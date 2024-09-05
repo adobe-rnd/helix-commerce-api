@@ -1,8 +1,8 @@
 {
-  "name": "helix-cache-debug",
+  "name": "helix-commerce-api",
   "version": "1.0.4",
   "private": true,
-  "description": "Tools for analyzing cache inconsistencies and purging",
+  "description": "API for markup content and a commerce graphql commerce proxy",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -25,13 +25,13 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adobe/helix-cache-debug"
+    "url": "https://github.com/adobe-rnd/helix-commerce-api"
   },
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/adobe/helix-cache-debug/issues"
+    "url": "https://github.com/adobe-rnd/helix-commerce-api/issues"
   },
-  "homepage": "https://github.com/adobe/helix-cache-debug#readme",
+  "homepage": "https://github.com/adobe-rnd/helix-commerce-api#readme",
   "mocha": {
     "require": [
       "test/setup-env.js"
