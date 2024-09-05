@@ -1,0 +1,66 @@
+{
+  "name": "helix-cache-debug",
+  "version": "1.0.4",
+  "private": true,
+  "description": "Tools for analyzing cache inconsistencies and purging",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "prepare": "husky",
+    "build": "node build.js",
+    "lint": "eslint . --ext js,cjs,mjs",
+    "test": "c8 mocha -i -g 'Post-Deploy' --spec test/*.test.js",
+    "dev": "if test -e .dev.vars; then wrangler dev --; else echo \"Need a .dev.vars files before starting local dev server\"; fi",
+    "dev:remote": "wrangler dev --remote",
+    "test-postdeploy": "mocha --spec test/post-deploy.test.js",
+    "deploy:dev": "node prepare-deploy.js && wrangler deploy -c wrangler-versioned.toml",
+    "deploy:ci": "node prepare-deploy.js && wrangler deploy -e ci  -c wrangler-versioned.toml",
+    "deploy:production": "node prepare-deploy.js && wrangler deploy -e production -c wrangler-versioned.toml",
+    "log": "wrangler tail --format pretty",
+    "log:ci": "wrangler tail --format pretty -e ci",
+    "log:production": "wrangler tail --format pretty -e production",
+    "semantic-release": "semantic-release",
+    "semantic-release-dry": "semantic-release --dry-run --no-ci --branches $CI_BRANCH"
+  },
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adobe/helix-cache-debug"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/adobe/helix-cache-debug/issues"
+  },
+  "homepage": "https://github.com/adobe/helix-cache-debug#readme",
+  "mocha": {
+    "require": [
+      "test/setup-env.js"
+    ],
+    "reporter": "mocha-multi-reporters",
+    "reporter-options": "configFile=.mocha-multi.json"
+  },
+  "devDependencies": {
+    "@adobe/eslint-config-helix": "2.0.6",
+    "@adobe/fetch": "4.1.8",
+    "@cloudflare/workers-types": "4.20240806.0",
+    "@semantic-release/changelog": "6.0.3",
+    "@semantic-release/exec": "6.0.3",
+    "@semantic-release/git": "10.0.1",
+    "c8": "10.1.2",
+    "dotenv": "16.4.5",
+    "esbuild": "0.23.0",
+    "eslint": "8.57.0",
+    "eslint-plugin-header": "3.1.1",
+    "eslint-plugin-import": "2.29.1",
+    "husky": "9.1.4",
+    "lint-staged": "15.2.9",
+    "mocha": "10.7.3",
+    "mocha-multi-reporters": "1.5.1",
+    "nock": "13.5.4",
+    "semantic-release": "24.0.0",
+    "wrangler": "3.71.0"
+  },
+  "lint-staged": {
+    "*.(js|cjs|mjs)": "eslint"
+  }
+}
