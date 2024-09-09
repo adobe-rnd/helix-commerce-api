@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.0...v1.0.1) (2024-09-09)
+
+
+### Bug Fixes
+
+* tweaks ([e5db728](https://github.com/adobe-rnd/helix-commerce-api/commit/e5db7289d15562c87e239981e777527eff553aff))
+
 # 1.0.0 (2024-09-05)
 
 
