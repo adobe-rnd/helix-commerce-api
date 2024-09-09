@@ -253,14 +253,6 @@ function resolvePDPTemplate(product) {
  <html>
    <head>
      <title>${product.metaTitle || product.name}</title>
-     <script type="importmap">
-       {
-           "imports": {
-               "@dropins/tools/": "/scripts/__dropins__/tools/",
-               "@dropins/storefront-pdp/": "/scripts/__dropins__/storefront-pdp/"
-           }
-       }
-     </script>
      <meta property="description" content="${product.metaDescription || product.description}">
      <meta property="og:title" content="${product.metaTitle || product.name}">
      <meta property="og:image" content="${product.images[0].url}">
@@ -269,7 +261,7 @@ function resolvePDPTemplate(product) {
      <meta name="twitter:title" content="${product.metaTitle || product.name}">
      <meta name="twitter:image" content="${product.images[0].url}">
      <meta name="viewport" content="width=device-width, initial-scale=1">
-     <script src="/scripts/lib-franklin.js" type="module"></script>
+     <script src="/scripts/aem.js" type="module"></script>
      <script src="/scripts/scripts.js" type="module"></script>
      <link rel="stylesheet" href="/styles/styles.css">
    </head>
@@ -280,42 +272,37 @@ function resolvePDPTemplate(product) {
          <h1>${product.name}</h1>
          <div class="product-gallery">
            <div>
-               ${product.images.map((img) => `<div>
-                   <picture>
-                     <source type="image/webp" srcset="${img.url}" media="(min-width: 600px)">
-                     <source type="image/webp" srcset="${img.url}">
-                     <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
-                     <img loading="lazy" alt="" src="${img.url}">
-                   </picture>
-                 </div>`).join('\n')}
-           </div>
-         </div>
-         <div class="product-price">
-           <div>
-             <div>Retail</div>
-             <div>1337.00</div>
-           </div>
-           <div>
-             <div>Sale</div>
-             <div>1337.00</div>
+              ${product.images.map((img) => `
+              <div>
+                <picture>
+                  <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
+                  <source type="image/webp" srcset="${img.url}">
+                  <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
+                  <img loading="lazy" alt="${img.label}" src="${img.url}">
+                </picture>
+              </div>`).join('\n')}
            </div>
          </div>
          <div class="product-attributes">
-           ${product.attributes.map((attr) => `<div>
-               <div>${attr.name}</div>
-               <div>${attr.label}</div>
-               <div>${attr.value}</div>
-             </div>`).join('\n')}
+          ${product.attributes.map((attr) => `
+          <div>
+            <div>${attr.name}</div>
+            <div>${attr.label}</div>
+            <div>${attr.value}</div>
+          </div>`).join('\n')}
          </div>
          <div class="product-options">
-           ${product.options.map((opt) => `<div>
-               <div>${opt.id}</div>
-               <div>${opt.title}</div>
-             </div>
-             ${opt.values.map((val) => `<div>
-                 <div>${val.id}</div>
-                 <div>${val.title}</div>
-               </div>`).join('\n')}`).join('\n')}
+          ${product.options.map((opt) => `
+          <div>
+            <div>${opt.id}</div>
+            <div>${opt.title}</div>
+            <div>${opt.required === true ? 'required' : ''}</div>
+          </div>
+          ${opt.values.map((val) => `
+          <div>
+            <div>${val.id}</div>
+            <div>${val.title}</div>
+          </div>`).join('\n')}`).join('\n')}
          </div>
        </div>
      </main>
@@ -373,11 +360,6 @@ export default {
   */
   async fetch(request, env, pctx) {
     const ctx = makeContext(pctx, request, env);
-    // TEMP: allow passthrough to live for helix stuff
-    if (ctx.url.pathname.startsWith('/scripts/') || ctx.url.pathname.startsWith('/styles/') || ctx.url.pathname.startsWith('/utils/')) {
-      return fetch(`https://main--helix-website--adobe.hlx.live${ctx.url.pathname}`);
-    }
-
     const [_, tenant, route] = ctx.url.pathname.split('/');
     if (!tenant) {
       return errorResponse(400, 'missing tenant');
