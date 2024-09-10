@@ -6,6 +6,7 @@ declare global {
     magentoEnvironmentId: string;
     magentoWebsiteCode: string;
     magentoStoreViewCode: string;
+    coreEndpoint: string;
   }
 
   export interface Product {
@@ -25,3 +26,5 @@ declare global {
     log: Console;
   }
 }
+
+export { };
