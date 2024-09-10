@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.1...v1.0.2) (2024-09-10)
+
+
+### Bug Fixes
+
+* moving to core query ([61196f1](https://github.com/adobe-rnd/helix-commerce-api/commit/61196f166b4dbb6a20d7b0444205f8970b4fba57))
+
 ## [1.0.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.0...v1.0.1) (2024-09-09)
 
 
