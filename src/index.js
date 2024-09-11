@@ -125,8 +125,9 @@ function resolvePDPTemplate(product) {
 * @param {Context} ctx
 */
 async function handlePDPRequest(ctx) {
+  // TODO: pull from config
   // eslint-disable-next-line no-unused-vars
-  const [_, tenant, _route, _pageType, sku] = ctx.url.pathname.split('/');
+  const [_, tenant, _route, _geo, _pageType, urlKey, sku] = ctx.url.pathname.split('/');
   if (!sku) {
     return errorResponse(404, 'missing sku');
   }
@@ -138,7 +139,7 @@ async function handlePDPRequest(ctx) {
   }
 
   // const product = await fetchProductCore({ sku }, config);
-  const product = await fetchProductCS(sku, config);
+  const product = await fetchProductCS(sku.toUpperCase(), config);
   const html = resolvePDPTemplate(product);
   return new Response(html, {
     status: 200,
@@ -152,7 +153,7 @@ async function handlePDPRequest(ctx) {
 * @param {Context} ctx
 */
 async function handleContentRequest(ctx) {
-  const [pageType] = ctx.url.pathname.split('/').slice(3);
+  const [pageType] = ctx.url.pathname.split('/').slice(4);
   switch (pageType) {
     case 'product':
       return handlePDPRequest(ctx);
