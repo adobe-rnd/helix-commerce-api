@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.3...v1.0.4) (2024-09-12)
+
+
+### Bug Fixes
+
+* configurable paths in config ([ecc5886](https://github.com/adobe-rnd/helix-commerce-api/commit/ecc58860657746d393b4a4c6ec838f845c453428))
+
 ## [1.0.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.2...v1.0.3) (2024-09-11)
 
 
