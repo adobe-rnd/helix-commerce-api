@@ -13,11 +13,11 @@
 import { gql } from '../util.js';
 
 /**
- * @param {{ urlKey?: string; sku?: string; }} param0
+ * @param {{ urlkey?: string; sku?: string; }} param0
  */
-export default ({ urlKey, sku }) => gql`{
+export default ({ urlkey, sku }) => gql`{
   products(
-    filter: { ${urlKey ? 'url_key' : 'sku'}: { eq: "${urlKey ?? sku}" } }
+    filter: { ${urlkey ? 'url_key' : 'sku'}: { eq: "${urlkey ?? sku}" } }
   ) {
     items {
       sku

@@ -11,10 +11,10 @@
  */
 
 /**
-* @param {TemplateStringsArray} strs
-* @param  {...any} params
-* @returns {string}
-*/
+ * @param {TemplateStringsArray} strs
+ * @param  {...any} params
+ * @returns {string}
+ */
 export function gql(strs, ...params) {
   let res = '';
   strs.forEach((s, i) => {
@@ -27,11 +27,11 @@ export function gql(strs, ...params) {
 }
 
 /**
-* @param {number} status
-* @param {string} xError
-* @param {string|Record<string,unknown>} [body='']
-* @returns
-*/
+ * @param {number} status
+ * @param {string} xError
+ * @param {string|Record<string,unknown>} [body='']
+ * @returns {Response}
+ */
 export function errorResponse(status, xError, body = '') {
   return new Response(typeof body === 'object' ? JSON.stringify(body) : body, {
     status,
@@ -40,11 +40,24 @@ export function errorResponse(status, xError, body = '') {
 }
 
 /**
-* @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
-* @param {Request} req
-* @param {Record<string, string>} env
-* @returns {Context}
-*/
+ * @param {number} status
+ * @param {string} xError
+ * @param {string|Record<string,unknown>} [body='']
+ * @returns {Error & {response: Response}}
+ */
+export function errorWithResponse(status, xError, body = '') {
+  const response = errorResponse(status, xError, body);
+  const error = new Error(xError);
+  error.response = response;
+  return error;
+}
+
+/**
+ * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
+ * @param {Request} req
+ * @param {Record<string, string>} env
+ * @returns {Context}
+ */
 export function makeContext(pctx, req, env) {
   /** @type {Context} */
   // @ts-ignore
@@ -52,5 +65,9 @@ export function makeContext(pctx, req, env) {
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;
+  ctx.info = {
+    method: req.method,
+    headers: Object.fromEntries(req.headers),
+  };
   return ctx;
 }

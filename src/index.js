@@ -11,44 +11,16 @@
  */
 // @ts-check
 
-import { errorResponse, makeContext } from './util.js';
+import { errorResponse, errorWithResponse, makeContext } from './util.js';
 import getProductQueryCS from './queries/cs-product.js';
 import getProductQueryCore from './queries/core-product.js';
 import HTML_TEMPLATE from './templates/html.js';
+import { resolveConfig } from './config.js';
 
 /**
-* @type {Record<string, Config>}
-*/
-const TENANT_CONFIGS = {
-  visualcomfort: {
-    apiKey: '59878b5d8af24fe9a354f523f5a0bb62',
-    magentoEnvironmentId: '97034e45-43a5-48ab-91ab-c9b5a98623a8',
-    magentoWebsiteCode: 'base',
-    magentoStoreViewCode: 'default',
-    coreEndpoint: 'https://www.visualcomfort.com/graphql',
-  },
-};
-
-/**
-* @param {string} tenant
-* @param {Partial<Config>} [overrides={}]
-* @returns {Config|null}
-*/
-function lookupConfig(tenant, overrides) {
-  if (!TENANT_CONFIGS[tenant]) {
-    return null;
-  }
-  // @ts-ignore
-  return {
-    ...TENANT_CONFIGS[tenant],
-    ...overrides,
-  };
-}
-
-/**
-* @param {string} sku
-* @param {Config} config
-*/
+ * @param {string} sku
+ * @param {Config} config
+ */
 async function fetchProductCS(sku, config) {
   const query = getProductQueryCS({ sku });
 
@@ -62,32 +34,32 @@ async function fetchProductCS(sku, config) {
     },
   });
   if (!resp.ok) {
-    console.warn('failed to fetch product: ', resp.status);
-    return resp;
+    console.warn('failed to fetch product: ', resp.status, resp.statusText);
+    throw errorWithResponse(resp.status, 'failed to fetch product');
   }
 
   const json = await resp.json();
   try {
     const [product] = json.data.products;
     if (!product) {
-      return errorResponse(404, 'could not find product', json.errors);
+      throw errorWithResponse(404, 'could not find product', json.errors);
     }
     return product;
   } catch (e) {
     console.error('failed to parse product: ', e);
-    return errorResponse(500, 'failed to parse product response');
+    throw errorWithResponse(500, 'failed to parse product response');
   }
 }
 
 /**
- * @param {{ urlKey: string } | { sku: string }} opt
+ * @param {{ urlkey: string } | { sku: string }} opt
  * @param {Config} config
  */
 // eslint-disable-next-line no-unused-vars
 async function fetchProductCore(opt, config) {
   const query = getProductQueryCore(opt);
   if (!config.coreEndpoint) {
-    return errorResponse(400, 'coreEndpoint not configured');
+    throw errorWithResponse(400, 'coreEndpoint not configured');
   }
 
   const resp = await fetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
@@ -100,47 +72,36 @@ async function fetchProductCore(opt, config) {
     },
   });
   if (!resp.ok) {
-    console.warn('failed to fetch product: ', resp.status);
-    return resp;
+    console.warn('failed to fetch product: ', resp.status, resp.statusText);
+    throw errorWithResponse(resp.status, 'failed to fetch product');
   }
 
   const json = await resp.json();
   try {
     const [product] = json.data.products;
     if (!product) {
-      return errorResponse(404, 'could not find product', json.errors);
+      throw errorWithResponse(404, 'could not find product', json.errors);
     }
     return product;
   } catch (e) {
     console.error('failed to parse product: ', e);
-    return errorResponse(500, 'failed to parse product response');
+    throw errorWithResponse(500, 'failed to parse product response');
   }
-}
-
-function resolvePDPTemplate(product) {
-  return HTML_TEMPLATE(product);
 }
 
 /**
-* @param {Context} ctx
-*/
-async function handlePDPRequest(ctx) {
-  // TODO: pull from config
-  // eslint-disable-next-line no-unused-vars
-  const [_, tenant, _route, _geo, _pageType, urlKey, sku] = ctx.url.pathname.split('/');
-  if (!sku) {
-    return errorResponse(404, 'missing sku');
-  }
-
-  const overrides = Object.fromEntries(ctx.url.searchParams.entries());
-  const config = lookupConfig(tenant, overrides);
-  if (!config) {
-    return errorResponse(404, 'config not found');
+ * @param {Context} ctx
+ * @param {Config} config
+ */
+async function handlePDPRequest(ctx, config) {
+  const { sku, urlkey } = config.params;
+  if (!sku && !urlkey) {
+    return errorResponse(404, 'missing sku or urlkey');
   }
 
   // const product = await fetchProductCore({ sku }, config);
   const product = await fetchProductCS(sku.toUpperCase(), config);
-  const html = resolvePDPTemplate(product);
+  const html = HTML_TEMPLATE(product);
   return new Response(html, {
     status: 200,
     headers: {
@@ -150,38 +111,54 @@ async function handlePDPRequest(ctx) {
 }
 
 /**
-* @param {Context} ctx
-*/
-async function handleContentRequest(ctx) {
-  const [pageType] = ctx.url.pathname.split('/').slice(4);
-  switch (pageType) {
-    case 'product':
-      return handlePDPRequest(ctx);
-    default:
-      return errorResponse(404, 'unknown content subroute');
-  }
-}
+ * @type {Record<string, (ctx: Context, config: Config) => Promise<Response>>}
+ */
+const handlers = {
+  content: async (ctx, config) => {
+    if (config.pageType !== 'product') {
+      return errorResponse(404, 'page type not supported');
+    }
+    return handlePDPRequest(ctx, config);
+  },
+  // eslint-disable-next-line no-unused-vars
+  graphql: async (ctx, config) => errorResponse(501, 'not implemented'),
+};
 
 export default {
   /**
-  *
-  * @param {Request} request
-  * @param {Record<string, string>} env
-  * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
-  * @returns {Promise<Response>}
-  */
+   * @param {Request} request
+   * @param {Record<string, string>} env
+   * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
+   * @returns {Promise<Response>}
+   */
   async fetch(request, env, pctx) {
     const ctx = makeContext(pctx, request, env);
-    const [_, tenant, route] = ctx.url.pathname.split('/');
-    if (!tenant) {
-      return errorResponse(400, 'missing tenant');
+    if (ctx.info.method !== 'GET') {
+      return errorResponse(405, 'method not allowed');
     }
 
-    switch (route) {
-      case 'content':
-        return handleContentRequest(ctx);
-      default:
-        return errorResponse(404, 'no route found');
+    const [_, tenant, route] = ctx.url.pathname.split('/');
+    if (!tenant) {
+      return errorResponse(404, 'missing tenant');
+    }
+    if (!route) {
+      return errorResponse(404, 'missing route');
+    }
+
+    const overrides = Object.fromEntries(ctx.url.searchParams.entries());
+    const config = resolveConfig(ctx, tenant, overrides);
+    if (!config) {
+      return errorResponse(404, 'config not found');
+    }
+
+    try {
+      return handlers[route](ctx, config);
+    } catch (e) {
+      if (e.response) {
+        return e.response;
+      }
+      ctx.log.error(e);
+      return errorResponse(500, 'internal server error');
     }
   },
 };

@@ -55,7 +55,7 @@ export default (product) => {
       <script src="/scripts/aem.js" type="module"></script>
       <script src="/scripts/scripts.js" type="module"></script>
       <link rel="stylesheet" href="/styles/styles.css">
-      <script type="ld+json">
+      <script type="application/ld+json">
         ${jsonLd}
       </script>
     </head>
