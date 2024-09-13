@@ -74,7 +74,7 @@ export default (product) => {
           <h1>${name}</h1>
           <div class="product-images">
             <div>
-              ${images.map((img) => `
+${images.map((img) => `\
               <div>
                 <picture>
                   <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
@@ -85,33 +85,35 @@ export default (product) => {
               </div>`).join('\n')}
             </div>
           </div>
+
           <div class="product-attributes">
-          ${attributes.map((attr) => `
-          <div>
-            <div>${attr.name}</div>
-            <div>${attr.label}</div>
-            <div>${attr.value}</div>
-          </div>`).join('\n')}
+${attributes.map((attr) => `\
+            <div>
+              <div>${attr.name}</div>
+              <div>${attr.label}</div>
+              <div>${attr.value}</div>
+            </div>`).join('\n')}
           </div>
+
           <div class="product-options">
-          ${options.map((opt) => `
-          <div>
-            <div>${opt.id}</div>
-            <div>${opt.label}</div>
-            <div>${opt.typename}</div>
-            <div>${opt.type ?? ''}</div>
-            <div>${opt.multiple ? 'multiple' : ''}</div>
-            <div>${opt.required === true ? 'required' : ''}</div>
-          </div>
-          ${opt.items.map((item) => `
-          <div>
-            <div>option</div>
-            <div>${item.id}</div>
-            <div>${item.label}</div>
-            <div>${item.value ?? ''}</div>
-            <div>${item.selected ? 'selected' : ''}</div>
-            <div>${item.inStock ? 'inStock' : ''}</div>
-          </div>`).join('\n')}`).join('\n')}
+${options.map((opt) => `\
+            <div>
+              <div>${opt.id}</div>
+              <div>${opt.label}</div>
+              <div>${opt.typename}</div>
+              <div>${opt.type ?? ''}</div>
+              <div>${opt.multiple ? 'multiple' : ''}</div>
+              <div>${opt.required === true ? 'required' : ''}</div>
+            </div>
+${opt.items.map((item) => `\
+              <div>
+                <div>option</div>
+                <div>${item.id}</div>
+                <div>${item.label}</div>
+                <div>${item.value ?? ''}</div>
+                <div>${item.selected ? 'selected' : ''}</div>
+                <div>${item.inStock ? 'inStock' : ''}</div>
+              </div>`).join('\n')}`).join('\n')}
           </div>
         </div>
       </main>
