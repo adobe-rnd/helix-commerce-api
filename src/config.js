@@ -50,7 +50,7 @@ function findOrderedMatches(patterns, path) {
 
 function extractPathParams(pattern, path) {
   // create a RegExp with named groups from the string contained in '{{}}'
-  const re = new RegExp(pattern.replace(/\{\{([^}]+)\}\}/g, '(?<$1>[^/]+)'));
+  const re = new RegExp(pattern.replace(/\{\{([^}]+)\}\}/g, '(?<$1>[^/]+)').replace(/\*/g, '([^/]+)'));
   const match = path.match(re);
   return match ? match.groups : {};
 }
