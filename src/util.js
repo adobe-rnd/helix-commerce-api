@@ -71,3 +71,7 @@ export function makeContext(pctx, req, env) {
   };
   return ctx;
 }
+
+export function pruneUndefined(obj) {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+}

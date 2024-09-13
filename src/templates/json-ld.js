@@ -9,54 +9,72 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-
 // @ts-check
 
+import { pruneUndefined } from '../util.js';
+
 /**
- * @param {{
-*  sku: string;
-*  url: string;
-*  description: string;
-*  image: string;
-*  name: string;
-*  brandName: string;
-*  reviewCount: number;
-*  ratingValue: number;
-* }} param0
-* @returns {string}
-*/
-export default ({
-  sku,
-  url,
-  name,
-  description,
-  image,
-  brandName,
-  reviewCount,
-  ratingValue,
-}) => JSON.stringify({
-  '@context': 'http://schema.org',
-  '@type': 'Product',
-  '@id': url,
-  name,
-  sku,
-  description,
-  image,
-  productID: sku,
-  brand: {
-    '@type': 'Brand',
-    name: brandName,
-  },
-  offers: [],
-  ...(typeof reviewCount === 'number'
+ * @param {Product} product
+ * @returns {string}
+ */
+export default (product) => {
+  const {
+    sku,
+    url,
+    name,
+    description,
+    images,
+    reviewCount,
+    ratingValue,
+    attributes,
+    inStock,
+    prices,
+  } = product;
+
+  const image = images?.[0].url;
+  const brandName = attributes.find((attr) => attr.name === 'brand')?.value;
+
+  return JSON.stringify(pruneUndefined({
+    '@context': 'http://schema.org',
+    '@type': 'Product',
+    '@id': url,
+    name,
+    sku,
+    description,
+    image,
+    productID: sku,
+    offers: [
+      /**
+       * TODO: add offers from variants, if `product.options[*].product.prices` exists
+       */
+      {
+        '@type': 'Offer',
+        sku,
+        url,
+        image,
+        availability: inStock ? 'InStock' : 'OutOfStock',
+        price: prices.final.amount,
+        priceCurrency: prices.final.currency,
+      },
+    ],
+    ...(brandName
+      ? {
+        brand: {
+          '@type': 'Brand',
+          name: brandName,
+        },
+      }
+      : {}),
+    ...(typeof reviewCount === 'number'
      && typeof ratingValue === 'number'
      && reviewCount > 0
-    ? {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue,
-        reviewCount,
-      },
-    }
-    : {}),
-});
+      ? {
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue,
+          reviewCount,
+        },
+      }
+      : {}),
+  }));
+};

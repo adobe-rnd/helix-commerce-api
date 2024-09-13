@@ -13,29 +13,32 @@
 
 import JSON_LD_TEMPLATE from './json-ld.js';
 
+/**
+ * @param {string} name
+ * @param {string|boolean|number|undefined|null} [content]
+ * @returns {string}
+ */
+const metaContent = (name, content) => (content ? `<meta name="${name}" content="${content}">` : '');
+
+/**
+ * @param {Product} product
+ */
 export default (product) => {
   const {
     sku,
     name,
+    urlKey,
     metaTitle,
     metaDescription,
     description,
     images,
     attributes,
     options,
+    addToCartAllowed,
+    inStock,
+    metaKeyword,
+    externalId,
   } = product;
-
-  const jsonLd = JSON_LD_TEMPLATE({
-    sku,
-    description: description ?? metaDescription,
-    image: images[0].url,
-    name,
-    // TODO: add following...
-    url: '',
-    brandName: '',
-    reviewCount: 0,
-    ratingValue: 0,
-  });
 
   return /* html */`\
 <!DOCTYPE html>
@@ -50,13 +53,18 @@ export default (product) => {
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:title" content="${metaTitle || name}">
       <meta name="twitter:image" content="${images[0].url}">
+      <meta name="keywords" content="${metaKeyword}">
       <meta name="sku" content="${sku}">
+      <meta name="urlKey" content="${urlKey}">
+      ${metaContent('externalId', externalId)}
+      ${metaContent('addToCartAllowed', addToCartAllowed)}
+      ${metaContent('inStock', inStock)}
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <script src="/scripts/aem.js" type="module"></script>
       <script src="/scripts/scripts.js" type="module"></script>
       <link rel="stylesheet" href="/styles/styles.css">
       <script type="application/ld+json">
-        ${jsonLd}
+        ${JSON_LD_TEMPLATE(product)}
       </script>
     </head>
     <body>
@@ -64,7 +72,7 @@ export default (product) => {
       <main>
         <div>
           <h1>${name}</h1>
-          <div class="product-gallery">
+          <div class="product-images">
             <div>
               ${images.map((img) => `
               <div>
@@ -89,13 +97,20 @@ export default (product) => {
           ${options.map((opt) => `
           <div>
             <div>${opt.id}</div>
-            <div>${opt.title}</div>
+            <div>${opt.label}</div>
+            <div>${opt.typename}</div>
+            <div>${opt.type ?? ''}</div>
+            <div>${opt.multiple ? 'multiple' : ''}</div>
             <div>${opt.required === true ? 'required' : ''}</div>
           </div>
-          ${opt.values.map((val) => `
+          ${opt.items.map((item) => `
           <div>
-            <div>${val.id}</div>
-            <div>${val.title}</div>
+            <div>option</div>
+            <div>${item.id}</div>
+            <div>${item.label}</div>
+            <div>${item.value ?? ''}</div>
+            <div>${item.selected ? 'selected' : ''}</div>
+            <div>${item.inStock ? 'inStock' : ''}</div>
           </div>`).join('\n')}`).join('\n')}
           </div>
         </div>
