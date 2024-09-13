@@ -12,7 +12,7 @@
 // @ts-check
 
 import { errorResponse, errorWithResponse, makeContext } from './util.js';
-import getProductQueryCS from './queries/cs-product.js';
+import getProductQueryCS, { adapter } from './queries/cs-product.js';
 import getProductQueryCore from './queries/core-product.js';
 import HTML_TEMPLATE from './templates/html.js';
 import { resolveConfig } from './config.js';
@@ -40,10 +40,11 @@ async function fetchProductCS(sku, config) {
 
   const json = await resp.json();
   try {
-    const [product] = json.data.products;
-    if (!product) {
+    const [productData] = json.data.products;
+    if (!productData) {
       throw errorWithResponse(404, 'could not find product', json.errors);
     }
+    const product = adapter(productData);
     return product;
   } catch (e) {
     console.error('failed to parse product: ', e);

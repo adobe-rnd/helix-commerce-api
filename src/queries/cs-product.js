@@ -12,11 +12,85 @@
 
 import { gql } from '../util.js';
 
+/**
+ * @param {any} productData
+ * @returns {Product}
+ */
+export const adapter = (productData) => {
+  const minPrice = productData.priceRange?.minimum ?? productData.price;
+  const maxPrice = productData.priceRange?.maximum ?? productData.price;
+
+  /** @type {Product} */
+  const product = {
+    sku: productData.sku,
+    name: productData.name,
+    metaTitle: productData.metaTitle,
+    metaDescription: productData.metaDescription,
+    metaKeyword: productData.metaKeyword,
+    description: productData.description,
+    url: productData.url,
+    urlKey: productData.urlKey,
+    shortDescription: productData.shortDescription,
+    addToCartAllowed: productData.addToCartAllowed,
+    inStock: productData.inStock,
+    externalId: productData.externalId,
+    images: productData.images ?? [],
+    attributes: productData.attributes ?? [],
+    options: (productData.options ?? []).map((option) => ({
+      id: option.id,
+      label: option.title,
+      // eslint-disable-next-line no-underscore-dangle
+      typename: option.values?.[0]?.__typename,
+      required: option.required,
+      multiple: option.multi,
+      items: (option.values ?? []).map((value) => ({
+        id: value.id,
+        label: value.title,
+        inStock: value.inStock,
+        type: value.type,
+        product: value.product
+          ? {
+            sku: value.product.sku,
+            name: value.product.name,
+            prices: value.product.price ? {
+              regular: value.product.price.regular,
+              final: value.product.price.final,
+              visible: value.product.price.roles?.includes('visible'),
+            } : undefined,
+          }
+          : undefined,
+        quantity: value.quantity,
+        isDefault: value.isDefault,
+      })),
+    })),
+    prices: {
+      regular: {
+        // TODO: determine whether to use min or max
+        amount: minPrice.regular.amount.value,
+        currency: minPrice.regular.amount.currency,
+        maximumAmount: maxPrice.regular.amount.value,
+        minimumAmount: minPrice.regular.amount.value,
+        // TODO: add variant?
+      },
+      final: {
+        // TODO: determine whether to use min or max
+        amount: minPrice.final.amount.value,
+        currency: minPrice.final.amount.currency,
+        maximumAmount: maxPrice.final.amount.value,
+        minimumAmount: minPrice.final.amount.value,
+        // TODO: add variant?
+      },
+      visible: minPrice.roles?.includes('visible'),
+    },
+  };
+
+  return product;
+};
+
 export default ({ sku }) => gql`{
     products(
       skus: ["${sku}"]
     ) {
-      __typename
       id
       sku
       name
@@ -30,18 +104,15 @@ export default ({ sku }) => gql`{
       url
       addToCartAllowed
       inStock
+      externalId
       images(roles: []) { 
         url
         label
-        roles
-        __typename
       }
       attributes(roles: []) {
         name
         label
         value
-        roles
-        __typename
       }
       ... on SimpleProductView {
         price {
@@ -49,47 +120,61 @@ export default ({ sku }) => gql`{
             amount {
               value
               currency
-              __typename
             }
-            __typename
           }
           regular {
             amount {
               value
               currency
-              __typename
             }
-            __typename
           }
           roles
-          __typename
         }
-        __typename
       }
       ... on ComplexProductView {
         options {
+          __typename
           id
           title
           required
+          multi
           values {
             id
             title
-            ... on ProductViewOptionValueProduct {
-              product {
-                sku
-                name
-                __typename
-              }
+            inStock
+            ...on ProductViewOptionValueConfiguration {
               __typename
             }
             ... on ProductViewOptionValueSwatch {
+              __typename
               type
               value
-              __typename
             }
-            __typename
+            ... on ProductViewOptionValueProduct {
+              __typename
+              quantity
+              isDefault
+              product {
+                sku
+                name
+                price {
+                  regular {
+                    amount {
+                      value
+                      currency
+                    }
+                  }
+                  final {
+                    amount {
+                      value
+                      currency
+                    }
+                  }
+                  roles
+                }
+              }
+            }
           }
-          __typename
         }
         priceRange {
           maximum {
@@ -97,44 +182,32 @@ export default ({ sku }) => gql`{
               amount {
                 value
                 currency
-                __typename
               }
-              __typename
             }
             regular {
               amount {
                 value
                 currency
-                __typename
               }
-              __typename
             }
             roles
-            __typename
           }
           minimum {
             final {
               amount {
                 value
                 currency
-                __typename
               }
-              __typename
             }
             regular {
               amount {
                 value
                 currency
-                __typename
               }
-              __typename
             }
             roles
-            __typename
           }
-          __typename
         }
-        __typename
       }
     }
   }`;
