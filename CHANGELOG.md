@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.4...v1.0.5) (2024-09-13)
+
+
+### Bug Fixes
+
+* use product model, add offer jsonld ([06dd4a6](https://github.com/adobe-rnd/helix-commerce-api/commit/06dd4a6795a5978606564f57ca79a48d70c3d04d))
+
 ## [1.0.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.3...v1.0.4) (2024-09-12)
 
 
