@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.5...v1.0.6) (2024-09-13)
+
+
+### Bug Fixes
+
+* html formatting tweaks ([57e8435](https://github.com/adobe-rnd/helix-commerce-api/commit/57e8435f1cbb2f1548d243d8d33253e13be98b5a))
+
 ## [1.0.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.4...v1.0.5) (2024-09-13)
 
 
