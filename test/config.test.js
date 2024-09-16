@@ -15,10 +15,15 @@ import { resolveConfig } from '../src/config.js';
 
 /**
  * @param {string} path
+ * @param {Record<string, Config>} configMap
  * @returns {Context}
  */
-const TEST_CONTEXT = (path) => ({
-  env: {},
+const TEST_CONTEXT = (path, configMap) => ({
+  env: {
+    CONFIGS: {
+      get: async (tenant) => configMap[tenant],
+    },
+  },
   log: console,
   url: new URL(`https://www.example.com/tenant/content${path}`),
   info: {
@@ -28,7 +33,7 @@ const TEST_CONTEXT = (path) => ({
 });
 
 describe('config tests', () => {
-  it('should extract path params', () => {
+  it('should extract path params', async () => {
     const tenantConfigs = {
       'test-tenant': {
         base: {
@@ -40,7 +45,10 @@ describe('config tests', () => {
         },
       },
     };
-    const config = resolveConfig(TEST_CONTEXT('/us/p/my-url-key/some-sku'), 'test-tenant', undefined, tenantConfigs);
+    const config = await resolveConfig(
+      TEST_CONTEXT('/us/p/my-url-key/some-sku', tenantConfigs),
+      'test-tenant',
+    );
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { urlkey: 'my-url-key', sku: 'some-sku' },
@@ -48,7 +56,7 @@ describe('config tests', () => {
     });
   });
 
-  it('should allow wildcard path segments', () => {
+  it('should allow wildcard path segments', async () => {
     const tenantConfigs = {
       'test-tenant': {
         base: {
@@ -60,7 +68,10 @@ describe('config tests', () => {
         },
       },
     };
-    const config = resolveConfig(TEST_CONTEXT('/us/p/something-here/some-sku'), 'test-tenant', undefined, tenantConfigs);
+    const config = await resolveConfig(
+      TEST_CONTEXT('/us/p/something-here/some-sku', tenantConfigs),
+      'test-tenant',
+    );
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { sku: 'some-sku' },
@@ -68,7 +79,7 @@ describe('config tests', () => {
     });
   });
 
-  it('should allow overrides', () => {
+  it('should allow overrides', async () => {
     const tenantConfigs = {
       'test-tenant': {
         base: {
@@ -80,7 +91,11 @@ describe('config tests', () => {
         },
       },
     };
-    const config = resolveConfig(TEST_CONTEXT('/us/p/some-sku'), 'test-tenant', { apiKey: 'good' }, tenantConfigs);
+    const config = await resolveConfig(
+      TEST_CONTEXT('/us/p/some-sku', tenantConfigs),
+      'test-tenant',
+      { apiKey: 'good' },
+    );
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { sku: 'some-sku' },
