@@ -147,7 +147,7 @@ export default {
     }
 
     const overrides = Object.fromEntries(ctx.url.searchParams.entries());
-    const config = resolveConfig(ctx, tenant, overrides);
+    const config = await resolveConfig(ctx, tenant, overrides);
     if (!config) {
       return errorResponse(404, 'config not found');
     }
