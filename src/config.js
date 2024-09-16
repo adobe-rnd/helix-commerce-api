@@ -13,25 +13,25 @@
 /**
  * @type {Record<string, Record<string, Config>>}
  */
-const TENANT_CONFIGS = {
-  visualcomfort: {
-    base: {
-      apiKey: '59878b5d8af24fe9a354f523f5a0bb62',
-      magentoEnvironmentId: '97034e45-43a5-48ab-91ab-c9b5a98623a8',
-      magentoWebsiteCode: 'base',
-      magentoStoreViewCode: 'default',
-      coreEndpoint: 'https://www.visualcomfort.com/graphql',
-    },
-    '/us/p/{{urlkey}}/{{sku}}': {
-      pageType: 'product',
-      apiKey: '59878b5d8af24fe9a354f523f5a0bb62',
-      magentoEnvironmentId: '97034e45-43a5-48ab-91ab-c9b5a98623a8',
-      magentoWebsiteCode: 'base',
-      magentoStoreViewCode: 'default',
-      coreEndpoint: 'https://www.visualcomfort.com/graphql',
-    },
-  },
-};
+// const TENANT_CONFIGS = {
+//   visualcomfort: {
+//     base: {
+//       apiKey: '59878b5d8af24fe9a354f523f5a0bb62',
+//       magentoEnvironmentId: '97034e45-43a5-48ab-91ab-c9b5a98623a8',
+//       magentoWebsiteCode: 'base',
+//       magentoStoreViewCode: 'default',
+//       coreEndpoint: 'https://www.visualcomfort.com/graphql',
+//     },
+//     '/us/p/{{urlkey}}/{{sku}}': {
+//       pageType: 'product',
+//       apiKey: '59878b5d8af24fe9a354f523f5a0bb62',
+//       magentoEnvironmentId: '97034e45-43a5-48ab-91ab-c9b5a98623a8',
+//       magentoWebsiteCode: 'base',
+//       magentoStoreViewCode: 'default',
+//       coreEndpoint: 'https://www.visualcomfort.com/graphql',
+//     },
+//   },
+// };
 
 /**
  * @param {string[]} patterns
@@ -59,10 +59,12 @@ function extractPathParams(pattern, path) {
  * @param {Context} ctx
  * @param {string} tenant
  * @param {Partial<Config>} [overrides={}]
- * @returns {Config|null}
+ * @returns {Promise<Config|null>}
  */
-export function resolveConfig(ctx, tenant, overrides, configs = TENANT_CONFIGS) {
-  const confMap = configs[tenant];
+export async function resolveConfig(ctx, tenant, overrides = {}) {
+  const confMap = await ctx.env.CONFIGS.get(tenant, 'json');
+  console.log('confMap: ', tenant, confMap, confMap);
+  console.log('config list: ', await ctx.env.CONFIGS.list());
   if (!confMap) {
     return null;
   }

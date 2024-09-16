@@ -1,4 +1,4 @@
-import type { ExecutionContext } from "@cloudflare/workers-types/experimental";
+import type { ExecutionContext, KVNamespace } from "@cloudflare/workers-types/experimental";
 
 declare global {
   export interface Config {
@@ -14,12 +14,16 @@ declare global {
   export interface Env {
     VERSION: string;
     ENVIRONMENT: string;
-    [key: string]: string;
+
+    // KV namespaces
+    CONFIGS: KVNamespace<string>;
+
+    [key: string]: string | KVNamespace<string>;
   }
 
   export interface Context extends ExecutionContext {
     url: URL;
-    env: Record<string, string>;
+    env: Env;
     log: Console;
     info: {
       method: string;
