@@ -3,12 +3,14 @@ import type { ExecutionContext, KVNamespace } from "@cloudflare/workers-types/ex
 declare global {
   export interface Config {
     pageType: 'product' | string;
+    origin?: string;
     apiKey: string;
     magentoEnvironmentId: string;
     magentoWebsiteCode: string;
     magentoStoreViewCode: string;
     magentoStoreCode: string;
     coreEndpoint: string;
+    catalogEndpoint?: string;
     params: Record<string, string>;
   }
 

@@ -31,7 +31,7 @@ export default (product) => {
     prices,
   } = product;
 
-  const image = images?.[0].url;
+  const image = images?.[0]?.url;
   const brandName = attributes.find((attr) => attr.name === 'brand')?.value;
 
   return JSON.stringify(pruneUndefined({
