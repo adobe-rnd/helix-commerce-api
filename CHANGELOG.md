@@ -1,3 +1,12 @@
+## [1.0.9](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.8...v1.0.9) (2024-09-26)
+
+
+### Bug Fixes
+
+* kv config ([a3e845e](https://github.com/adobe-rnd/helix-commerce-api/commit/a3e845e28d7cdf556533976fd81016daf9d5e1aa))
+* query tweaks ([9ccfde9](https://github.com/adobe-rnd/helix-commerce-api/commit/9ccfde931fbdd2e226e86af4b1a8cd04c4d1adf1))
+* search by urlkey ([ea8c40a](https://github.com/adobe-rnd/helix-commerce-api/commit/ea8c40abb8a5944048e3c33b467cc60394135c98))
+
 ## [1.0.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.7...v1.0.8) (2024-09-16)
 
 
