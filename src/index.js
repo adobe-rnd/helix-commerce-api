@@ -23,19 +23,24 @@ import { resolveConfig } from './config.js';
  * @param {Config} config
  */
 async function fetchProductCS(sku, config) {
+  console.log('config: ', config);
+  const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
   const query = getProductQueryCS({ sku });
-
-  const resp = await fetch(`https://catalog-service.adobe.io/graphql?query=${encodeURIComponent(query)}`, {
+  const resp = await fetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
-      origin: 'https://api.adobecommerce.live',
+      origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
       'Magento-Store-View-Code': config.magentoStoreViewCode,
+      'Magento-Store-Code': config.magentoStoreCode,
     },
   });
   if (!resp.ok) {
     console.warn('failed to fetch product: ', resp.status, resp.statusText);
+    try {
+      console.info('body: ', await resp.text());
+    } catch { /* noop */ }
     throw errorWithResponse(resp.status, 'failed to fetch product');
   }
 
@@ -66,15 +71,19 @@ async function fetchProductCore(opt, config) {
 
   const resp = await fetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
-      origin: 'https://api.adobecommerce.live',
+      origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
       'Magento-Store-View-Code': config.magentoStoreViewCode,
+      'Magento-Store-Code': config.magentoStoreCode,
     },
   });
   if (!resp.ok) {
     console.warn('failed to fetch product: ', resp.status, resp.statusText);
+    try {
+      console.info('body: ', await resp.text());
+    } catch { /* noop */ }
     throw errorWithResponse(resp.status, 'failed to fetch product');
   }
 
@@ -99,19 +108,24 @@ async function lookupProductSKU(urlkey, config) {
   const query = getProductSKUQuery({ urlkey });
   const resp = await fetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
-      origin: 'https://api.adobecommerce.live',
+      origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
       'Magento-Store-View-Code': config.magentoStoreViewCode,
+      'Magento-Store-Code': config.magentoStoreCode,
     },
   });
   if (!resp.ok) {
     console.warn('failed to fetch product sku: ', resp.status, resp.statusText);
+    try {
+      console.info('body: ', await resp.text());
+    } catch { /* noop */ }
     throw errorWithResponse(resp.status, 'failed to fetch product sku');
   }
 
   const json = await resp.json();
+  console.log('json: ', JSON.stringify(json, undefined, 2));
   try {
     const [product] = json.data.products.items;
     if (!product) {

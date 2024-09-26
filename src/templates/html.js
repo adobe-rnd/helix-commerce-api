@@ -47,12 +47,12 @@ export default (product) => {
       <title>${metaTitle || name}</title>
       <meta property="description" content="${metaDescription || description}">
       <meta property="og:title" content="${metaTitle || name}">
-      <meta property="og:image" content="${images[0].url}">
-      <meta property="og:image:secure_url" content="${images[0].url}">
+      <meta property="og:image" content="${images[0]?.url}">
+      <meta property="og:image:secure_url" content="${images[0]?.url}">
       <meta property="og:type" content="og:product">
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:title" content="${metaTitle || name}">
-      <meta name="twitter:image" content="${images[0].url}">
+      <meta name="twitter:image" content="${images[0]?.url}">
       <meta name="keywords" content="${metaKeyword}">
       <meta name="sku" content="${sku}">
       <meta name="urlKey" content="${urlKey}">
