@@ -23,7 +23,6 @@ import { resolveConfig } from './config.js';
  * @param {Config} config
  */
 async function fetchProductCS(sku, config) {
-  console.log('config: ', config);
   const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
   const query = getProductQueryCS({ sku });
   const resp = await fetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
@@ -207,6 +206,7 @@ export default {
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
       const config = await resolveConfig(ctx, tenant, overrides);
+      console.debug('resolved config: ', JSON.stringify(config, undefined, 2));
       if (!config) {
         return errorResponse(404, 'config not found');
       }
