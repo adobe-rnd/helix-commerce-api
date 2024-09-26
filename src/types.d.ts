@@ -7,6 +7,7 @@ declare global {
     magentoEnvironmentId: string;
     magentoWebsiteCode: string;
     magentoStoreViewCode: string;
+    magentoStoreCode: string;
     coreEndpoint: string;
     params: Record<string, string>;
   }

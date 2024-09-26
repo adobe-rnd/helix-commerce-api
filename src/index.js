@@ -14,6 +14,7 @@
 import { errorResponse, errorWithResponse, makeContext } from './util.js';
 import getProductQueryCS, { adapter } from './queries/cs-product.js';
 import getProductQueryCore from './queries/core-product.js';
+import getProductSKUQuery from './queries/core-product-sku.js';
 import HTML_TEMPLATE from './templates/html.js';
 import { resolveConfig } from './config.js';
 
@@ -91,13 +92,56 @@ async function fetchProductCore(opt, config) {
 }
 
 /**
+ * @param {string} urlkey
+ * @param {Config} config
+ */
+async function lookupProductSKU(urlkey, config) {
+  const query = getProductSKUQuery({ urlkey });
+  const resp = await fetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
+    headers: {
+      origin: 'https://api.adobecommerce.live',
+      'x-api-key': config.apiKey,
+      'Magento-Environment-Id': config.magentoEnvironmentId,
+      'Magento-Website-Code': config.magentoWebsiteCode,
+      'Magento-Store-View-Code': config.magentoStoreViewCode,
+    },
+  });
+  if (!resp.ok) {
+    console.warn('failed to fetch product sku: ', resp.status, resp.statusText);
+    throw errorWithResponse(resp.status, 'failed to fetch product sku');
+  }
+
+  const json = await resp.json();
+  try {
+    const [product] = json.data.products;
+    if (!product) {
+      throw errorWithResponse(404, 'could not find product sku', json.errors);
+    }
+    return product.sku;
+  } catch (e) {
+    console.error('failed to parse product sku: ', e);
+    throw errorWithResponse(500, 'failed to parse product sku response');
+  }
+}
+
+/**
  * @param {Context} ctx
  * @param {Config} config
  */
 async function handlePDPRequest(ctx, config) {
-  const { sku, urlkey } = config.params;
+  const { urlkey } = config.params;
+  let { sku } = config.params;
+
   if (!sku && !urlkey) {
     return errorResponse(404, 'missing sku or urlkey');
+  } else if (!sku && !config.coreEndpoint) {
+    return errorResponse(400, 'missing sku and coreEndpoint');
+  }
+
+  if (!sku) {
+    // lookup sku by urlkey with core
+    // TODO: test if livesearch if enabled
+    sku = await lookupProductSKU(urlkey, config);
   }
 
   // const product = await fetchProductCore({ sku }, config);
@@ -146,13 +190,13 @@ export default {
       return errorResponse(404, 'missing route');
     }
 
-    const overrides = Object.fromEntries(ctx.url.searchParams.entries());
-    const config = await resolveConfig(ctx, tenant, overrides);
-    if (!config) {
-      return errorResponse(404, 'config not found');
-    }
-
     try {
+      const overrides = Object.fromEntries(ctx.url.searchParams.entries());
+      const config = await resolveConfig(ctx, tenant, overrides);
+      if (!config) {
+        return errorResponse(404, 'config not found');
+      }
+
       return handlers[route](ctx, config);
     } catch (e) {
       if (e.response) {

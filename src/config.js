@@ -56,7 +56,8 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
   );
 
   // merge configs
-  return {
+  /** @type {Config} */
+  const resolved = {
     ...paths.reduce((conf, key) => ({
       ...conf,
       ...confMap[key],
@@ -70,4 +71,13 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
     }),
     ...overrides,
   };
+
+  // ensure validity
+  // TODO: make this more robust
+  if (!resolved.pageType) {
+    ctx.log.warn('invalid config for tenant (missing pageType)', tenant);
+    return null;
+  }
+
+  return resolved;
 }
