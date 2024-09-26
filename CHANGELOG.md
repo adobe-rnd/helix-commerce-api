@@ -1,3 +1,11 @@
+## [1.0.10](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.9...v1.0.10) (2024-09-26)
+
+
+### Bug Fixes
+
+* allow origin and catalog endpoints in config ([ee83a69](https://github.com/adobe-rnd/helix-commerce-api/commit/ee83a6966edfe9fac1bc48dadd006e6111d24764))
+* cleanup ([b2a0df7](https://github.com/adobe-rnd/helix-commerce-api/commit/b2a0df7a71dbd210c19b57cb0b0fe80c80988857))
+
 ## [1.0.9](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.8...v1.0.9) (2024-09-26)
 
 
