@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.10...v1.1.0) (2024-09-27)
+
+
+### Features
+
+* add variants ([0ac8163](https://github.com/adobe-rnd/helix-commerce-api/commit/0ac8163f6f52279d6f2ea1fc94a11c6e88c4309b))
+
 ## [1.0.10](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.9...v1.0.10) (2024-09-26)
 
 
