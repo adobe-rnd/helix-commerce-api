@@ -12,8 +12,8 @@
 // @ts-check
 
 import { errorResponse, errorWithResponse, makeContext } from './util.js';
-import getProductQueryCS, { adapter } from './queries/cs-product.js';
-import getProductQueryCore from './queries/core-product.js';
+import getProductQuery, { adapter as productAdapter } from './queries/cs-product.js';
+import getVariantsQuery, { adapter as variantsAdapter } from './queries/cs-variants.js';
 import getProductSKUQuery from './queries/core-product-sku.js';
 import HTML_TEMPLATE from './templates/html.js';
 import { resolveConfig } from './config.js';
@@ -22,9 +22,9 @@ import { resolveConfig } from './config.js';
  * @param {string} sku
  * @param {Config} config
  */
-async function fetchProductCS(sku, config) {
+async function fetchProduct(sku, config) {
   const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
-  const query = getProductQueryCS({ sku });
+  const query = getProductQuery({ sku });
   const resp = await fetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
@@ -49,7 +49,7 @@ async function fetchProductCS(sku, config) {
     if (!productData) {
       throw errorWithResponse(404, 'could not find product', json.errors);
     }
-    const product = adapter(productData);
+    const product = productAdapter(productData);
     return product;
   } catch (e) {
     console.error('failed to parse product: ', e);
@@ -58,17 +58,13 @@ async function fetchProductCS(sku, config) {
 }
 
 /**
- * @param {{ urlkey: string } | { sku: string }} opt
+ * @param {string} sku
  * @param {Config} config
  */
-// eslint-disable-next-line no-unused-vars
-async function fetchProductCore(opt, config) {
-  const query = getProductQueryCore(opt);
-  if (!config.coreEndpoint) {
-    throw errorWithResponse(400, 'coreEndpoint not configured');
-  }
-
-  const resp = await fetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
+async function fetchVariants(sku, config) {
+  const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
+  const query = getVariantsQuery(sku);
+  const resp = await fetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
@@ -79,23 +75,20 @@ async function fetchProductCore(opt, config) {
     },
   });
   if (!resp.ok) {
-    console.warn('failed to fetch product: ', resp.status, resp.statusText);
+    console.warn('failed to fetch variants: ', resp.status, resp.statusText);
     try {
       console.info('body: ', await resp.text());
     } catch { /* noop */ }
-    throw errorWithResponse(resp.status, 'failed to fetch product');
+    throw errorWithResponse(resp.status, 'failed to fetch variants');
   }
 
   const json = await resp.json();
   try {
-    const [product] = json.data.products.items;
-    if (!product) {
-      throw errorWithResponse(404, 'could not find product', json.errors);
-    }
-    return product;
+    const { variants } = json.data.variants;
+    return variantsAdapter(variants);
   } catch (e) {
-    console.error('failed to parse product: ', e);
-    throw errorWithResponse(500, 'failed to parse product response');
+    console.error('failed to parse variants: ', e);
+    throw errorWithResponse(500, 'failed to parse variants response');
   }
 }
 
@@ -105,6 +98,10 @@ async function fetchProductCore(opt, config) {
  */
 async function lookupProductSKU(urlkey, config) {
   const query = getProductSKUQuery({ urlkey });
+  if (!config.coreEndpoint) {
+    throw errorResponse(400, 'missing coreEndpoint');
+  }
+
   const resp = await fetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
@@ -124,7 +121,6 @@ async function lookupProductSKU(urlkey, config) {
   }
 
   const json = await resp.json();
-  console.log('json: ', JSON.stringify(json, undefined, 2));
   try {
     const [product] = json.data.products.items;
     if (!product) {
@@ -158,8 +154,11 @@ async function handlePDPRequest(ctx, config) {
   }
 
   // const product = await fetchProductCore({ sku }, config);
-  const product = await fetchProductCS(sku.toUpperCase(), config);
-  const html = HTML_TEMPLATE(product);
+  const [product, variants] = await Promise.all([
+    fetchProduct(sku.toUpperCase(), config),
+    fetchVariants(sku.toUpperCase(), config),
+  ]);
+  const html = HTML_TEMPLATE(product, variants);
   return new Response(html, {
     status: 200,
     headers: {
@@ -206,7 +205,7 @@ export default {
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
       const config = await resolveConfig(ctx, tenant, overrides);
-      console.debug('resolved config: ', JSON.stringify(config, undefined, 2));
+      console.debug('resolved config: ', JSON.stringify(config));
       if (!config) {
         return errorResponse(404, 'config not found');
       }

@@ -22,8 +22,9 @@ const metaContent = (name, content) => (content ? `<meta name="${name}" content=
 
 /**
  * @param {Product} product
+ * @param {Variant[]} variants
  */
-export default (product) => {
+export default (product, variants) => {
   const {
     sku,
     name,
@@ -64,7 +65,7 @@ export default (product) => {
       <script src="/scripts/scripts.js" type="module"></script>
       <link rel="stylesheet" href="/styles/styles.css">
       <script type="application/ld+json">
-        ${JSON_LD_TEMPLATE(product)}
+        ${JSON_LD_TEMPLATE(product, variants)}
       </script>
     </head>
     <body>

@@ -15,9 +15,10 @@ import { pruneUndefined } from '../util.js';
 
 /**
  * @param {Product} product
+ * @param {Variant[]} variants
  * @returns {string}
  */
-export default (product) => {
+export default (product, variants) => {
   const {
     sku,
     url,
@@ -44,9 +45,6 @@ export default (product) => {
     image,
     productID: sku,
     offers: [
-      /**
-       * TODO: add offers from variants, if `product.options[*].product.prices` exists
-       */
       {
         '@type': 'Offer',
         sku,
@@ -56,6 +54,16 @@ export default (product) => {
         price: prices.final.amount,
         priceCurrency: prices.final.currency,
       },
+      ...variants.map((v) => ({
+        '@type': 'Offer',
+        sku: v.sku,
+        url: v.url,
+        image: v.images?.[0]?.url,
+        availability: v.inStock ? 'InStock' : 'OutOfStock',
+        price: v.prices.final.amount,
+        priceCurrency: v.prices.final.currency,
+
+      })),
     ],
     ...(brandName
       ? {
