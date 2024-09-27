@@ -60,6 +60,14 @@ declare global {
     optionUIDs?: string[];
   }
 
+  export interface Variant {
+    sku: string;
+    url: string;
+    inStock: boolean;
+    images: Image[];
+    prices: Pick<Prices, 'regular' | 'final'>;
+  }
+
   interface Image {
     url: string;
     label: string;
