@@ -1,3 +1,11 @@
+## [1.1.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.1...v1.1.2) (2024-09-30)
+
+
+### Bug Fixes
+
+* allow slashes in path params ([7ff4f60](https://github.com/adobe-rnd/helix-commerce-api/commit/7ff4f60e6d9c56ac1b441796d3bbfeec3e77d360))
+* tweak config matching ([4a46c7c](https://github.com/adobe-rnd/helix-commerce-api/commit/4a46c7ccb17e48170a41c338c5a9c71366eca53f))
+
 ## [1.1.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.0...v1.1.1) (2024-09-30)
 
 
