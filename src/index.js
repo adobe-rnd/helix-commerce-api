@@ -25,6 +25,8 @@ import { resolveConfig } from './config.js';
 async function fetchProduct(sku, config) {
   const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
   const query = getProductQuery({ sku });
+  console.debug(query);
+
   const resp = await fetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
@@ -65,6 +67,8 @@ async function fetchProduct(sku, config) {
 async function fetchVariants(sku, config) {
   const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
   const query = getVariantsQuery(sku);
+  console.debug(query);
+
   const resp = await fetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
@@ -103,6 +107,7 @@ async function lookupProductSKU(urlkey, config) {
   if (!config.coreEndpoint) {
     throw errorResponse(400, 'missing coreEndpoint');
   }
+  console.debug(query);
 
   const resp = await fetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {

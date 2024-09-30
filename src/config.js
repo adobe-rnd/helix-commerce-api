@@ -25,9 +25,14 @@ function findOrderedMatches(patterns, path) {
     .sort((a, b) => a.length - b.length);
 }
 
+/**
+ * @param {string} pattern
+ * @param {string} path
+ * @returns {Record<string, string>}
+ */
 function extractPathParams(pattern, path) {
   // create a RegExp with named groups from the string contained in '{{}}'
-  const re = new RegExp(pattern.replace(/\{\{([^}]+)\}\}/g, '(?<$1>[^/]+)').replace(/\*/g, '([^/]+)'));
+  const re = new RegExp(pattern.replace(/\{\{([^}]+)\}\}/g, '(?<$1>[^{]+)').replace(/\*/g, '([^/]+)'));
   const match = path.match(re);
   return match ? match.groups : {};
 }
