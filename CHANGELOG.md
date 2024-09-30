@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.0...v1.1.1) (2024-09-30)
+
+
+### Bug Fixes
+
+* allow headers in config ([627a77c](https://github.com/adobe-rnd/helix-commerce-api/commit/627a77c54d0983e3430b48d36785951b5a565eb8))
+
 # [1.1.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.0.10...v1.1.0) (2024-09-27)
 
 
