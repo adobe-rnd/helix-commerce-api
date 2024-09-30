@@ -61,12 +61,17 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
     ...paths.reduce((conf, key) => ({
       ...conf,
       ...confMap[key],
+      headers: {
+        ...conf.headers,
+        ...(confMap[key]?.headers ?? {}),
+      },
       params: {
         ...conf.params,
         ...extractPathParams(key, suffix),
       },
     }), {
       ...(confMap.base ?? {}),
+      headers: confMap.base?.headers ?? {},
       params: {},
     }),
     ...overrides,
