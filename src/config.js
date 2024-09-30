@@ -17,7 +17,7 @@
 function findOrderedMatches(patterns, path) {
   return patterns
     .map((pattern) => {
-      const re = new RegExp(pattern.replace(/\{\{([^}]+)\}\}/g, '([^/]+)').replace(/\*/g, '([^/]+)'));
+      const re = new RegExp(pattern.replace(/\{\{([^}]+)\}\}/g, '([^{]+)').replace(/\*/g, '([^/]+)'));
       const match = path.match(re);
       return match ? pattern : null;
     })
