@@ -33,6 +33,7 @@ async function fetchProduct(sku, config) {
       'Magento-Website-Code': config.magentoWebsiteCode,
       'Magento-Store-View-Code': config.magentoStoreViewCode,
       'Magento-Store-Code': config.magentoStoreCode,
+      ...config.headers,
     },
   });
   if (!resp.ok) {
@@ -72,6 +73,7 @@ async function fetchVariants(sku, config) {
       'Magento-Website-Code': config.magentoWebsiteCode,
       'Magento-Store-View-Code': config.magentoStoreViewCode,
       'Magento-Store-Code': config.magentoStoreCode,
+      ...config.headers,
     },
   });
   if (!resp.ok) {
@@ -110,6 +112,7 @@ async function lookupProductSKU(urlkey, config) {
       'Magento-Website-Code': config.magentoWebsiteCode,
       'Magento-Store-View-Code': config.magentoStoreViewCode,
       'Magento-Store-Code': config.magentoStoreCode,
+      ...config.headers,
     },
   });
   if (!resp.ok) {

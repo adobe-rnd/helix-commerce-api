@@ -12,6 +12,7 @@ declare global {
     coreEndpoint: string;
     catalogEndpoint?: string;
     params: Record<string, string>;
+    headers: Record<string, string>;
   }
 
   export interface Env {

@@ -52,6 +52,39 @@ describe('config tests', () => {
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { urlkey: 'my-url-key', sku: 'some-sku' },
+      headers: {},
+      pageType: 'product',
+    });
+  });
+
+  it('should combine headers objects', async () => {
+    const tenantConfigs = {
+      'test-tenant': {
+        base: {
+          apiKey: 'bad',
+          headers: {
+            foo: '1',
+            baz: '1',
+          },
+        },
+        '/us/p/{{urlkey}}/{{sku}}': {
+          pageType: 'product',
+          apiKey: 'good',
+          headers: {
+            foo: '2',
+            bar: '2',
+          },
+        },
+      },
+    };
+    const config = await resolveConfig(
+      TEST_CONTEXT('/us/p/my-url-key/some-sku', tenantConfigs),
+      'test-tenant',
+    );
+    assert.deepStrictEqual(config, {
+      apiKey: 'good',
+      params: { urlkey: 'my-url-key', sku: 'some-sku' },
+      headers: { foo: '2', baz: '1', bar: '2' },
       pageType: 'product',
     });
   });
@@ -75,6 +108,7 @@ describe('config tests', () => {
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { sku: 'some-sku' },
+      headers: {},
       pageType: 'product',
     });
   });
@@ -100,6 +134,7 @@ describe('config tests', () => {
       apiKey: 'good',
       params: { sku: 'some-sku' },
       pageType: 'product',
+      headers: {},
     });
   });
 });
