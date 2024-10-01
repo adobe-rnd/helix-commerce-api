@@ -19,8 +19,18 @@ import HTML_TEMPLATE from './templates/html.js';
 import { resolveConfig } from './config.js';
 
 /** @type {import('@cloudflare/workers-types').fetch} */
-// @ts-ignore
-const ffetch = fetch;
+const ffetch = async (url, init) => {
+  // @ts-ignore
+  const resp = await fetch(url, init);
+  console.debug(JSON.stringify({
+    url,
+    status: resp.status,
+    statusText: resp.statusText,
+    headers: Object.fromEntries(resp.headers),
+  }));
+  // @ts-ignore
+  return resp;
+};
 
 /**
  * @param {string} sku
