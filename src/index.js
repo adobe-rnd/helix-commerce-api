@@ -18,6 +18,20 @@ import getProductSKUQuery from './queries/core-product-sku.js';
 import HTML_TEMPLATE from './templates/html.js';
 import { resolveConfig } from './config.js';
 
+/** @type {import('@cloudflare/workers-types').fetch} */
+const ffetch = async (url, init) => {
+  // @ts-ignore
+  const resp = await fetch(url, init);
+  console.debug({
+    url,
+    status: resp.status,
+    statusText: resp.statusText,
+    headers: Object.fromEntries(resp.headers),
+  });
+  // @ts-ignore
+  return resp;
+};
+
 /**
  * @param {string} sku
  * @param {Config} config
@@ -27,7 +41,7 @@ async function fetchProduct(sku, config) {
   const query = getProductQuery({ sku });
   console.debug(query);
 
-  const resp = await fetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.magentoStoreViewCode}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
@@ -36,6 +50,10 @@ async function fetchProduct(sku, config) {
       'Magento-Store-View-Code': config.magentoStoreViewCode,
       'Magento-Store-Code': config.magentoStoreCode,
       ...config.headers,
+    },
+    cf: {
+      cacheTtl: 0,
+      // TODO: use cache tags (including store view) and short but non-zero TTL
     },
   });
   if (!resp.ok) {
@@ -69,7 +87,7 @@ async function fetchVariants(sku, config) {
   const query = getVariantsQuery(sku);
   console.debug(query);
 
-  const resp = await fetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.magentoStoreViewCode}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
@@ -78,6 +96,9 @@ async function fetchVariants(sku, config) {
       'Magento-Store-View-Code': config.magentoStoreViewCode,
       'Magento-Store-Code': config.magentoStoreCode,
       ...config.headers,
+    },
+    cf: {
+      cacheTtl: 0,
     },
   });
   if (!resp.ok) {
@@ -109,7 +130,7 @@ async function lookupProductSKU(urlkey, config) {
   }
   console.debug(query);
 
-  const resp = await fetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
+  const resp = await ffetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
@@ -119,6 +140,7 @@ async function lookupProductSKU(urlkey, config) {
       'Magento-Store-Code': config.magentoStoreCode,
       ...config.headers,
     },
+    // don't disable cache, since it's unlikely to change
   });
   if (!resp.ok) {
     console.warn('failed to fetch product sku: ', resp.status, resp.statusText);
@@ -145,6 +167,7 @@ async function lookupProductSKU(urlkey, config) {
  * @param {Context} ctx
  * @param {Config} config
  */
+// @ts-ignore
 async function handlePDPRequest(ctx, config) {
   const { urlkey } = config.params;
   let { sku } = config.params;
