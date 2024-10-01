@@ -22,12 +22,12 @@ import { resolveConfig } from './config.js';
 const ffetch = async (url, init) => {
   // @ts-ignore
   const resp = await fetch(url, init);
-  console.debug(JSON.stringify({
+  console.debug({
     url,
     status: resp.status,
     statusText: resp.statusText,
     headers: Object.fromEntries(resp.headers),
-  }));
+  });
   // @ts-ignore
   return resp;
 };
@@ -41,7 +41,7 @@ async function fetchProduct(sku, config) {
   const query = getProductQuery({ sku });
   console.debug(query);
 
-  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.magentoStoreViewCode}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
@@ -87,7 +87,7 @@ async function fetchVariants(sku, config) {
   const query = getVariantsQuery(sku);
   console.debug(query);
 
-  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.magentoStoreViewCode}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
