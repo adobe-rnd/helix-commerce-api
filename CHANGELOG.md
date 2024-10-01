@@ -1,3 +1,12 @@
+## [1.1.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.2...v1.1.3) (2024-10-01)
+
+
+### Bug Fixes
+
+* add view code as query param ([d4dadb5](https://github.com/adobe-rnd/helix-commerce-api/commit/d4dadb584570390da3cc9f88fc2b95877832b8e9))
+* disable cache for catalog service calls ([14418b6](https://github.com/adobe-rnd/helix-commerce-api/commit/14418b62f2bf6ed8e4d8bdac616fe92e9755d161))
+* log subreq data ([89bb4de](https://github.com/adobe-rnd/helix-commerce-api/commit/89bb4dec78920f2f6c8f15b26014a6cf7c5ef802))
+
 ## [1.1.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.1...v1.1.2) (2024-09-30)
 
 
