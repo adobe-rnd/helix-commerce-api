@@ -76,6 +76,7 @@ export default (product, variants) => {
       <main>
         <div>
           <h1>${name}</h1>
+          ${description ? `<p>${description}</p>` : ''}
           <div class="product-images">
             <div>
 ${images.map((img) => `\
@@ -119,6 +120,25 @@ ${opt.items.map((item) => `\
                 <div>${item.inStock ? 'inStock' : ''}</div>
               </div>`).join('\n')}`).join('\n')}
           </div>
+
+          <div class="product-variants">
+${variants.map((v) => `\
+            <div>
+              <div>${v.id}</div>
+              <div>${v.sku}</div>
+              <div>${v.name}</div>
+              <div>${v.inStock ? 'inStock' : ''}</div>
+              <div>Regular: ${v.prices.regular.amount} ${v.prices.regular.currency} (${v.prices.regular.minimumAmount} - ${v.prices.regular.maximumAmount})</div>
+              <div>Final: ${v.prices.final.amount} ${v.prices.final.currency} (${v.prices.final.minimumAmount} - ${v.prices.final.maximumAmount})</div>
+              <div>${v.images.map((img) => `\
+                <picture>
+                  <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
+                  <source type="image/webp" srcset="${img.url}">
+                  <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
+                  <img loading="lazy" alt="${img.label}" src="${img.url}">
+                </picture>`).join('\n')}
+              </div>
+            </div>`).join('\n')}
         </div>
       </main>
       <footer></footer>
