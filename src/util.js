@@ -89,9 +89,9 @@ export function findProductImage(product, variants = []) {
   if (product.images?.length || !variants.length) {
     return product.images?.[0];
   }
-  const inStock = variants.find((v) => v.inStock);
+  const inStock = variants.find((v) => v.inStock && v.images?.length);
   if (inStock) {
-    return inStock[0].images[0];
+    return inStock.images[0];
   }
-  return variants[0].images[0];
+  return variants.find((v) => v.images?.length)?.images?.[0];
 }
