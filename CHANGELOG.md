@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.3...v1.1.4) (2024-10-03)
+
+
+### Bug Fixes
+
+* fallback to variant images on missing product images: ([#17](https://github.com/adobe-rnd/helix-commerce-api/issues/17)) ([d2bbb41](https://github.com/adobe-rnd/helix-commerce-api/commit/d2bbb4197ffd1c44439a46010115c013f777fb5e))
+
 ## [1.1.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.2...v1.1.3) (2024-10-01)
 
 
