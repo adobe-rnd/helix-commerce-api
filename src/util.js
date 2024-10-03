@@ -75,3 +75,23 @@ export function makeContext(pctx, req, env) {
 export function pruneUndefined(obj) {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
+
+/**
+ * Finds product image
+ * If product doesn't contain an image, finds first in-stock variant image
+ * If no in-stock variant, returns first variant image
+ *
+ * @param {Product} product
+ * @param {Variant[]} variants
+ * @returns {Product['images'][number]}
+ */
+export function findProductImage(product, variants) {
+  if (product.images.length || !variants.length) {
+    return product.images?.[0];
+  }
+  const inStock = variants.find((v) => v.inStock);
+  if (inStock) {
+    return inStock[0].images[0];
+  }
+  return variants[0].images[0];
+}
