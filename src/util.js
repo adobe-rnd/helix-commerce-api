@@ -82,11 +82,11 @@ export function pruneUndefined(obj) {
  * If no in-stock variant, returns first variant image
  *
  * @param {Product} product
- * @param {Variant[]} variants
+ * @param {Variant[]} [variants]
  * @returns {Product['images'][number]}
  */
-export function findProductImage(product, variants) {
-  if (product.images.length || !variants.length) {
+export function findProductImage(product, variants = []) {
+  if (product.images?.length || !variants.length) {
     return product.images?.[0];
   }
   const inStock = variants.find((v) => v.inStock);
