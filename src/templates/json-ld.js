@@ -11,7 +11,7 @@
  */
 // @ts-check
 
-import { pruneUndefined } from '../util.js';
+import { findProductImage, pruneUndefined } from '../util.js';
 
 /**
  * @param {Product} product
@@ -32,7 +32,7 @@ export default (product, variants) => {
     prices,
   } = product;
 
-  const image = images?.[0]?.url;
+  const image = images?.[0]?.url ?? findProductImage(product, variants)?.url;
   const brandName = attributes.find((attr) => attr.name === 'brand')?.value;
 
   return JSON.stringify(pruneUndefined({
@@ -58,7 +58,7 @@ export default (product, variants) => {
         '@type': 'Offer',
         sku: v.sku,
         url: v.url,
-        image: v.images?.[0]?.url,
+        image: v.images?.[0]?.url ?? image,
         availability: v.inStock ? 'InStock' : 'OutOfStock',
         price: v.prices.final.amount,
         priceCurrency: v.prices.final.currency,

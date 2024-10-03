@@ -11,6 +11,7 @@
  */
 // @ts-check
 
+import { findProductImage } from '../util.js';
 import JSON_LD_TEMPLATE from './json-ld.js';
 
 /**
@@ -32,14 +33,16 @@ export default (product, variants) => {
     metaTitle,
     metaDescription,
     description,
-    images,
     attributes,
     options,
     addToCartAllowed,
     inStock,
     metaKeyword,
     externalId,
+    images,
   } = product;
+
+  const image = findProductImage(product, variants);
 
   return /* html */`\
 <!DOCTYPE html>
@@ -48,12 +51,12 @@ export default (product, variants) => {
       <title>${metaTitle || name}</title>
       <meta property="description" content="${metaDescription || description}">
       <meta property="og:title" content="${metaTitle || name}">
-      <meta property="og:image" content="${images[0]?.url}">
-      <meta property="og:image:secure_url" content="${images[0]?.url}">
+      <meta property="og:image" content="${image?.url}">
+      <meta property="og:image:secure_url" content="${image?.url}">
       <meta property="og:type" content="og:product">
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:title" content="${metaTitle || name}">
-      <meta name="twitter:image" content="${images[0]?.url}">
+      <meta name="twitter:image" content="${image?.url}">
       <meta name="keywords" content="${metaKeyword}">
       <meta name="sku" content="${sku}">
       <meta name="urlKey" content="${urlKey}">
