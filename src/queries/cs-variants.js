@@ -28,7 +28,7 @@ export const adapter = (variants) => variants.map(({ product }) => {
     sku: product.sku,
     url: product.url,
     inStock: product.inStock,
-    images: product.images.images ?? [],
+    images: product.images ?? [],
     prices: {
       regular: {
         // TODO: determine whether to use min or max
