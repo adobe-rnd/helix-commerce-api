@@ -62,7 +62,9 @@ declare global {
   }
 
   export interface Variant {
+    id: string;
     sku: string;
+    name: string;
     url: string;
     inStock: boolean;
     images: Image[];

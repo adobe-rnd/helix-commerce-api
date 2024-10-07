@@ -23,6 +23,8 @@ export const adapter = (variants) => variants.map(({ product }) => {
 
   /** @type {Variant} */
   const variant = {
+    id: product.id,
+    name: product.name,
     sku: product.sku,
     url: product.url,
     inStock: product.inStock,
@@ -55,11 +57,13 @@ export default (sku) => gql`
   variants(sku: "${sku}") {
     variants {
       product {
+        id
+        name
         sku
-        url
         inStock
         images {
           url
+          label
         }
         ... on SimpleProductView {
           price {

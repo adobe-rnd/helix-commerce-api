@@ -1,4 +1,4 @@
-name = "adobe-commerce-api-dev"
+name = "adobe-commerce-api"
 main = "dist/index.mjs"
 compatibility_date = "2024-03-21"
 account_id = "852dfa4ae1b0d579df29be65b986c101"
