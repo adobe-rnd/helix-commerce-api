@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.4...v1.1.5) (2024-10-07)
+
+
+### Bug Fixes
+
+* add product-variants block, description para ([#18](https://github.com/adobe-rnd/helix-commerce-api/issues/18)) ([27632cd](https://github.com/adobe-rnd/helix-commerce-api/commit/27632cd578a1969af195d8d5fc5e21da26d39dd4))
+
 ## [1.1.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.3...v1.1.4) (2024-10-03)
 
 
