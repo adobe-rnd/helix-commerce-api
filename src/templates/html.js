@@ -85,7 +85,7 @@ export default (product, variants) => {
       <main>
         <div>
           <h1>${name}</h1>
-          ${description ? `<p>${description}</p>` : ''}
+          ${description ? `<div><p>${description}</p></div>` : ''}
           <div class="product-images">
             <div>
 ${images.map((img) => `\
