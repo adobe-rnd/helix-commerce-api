@@ -56,8 +56,8 @@ export default (product, variants) => {
       <meta property="og:image:secure_url" content="${image?.url}">
       <meta property="og:type" content="product">
       <meta property="product:availability" content="${inStock ? 'In stock' : 'Out of stock'}"/>
-      <meta property="product:price.amount" content="${prices.final.amount}">
-      <meta property="product:price.currency" content="${prices.final.currency}">
+      <meta property="product:price:amount" content="${prices.final.amount}">
+      <meta property="product:price:currency" content="${prices.final.currency}">
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:title" content="${metaTitle || name}">
       <meta name="twitter:image" content="${image?.url}">
