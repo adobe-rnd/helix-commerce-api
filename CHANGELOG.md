@@ -1,3 +1,10 @@
+## [1.1.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.7...v1.1.8) (2024-10-08)
+
+
+### Bug Fixes
+
+* consistent tag closure ([#21](https://github.com/adobe-rnd/helix-commerce-api/issues/21)) ([942b22e](https://github.com/adobe-rnd/helix-commerce-api/commit/942b22e02d7b542f1154180787da2fe13ce5a7ce))
+
 ## [1.1.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.6...v1.1.7) (2024-10-08)
 
 
