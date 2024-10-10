@@ -17,13 +17,12 @@ import { gql } from '../util.js';
  * @param {any} variants
  * @returns {Variant[]}
  */
-export const adapter = (variants) => variants.map(({ product }) => {
+export const adapter = (variants) => variants.map(({ selections, product }) => {
   const minPrice = product.priceRange?.minimum ?? product.price;
   const maxPrice = product.priceRange?.maximum ?? product.price;
 
   /** @type {Variant} */
   const variant = {
-    id: product.id,
     name: product.name,
     sku: product.sku,
     url: product.url,
@@ -45,6 +44,7 @@ export const adapter = (variants) => variants.map(({ product }) => {
         minimumAmount: minPrice.final.amount.value,
       },
     },
+    selections: selections ?? [],
   };
   return variant;
 });
@@ -56,8 +56,8 @@ export default (sku) => gql`
 {
   variants(sku: "${sku}") {
     variants {
+      selections
       product {
-        id
         name
         sku
         inStock

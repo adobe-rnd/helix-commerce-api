@@ -62,13 +62,13 @@ declare global {
   }
 
   export interface Variant {
-    id: string;
     sku: string;
     name: string;
     url: string;
     inStock: boolean;
     images: Image[];
     prices: Pick<Prices, 'regular' | 'final'>;
+    selections: string[];
   }
 
   interface Image {
