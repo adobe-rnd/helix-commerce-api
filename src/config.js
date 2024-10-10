@@ -60,7 +60,7 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
     suffix,
   );
 
-  const [owner = '', repo = ''] = tenant.split('--');
+  const [org = '', repo = ''] = tenant.split('--');
   // merge configs
   /** @type {Config} */
   const resolved = {
@@ -80,7 +80,7 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
       headers: confMap.base?.headers ?? {},
       params: {},
     }),
-    owner,
+    org,
     repo,
     ...overrides,
   };

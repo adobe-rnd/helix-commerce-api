@@ -25,7 +25,7 @@ const TEST_CONTEXT = (path, configMap) => ({
     },
   },
   log: console,
-  url: new URL(`https://www.example.com/owner--repo/content${path}`),
+  url: new URL(`https://www.example.com/org--repo/content${path}`),
   info: {
     method: 'GET',
     headers: {},
@@ -35,7 +35,7 @@ const TEST_CONTEXT = (path, configMap) => ({
 describe('config tests', () => {
   it('should extract path params', async () => {
     const tenantConfigs = {
-      'owner--repo': {
+      'org--repo': {
         base: {
           apiKey: 'bad',
         },
@@ -47,21 +47,21 @@ describe('config tests', () => {
     };
     const config = await resolveConfig(
       TEST_CONTEXT('/us/p/my-url-key/some-sku', tenantConfigs),
-      'owner--repo',
+      'org--repo',
     );
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { urlkey: 'my-url-key', sku: 'some-sku' },
       headers: {},
       pageType: 'product',
-      owner: 'owner',
+      org: 'org',
       repo: 'repo',
     });
   });
 
   it('should combine headers objects', async () => {
     const tenantConfigs = {
-      'owner--repo': {
+      'org--repo': {
         base: {
           apiKey: 'bad',
           headers: {
@@ -81,21 +81,21 @@ describe('config tests', () => {
     };
     const config = await resolveConfig(
       TEST_CONTEXT('/us/p/my-url-key/some-sku', tenantConfigs),
-      'owner--repo',
+      'org--repo',
     );
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { urlkey: 'my-url-key', sku: 'some-sku' },
       headers: { foo: '2', baz: '1', bar: '2' },
       pageType: 'product',
-      owner: 'owner',
+      org: 'org',
       repo: 'repo',
     });
   });
 
   it('should allow wildcard path segments', async () => {
     const tenantConfigs = {
-      'owner--repo': {
+      'org--repo': {
         base: {
           apiKey: 'bad',
         },
@@ -107,21 +107,21 @@ describe('config tests', () => {
     };
     const config = await resolveConfig(
       TEST_CONTEXT('/us/p/something-here/some-sku', tenantConfigs),
-      'owner--repo',
+      'org--repo',
     );
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { sku: 'some-sku' },
       headers: {},
       pageType: 'product',
-      owner: 'owner',
+      org: 'org',
       repo: 'repo',
     });
   });
 
   it('should allow overrides', async () => {
     const tenantConfigs = {
-      'owner--repo': {
+      'org--repo': {
         base: {
           apiKey: 'bad1',
         },
@@ -133,7 +133,7 @@ describe('config tests', () => {
     };
     const config = await resolveConfig(
       TEST_CONTEXT('/us/p/some-sku', tenantConfigs),
-      'owner--repo',
+      'org--repo',
       { apiKey: 'good' },
     );
     assert.deepStrictEqual(config, {
@@ -141,7 +141,7 @@ describe('config tests', () => {
       params: { sku: 'some-sku' },
       pageType: 'product',
       headers: {},
-      owner: 'owner',
+      org: 'org',
       repo: 'repo',
     });
   });
