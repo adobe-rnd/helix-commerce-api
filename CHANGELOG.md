@@ -1,3 +1,10 @@
+## [1.1.9](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.8...v1.1.9) (2024-10-10)
+
+
+### Bug Fixes
+
+* add variant selections, conditionally render price range ([#23](https://github.com/adobe-rnd/helix-commerce-api/issues/23)) ([440705c](https://github.com/adobe-rnd/helix-commerce-api/commit/440705c35dfd320ff84cd5591db73f6d39620ea6))
+
 ## [1.1.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.7...v1.1.8) (2024-10-08)
 
 
