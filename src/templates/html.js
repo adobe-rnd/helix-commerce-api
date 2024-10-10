@@ -22,6 +22,13 @@ import JSON_LD_TEMPLATE from './json-ld.js';
 const metaContent = (name, content) => (content ? `<meta name="${name}" content="${content}">` : '');
 
 /**
+ * @param {number|undefined} min
+ * @param {number|undefined} max
+ * @returns {string}
+ */
+const priceRange = (min, max) => (min !== max ? ` (${min} - ${max})` : '');
+
+/**
  * @param {Product} product
  * @param {Variant[]} variants
  */
@@ -133,13 +140,13 @@ ${opt.items.map((item) => `\
           <div class="product-variants">
 ${variants.map((v) => `\
             <div>
-              <div>${v.id}</div>
               <div>${v.sku}</div>
               <div>${v.name}</div>
               <div>${v.inStock ? 'inStock' : ''}</div>
-              <div>Regular: ${v.prices.regular.amount} ${v.prices.regular.currency} (${v.prices.regular.minimumAmount} - ${v.prices.regular.maximumAmount})</div>
-              <div>Final: ${v.prices.final.amount} ${v.prices.final.currency} (${v.prices.final.minimumAmount} - ${v.prices.final.maximumAmount})</div>
-              <div>${v.images.map((img) => `\
+              <div>Regular: ${v.prices.regular.amount} ${v.prices.regular.currency}${priceRange(v.prices.regular.minimumAmount, v.prices.regular.maximumAmount)}</div>
+              <div>Final: ${v.prices.final.amount} ${v.prices.final.currency}${priceRange(v.prices.final.minimumAmount, v.prices.final.maximumAmount)}</div>
+              <div>
+${v.images.map((img) => `\
                 <picture>
                   <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
                   <source type="image/webp" srcset="${img.url}">
@@ -147,6 +154,7 @@ ${variants.map((v) => `\
                   <img loading="lazy" alt="${img.label}" src="${img.url}">
                 </picture>`).join('\n')}
               </div>
+              <div>${v.selections.join(', ')}</div>
             </div>`).join('\n')}
         </div>
       </main>
