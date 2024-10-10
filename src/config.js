@@ -60,7 +60,8 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
     suffix,
   );
 
-  const [org = '', repo = ''] = tenant.split('--');
+  const [org, repo] = tenant.split('--');
+
   // merge configs
   /** @type {Config} */
   const resolved = {
