@@ -7,8 +7,8 @@ declare global {
     apiKey: string;
     magentoEnvironmentId: string;
     magentoWebsiteCode: string;
-    magentoStoreViewCode: string;
-    magentoStoreCode: string;
+    storeViewCode: string;
+    storeCode: string;
     coreEndpoint: string;
     catalogEndpoint?: string;
     params: Record<string, string>;

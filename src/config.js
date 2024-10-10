@@ -60,6 +60,8 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
     suffix,
   );
 
+  const [org, repo] = tenant.split('--');
+
   // merge configs
   /** @type {Config} */
   const resolved = {
@@ -79,9 +81,10 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
       headers: confMap.base?.headers ?? {},
       params: {},
     }),
+    org,
+    repo,
     ...overrides,
   };
-
   // ensure validity
   // TODO: make this more robust
   if (!resolved.pageType) {
