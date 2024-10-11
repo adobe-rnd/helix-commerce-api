@@ -51,12 +51,12 @@ export default (product, variants) => {
   } = product;
 
   const image = findProductImage(product, variants);
-
-  return /* html */`\
+  return /* html */`
 <!DOCTYPE html>
   <html>
     <head>
       <title>${metaTitle || name}</title>
+      <meta charset="UTF-8">
       <meta property="description" content="${metaDescription || description}">
       <meta property="og:title" content="${metaTitle || name}">
       <meta property="og:image" content="${image?.url}">
@@ -68,7 +68,7 @@ export default (product, variants) => {
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:title" content="${name}">
       <meta name="twitter:image" content="${image?.url}">
-      <meta name="twitter:description" content="${description}">
+      <meta name="twitter:description" content="${metaDescription || description}">
       <meta name="twitter:label1" content="Price">
       <meta name="twitter:data1" content="${prices.final.amount}">
       <meta name="twitter:label2" content="Availability">
@@ -95,7 +95,7 @@ export default (product, variants) => {
           ${description ? `<p>${description}</p>` : ''}
           <div class="product-images">
             <div>
-${images.map((img) => `\
+${images.map((img) => `
               <div>
                 <picture>
                   <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
@@ -108,7 +108,7 @@ ${images.map((img) => `\
           </div>
 
           <div class="product-attributes">
-${attributes.map((attr) => `\
+${attributes.map((attr) => `
             <div>
               <div>${attr.name}</div>
               <div>${attr.label}</div>
@@ -117,7 +117,7 @@ ${attributes.map((attr) => `\
           </div>
 
           <div class="product-options">
-${options.map((opt) => `\
+${options.map((opt) => `
             <div>
               <div>${opt.id}</div>
               <div>${opt.label}</div>
@@ -126,7 +126,7 @@ ${options.map((opt) => `\
               <div>${opt.multiple ? 'multiple' : ''}</div>
               <div>${opt.required === true ? 'required' : ''}</div>
             </div>
-${opt.items.map((item) => `\
+${opt.items.map((item) => `
               <div>
                 <div>option</div>
                 <div>${item.id}</div>
@@ -138,7 +138,7 @@ ${opt.items.map((item) => `\
           </div>
 
           <div class="product-variants">
-${variants.map((v) => `\
+${variants.map((v) => `
             <div>
               <div>${v.sku}</div>
               <div>${v.name}</div>
@@ -146,7 +146,7 @@ ${variants.map((v) => `\
               <div>Regular: ${v.prices.regular.amount} ${v.prices.regular.currency}${priceRange(v.prices.regular.minimumAmount, v.prices.regular.maximumAmount)}</div>
               <div>Final: ${v.prices.final.amount} ${v.prices.final.currency}${priceRange(v.prices.final.minimumAmount, v.prices.final.maximumAmount)}</div>
               <div>
-${v.images.map((img) => `\
+${v.images.map((img) => `
                 <picture>
                   <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
                   <source type="image/webp" srcset="${img.url}">
