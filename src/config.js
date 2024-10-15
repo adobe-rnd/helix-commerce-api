@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import { errorWithResponse } from './util.js';
+
 /**
  * @param {string[]} patterns
  * @param {string} path
@@ -43,13 +45,25 @@ function extractPathParams(pattern, path) {
  * @param {Partial<Config>} [overrides={}]
  * @returns {Promise<Config|null>}
  */
-export async function resolveConfig(ctx, tenant, overrides = {}) {
-  const confMap = await ctx.env.CONFIGS.get(tenant, 'json');
+export async function resolveConfig(ctx, overrides = {}) {
+  const [_, org, site, route] = ctx.url.pathname.split('/');
+  if (!org) {
+    throw errorWithResponse(404, 'missing org');
+  }
+  if (!site) {
+    throw errorWithResponse(404, 'missing site');
+  }
+  if (!route) {
+    throw errorWithResponse(404, 'missing route');
+  }
+
+  const siteKey = `${org}--${site}`;
+  const confMap = await ctx.env.CONFIGS.get(siteKey, 'json');
   if (!confMap) {
     return null;
   }
   if (typeof confMap !== 'object') {
-    ctx.log.warn('invalid config for tenant', tenant);
+    ctx.log.warn('invalid config for', siteKey);
     return null;
   }
 
@@ -59,8 +73,6 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
     Object.keys(confMap).filter((p) => p !== 'base'),
     suffix,
   );
-
-  const [org, repo] = tenant.split('--');
 
   // merge configs
   /** @type {Config} */
@@ -82,13 +94,14 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
       params: {},
     }),
     org,
-    repo,
+    site,
+    route,
     ...overrides,
   };
   // ensure validity
   // TODO: make this more robust
   if (!resolved.pageType) {
-    ctx.log.warn('invalid config for tenant (missing pageType)', tenant);
+    ctx.log.warn('invalid config for tenant site (missing pageType)', siteKey);
     return null;
   }
 

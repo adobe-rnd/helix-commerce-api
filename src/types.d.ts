@@ -2,6 +2,9 @@ import type { ExecutionContext, KVNamespace } from "@cloudflare/workers-types/ex
 
 declare global {
   export interface Config {
+    org: string;
+    site: string;
+    route: string;
     pageType: 'product' | string;
     origin?: string;
     apiKey: string;

@@ -225,23 +225,15 @@ export default {
       return errorResponse(405, 'method not allowed');
     }
 
-    const [_, tenant, route] = ctx.url.pathname.split('/');
-    if (!tenant) {
-      return errorResponse(404, 'missing tenant');
-    }
-    if (!route) {
-      return errorResponse(404, 'missing route');
-    }
-
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
-      const config = await resolveConfig(ctx, tenant, overrides);
+      const config = await resolveConfig(ctx, overrides);
       console.debug('resolved config: ', JSON.stringify(config));
       if (!config) {
         return errorResponse(404, 'config not found');
       }
 
-      return handlers[route](ctx, config);
+      return handlers[config.route](ctx, config);
     } catch (e) {
       if (e.response) {
         return e.response;
