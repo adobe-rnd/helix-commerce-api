@@ -41,14 +41,14 @@ async function fetchProduct(sku, config) {
   const query = getProductQuery({ sku });
   console.debug(query);
 
-  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.magentoStoreViewCode}`, {
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.storeViewCode}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
-      'Magento-Store-View-Code': config.magentoStoreViewCode,
-      'Magento-Store-Code': config.magentoStoreCode,
+      'Magento-Store-View-Code': config.storeViewCode,
+      'Magento-Store-Code': config.storeCode,
       ...config.headers,
     },
     cf: {
@@ -87,14 +87,14 @@ async function fetchVariants(sku, config) {
   const query = getVariantsQuery(sku);
   console.debug(query);
 
-  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.magentoStoreViewCode}`, {
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.storeViewCode}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
-      'Magento-Store-View-Code': config.magentoStoreViewCode,
-      'Magento-Store-Code': config.magentoStoreCode,
+      'Magento-Store-View-Code': config.storeViewCode,
+      'Magento-Store-Code': config.storeCode,
       ...config.headers,
     },
     cf: {
@@ -136,8 +136,8 @@ async function lookupProductSKU(urlkey, config) {
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
-      'Magento-Store-View-Code': config.magentoStoreViewCode,
-      'Magento-Store-Code': config.magentoStoreCode,
+      'Magento-Store-View-Code': config.storeViewCode,
+      'Magento-Store-Code': config.storeCode,
       ...config.headers,
     },
     // don't disable cache, since it's unlikely to change
@@ -225,23 +225,15 @@ export default {
       return errorResponse(405, 'method not allowed');
     }
 
-    const [_, tenant, route] = ctx.url.pathname.split('/');
-    if (!tenant) {
-      return errorResponse(404, 'missing tenant');
-    }
-    if (!route) {
-      return errorResponse(404, 'missing route');
-    }
-
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
-      const config = await resolveConfig(ctx, tenant, overrides);
+      const config = await resolveConfig(ctx, overrides);
       console.debug('resolved config: ', JSON.stringify(config));
       if (!config) {
         return errorResponse(404, 'config not found');
       }
 
-      return handlers[route](ctx, config);
+      return handlers[config.route](ctx, config);
     } catch (e) {
       if (e.response) {
         return e.response;
