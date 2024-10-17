@@ -108,8 +108,8 @@ export async function resolveConfig(ctx, overrides = {}) {
     // Ensure that there are exactly 4 segments after 'catalog' (env, store, storeView, product)
     if (catalogIndex !== -1 && pathSegments.length >= catalogIndex + 4) {
       resolved.env = pathSegments[catalogIndex + 1];
-      resolved.store = pathSegments[catalogIndex + 2];
-      resolved.storeView = pathSegments[catalogIndex + 3];
+      resolved.storeCode = pathSegments[catalogIndex + 2];
+      resolved.storeViewCode = pathSegments[catalogIndex + 3];
       resolved.subRoute = pathSegments[catalogIndex + 4];
       resolved.sku = pathSegments[catalogIndex + 5];
     } else {

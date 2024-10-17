@@ -18,6 +18,7 @@ import getProductSKUQuery from './queries/core-product-sku.js';
 import HTML_TEMPLATE from './templates/html.js';
 import { resolveConfig } from './config.js';
 import { handleProductGetRequest, handleProductPutRequest } from './catalog/product.js';
+import { loadProductFromR2 } from './utils/r2.js';
 
 const ALLOWED_METHODS = ['GET', 'PUT'];
 
@@ -171,7 +172,7 @@ async function lookupProductSKU(urlkey, config) {
  * @param {Config} config
  */
 // @ts-ignore
-async function handlePDPRequest(ctx, config) {
+async function handleMagentoPDPRequest(ctx, config) {
   const { urlkey } = config.params;
   let { sku } = config.params;
 
@@ -202,6 +203,30 @@ async function handlePDPRequest(ctx, config) {
 }
 
 /**
+ * @param {Context} ctx
+ * @param {Config} config
+ */
+// @ts-ignore
+async function handleHelixPDPRequest(ctx, config) {
+  const { urlkey } = config.params;
+  const { sku } = config.params;
+
+  if (!sku && !urlkey) {
+    return errorResponse(404, 'missing sku or urlkey');
+  }
+
+  config.env = 'prod';
+  const product = await loadProductFromR2(ctx, config, sku);
+  const html = HTML_TEMPLATE(product, product.variants);
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'content-type': 'text/html',
+    },
+  });
+}
+
+/**
  * @type {Record<string, (ctx: Context, config: Config, request: Request) => Promise<Response>>}
  */
 const handlers = {
@@ -209,7 +234,12 @@ const handlers = {
     if (config.pageType !== 'product') {
       return errorResponse(404, 'page type not supported');
     }
-    return handlePDPRequest(ctx, config);
+
+    if (config.catalogSource === 'helix') {
+      return handleHelixPDPRequest(ctx, config);
+    }
+
+    return handleMagentoPDPRequest(ctx, config);
   },
   catalog: async (ctx, config, request) => {
     if (ctx.info.method !== 'PUT' && ctx.info.method !== 'GET') {

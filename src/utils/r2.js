@@ -43,7 +43,7 @@ export async function getSyncTimestamp(ctx, config) {
 
 // Helper function to load product from R2 using SKU
 export async function loadProductFromR2(ctx, config, sku) {
-  const key = `${config.org}/${config.site}/${config.env}/${config.store}/${config.storeView}/${sku}.json`;
+  const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/${sku}.json`;
   const object = await ctx.env.CATALOG_BUCKET.get(key);
 
   if (!object) {
@@ -65,18 +65,18 @@ export async function saveProductsToR2(ctx, config, products) {
   const storeProductsBatch = async (batch) => {
     const storePromises = batch.map(async (product) => {
       try {
-        const { sku, name, url_key } = product;
-        const key = `${config.org}/${config.site}/${config.env}/${config.store}/${config.storeView}/${sku}.json`;
+        const { sku, name, urlKey } = product;
+        const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/${sku}.json`;
         const body = JSON.stringify(product);
-        const customMetadata = { sku, name, url_key };
+        const customMetadata = { sku, name, urlKey };
 
         const productPromise = ctx.env.CATALOG_BUCKET.put(key, body, {
           httpMetadata: { contentType: 'application/json' },
           customMetadata,
         });
 
-        if (url_key) {
-          const metadataKey = `${config.org}/${config.site}/${config.env}/${config.store}/${config.storeView}/urlkeys/${url_key}`;
+        if (urlKey) {
+          const metadataKey = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
           const metadataPromise = ctx.env.CATALOG_BUCKET.put(metadataKey, '', {
             httpMetadata: { contentType: 'application/octet-stream' },
             customMetadata,
@@ -103,14 +103,14 @@ export async function saveProductsToR2(ctx, config, products) {
 export async function listAllProducts(ctx, config) {
   const bucket = ctx.env.CATALOG_BUCKET;
 
-  console.log(`${config.org}/${config.site}/${config.env}/${config.store}/${config.storeView}/`);
-  const listResponse = await bucket.list({ prefix: `${config.org}/${config.site}/${config.env}/${config.store}/${config.storeView}/     ` });
+  console.log(`${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/`);
+  const listResponse = await bucket.list({ prefix: `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/` });
   const files = listResponse.objects;
 
   const batchSize = 50; // Define the batch size
   const customMetadataArray = [];
 
-  const excludeDirectory = `${config.org}/${config.site}/${config.env}/${config.store}/${config.storeView}/ urlkeys/`;
+  const excludeDirectory = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/ urlkeys/`;
 
   // Helper function to split the array into chunks of a specific size
   function chunkArray(array, size) {

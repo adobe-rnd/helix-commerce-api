@@ -149,12 +149,17 @@ export async function handleProductPutRequest(ctx, config, request) {
       for (const key of matchedKeys) {
         let path = key.replace('{{sku}}', product.sku);
 
-        if (key.includes('{{urlkey}}') && product.url_key) {
-          path = path.replace('{{urlkey}}', product.url_key);
+        if (key.includes('{{urlkey}}') && product.urlKey) {
+          path = path.replace('{{urlkey}}', product.urlKey);
         }
-
-        await callAdmin(config, 'preview', path);
-        await callAdmin(config, 'publish', path);
+        const previewResponse = await callAdmin(config, 'preview', path);
+        if (!previewResponse.ok) {
+          return errorResponse(400, 'failed to preview product');
+        }
+        const publishResponse = await callAdmin(config, 'publish', path);
+        if (!publishResponse.ok) {
+          return errorResponse(400, 'failed to publish product');
+        }
       }
     }
     return new Response(undefined, { status: 201 });

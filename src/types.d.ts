@@ -13,6 +13,7 @@ declare global {
     storeViewCode: string;
     storeCode: string;
     coreEndpoint: string;
+    catalogSource: string;
     catalogEndpoint?: string;
     sku?: string;
     confMap: Record<string, Config>;
