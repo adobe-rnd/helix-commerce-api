@@ -14,6 +14,8 @@ declare global {
     storeCode: string;
     coreEndpoint: string;
     catalogEndpoint?: string;
+    sku?: string;
+    confMap: Record<string, Config>;
     params: Record<string, string>;
     headers: Record<string, string>;
   }

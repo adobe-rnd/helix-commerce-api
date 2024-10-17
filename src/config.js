@@ -92,15 +92,34 @@ export async function resolveConfig(ctx, overrides = {}) {
       ...(confMap.base ?? {}),
       headers: confMap.base?.headers ?? {},
       params: {},
+      confMap,
     }),
     org,
     site,
     route,
     ...overrides,
   };
+
+  // If the route is catalog, get the environment from the path segment
+  if (route === 'catalog') {
+    const pathSegments = ctx.url.pathname.split('/');
+    const catalogIndex = pathSegments.indexOf('catalog');
+
+    // Ensure that there are exactly 4 segments after 'catalog' (env, store, storeView, product)
+    if (catalogIndex !== -1 && pathSegments.length >= catalogIndex + 4) {
+      resolved.env = pathSegments[catalogIndex + 1];
+      resolved.store = pathSegments[catalogIndex + 2];
+      resolved.storeView = pathSegments[catalogIndex + 3];
+      resolved.subRoute = pathSegments[catalogIndex + 4];
+      resolved.sku = pathSegments[catalogIndex + 5];
+    } else {
+      throw new Error('Invalid URL structure: Missing required segments after "catalog". Expected format: /catalog/{env}/{store}/{storeView}/{product}[/{sku}]');
+    }
+  }
+
   // ensure validity
   // TODO: make this more robust
-  if (!resolved.pageType) {
+  if (!resolved.pageType && route !== 'catalog') {
     ctx.log.warn('invalid config for tenant site (missing pageType)', siteKey);
     return null;
   }

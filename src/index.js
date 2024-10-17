@@ -17,6 +17,9 @@ import getVariantsQuery, { adapter as variantsAdapter } from './queries/cs-varia
 import getProductSKUQuery from './queries/core-product-sku.js';
 import HTML_TEMPLATE from './templates/html.js';
 import { resolveConfig } from './config.js';
+import { handleProductGetRequest, handleProductPutRequest } from './catalog/product.js';
+
+const ALLOWED_METHODS = ['GET', 'PUT'];
 
 /** @type {import('@cloudflare/workers-types').fetch} */
 const ffetch = async (url, init) => {
@@ -199,7 +202,7 @@ async function handlePDPRequest(ctx, config) {
 }
 
 /**
- * @type {Record<string, (ctx: Context, config: Config) => Promise<Response>>}
+ * @type {Record<string, (ctx: Context, config: Config, request: Request) => Promise<Response>>}
  */
 const handlers = {
   content: async (ctx, config) => {
@@ -207,6 +210,15 @@ const handlers = {
       return errorResponse(404, 'page type not supported');
     }
     return handlePDPRequest(ctx, config);
+  },
+  catalog: async (ctx, config, request) => {
+    if (ctx.info.method !== 'PUT' && ctx.info.method !== 'GET') {
+      return errorResponse(405, 'method not allowed');
+    }
+    if (ctx.info.method === 'PUT') {
+      return handleProductPutRequest(ctx, config, request);
+    }
+    return handleProductGetRequest(ctx, config);
   },
   // eslint-disable-next-line no-unused-vars
   graphql: async (ctx, config) => errorResponse(501, 'not implemented'),
@@ -221,7 +233,7 @@ export default {
    */
   async fetch(request, env, pctx) {
     const ctx = makeContext(pctx, request, env);
-    if (ctx.info.method !== 'GET') {
+    if (!ALLOWED_METHODS.includes(ctx.info.method)) {
       return errorResponse(405, 'method not allowed');
     }
 
@@ -233,7 +245,7 @@ export default {
         return errorResponse(404, 'config not found');
       }
 
-      return handlers[config.route](ctx, config);
+      return handlers[config.route](ctx, config, request);
     } catch (e) {
       if (e.response) {
         return e.response;
