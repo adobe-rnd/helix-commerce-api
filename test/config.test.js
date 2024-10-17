@@ -67,6 +67,15 @@ describe('config tests', () => {
       org: 'org',
       site: 'site',
       route: 'content',
+      confMap: {
+        '/us/p/{{urlkey}}/{{sku}}': {
+          apiKey: 'good',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
+        },
+      },
     });
   });
 
@@ -99,6 +108,23 @@ describe('config tests', () => {
       org: 'org',
       site: 'site',
       route: 'content',
+      confMap: {
+        '/us/p/{{urlkey}}/{{sku}}': {
+          apiKey: 'good',
+          headers: {
+            bar: '2',
+            foo: '2',
+          },
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
+          headers: {
+            baz: '1',
+            foo: '1',
+          },
+        },
+      },
     });
   });
 
@@ -123,6 +149,15 @@ describe('config tests', () => {
       org: 'org',
       site: 'site',
       route: 'content',
+      confMap: {
+        '/us/p/*/{{sku}}': {
+          apiKey: 'good',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
+        },
+      },
     });
   });
 
@@ -150,6 +185,15 @@ describe('config tests', () => {
       org: 'org',
       site: 'site',
       route: 'content',
+      confMap: {
+        '/us/p/{{sku}}': {
+          apiKey: 'bad2',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad1',
+        },
+      },
     });
   });
 
