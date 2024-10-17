@@ -57,6 +57,7 @@ export default (product, variants) => {
   <html>
     <head>
       <title>${metaTitle || name}</title>
+      <meta charset="UTF-8">
       <meta property="description" content="${metaDescription || description}">
       <meta property="og:title" content="${metaTitle || name}">
       <meta property="og:image" content="${image?.url}">
@@ -68,7 +69,7 @@ export default (product, variants) => {
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:title" content="${name}">
       <meta name="twitter:image" content="${image?.url}">
-      <meta name="twitter:description" content="${description}">
+      <meta name="twitter:description" content="${metaDescription || description}">
       <meta name="twitter:label1" content="Price">
       <meta name="twitter:data1" content="${prices.final.amount}">
       <meta name="twitter:label2" content="Availability">
