@@ -10,11 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
-import { gql } from '../util.js';
+import { gql } from '../../utils/product.js';
 
 /**
  * @param {{ urlkey?: string; sku?: string; }} param0
  */
+// @ts-ignore
 export default ({ urlkey, sku }) => gql`{
   products(
     filter: { ${urlkey ? 'url_key' : 'sku'}: { eq: "${urlkey ?? sku}" } }

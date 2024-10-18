@@ -2,15 +2,23 @@ import type { ExecutionContext, KVNamespace } from "@cloudflare/workers-types/ex
 
 declare global {
   export interface Config {
+    base: Partial<Config>;
+    org: string;
+    site: string;
+    route: string;
     pageType: 'product' | string;
     origin?: string;
     apiKey: string;
     magentoEnvironmentId: string;
     magentoWebsiteCode: string;
-    magentoStoreViewCode: string;
-    magentoStoreCode: string;
+    env:string;
+    storeViewCode: string;
+    storeCode: string;
     coreEndpoint: string;
+    catalogSource: string
     catalogEndpoint?: string;
+    sku?: string;
+    confMap: Record<string, Config>;
     params: Record<string, string>;
     headers: Record<string, string>;
   }
@@ -22,7 +30,7 @@ declare global {
     // KV namespaces
     CONFIGS: KVNamespace<string>;
 
-    [key: string]: string | KVNamespace<string>;
+    [key: string]: string | KVNamespace<string> | R2Bucket;
   }
 
   export interface Context extends ExecutionContext {
@@ -52,6 +60,7 @@ declare global {
     url?: string;
     urlKey?: string;
     externalId?: string;
+    variants?: Variant[]; // variants exist on products in helix commerce but not on magento
 
     // not handled currently:
     externalParentId?: string;

@@ -9,9 +9,8 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-// @ts-check
 
-import { findProductImage, pruneUndefined } from '../util.js';
+import { findProductImage, pruneUndefined } from '../utils/product.js';
 
 /**
  * @param {Product} product
@@ -33,7 +32,7 @@ export default (product, variants) => {
   } = product;
 
   const image = images?.[0]?.url ?? findProductImage(product, variants)?.url;
-  const brandName = attributes.find((attr) => attr.name === 'brand')?.value;
+  const brandName = attributes?.find((attr) => attr.name === 'brand')?.value;
 
   return JSON.stringify(pruneUndefined({
     '@context': 'http://schema.org',
@@ -51,8 +50,8 @@ export default (product, variants) => {
         url,
         image,
         availability: inStock ? 'InStock' : 'OutOfStock',
-        price: prices.final.amount,
-        priceCurrency: prices.final.currency,
+        price: prices?.final?.amount,
+        priceCurrency: prices?.final?.currency,
       },
       ...variants.map((v) => ({
         '@type': 'Offer',
@@ -60,8 +59,8 @@ export default (product, variants) => {
         url: v.url,
         image: v.images?.[0]?.url ?? image,
         availability: v.inStock ? 'InStock' : 'OutOfStock',
-        price: v.prices.final.amount,
-        priceCurrency: v.prices.final.currency,
+        price: v.prices?.final?.amount,
+        priceCurrency: v.prices?.final?.currency,
 
       })),
     ],

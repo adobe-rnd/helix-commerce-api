@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "NodeNext",   
+    "moduleResolution": "NodeNext",
+    "checkJs": true,
+    "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["types/*"],         
+      "@cloudflare/workers-types/*": ["node_modules/@cloudflare/workers-types/*"]
+    }
+  },
+  "include": [
+    "./**/*.js",
+    "./src/types.d.ts" 
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
