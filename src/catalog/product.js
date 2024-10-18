@@ -156,10 +156,10 @@ export async function handleProductPutRequest(ctx, config, request) {
         if (!previewResponse.ok) {
           return errorResponse(400, 'failed to preview product');
         }
-        const publishResponse = await callAdmin(config, 'publish', path);
-        if (!publishResponse.ok) {
-          return errorResponse(400, 'failed to publish product');
-        }
+        // const publishResponse = await callAdmin(config, 'publish', path);
+        // if (!publishResponse.ok) {
+        //   return errorResponse(400, 'failed to publish product');
+        // }
       }
     }
     return new Response(undefined, { status: 201 });
