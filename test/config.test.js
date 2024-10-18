@@ -16,26 +16,39 @@ import { resolveConfig } from '../src/config.js';
 /**
  * @param {string} path
  * @param {Record<string, Config>} configMap
+ * @param {string} [baseUrl='https://www.example.com/org/site/content']
  * @returns {Context}
  */
-const TEST_CONTEXT = (path, configMap) => ({
+const TEST_CONTEXT = (path, configMap, baseUrl = 'https://www.example.com/org/site/content') => ({
   env: {
     CONFIGS: {
       get: async (tenant) => configMap[tenant],
     },
   },
   log: console,
-  url: new URL(`https://www.example.com/tenant/content${path}`),
+  url: new URL(`${baseUrl}${path}`),
   info: {
     method: 'GET',
     headers: {},
   },
 });
 
+const defaultTenantConfigs = {
+  'org--site': {
+    base: {
+      apiKey: 'bad',
+    },
+    '/us/p/{{urlkey}}/{{sku}}': {
+      pageType: 'product',
+      apiKey: 'good',
+    },
+  },
+};
+
 describe('config tests', () => {
   it('should extract path params', async () => {
     const tenantConfigs = {
-      'test-tenant': {
+      'org--site': {
         base: {
           apiKey: 'bad',
         },
@@ -45,21 +58,30 @@ describe('config tests', () => {
         },
       },
     };
-    const config = await resolveConfig(
-      TEST_CONTEXT('/us/p/my-url-key/some-sku', tenantConfigs),
-      'test-tenant',
-    );
+    const config = await resolveConfig(TEST_CONTEXT('/us/p/my-url-key/some-sku', tenantConfigs));
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { urlkey: 'my-url-key', sku: 'some-sku' },
       headers: {},
       pageType: 'product',
+      org: 'org',
+      site: 'site',
+      route: 'content',
+      confMap: {
+        '/us/p/{{urlkey}}/{{sku}}': {
+          apiKey: 'good',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
+        },
+      },
     });
   });
 
   it('should combine headers objects', async () => {
     const tenantConfigs = {
-      'test-tenant': {
+      'org--site': {
         base: {
           apiKey: 'bad',
           headers: {
@@ -77,21 +99,38 @@ describe('config tests', () => {
         },
       },
     };
-    const config = await resolveConfig(
-      TEST_CONTEXT('/us/p/my-url-key/some-sku', tenantConfigs),
-      'test-tenant',
-    );
+    const config = await resolveConfig(TEST_CONTEXT('/us/p/my-url-key/some-sku', tenantConfigs));
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { urlkey: 'my-url-key', sku: 'some-sku' },
       headers: { foo: '2', baz: '1', bar: '2' },
       pageType: 'product',
+      org: 'org',
+      site: 'site',
+      route: 'content',
+      confMap: {
+        '/us/p/{{urlkey}}/{{sku}}': {
+          apiKey: 'good',
+          headers: {
+            bar: '2',
+            foo: '2',
+          },
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
+          headers: {
+            baz: '1',
+            foo: '1',
+          },
+        },
+      },
     });
   });
 
   it('should allow wildcard path segments', async () => {
     const tenantConfigs = {
-      'test-tenant': {
+      'org--site': {
         base: {
           apiKey: 'bad',
         },
@@ -101,21 +140,30 @@ describe('config tests', () => {
         },
       },
     };
-    const config = await resolveConfig(
-      TEST_CONTEXT('/us/p/something-here/some-sku', tenantConfigs),
-      'test-tenant',
-    );
+    const config = await resolveConfig(TEST_CONTEXT('/us/p/something-here/some-sku', tenantConfigs));
     assert.deepStrictEqual(config, {
       apiKey: 'good',
       params: { sku: 'some-sku' },
       headers: {},
       pageType: 'product',
+      org: 'org',
+      site: 'site',
+      route: 'content',
+      confMap: {
+        '/us/p/*/{{sku}}': {
+          apiKey: 'good',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
+        },
+      },
     });
   });
 
   it('should allow overrides', async () => {
     const tenantConfigs = {
-      'test-tenant': {
+      'org--site': {
         base: {
           apiKey: 'bad1',
         },
@@ -127,7 +175,6 @@ describe('config tests', () => {
     };
     const config = await resolveConfig(
       TEST_CONTEXT('/us/p/some-sku', tenantConfigs),
-      'test-tenant',
       { apiKey: 'good' },
     );
     assert.deepStrictEqual(config, {
@@ -135,6 +182,65 @@ describe('config tests', () => {
       params: { sku: 'some-sku' },
       pageType: 'product',
       headers: {},
+      org: 'org',
+      site: 'site',
+      route: 'content',
+      confMap: {
+        '/us/p/{{sku}}': {
+          apiKey: 'bad2',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad1',
+        },
+      },
     });
+  });
+
+  it('should throw if org is missing', async () => {
+    await assert.rejects(
+      resolveConfig(TEST_CONTEXT('', defaultTenantConfigs, 'http://www.example.com')),
+      new Error('missing org'),
+    );
+  });
+
+  it('should throw if site is missing', async () => {
+    await assert.rejects(
+      resolveConfig(TEST_CONTEXT('', defaultTenantConfigs, 'http://www.example.com/org')),
+      new Error('missing site'),
+    );
+  });
+
+  it('should throw if route is missing', async () => {
+    await assert.rejects(
+      resolveConfig(TEST_CONTEXT('', defaultTenantConfigs, 'http://www.example.com/org/site')),
+      new Error('missing route'),
+    );
+  });
+
+  it('should return null for invalid config', async () => {
+    const config = await resolveConfig(TEST_CONTEXT('/us/p/some-sku', {}));
+    assert.deepStrictEqual(config, null);
+  });
+
+  it('should return null if config is not an object', async () => {
+    const ctx = TEST_CONTEXT('/us/p/some-sku', {});
+    ctx.env.CONFIGS.get = async () => 'not an object';
+    const config = await resolveConfig(ctx);
+    assert.deepStrictEqual(config, null);
+  });
+
+  it('should log a warning if pageType is missing', async () => {
+    const tenantConfigs = {
+      'org--site': {
+        base: {
+          apiKey: 'good',
+        },
+        '/us/p/{{sku}}': {},
+      },
+    };
+    const ctx = TEST_CONTEXT('/us/p/some-sku', tenantConfigs);
+    const config = await resolveConfig(ctx);
+    assert.deepStrictEqual(config, null);
   });
 });

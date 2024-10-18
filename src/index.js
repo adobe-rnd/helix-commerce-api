@@ -17,6 +17,10 @@ import getVariantsQuery, { adapter as variantsAdapter } from './queries/cs-varia
 import getProductSKUQuery from './queries/core-product-sku.js';
 import HTML_TEMPLATE from './templates/html.js';
 import { resolveConfig } from './config.js';
+import { handleProductGetRequest, handleProductPutRequest } from './catalog/product.js';
+import { loadProductFromR2 } from './utils/r2.js';
+
+const ALLOWED_METHODS = ['GET', 'PUT'];
 
 /** @type {import('@cloudflare/workers-types').fetch} */
 const ffetch = async (url, init) => {
@@ -41,14 +45,14 @@ async function fetchProduct(sku, config) {
   const query = getProductQuery({ sku });
   console.debug(query);
 
-  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.magentoStoreViewCode}`, {
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.storeViewCode}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
-      'Magento-Store-View-Code': config.magentoStoreViewCode,
-      'Magento-Store-Code': config.magentoStoreCode,
+      'Magento-Store-View-Code': config.storeViewCode,
+      'Magento-Store-Code': config.storeCode,
       ...config.headers,
     },
     cf: {
@@ -87,14 +91,14 @@ async function fetchVariants(sku, config) {
   const query = getVariantsQuery(sku);
   console.debug(query);
 
-  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.magentoStoreViewCode}`, {
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.storeViewCode}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
-      'Magento-Store-View-Code': config.magentoStoreViewCode,
-      'Magento-Store-Code': config.magentoStoreCode,
+      'Magento-Store-View-Code': config.storeViewCode,
+      'Magento-Store-Code': config.storeCode,
       ...config.headers,
     },
     cf: {
@@ -136,8 +140,8 @@ async function lookupProductSKU(urlkey, config) {
       'x-api-key': config.apiKey,
       'Magento-Environment-Id': config.magentoEnvironmentId,
       'Magento-Website-Code': config.magentoWebsiteCode,
-      'Magento-Store-View-Code': config.magentoStoreViewCode,
-      'Magento-Store-Code': config.magentoStoreCode,
+      'Magento-Store-View-Code': config.storeViewCode,
+      'Magento-Store-Code': config.storeCode,
       ...config.headers,
     },
     // don't disable cache, since it's unlikely to change
@@ -168,7 +172,7 @@ async function lookupProductSKU(urlkey, config) {
  * @param {Config} config
  */
 // @ts-ignore
-async function handlePDPRequest(ctx, config) {
+async function handleMagentoPDPRequest(ctx, config) {
   const { urlkey } = config.params;
   let { sku } = config.params;
 
@@ -199,14 +203,52 @@ async function handlePDPRequest(ctx, config) {
 }
 
 /**
- * @type {Record<string, (ctx: Context, config: Config) => Promise<Response>>}
+ * @param {Context} ctx
+ * @param {Config} config
+ */
+// @ts-ignore
+async function handleHelixPDPRequest(ctx, config) {
+  const { urlkey } = config.params;
+  const { sku } = config.params;
+
+  if (!sku && !urlkey) {
+    return errorResponse(404, 'missing sku or urlkey');
+  }
+
+  config.env = 'prod';
+  const product = await loadProductFromR2(ctx, config, sku);
+  const html = HTML_TEMPLATE(product, product.variants);
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'content-type': 'text/html',
+    },
+  });
+}
+
+/**
+ * @type {Record<string, (ctx: Context, config: Config, request: Request) => Promise<Response>>}
  */
 const handlers = {
   content: async (ctx, config) => {
     if (config.pageType !== 'product') {
       return errorResponse(404, 'page type not supported');
     }
-    return handlePDPRequest(ctx, config);
+
+    if (config.catalogSource === 'helix') {
+      return handleHelixPDPRequest(ctx, config);
+    }
+
+    return handleMagentoPDPRequest(ctx, config);
+  },
+  catalog: async (ctx, config, request) => {
+    if (ctx.info.method !== 'PUT' && ctx.info.method !== 'GET') {
+      return errorResponse(405, 'method not allowed');
+    }
+    if (ctx.info.method === 'PUT') {
+      return handleProductPutRequest(ctx, config, request);
+    }
+    return handleProductGetRequest(ctx, config);
   },
   // eslint-disable-next-line no-unused-vars
   graphql: async (ctx, config) => errorResponse(501, 'not implemented'),
@@ -221,27 +263,19 @@ export default {
    */
   async fetch(request, env, pctx) {
     const ctx = makeContext(pctx, request, env);
-    if (ctx.info.method !== 'GET') {
+    if (!ALLOWED_METHODS.includes(ctx.info.method)) {
       return errorResponse(405, 'method not allowed');
-    }
-
-    const [_, tenant, route] = ctx.url.pathname.split('/');
-    if (!tenant) {
-      return errorResponse(404, 'missing tenant');
-    }
-    if (!route) {
-      return errorResponse(404, 'missing route');
     }
 
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
-      const config = await resolveConfig(ctx, tenant, overrides);
+      const config = await resolveConfig(ctx, overrides);
       console.debug('resolved config: ', JSON.stringify(config));
       if (!config) {
         return errorResponse(404, 'config not found');
       }
 
-      return handlers[route](ctx, config);
+      return handlers[config.route](ctx, config, request);
     } catch (e) {
       if (e.response) {
         return e.response;
