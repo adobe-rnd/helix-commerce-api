@@ -10,8 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-// @ts-check
-
 import { errorResponse } from './utils/http.js';
 import { resolveConfig } from './config.js';
 import contentHandler from './content/handler.js';

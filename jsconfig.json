@@ -1,22 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ES6",           // Or your desired ECMAScript target
+    "target": "ES6",
     "module": "NodeNext",   
     "moduleResolution": "NodeNext",
-    "checkJs": true,           // Enable type checking for JavaScript files
-    "allowJs": true,           // Allow JavaScript files to be compiled
-    "baseUrl": ".",            // Base directory for resolving non-absolute module names
+    "checkJs": true,
+    "allowJs": true,
+    "baseUrl": ".",
     "paths": {
       "*": ["types/*"],         
       "@cloudflare/workers-types/*": ["node_modules/@cloudflare/workers-types/*"]
     }
   },
   "include": [
-    "./**/*.js",               // Include all JavaScript files in your project
-    "./src/types.d.ts"        // Include your type definition files
+    "./**/*.js",
+    "./src/types.d.ts" 
   ],
   "exclude": [
-    "node_modules",            // Exclude node_modules directory
-    "dist"                     // Exclude distribution/build directory
+    "node_modules",
+    "dist"
   ]
 }

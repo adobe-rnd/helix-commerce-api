@@ -46,9 +46,6 @@ module.exports = {
     // parameters is definitely desirable
     'no-param-reassign': 'off',
 
-    // We use url_key in the catalog
-    camelcase: 'off',
-
     // Allow while (true) infinite loops
     // 'no-constant-condition': ['error', { checkLoops: false }],
 

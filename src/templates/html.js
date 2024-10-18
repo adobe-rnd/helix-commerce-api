@@ -9,7 +9,6 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-// @ts-check
 
 import { findProductImage } from '../utils/product.js';
 import JSON_LD_TEMPLATE from './json-ld.js';
