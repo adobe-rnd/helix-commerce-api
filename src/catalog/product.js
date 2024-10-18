@@ -152,7 +152,9 @@ export async function handleProductPutRequest(ctx, config, request) {
         if (key.includes('{{urlkey}}') && product.urlKey) {
           path = path.replace('{{urlkey}}', product.urlKey);
         }
-        const previewResponse = await callAdmin(config, 'preview', path);
+        const previewResponse = await callAdmin(config, 'preview', path, {
+          method: 'post',
+        });
         if (!previewResponse.ok) {
           return errorResponse(400, 'failed to preview product');
         }
