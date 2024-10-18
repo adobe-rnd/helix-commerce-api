@@ -11,7 +11,7 @@
  */
 // @ts-check
 
-import { findProductImage, pruneUndefined } from '../util.js';
+import { findProductImage, pruneUndefined } from '../utils/product.js';
 
 /**
  * @param {Product} product

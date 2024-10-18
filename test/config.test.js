@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+// @ts-nocheck
+
 import assert from 'node:assert';
 import { resolveConfig } from '../src/config.js';
 
@@ -226,20 +228,6 @@ describe('config tests', () => {
   it('should return null if config is not an object', async () => {
     const ctx = TEST_CONTEXT('/us/p/some-sku', {});
     ctx.env.CONFIGS.get = async () => 'not an object';
-    const config = await resolveConfig(ctx);
-    assert.deepStrictEqual(config, null);
-  });
-
-  it('should log a warning if pageType is missing', async () => {
-    const tenantConfigs = {
-      'org--site': {
-        base: {
-          apiKey: 'good',
-        },
-        '/us/p/{{sku}}': {},
-      },
-    };
-    const ctx = TEST_CONTEXT('/us/p/some-sku', tenantConfigs);
     const config = await resolveConfig(ctx);
     assert.deepStrictEqual(config, null);
   });

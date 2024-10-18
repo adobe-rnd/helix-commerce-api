@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { gql } from '../util.js';
+import { gql } from '../../utils/product.js';
 
 /**
  * @param {any} productData
@@ -87,6 +87,7 @@ export const adapter = (productData) => {
   return product;
 };
 
+// @ts-ignore
 export default ({ sku }) => gql`{
     products(
       skus: ["${sku}"]

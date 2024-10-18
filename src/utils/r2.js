@@ -10,45 +10,24 @@
  * governing permissions and limitations under the License.
  */
 
+import { errorWithResponse } from './http.js';
+
 /* eslint-disable no-await-in-loop */
 
-export async function setSyncTimestamp(ctx, config) {
-  const { log } = ctx;
-  const timestampKey = `${config.tenant}/${config.store}/.helix/last-sync.json`;
-  const timestampData = {
-    lastSyncDate: new Date().toISOString(),
-  };
-
-  await ctx.env.CATALOG_BUCKET.put(timestampKey, JSON.stringify(timestampData), {
-    httpMetadata: {
-      contentType: 'application/json',
-    },
-  });
-
-  log.debug('Set last sync timestamp', timestampData);
-  log.debug(`${config.tenant}/${config.store}/.helix/last-sync.json`);
-}
-
-export async function getSyncTimestamp(ctx, config) {
-  const timestampKey = `${config.tenant}/${config.store}/.helix/last-sync.json`;
-  const object = await ctx.env.CATALOG_BUCKET.get(timestampKey);
-
-  if (!object) {
-    return new Date(0);
-  }
-
-  const timestampData = await object.json();
-  return new Date(timestampData.lastSyncDate);
-}
-
-// Helper function to load product from R2 using SKU
+/**
+ * Load product from R2 using SKU
+ * @param {Context} ctx - The context object.
+ * @param {Config} config - The config object.
+ * @param {string} sku - The SKU of the product.
+ * @returns {Promise<Product>} - A promise that resolves to the product.
+ */
 export async function loadProductFromR2(ctx, config, sku) {
   const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/${sku}.json`;
   const object = await ctx.env.CATALOG_BUCKET.get(key);
 
   if (!object) {
     // Product not found in R2
-    return null;
+    throw errorWithResponse(404, 'Product not found');
   }
 
   // Convert the object to JSON and return
@@ -58,6 +37,13 @@ export async function loadProductFromR2(ctx, config, sku) {
   return JSON.parse(productData);
 }
 
+/**
+ * Save products to R2
+ * @param {Context} ctx - The context object.
+ * @param {Config} config - The config object.
+ * @param {Product[]} products - The products to save.
+ * @returns {Promise<void>} - A promise that resolves when the products are saved.
+ */
 export async function saveProductsToR2(ctx, config, products) {
   const { log } = ctx;
   const BATCH_SIZE = 50;
@@ -100,17 +86,42 @@ export async function saveProductsToR2(ctx, config, products) {
   }
 }
 
+/**
+ * Resolve SKU from a URL key
+ * @param {Context} ctx - The context object.
+ * @param {Config} config - The config object.
+ * @param {string} urlKey - The URL key.
+ * @returns {Promise<string>} - A promise that resolves to the SKU.
+ */
+export async function resolveSku(ctx, config, urlKey) {
+  // Make a HEAD request to retrieve the SKU from metadata based on the URL key
+  const urlKeyPath = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
+  const headResponse = await ctx.env.CATALOG_BUCKET.head(urlKeyPath);
+
+  if (!headResponse || !headResponse.customMetadata?.sku) {
+    // SKU not found for the provided URL key
+    throw errorWithResponse(404, 'Product not found');
+  }
+  // Return the resolved SKU
+  return headResponse.customMetadata.sku;
+}
+
+/**
+ * List all products from R2
+ * @param {Context} ctx - The context object.
+ * @param {Config} config - The config object.
+ * @returns {Promise<Product[]>} - A promise that resolves to the products.
+ */
 export async function listAllProducts(ctx, config) {
   const bucket = ctx.env.CATALOG_BUCKET;
 
-  console.log(`${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/`);
   const listResponse = await bucket.list({ prefix: `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/` });
   const files = listResponse.objects;
 
   const batchSize = 50; // Define the batch size
   const customMetadataArray = [];
 
-  const excludeDirectory = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/ urlkeys/`;
+  const excludeDirectory = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/urlkeys/`;
 
   // Helper function to split the array into chunks of a specific size
   function chunkArray(array, size) {
@@ -129,7 +140,7 @@ export async function listAllProducts(ctx, config) {
     // Run the requests for this chunk in parallel
     const chunkResults = await Promise.all(
       chunk
-        .filter((file) => !file.key.includes('last-sync.json') && !file.key.startsWith(excludeDirectory))
+        .filter((file) => !file.key.startsWith(excludeDirectory))
         .map(async (file) => {
           const objectKey = file.key;
 
@@ -138,15 +149,16 @@ export async function listAllProducts(ctx, config) {
 
           if (headResponse) {
             const { customMetadata } = headResponse;
-
+            const { sku } = customMetadata;
             return {
-              fileName: objectKey,
-              customMetadata: customMetadata || {},
+              ...customMetadata,
+              links: {
+                product: `${ctx.url.origin}/${config.org}/${config.site}/catalog/${config.env}/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
+              },
             };
           } else {
             return {
               fileName: objectKey,
-              customMetadata: {},
             };
           }
         }),

@@ -11,7 +11,7 @@
  */
 // @ts-check
 
-import { findProductImage } from '../util.js';
+import { findProductImage } from '../utils/product.js';
 import JSON_LD_TEMPLATE from './json-ld.js';
 
 /**
