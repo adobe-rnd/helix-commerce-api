@@ -10,36 +10,23 @@
  * governing permissions and limitations under the License.
  */
 
+/* eslint-disable no-await-in-loop */
+
 import { errorResponse } from '../utils/http.js';
-import { listAllProducts, fetchProduct, lookupSku } from '../utils/r2.js';
+import { fetchProduct } from '../utils/r2.js';
 
 /**
- * Handles a product lookup request.
- * @param {Context} ctx - The context object.
- * @param {Config} config - The configuration object.
+ * Handles a GET request for a product.
+ * @param {Context} ctx - The context object containing request information and utilities.
+ * @param {Config} config - The configuration object with application settings.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductLookupRequest(ctx, config) {
+export async function handleProductFetchRequest(ctx, config) {
   try {
-    const { search } = ctx.url;
-    const params = new URLSearchParams(search);
+    const sku = ctx.url.pathname.split('/').pop();
+    const product = await fetchProduct(ctx, config, sku);
 
-    if (params.has('urlKey')) {
-      const sku = await lookupSku(ctx, config, params.get('urlKey'));
-      const product = await fetchProduct(ctx, config, sku);
-      return new Response(JSON.stringify(product), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const products = await listAllProducts(ctx, config);
-
-    const response = {
-      total: products.length,
-      products,
-    };
-
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify(product), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (e) {

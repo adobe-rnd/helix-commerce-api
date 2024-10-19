@@ -12,7 +12,8 @@
 
 import { errorResponse } from '../utils/http.js';
 import { handleProductLookupRequest } from './lookup.js';
-import { handleProductGetRequest, handleProductPutRequest } from './product.js';
+import { handleProductFetchRequest } from './fetch.js';
+import { handleProductSaveRequest } from './update.js';
 
 const ALLOWED_METHODS = ['GET', 'PUT'];
 
@@ -24,15 +25,22 @@ const ALLOWED_METHODS = ['GET', 'PUT'];
  * @returns {Promise<Response>} - A promise that resolves to the catalog response.
  */
 export default async function catalogHandler(ctx, config, request) {
-  if (!ALLOWED_METHODS.includes(ctx.info.method)) {
+  const { method } = ctx.info;
+
+  // Split the pathname into segments and filter out empty strings
+  const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
+
+  if (!ALLOWED_METHODS.includes(method)) {
     return errorResponse(405, 'method not allowed');
   }
 
-  const pathSegments = ctx.url.pathname.split('/');
   const catalogIndex = pathSegments.indexOf('catalog');
+  if (catalogIndex === -1) {
+    return errorResponse(400, 'Invalid URL: Missing "catalog" segment');
+  }
 
   if (catalogIndex === -1 || pathSegments.length < catalogIndex + 5) {
-    throw new Error('Invalid URL structure: Expected format: /catalog/{env}/{store}/{storeView}/{product}[/{sku}]');
+    return errorResponse(400, 'Invalid URL structure: Expected format: /catalog/{env}/{store}/{storeView}/product/{sku}');
   }
 
   const [env, storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(catalogIndex + 1);
@@ -49,7 +57,7 @@ export default async function catalogHandler(ctx, config, request) {
   }
 
   if (ctx.info.method === 'PUT') {
-    return handleProductPutRequest(ctx, config, request);
+    return handleProductSaveRequest(ctx, config, request);
   }
-  return handleProductGetRequest(ctx, config);
+  return handleProductFetchRequest(ctx, config);
 }

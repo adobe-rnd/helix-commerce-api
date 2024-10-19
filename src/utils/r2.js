@@ -15,13 +15,13 @@ import { errorWithResponse } from './http.js';
 /* eslint-disable no-await-in-loop */
 
 /**
- * Load product from R2 using SKU
+ * Load product by SKU
  * @param {Context} ctx - The context object.
  * @param {Config} config - The config object.
  * @param {string} sku - The SKU of the product.
  * @returns {Promise<Product>} - A promise that resolves to the product.
  */
-export async function loadProductFromR2(ctx, config, sku) {
+export async function fetchProduct(ctx, config, sku) {
   const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/${sku}.json`;
   const object = await ctx.env.CATALOG_BUCKET.get(key);
 
@@ -38,13 +38,13 @@ export async function loadProductFromR2(ctx, config, sku) {
 }
 
 /**
- * Save products to R2
+ * Save products
  * @param {Context} ctx - The context object.
  * @param {Config} config - The config object.
  * @param {Product[]} products - The products to save.
  * @returns {Promise<void>} - A promise that resolves when the products are saved.
  */
-export async function saveProductsToR2(ctx, config, products) {
+export async function saveProducts(ctx, config, products) {
   const { log } = ctx;
   const BATCH_SIZE = 50;
 
@@ -93,7 +93,7 @@ export async function saveProductsToR2(ctx, config, products) {
  * @param {string} urlKey - The URL key.
  * @returns {Promise<string>} - A promise that resolves to the SKU.
  */
-export async function resolveSku(ctx, config, urlKey) {
+export async function lookupSku(ctx, config, urlKey) {
   // Make a HEAD request to retrieve the SKU from metadata based on the URL key
   const urlKeyPath = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
   const headResponse = await ctx.env.CATALOG_BUCKET.head(urlKeyPath);

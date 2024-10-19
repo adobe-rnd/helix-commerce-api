@@ -11,7 +11,7 @@
  */
 
 import { errorResponse } from '../utils/http.js';
-import { loadProductFromR2 } from '../utils/r2.js';
+import { fetchProduct } from '../utils/r2.js';
 import HTML_TEMPLATE from '../templates/html.js';
 
 export async function handle(ctx, config) {
@@ -23,7 +23,7 @@ export async function handle(ctx, config) {
   }
 
   config.env = 'prod';
-  const product = await loadProductFromR2(ctx, config, sku);
+  const product = await fetchProduct(ctx, config, sku);
   const html = HTML_TEMPLATE(product, product.variants);
   return new Response(html, {
     status: 200,
