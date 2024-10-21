@@ -12,12 +12,23 @@
 
 export const defaultTenantConfigs = {
   'org--site': {
-    base: {
-      apiKey: 'bad',
+    env: {
+      base: {
+        apiKey: 'bad',
+      },
+      '/us/p/{{urlkey}}/{{sku}}': {
+        pageType: 'product',
+        apiKey: 'good',
+      },
     },
-    '/us/p/{{urlkey}}/{{sku}}': {
-      pageType: 'product',
-      apiKey: 'good',
+    stage: {
+      base: {
+        apiKey: 'foo',
+      },
+      '/stage/us/p/{{urlkey}}/{{sku}}': {
+        pageType: 'product',
+        apiKey: 'bar',
+      },
     },
   },
 };

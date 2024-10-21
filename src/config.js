@@ -48,12 +48,15 @@ function extractPathParams(pattern, path) {
  * @returns {Promise<Config|null>} - A promise that resolves to the configuration.
  */
 export async function resolveConfig(ctx, overrides = {}) {
-  const [_, org, site, route] = ctx.url.pathname.split('/');
+  const [_, org, site, env, route] = ctx.url.pathname.split('/');
   if (!org) {
     throw errorWithResponse(404, 'missing org');
   }
   if (!site) {
     throw errorWithResponse(404, 'missing site');
+  }
+  if (!env) {
+    throw errorWithResponse(404, 'missing env');
   }
   if (!route) {
     throw errorWithResponse(404, 'missing route');
@@ -62,14 +65,23 @@ export async function resolveConfig(ctx, overrides = {}) {
   const siteKey = `${org}--${site}`;
 
   /**
-   * @type {Config}
+   * @type {ConfigEnvMap}
    */
-  const confMap = await ctx.env.CONFIGS.get(siteKey, 'json');
+  const confEnvMap = await ctx.env.CONFIGS.get(siteKey, 'json');
+  if (!confEnvMap) {
+    return null;
+  }
+  if (typeof confEnvMap !== 'object') {
+    ctx.log.warn('invalid config for ', siteKey);
+    return null;
+  }
+
+  const confMap = confEnvMap[env];
   if (!confMap) {
     return null;
   }
   if (typeof confMap !== 'object') {
-    ctx.log.warn('invalid config for', siteKey);
+    ctx.log.warn('invalid config for ', siteKey, env);
     return null;
   }
 
@@ -82,6 +94,7 @@ export async function resolveConfig(ctx, overrides = {}) {
 
   // merge configs
   /** @type {Config} */
+  // @ts-ignore
   const resolved = {
     ...paths.reduce((conf, key) => ({
       ...conf,
@@ -98,8 +111,8 @@ export async function resolveConfig(ctx, overrides = {}) {
       ...(confMap.base ?? {}),
       headers: confMap.base?.headers ?? {},
       params: {},
-      confMap,
     }),
+    confMap,
     org,
     site,
     route,

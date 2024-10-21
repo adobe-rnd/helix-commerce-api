@@ -10,10 +10,10 @@
  * governing permissions and limitations under the License.
  */
 
-export const TEST_CONTEXT = (path, configMap, baseUrl = 'https://www.example.com/org/site/content') => ({
+export const TEST_CONTEXT = (path, configMap, baseUrl = 'https://www.example.com/org/site/env/content') => ({
   env: {
     CONFIGS: {
-      get: async (tenant) => configMap[tenant],
+      get: async (id) => configMap[id],
     },
   },
   log: console,

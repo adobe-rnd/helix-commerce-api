@@ -17,16 +17,18 @@ import { resolveConfig } from '../src/config.js';
 import { TEST_CONTEXT } from './fixtures/context.js';
 import { defaultTenantConfigs } from './fixtures/kv.js';
 
-describe('config tests', () => {
+describe.only('config tests', () => {
   it('should extract path params', async () => {
     const tenantConfigs = {
       'org--site': {
-        base: {
-          apiKey: 'bad',
-        },
-        '/us/p/{{urlkey}}/{{sku}}': {
-          pageType: 'product',
-          apiKey: 'good',
+        env: {
+          base: {
+            apiKey: 'bad',
+          },
+          '/us/p/{{urlkey}}/{{sku}}': {
+            pageType: 'product',
+            apiKey: 'good',
+          },
         },
       },
     };
@@ -54,19 +56,21 @@ describe('config tests', () => {
   it('should combine headers objects', async () => {
     const tenantConfigs = {
       'org--site': {
-        base: {
-          apiKey: 'bad',
-          headers: {
-            foo: '1',
-            baz: '1',
+        env: {
+          base: {
+            apiKey: 'bad',
+            headers: {
+              foo: '1',
+              baz: '1',
+            },
           },
-        },
-        '/us/p/{{urlkey}}/{{sku}}': {
-          pageType: 'product',
-          apiKey: 'good',
-          headers: {
-            foo: '2',
-            bar: '2',
+          '/us/p/{{urlkey}}/{{sku}}': {
+            pageType: 'product',
+            apiKey: 'good',
+            headers: {
+              foo: '2',
+              bar: '2',
+            },
           },
         },
       },
@@ -103,12 +107,14 @@ describe('config tests', () => {
   it('should allow wildcard path segments', async () => {
     const tenantConfigs = {
       'org--site': {
-        base: {
-          apiKey: 'bad',
-        },
-        '/us/p/*/{{sku}}': {
-          pageType: 'product',
-          apiKey: 'good',
+        env: {
+          base: {
+            apiKey: 'bad',
+          },
+          '/us/p/*/{{sku}}': {
+            pageType: 'product',
+            apiKey: 'good',
+          },
         },
       },
     };
@@ -136,12 +142,14 @@ describe('config tests', () => {
   it('should allow overrides', async () => {
     const tenantConfigs = {
       'org--site': {
-        base: {
-          apiKey: 'bad1',
-        },
-        '/us/p/{{sku}}': {
-          pageType: 'product',
-          apiKey: 'bad2',
+        env: {
+          base: {
+            apiKey: 'bad1',
+          },
+          '/us/p/{{sku}}': {
+            pageType: 'product',
+            apiKey: 'bad2',
+          },
         },
       },
     };
@@ -183,9 +191,16 @@ describe('config tests', () => {
     );
   });
 
-  it('should throw if route is missing', async () => {
+  it('should throw if env is missing', async () => {
     await assert.rejects(
       resolveConfig(TEST_CONTEXT('', defaultTenantConfigs, 'http://www.example.com/org/site')),
+      new Error('missing env'),
+    );
+  });
+
+  it('should throw if route is missing', async () => {
+    await assert.rejects(
+      resolveConfig(TEST_CONTEXT('', defaultTenantConfigs, 'http://www.example.com/org/site/env')),
       new Error('missing route'),
     );
   });

@@ -1,8 +1,20 @@
 import type { ExecutionContext, KVNamespace } from "@cloudflare/workers-types/experimental";
 
 declare global {
+  /**
+   * { pathPattern => Config }
+   */
+  export type ConfigMap = Record<string, Config>;
+
+  /**
+   * { env => { pathPattern => Config } }
+   */
+  export type ConfigEnvMap = Record<string, ConfigMap>;
+
+  /**
+   * Resolved config object
+   */
   export interface Config {
-    base: Partial<Config>;
     org: string;
     site: string;
     route: string;
@@ -11,14 +23,14 @@ declare global {
     apiKey: string;
     magentoEnvironmentId: string;
     magentoWebsiteCode: string;
-    env:string;
+    env: string;
     storeViewCode: string;
     storeCode: string;
     coreEndpoint: string;
     catalogSource: string
     catalogEndpoint?: string;
     sku?: string;
-    confMap: Record<string, Config>;
+    confMap: ConfigMap;
     params: Record<string, string>;
     headers: Record<string, string>;
   }
