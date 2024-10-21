@@ -115,13 +115,11 @@ export async function lookupSku(ctx, config, urlKey) {
 export async function listAllProducts(ctx, config) {
   const bucket = ctx.env.CATALOG_BUCKET;
 
-  const listResponse = await bucket.list({ prefix: `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/` });
+  const listResponse = await bucket.list({ prefix: `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/products/` });
   const files = listResponse.objects;
 
   const batchSize = 50; // Define the batch size
   const customMetadataArray = [];
-
-  const excludeDirectory = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/urlkeys/`;
 
   // Helper function to split the array into chunks of a specific size
   function chunkArray(array, size) {
@@ -139,29 +137,27 @@ export async function listAllProducts(ctx, config) {
   for (const chunk of fileChunks) {
     // Run the requests for this chunk in parallel
     const chunkResults = await Promise.all(
-      chunk
-        .filter((file) => !file.key.startsWith(excludeDirectory))
-        .map(async (file) => {
-          const objectKey = file.key;
+      chunk.map(async (file) => {
+        const objectKey = file.key;
 
-          // Fetch the head response for each file
-          const headResponse = await bucket.head(objectKey);
+        // Fetch the head response for each file
+        const headResponse = await bucket.head(objectKey);
 
-          if (headResponse) {
-            const { customMetadata } = headResponse;
-            const { sku } = customMetadata;
-            return {
-              ...customMetadata,
-              links: {
-                product: `${ctx.url.origin}/${config.org}/${config.site}/catalog/${config.env}/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
-              },
-            };
-          } else {
-            return {
-              fileName: objectKey,
-            };
-          }
-        }),
+        if (headResponse) {
+          const { customMetadata } = headResponse;
+          const { sku } = customMetadata;
+          return {
+            ...customMetadata,
+            links: {
+              product: `${ctx.url.origin}/${config.org}/${config.site}/${config.env}/catalog/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
+            },
+          };
+        } else {
+          return {
+            fileName: objectKey,
+          };
+        }
+      }),
     );
 
     // Append the results of this chunk to the overall results array

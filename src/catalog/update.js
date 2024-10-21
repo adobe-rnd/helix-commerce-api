@@ -57,21 +57,26 @@ export async function handleProductSaveRequest(ctx, config, request) {
     const product = await putProduct(ctx, config, requestBody);
     const products = [product];
 
-    const matchedKeys = Object.keys(config.confMap)
-      .filter((key) => config.confMap[key].env === config.env);
+    const matchedPathPatterns = Object.entries(config.confEnvMap)
+      .reduce((acc, [env, confMap]) => {
+        if (env === config.env) {
+          acc.push(...Object.keys(confMap));
+        }
+        return acc;
+      }, []);
 
     for (const purgeProduct of products) {
-      for (const key of matchedKeys) {
-        let path = key.replace('{{sku}}', purgeProduct.sku);
+      for (const pattern of matchedPathPatterns) {
+        let path = pattern.replace('{{sku}}', purgeProduct.sku);
 
-        if (key.includes('{{urlkey}}') && purgeProduct.urlKey) {
+        if (path.includes('{{urlkey}}') && purgeProduct.urlKey) {
           path = path.replace('{{urlkey}}', purgeProduct.urlKey);
         }
 
-        for (const env of ['preview', 'live']) {
-          const response = await callAdmin(config, env, path, { method: 'post' });
+        for (const op of ['preview', 'live']) {
+          const response = await callAdmin(config, op, path, { method: 'post' });
           if (!response.ok) {
-            return errorResponse(400, `failed to ${env} product`);
+            return errorResponse(400, `failed to ${op} product`);
           }
         }
       }

@@ -14,6 +14,11 @@ import { errorResponse } from '../utils/http.js';
 import { fetchProduct } from '../utils/r2.js';
 import HTML_TEMPLATE from '../templates/html.js';
 
+/**
+ * @param {Context} ctx
+ * @param {Config} config
+ * @returns {Promise<Response>}
+ */
 export async function handle(ctx, config) {
   const { urlkey } = config.params;
   const { sku } = config.params;

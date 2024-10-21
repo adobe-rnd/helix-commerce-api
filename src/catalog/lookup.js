@@ -24,8 +24,9 @@ export async function handleProductLookupRequest(ctx, config) {
     const { search } = ctx.url;
     const params = new URLSearchParams(search);
 
-    if (params.has('urlKey')) {
-      const sku = await lookupSku(ctx, config, params.get('urlKey'));
+    if (params.has('urlKey') || params.has('urlkey')) {
+      const urlkey = params.get('urlKey') || params.get('urlkey');
+      const sku = await lookupSku(ctx, config, urlkey);
       const product = await fetchProduct(ctx, config, sku);
       return new Response(JSON.stringify(product), {
         headers: { 'Content-Type': 'application/json' },

@@ -12,15 +12,15 @@
 
 import { errorResponse } from './utils/http.js';
 import { resolveConfig } from './config.js';
-import contentHandler from './content/handler.js';
-import catalogHandler from './catalog/handler.js';
+import content from './content/handler.js';
+import catalog from './catalog/handler.js';
 
 /**
  * @type {Record<string, (ctx: Context, config: Config, request: Request) => Promise<Response>>}
  */
 const handlers = {
-  content: async (ctx, config) => contentHandler(ctx, config),
-  catalog: async (ctx, config, request) => catalogHandler(ctx, config, request),
+  content,
+  catalog,
   // eslint-disable-next-line no-unused-vars
   graphql: async (ctx, config) => errorResponse(501, 'not implemented'),
 };

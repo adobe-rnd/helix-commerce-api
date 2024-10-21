@@ -14,10 +14,10 @@
 
 import assert from 'node:assert';
 import { resolveConfig } from '../src/config.js';
-import { TEST_CONTEXT } from './fixtures/context.js';
-import { defaultTenantConfigs } from './fixtures/kv.js';
+import { TEST_CONTEXT } from './utils/context.js';
+import { defaultTenantConfigs } from './utils/kv.js';
 
-describe.only('config tests', () => {
+describe('config tests', () => {
   it('should extract path params', async () => {
     const tenantConfigs = {
       'org--site': {
@@ -40,14 +40,17 @@ describe.only('config tests', () => {
       pageType: 'product',
       org: 'org',
       site: 'site',
+      env: 'env',
       route: 'content',
-      confMap: {
-        '/us/p/{{urlkey}}/{{sku}}': {
-          apiKey: 'good',
-          pageType: 'product',
-        },
-        base: {
-          apiKey: 'bad',
+      confEnvMap: {
+        env: {
+          '/us/p/{{urlkey}}/{{sku}}': {
+            apiKey: 'good',
+            pageType: 'product',
+          },
+          base: {
+            apiKey: 'bad',
+          },
         },
       },
     });
@@ -83,21 +86,24 @@ describe.only('config tests', () => {
       pageType: 'product',
       org: 'org',
       site: 'site',
+      env: 'env',
       route: 'content',
-      confMap: {
-        '/us/p/{{urlkey}}/{{sku}}': {
-          apiKey: 'good',
-          headers: {
-            bar: '2',
-            foo: '2',
+      confEnvMap: {
+        env: {
+          '/us/p/{{urlkey}}/{{sku}}': {
+            apiKey: 'good',
+            headers: {
+              bar: '2',
+              foo: '2',
+            },
+            pageType: 'product',
           },
-          pageType: 'product',
-        },
-        base: {
-          apiKey: 'bad',
-          headers: {
-            baz: '1',
-            foo: '1',
+          base: {
+            apiKey: 'bad',
+            headers: {
+              baz: '1',
+              foo: '1',
+            },
           },
         },
       },
@@ -126,14 +132,17 @@ describe.only('config tests', () => {
       pageType: 'product',
       org: 'org',
       site: 'site',
+      env: 'env',
       route: 'content',
-      confMap: {
-        '/us/p/*/{{sku}}': {
-          apiKey: 'good',
-          pageType: 'product',
-        },
-        base: {
-          apiKey: 'bad',
+      confEnvMap: {
+        env: {
+          '/us/p/*/{{sku}}': {
+            apiKey: 'good',
+            pageType: 'product',
+          },
+          base: {
+            apiKey: 'bad',
+          },
         },
       },
     });
@@ -164,14 +173,17 @@ describe.only('config tests', () => {
       headers: {},
       org: 'org',
       site: 'site',
+      env: 'env',
       route: 'content',
-      confMap: {
-        '/us/p/{{sku}}': {
-          apiKey: 'bad2',
-          pageType: 'product',
-        },
-        base: {
-          apiKey: 'bad1',
+      confEnvMap: {
+        env: {
+          '/us/p/{{sku}}': {
+            apiKey: 'bad2',
+            pageType: 'product',
+          },
+          base: {
+            apiKey: 'bad1',
+          },
         },
       },
     });

@@ -150,8 +150,8 @@ async function lookupProductSKU(urlkey, config) {
 /**
  * @param {Context} ctx
  * @param {Config} config
+ * @returns {Promise<Response>}
  */
-// @ts-ignore
 export async function handle(ctx, config) {
   const { urlkey } = config.params;
   let { sku } = config.params;

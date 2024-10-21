@@ -9,6 +9,7 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
+
 import { strict as assert } from 'assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
@@ -84,7 +85,12 @@ describe('Product Save Tests', () => {
     it('should return 201 when product is successfully saved and paths are purged', async () => {
       const config = {
         sku: '1234',
-        confMap: { '/path/to/{{sku}}': { env: 'test' }, '/path/to/{{urlkey}}/{{sku}}': { env: 'test' } },
+        confEnvMap: {
+          test: {
+            '/path/to/{{sku}}': { env: 'test' },
+            '/path/to/{{urlkey}}/{{sku}}': { env: 'test' },
+          },
+        },
         env: 'test',
       };
       const ctx = { log: { error: sinon.stub() } };
@@ -103,7 +109,11 @@ describe('Product Save Tests', () => {
     it('should skip calling callAdmin when confMap has no matching keys', async () => {
       const config = {
         sku: '1234',
-        confMap: { '/path/to/{{sku}}': { env: 'other-env' } },
+        confEnvMap: {
+          'other-env': {
+            '/path/to/{{sku}}': { env: 'other-env' },
+          },
+        },
         env: 'test',
       };
       const ctx = { log: { error: sinon.stub() } };
@@ -119,7 +129,11 @@ describe('Product Save Tests', () => {
     it('should return error when callAdmin fails', async () => {
       const config = {
         sku: '1234',
-        confMap: { '/path/to/{{sku}}': { env: 'test' } },
+        confEnvMap: {
+          test: {
+            '/path/to/{{sku}}': { env: 'test' },
+          },
+        },
         env: 'test',
       };
       const ctx = { log: { error: sinon.stub() } };
@@ -140,7 +154,7 @@ describe('Product Save Tests', () => {
     });
 
     it('should return 400 if request.json throws a JSON parsing error', async () => {
-      const config = { sku: '1234', confMap: {} };
+      const config = { sku: '1234', confEnvMap: {} };
       const ctx = { log: { error: sinon.stub() } };
       const request = { json: sinon.stub().rejects(new Error('Unexpected token < in JSON at position 0')) };
 

@@ -42,7 +42,7 @@ describe('catalogHandler Tests', () => {
   it('should return 405 when method is not allowed', async () => {
     const ctx = {
       info: { method: 'DELETE' },
-      url: { pathname: '/catalog/stage/store/view/product/sku' },
+      url: { pathname: '/org/site/env/catalog/store/view/product/sku' },
     };
     const config = {};
     const request = {};
@@ -59,7 +59,7 @@ describe('catalogHandler Tests', () => {
   it('should return 400 when URL is missing "catalog" segment', async () => {
     const ctx = {
       info: { method: 'GET' },
-      url: { pathname: '/store/view/product/sku' },
+      url: { pathname: '/org/site/env/store/view/product/sku' },
     };
     const config = {};
     const request = {};
@@ -76,7 +76,7 @@ describe('catalogHandler Tests', () => {
   it('should return 400 when URL structure is incorrect', async () => {
     const ctx = {
       info: { method: 'GET' },
-      url: { pathname: '/catalog/stage/store/view' },
+      url: { pathname: '/org/site/env/catalog/store/view' },
     };
     const config = {};
     const request = {};
@@ -87,13 +87,13 @@ describe('catalogHandler Tests', () => {
     const response = await catalogHandler(ctx, config, request);
 
     assert.equal(response.status, 400);
-    assert(errorResponseStub.calledWith(400, 'Invalid URL structure: Expected format: /catalog/{env}/{store}/{storeView}/product/{sku}'));
+    assert(errorResponseStub.calledWith(400, 'Invalid URL structure: Expected format: /{org}/{site}/{env}/catalog/{store}/{storeView}/product/{sku}'));
   });
 
   it('should call handleProductLookupRequest when method is GET and subRoute is "lookup"', async () => {
     const ctx = {
       info: { method: 'GET' },
-      url: { pathname: '/catalog/stage/store/view/lookup/sku' },
+      url: { pathname: '/org/site/env/catalog/store/view/lookup/sku' },
     };
     const config = {};
     const request = {};
@@ -110,7 +110,7 @@ describe('catalogHandler Tests', () => {
   it('should return 405 if subRoute is "lookup" but method is not GET', async () => {
     const ctx = {
       info: { method: 'PUT' },
-      url: { pathname: '/catalog/stage/store/view/lookup/sku' },
+      url: { pathname: '/org/site/env/catalog/store/view/lookup/sku' },
     };
     const config = {};
     const request = {};
@@ -127,7 +127,7 @@ describe('catalogHandler Tests', () => {
   it('should call handleProductSaveRequest when method is PUT and subRoute is not "lookup"', async () => {
     const ctx = {
       info: { method: 'PUT' },
-      url: { pathname: '/catalog/stage/store/view/product/sku' },
+      url: { pathname: '/org/site/stage/catalog/store/view/product/sku' },
     };
     const config = {};
     const request = {};
@@ -144,7 +144,7 @@ describe('catalogHandler Tests', () => {
   it('should call handleProductFetchRequest when method is GET and subRoute is not "lookup"', async () => {
     const ctx = {
       info: { method: 'GET' },
-      url: { pathname: '/catalog/stage/store/view/product/sku' },
+      url: { pathname: '/org/site/stage/catalog/store/view/product/sku' },
     };
     const config = {};
     const request = {};

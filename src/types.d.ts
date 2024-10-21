@@ -30,7 +30,7 @@ declare global {
     catalogSource: string
     catalogEndpoint?: string;
     sku?: string;
-    confMap: ConfigMap;
+    confEnvMap: ConfigEnvMap;
     params: Record<string, string>;
     headers: Record<string, string>;
   }

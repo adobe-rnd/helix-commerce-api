@@ -39,14 +39,14 @@ export default async function catalogHandler(ctx, config, request) {
     return errorResponse(400, 'Invalid URL: Missing "catalog" segment');
   }
 
-  if (catalogIndex === -1 || pathSegments.length < catalogIndex + 5) {
-    return errorResponse(400, 'Invalid URL structure: Expected format: /catalog/{env}/{store}/{storeView}/product/{sku}');
+  if (pathSegments.length < catalogIndex + 4) {
+    return errorResponse(400, 'Invalid URL structure: Expected format: /{org}/{site}/{env}/catalog/{store}/{storeView}/product/{sku}');
   }
 
-  const [env, storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(catalogIndex + 1);
+  const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(catalogIndex + 1);
 
   Object.assign(config, {
-    env, storeCode, storeViewCode, subRoute, sku,
+    storeCode, storeViewCode, subRoute, sku,
   });
 
   if (subRoute === 'lookup') {

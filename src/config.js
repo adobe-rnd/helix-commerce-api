@@ -112,9 +112,10 @@ export async function resolveConfig(ctx, overrides = {}) {
       headers: confMap.base?.headers ?? {},
       params: {},
     }),
-    confMap,
+    confEnvMap,
     org,
     site,
+    env,
     route,
     ...overrides,
   };

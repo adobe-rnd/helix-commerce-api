@@ -62,6 +62,26 @@ describe('handleProductLookupRequest Tests', () => {
     assert(fetchProductStub.calledOnceWith(ctx, config, '1234'));
   });
 
+  it('should return a product when urlkey is provided', async () => {
+    const ctx = {
+      url: { search: '?urlkey=some-url-key' },
+      log: { error: sinon.stub() },
+    };
+    const config = {};
+
+    lookupSkuStub.resolves('1234');
+    fetchProductStub.resolves({ sku: '1234', name: 'Test Product' });
+
+    const response = await handleProductLookupRequest(ctx, config);
+
+    assert.equal(response.status, 200);
+    const responseBody = await response.json();
+    assert.deepEqual(responseBody, { sku: '1234', name: 'Test Product' });
+
+    assert(lookupSkuStub.calledOnceWith(ctx, config, 'some-url-key'));
+    assert(fetchProductStub.calledOnceWith(ctx, config, '1234'));
+  });
+
   it('should return a list of all products when no urlKey is provided', async () => {
     const ctx = {
       url: { search: '' },

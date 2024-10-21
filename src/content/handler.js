@@ -16,6 +16,11 @@ import { handle as handleHelixCommerce } from './helix-commerce.js';
 
 const ALLOWED_METHODS = ['GET'];
 
+/**
+ * @param {Context} ctx
+ * @param {Config} config
+ * @returns {Promise<Response>}
+ */
 export default async function contentHandler(ctx, config) {
   if (!ALLOWED_METHODS.includes(ctx.info.method)) {
     return errorResponse(405, 'method not allowed');
