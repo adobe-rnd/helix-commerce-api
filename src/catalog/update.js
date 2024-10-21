@@ -23,7 +23,7 @@ import { saveProducts } from '../utils/r2.js';
  * @param {Object} product - The product object to be saved.
  * @returns {Promise<Object>} - A promise that resolves to the saved product.
  */
-async function putProduct(ctx, config, product) {
+export async function putProduct(ctx, config, product) {
   if (!product.sku) {
     throw errorWithResponse(400, 'invalid request body: missing sku');
   }
@@ -41,7 +41,14 @@ async function putProduct(ctx, config, product) {
  */
 export async function handleProductSaveRequest(ctx, config, request) {
   try {
-    const requestBody = await request.json();
+    let requestBody;
+
+    try {
+      requestBody = await request.json();
+    } catch (jsonError) {
+      ctx.log.error('Invalid JSON in request body:', jsonError);
+      return errorResponse(400, 'invalid JSON');
+    }
 
     if (config.sku === '*') {
       return errorResponse(501, 'not implemented');

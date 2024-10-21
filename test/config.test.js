@@ -14,38 +14,8 @@
 
 import assert from 'node:assert';
 import { resolveConfig } from '../src/config.js';
-
-/**
- * @param {string} path
- * @param {Record<string, Config>} configMap
- * @param {string} [baseUrl='https://www.example.com/org/site/content']
- * @returns {Context}
- */
-const TEST_CONTEXT = (path, configMap, baseUrl = 'https://www.example.com/org/site/content') => ({
-  env: {
-    CONFIGS: {
-      get: async (tenant) => configMap[tenant],
-    },
-  },
-  log: console,
-  url: new URL(`${baseUrl}${path}`),
-  info: {
-    method: 'GET',
-    headers: {},
-  },
-});
-
-const defaultTenantConfigs = {
-  'org--site': {
-    base: {
-      apiKey: 'bad',
-    },
-    '/us/p/{{urlkey}}/{{sku}}': {
-      pageType: 'product',
-      apiKey: 'good',
-    },
-  },
-};
+import { TEST_CONTEXT } from './fixtures/context.js';
+import { defaultTenantConfigs } from './fixtures/kv.js';
 
 describe('config tests', () => {
   it('should extract path params', async () => {
