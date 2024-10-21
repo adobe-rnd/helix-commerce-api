@@ -22,7 +22,7 @@ import { errorWithResponse } from './http.js';
  * @returns {Promise<Product>} - A promise that resolves to the product.
  */
 export async function fetchProduct(ctx, config, sku) {
-  const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/${sku}.json`;
+  const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
   const object = await ctx.env.CATALOG_BUCKET.get(key);
 
   if (!object) {
@@ -52,7 +52,7 @@ export async function saveProducts(ctx, config, products) {
     const storePromises = batch.map(async (product) => {
       try {
         const { sku, name, urlKey } = product;
-        const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/${sku}.json`;
+        const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
         const body = JSON.stringify(product);
         const customMetadata = { sku, name, urlKey };
 
