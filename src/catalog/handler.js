@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { hasUppercase } from '../utils/product.js';
 import { errorResponse } from '../utils/http.js';
 import { handleProductLookupRequest } from './lookup.js';
 import { handleProductFetchRequest } from './fetch.js';
@@ -44,6 +45,10 @@ export default async function catalogHandler(ctx, config, request) {
   }
 
   const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(catalogIndex + 1);
+
+  if (hasUppercase(sku)) {
+    return errorResponse(400, 'Invalid SKU: SKU cannot contain uppercase letters');
+  }
 
   Object.assign(config, {
     storeCode, storeViewCode, subRoute, sku,

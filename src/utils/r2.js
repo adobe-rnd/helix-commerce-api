@@ -51,7 +51,8 @@ export async function saveProducts(ctx, config, products) {
   const storeProductsBatch = async (batch) => {
     const storePromises = batch.map(async (product) => {
       try {
-        const { sku, name, urlKey } = product;
+        const { name, urlKey } = product;
+        const { sku } = config;
         const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
         const body = JSON.stringify(product);
         const customMetadata = { sku, name, urlKey };

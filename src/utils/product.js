@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+export const hasUppercase = (str) => /[A-Z]/.test(str);
+
 /**
  * This function combines an array of strings with interpolated
  * parameters to create a GraphQL query string.
