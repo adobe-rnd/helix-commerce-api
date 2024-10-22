@@ -9,9 +9,8 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-// @ts-check
 
-import { gql } from '../util.js';
+import { gql } from '../../utils/product.js';
 
 /**
  * @param {any} variants
@@ -52,6 +51,7 @@ export const adapter = (variants) => variants.map(({ selections, product }) => {
 /**
  * @param {string} sku
  */
+// @ts-ignore
 export default (sku) => gql`
 {
   variants(sku: "${sku}") {
