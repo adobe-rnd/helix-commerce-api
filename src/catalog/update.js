@@ -10,8 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-/* eslint-disable no-await-in-loop */
-
+import { assertValidProduct } from '../utils/product.js';
 import { callAdmin } from '../utils/admin.js';
 import { errorResponse, errorWithResponse } from '../utils/http.js';
 import { saveProducts } from '../utils/r2.js';
@@ -41,44 +40,78 @@ export async function putProduct(ctx, config, product) {
  */
 export async function handleProductSaveRequest(ctx, config, request) {
   try {
-    let requestBody;
-
-    try {
-      requestBody = await request.json();
-    } catch (jsonError) {
-      ctx.log.error('Invalid JSON in request body:', jsonError);
-      return errorResponse(400, 'invalid JSON');
-    }
+    let product;
 
     if (config.sku === '*') {
       return errorResponse(501, 'not implemented');
+    } else {
+      try {
+        product = await request.json();
+      } catch (jsonError) {
+        ctx.log.error('Invalid JSON in request body:', jsonError);
+        return errorResponse(400, 'invalid JSON');
+      }
+
+      try {
+        assertValidProduct(product);
+      } catch (e) {
+        return errorResponse(400, e.message);
+      }
     }
 
-    const product = await putProduct(ctx, config, requestBody);
-    const products = [product];
+    const { base: _ = undefined, ...otherPatterns } = config.confEnvMap[config.env] ?? {};
+    const matchedPathPatterns = Object.entries(otherPatterns)
+      .reduce((acc, [pattern, matchConf]) => {
+        // find only configs that match the provided store & view codes
+        if (config.storeCode === matchConf.storeCode
+          && config.storeViewCode === matchConf.storeViewCode) {
+          acc.push(pattern);
+        }
+        return acc;
+      }, []);
 
-    const { base: _ = undefined, ...otherPatterns } = (config.env in config.confEnvMap)
-      ? config.confEnvMap[config.env]
-      : {};
-    const matchedPathPatterns = Object.keys(otherPatterns);
+    if (!matchedPathPatterns.length) {
+      return errorResponse(404, 'no path patterns found');
+    }
 
-    if (matchedPathPatterns.length !== 0) {
-      for (const purgeProduct of products) {
-        for (const pattern of matchedPathPatterns) {
-          let path = pattern.replace('{{sku}}', purgeProduct.sku);
+    await putProduct(ctx, config, product);
 
-          if (path.includes('{{urlkey}}') && purgeProduct.urlKey) {
-            path = path.replace('{{urlkey}}', purgeProduct.urlKey);
-          }
+    const purgePaths = matchedPathPatterns.map(
+      (pattern) => pattern
+        .replace('{{sku}}', product.sku)
+        .replace('{{urlkey}}', product.urlKey),
+    );
 
-          for (const op of ['preview', 'live']) {
-            const response = await callAdmin(config, op, path, { method: 'post' });
-            if (!response.ok) {
-              return errorResponse(400, `failed to ${op} product`);
-            }
+    const errors = [];
+    await Promise.all(
+      purgePaths.map(async (path) => {
+        for (const op of ['preview', 'live']) {
+          // eslint-disable-next-line no-await-in-loop
+          const response = await callAdmin(config, op, path, { method: 'POST' });
+          if (!response.ok) {
+            errors.push({
+              op,
+              path,
+              status: response.status,
+              message: response.headers.get('x-error') ?? response.statusText,
+            });
+            break; // don't hit live if preview fails
           }
         }
-      }
+      }),
+    );
+
+    if (errors.length) {
+      // use highest error code as status,
+      // so 5xx will be forwarded but all 404s will be treated as a 404
+      const status = errors.reduce((errCode, { status: code }) => Math.max(errCode, code), 0);
+      return new Response(JSON.stringify({ errors }), {
+        status,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-error': 'purge errors',
+        },
+      });
     }
 
     return new Response(undefined, { status: 201 });

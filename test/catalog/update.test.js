@@ -10,28 +10,28 @@
  * governing permissions and limitations under the License.
  */
 
+// @ts-nocheck
+
 import { strict as assert } from 'assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
 
 describe('Product Save Tests', () => {
   let putProduct;
+  /** @type {import('../../src/catalog/update.js').handleProductSaveRequest} */
   let handleProductSaveRequest;
+  /** @type {sinon.SinonStub} */
   let saveProductsStub;
+  /** @type {sinon.SinonStub} */
   let callAdminStub;
-  let errorResponseStub;
-  let errorWithResponseStub;
 
   beforeEach(async () => {
     saveProductsStub = sinon.stub();
     callAdminStub = sinon.stub();
-    errorResponseStub = sinon.stub();
-    errorWithResponseStub = sinon.stub();
 
     const mocks = {
       '../../src/utils/r2.js': { saveProducts: saveProductsStub },
       '../../src/utils/admin.js': { callAdmin: callAdminStub },
-      '../../src/utils/http.js': { errorResponse: errorResponseStub, errorWithResponse: errorWithResponseStub },
     };
 
     ({ putProduct, handleProductSaveRequest } = await esmock('../../src/catalog/update.js', mocks));
@@ -43,16 +43,10 @@ describe('Product Save Tests', () => {
 
   describe('putProduct', () => {
     it('should throw error when product SKU is missing', async () => {
-      const error = new Error('invalid request body: missing sku');
-      errorWithResponseStub.throws(error);
-
       const product = {};
       await assert.rejects(async () => {
         await putProduct({}, {}, product);
       }, /invalid request body: missing sku/);
-
-      assert(errorWithResponseStub.calledOnce);
-      assert(errorWithResponseStub.calledWith(400, 'invalid request body: missing sku'));
     });
 
     it('should save the product when SKU is present', async () => {
@@ -72,13 +66,9 @@ describe('Product Save Tests', () => {
       const ctx = { log: { error: sinon.stub() } };
       const request = { json: sinon.stub().resolves({ sku: '1234' }) };
 
-      const mockResponse = new Response(null, { status: 501, headers: { 'x-error': 'not implemented' } });
-      errorResponseStub.returns(mockResponse);
-
       const response = await handleProductSaveRequest(ctx, config, request);
 
       assert.equal(response.status, 501);
-      assert(errorResponseStub.calledWith(501, 'not implemented'));
       assert.equal(response.headers.get('x-error'), 'not implemented');
     });
 
@@ -106,7 +96,7 @@ describe('Product Save Tests', () => {
       assert.equal(callAdminStub.callCount, 4);
     });
 
-    it('should skip calling callAdmin when confMap has no matching env', async () => {
+    it('should return 404 when no matching path patterns found', async () => {
       const config = {
         sku: '1234',
         confEnvMap: {
@@ -124,10 +114,11 @@ describe('Product Save Tests', () => {
       const response = await handleProductSaveRequest(ctx, config, request);
 
       assert(callAdminStub.notCalled);
-      assert.equal(response.status, 201);
+      assert.equal(response.status, 404);
+      assert.equal(response.headers.get('x-error'), 'no path patterns found');
     });
 
-    it('should return error when callAdmin fails', async () => {
+    it('should return error when purging fails', async () => {
       const config = {
         sku: '1234',
         confEnvMap: {
@@ -137,21 +128,28 @@ describe('Product Save Tests', () => {
         },
         env: 'test',
       };
-      const ctx = { log: { error: sinon.stub() } };
+      const ctx = { log: console };
       const request = { json: sinon.stub().resolves({ sku: '1234', urlKey: 'product-url-key' }) };
 
       saveProductsStub.resolves();
-      callAdminStub.onFirstCall().resolves({ ok: false });
-
-      const mockResponse = new Response(null, { status: 400, headers: { 'x-error': 'failed to preview product' } });
-      errorResponseStub.returns(mockResponse);
+      callAdminStub.onFirstCall().resolves(new Response('', { status: 500, headers: { 'x-error': 'bad thing happen' } }));
 
       const response = await handleProductSaveRequest(ctx, config, request);
 
-      assert.equal(response.status, 400);
-      assert(callAdminStub.calledOnce);
-      assert(errorResponseStub.calledWith(400, 'failed to preview product'));
-      assert.equal(response.headers.get('x-error'), 'failed to preview product');
+      assert.equal(response.status, 500);
+      assert.ok(callAdminStub.calledOnce);
+      assert.equal(response.headers.get('x-error'), 'purge errors');
+      const respBody = await response.json();
+      assert.deepStrictEqual(respBody, {
+        errors: [
+          {
+            op: 'preview',
+            path: '/path/to/1234',
+            status: 500,
+            message: 'bad thing happen',
+          },
+        ],
+      });
     });
 
     it('should return 400 if request.json throws a JSON parsing error', async () => {
@@ -159,15 +157,9 @@ describe('Product Save Tests', () => {
       const ctx = { log: { error: sinon.stub() } };
       const request = { json: sinon.stub().rejects(new Error('Unexpected token < in JSON at position 0')) };
 
-      const mockResponse = new Response(null, { status: 400, headers: { 'x-error': 'invalid JSON' } });
-      errorResponseStub.returns(mockResponse);
-
       const response = await handleProductSaveRequest(ctx, config, request);
 
       assert.equal(response.status, 400);
-
-      assert(errorResponseStub.calledWith(400, 'invalid JSON'));
-
       assert.equal(response.headers.get('x-error'), 'invalid JSON');
 
       assert(ctx.log.error.calledOnce);

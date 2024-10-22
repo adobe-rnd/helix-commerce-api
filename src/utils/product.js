@@ -58,3 +58,13 @@ export function findProductImage(product, variants = []) {
   }
   return variants.find((v) => v.images?.length)?.images?.[0];
 }
+
+/**
+ * @param {any} product
+ * @returns {asserts product is Product}
+ */
+export function assertValidProduct(product) {
+  if (typeof product !== 'object' || !product.sku) {
+    throw new Error('Invalid product');
+  }
+}
