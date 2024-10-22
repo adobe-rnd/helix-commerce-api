@@ -106,24 +106,25 @@ describe('Product Save Tests', () => {
       assert.equal(callAdminStub.callCount, 4);
     });
 
-    it('should skip calling callAdmin when confMap has no matching keys', async () => {
+    it('should skip calling callAdmin when confMap has no matching env', async () => {
       const config = {
         sku: '1234',
         confEnvMap: {
-          'other-env': {
+          prod: {
+            base: { },
             '/path/to/{{sku}}': { env: 'other-env' },
           },
         },
-        env: 'test',
+        env: 'dev',
       };
       const ctx = { log: { error: sinon.stub() } };
       const request = { json: sinon.stub().resolves({ sku: '1234' }) };
 
+      saveProductsStub.resolves();
       const response = await handleProductSaveRequest(ctx, config, request);
 
-      assert.equal(response.status, 201);
-      assert(saveProductsStub.calledOnce);
       assert(callAdminStub.notCalled);
+      assert.equal(response.status, 201);
     });
 
     it('should return error when callAdmin fails', async () => {

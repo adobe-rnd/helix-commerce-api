@@ -57,25 +57,30 @@ export async function handleProductSaveRequest(ctx, config, request) {
     const product = await putProduct(ctx, config, requestBody);
     const products = [product];
 
-    const { base: _, ...otherPatterns } = config.confEnvMap[config.env];
+    const { base: _ = undefined, ...otherPatterns } = (config.env in config.confEnvMap)
+      ? config.confEnvMap[config.env]
+      : {};
     const matchedPathPatterns = Object.keys(otherPatterns);
 
-    for (const purgeProduct of products) {
-      for (const pattern of matchedPathPatterns) {
-        let path = pattern.replace('{{sku}}', purgeProduct.sku);
+    if (matchedPathPatterns.length !== 0) {
+      for (const purgeProduct of products) {
+        for (const pattern of matchedPathPatterns) {
+          let path = pattern.replace('{{sku}}', purgeProduct.sku);
 
-        if (path.includes('{{urlkey}}') && purgeProduct.urlKey) {
-          path = path.replace('{{urlkey}}', purgeProduct.urlKey);
-        }
+          if (path.includes('{{urlkey}}') && purgeProduct.urlKey) {
+            path = path.replace('{{urlkey}}', purgeProduct.urlKey);
+          }
 
-        for (const op of ['preview', 'live']) {
-          const response = await callAdmin(config, op, path, { method: 'post' });
-          if (!response.ok) {
-            return errorResponse(400, `failed to ${op} product`);
+          for (const op of ['preview', 'live']) {
+            const response = await callAdmin(config, op, path, { method: 'post' });
+            if (!response.ok) {
+              return errorResponse(400, `failed to ${op} product`);
+            }
           }
         }
       }
     }
+
     return new Response(undefined, { status: 201 });
   } catch (e) {
     if (e.response) {
