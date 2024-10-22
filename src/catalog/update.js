@@ -57,13 +57,8 @@ export async function handleProductSaveRequest(ctx, config, request) {
     const product = await putProduct(ctx, config, requestBody);
     const products = [product];
 
-    const matchedPathPatterns = Object.entries(config.confEnvMap)
-      .reduce((acc, [env, confMap]) => {
-        if (env === config.env) {
-          acc.push(...Object.keys(confMap));
-        }
-        return acc;
-      }, []);
+    const { base: _, ...otherPatterns } = config.confEnvMap[config.env];
+    const matchedPathPatterns = Object.keys(otherPatterns);
 
     for (const purgeProduct of products) {
       for (const pattern of matchedPathPatterns) {
