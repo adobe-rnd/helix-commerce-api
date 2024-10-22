@@ -42,39 +42,26 @@ describe('handleProductLookupRequest Tests', () => {
     sinon.restore();
   });
 
-  it('should return a product when urlKey is provided', async () => {
-    const ctx = {
-      url: { search: '?urlKey=some-url-key' },
-      log: { error: sinon.stub() },
-    };
-    const config = {};
-
-    lookupSkuStub.resolves('1234');
-    fetchProductStub.resolves({ sku: '1234', name: 'Test Product' });
-
-    const response = await handleProductLookupRequest(ctx, config);
-
-    assert.equal(response.status, 200);
-    const responseBody = await response.json();
-    assert.deepEqual(responseBody, { sku: '1234', name: 'Test Product' });
-
-    assert(lookupSkuStub.calledOnceWith(ctx, config, 'some-url-key'));
-    assert(fetchProductStub.calledOnceWith(ctx, config, '1234'));
-  });
-
   it('should return a product when urlkey is provided', async () => {
     const ctx = {
-      url: { search: '?urlkey=some-url-key' },
+      url: { origin: 'https://test-origin', search: '?urlkey=some-url-key' },
       log: { error: sinon.stub() },
     };
-    const config = {};
+    const config = {
+      org: 'test-org',
+      site: 'test-site',
+      env: 'test-env',
+      storeCode: 'test-store-code',
+      storeViewCode: 'test-store-view-code',
+    };
 
     lookupSkuStub.resolves('1234');
     fetchProductStub.resolves({ sku: '1234', name: 'Test Product' });
 
     const response = await handleProductLookupRequest(ctx, config);
 
-    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Location'), 'https://test-origin/test-org/test-site/test-env/test-store-code/test-store-view-code/product/1234');
+    assert.equal(response.status, 301);
     const responseBody = await response.json();
     assert.deepEqual(responseBody, { sku: '1234', name: 'Test Product' });
 
