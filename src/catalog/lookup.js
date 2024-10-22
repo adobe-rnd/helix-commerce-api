@@ -29,7 +29,11 @@ export async function handleProductLookupRequest(ctx, config) {
       const sku = await lookupSku(ctx, config, urlkey);
       const product = await fetchProduct(ctx, config, sku);
       return new Response(JSON.stringify(product), {
-        headers: { 'Content-Type': 'application/json' },
+        status: 301,
+        headers: {
+          'Content-Type': 'application/json',
+          Location: `${ctx.url.origin}/${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
+        },
       });
     }
 
