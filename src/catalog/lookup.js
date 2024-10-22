@@ -11,7 +11,7 @@
  */
 
 import { errorResponse } from '../utils/http.js';
-import { listAllProducts, fetchProduct, lookupSku } from '../utils/r2.js';
+import { listAllProducts, lookupSku } from '../utils/r2.js';
 
 /**
  * Handles a product lookup request.
@@ -27,11 +27,9 @@ export async function handleProductLookupRequest(ctx, config) {
     if (params.has('urlKey') || params.has('urlkey')) {
       const urlkey = params.get('urlKey') || params.get('urlkey');
       const sku = await lookupSku(ctx, config, urlkey);
-      const product = await fetchProduct(ctx, config, sku);
-      return new Response(JSON.stringify(product), {
+      return new Response(undefined, {
         status: 301,
         headers: {
-          'Content-Type': 'application/json',
           Location: `${ctx.url.origin}/${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
         },
       });
