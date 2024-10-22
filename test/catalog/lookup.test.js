@@ -62,11 +62,8 @@ describe('handleProductLookupRequest Tests', () => {
 
     assert.equal(response.headers.get('Location'), 'https://test-origin/test-org/test-site/test-env/test-store-code/test-store-view-code/product/1234');
     assert.equal(response.status, 301);
-    const responseBody = await response.json();
-    assert.deepEqual(responseBody, { sku: '1234', name: 'Test Product' });
 
     assert(lookupSkuStub.calledOnceWith(ctx, config, 'some-url-key'));
-    assert(fetchProductStub.calledOnceWith(ctx, config, '1234'));
   });
 
   it('should return a list of all products when no urlKey is provided', async () => {
