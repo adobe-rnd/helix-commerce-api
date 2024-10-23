@@ -27,7 +27,6 @@ export async function handle(ctx, config) {
     return errorResponse(404, 'missing sku or urlkey');
   }
 
-  config.env = 'prod';
   const product = await fetchProduct(ctx, config, sku);
   const html = HTML_TEMPLATE(product, product.variants);
   return new Response(html, {
