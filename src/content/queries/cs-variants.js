@@ -24,9 +24,11 @@ export const adapter = (variants) => variants.map(({ selections, product }) => {
   const variant = {
     name: product.name,
     sku: product.sku,
+    description: product.description,
     url: product.url,
     inStock: product.inStock,
     images: product.images ?? [],
+    attributes: product.attributes ?? [],
     prices: {
       regular: {
         // TODO: determine whether to use min or max
@@ -66,6 +68,12 @@ export default (sku) => gql`
           label
         }
         ... on SimpleProductView {
+          description
+          attributes(roles: ["visible_in_pdp"]) {
+            name
+            label
+            value
+          }
           price {
             regular {
               amount {
