@@ -10,9 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
+import { errorWithResponse } from './utils/http.js';
+
 /**
- * @param {string[]} patterns
- * @param {string} path
+ * This function finds ordered matches between a list of patterns and a given path.
+ * @param {string[]} patterns - An array of pattern strings to match against.
+ * @param {string} path - The path string to match patterns against.
  */
 function findOrderedMatches(patterns, path) {
   return patterns
@@ -26,9 +29,10 @@ function findOrderedMatches(patterns, path) {
 }
 
 /**
- * @param {string} pattern
- * @param {string} path
- * @returns {Record<string, string>}
+ * This function extracts path parameters from a pattern and a path.
+ * @param {string} pattern - The pattern string.
+ * @param {string} path - The path string.
+ * @returns {Record<string, string>} - The path parameters.
  */
 function extractPathParams(pattern, path) {
   // create a RegExp with named groups from the string contained in '{{}}'
@@ -38,18 +42,46 @@ function extractPathParams(pattern, path) {
 }
 
 /**
- * @param {Context} ctx
- * @param {string} tenant
- * @param {Partial<Config>} [overrides={}]
- * @returns {Promise<Config|null>}
+ * This function resolves the configuration for a given context and overrides.
+ * @param {Context} ctx - The context object.
+ * @param {Partial<Config>} [overrides={}] - The overrides object.
+ * @returns {Promise<Config|null>} - A promise that resolves to the configuration.
  */
-export async function resolveConfig(ctx, tenant, overrides = {}) {
-  const confMap = await ctx.env.CONFIGS.get(tenant, 'json');
+export async function resolveConfig(ctx, overrides = {}) {
+  const [_, org, site, env, route] = ctx.url.pathname.split('/');
+  if (!org) {
+    throw errorWithResponse(404, 'missing org');
+  }
+  if (!site) {
+    throw errorWithResponse(404, 'missing site');
+  }
+  if (!env) {
+    throw errorWithResponse(404, 'missing env');
+  }
+  if (!route) {
+    throw errorWithResponse(404, 'missing route');
+  }
+
+  const siteKey = `${org}--${site}`;
+
+  /**
+   * @type {ConfigEnvMap}
+   */
+  const confEnvMap = await ctx.env.CONFIGS.get(siteKey, 'json');
+  if (!confEnvMap) {
+    return null;
+  }
+  if (typeof confEnvMap !== 'object') {
+    ctx.log.warn('invalid config for ', siteKey);
+    return null;
+  }
+
+  const confMap = confEnvMap[env];
   if (!confMap) {
     return null;
   }
   if (typeof confMap !== 'object') {
-    ctx.log.warn('invalid config for tenant', tenant);
+    ctx.log.warn('invalid config for ', siteKey, env);
     return null;
   }
 
@@ -62,6 +94,7 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
 
   // merge configs
   /** @type {Config} */
+  // @ts-ignore
   const resolved = {
     ...paths.reduce((conf, key) => ({
       ...conf,
@@ -79,15 +112,12 @@ export async function resolveConfig(ctx, tenant, overrides = {}) {
       headers: confMap.base?.headers ?? {},
       params: {},
     }),
+    confEnvMap,
+    org,
+    site,
+    env,
+    route,
     ...overrides,
   };
-
-  // ensure validity
-  // TODO: make this more robust
-  if (!resolved.pageType) {
-    ctx.log.warn('invalid config for tenant (missing pageType)', tenant);
-    return null;
-  }
-
   return resolved;
 }

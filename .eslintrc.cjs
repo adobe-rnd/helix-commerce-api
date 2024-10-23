@@ -46,6 +46,13 @@ module.exports = {
     // parameters is definitely desirable
     'no-param-reassign': 'off',
 
+    'import/no-extraneous-dependencies': [
+      'error',
+      {
+        devDependencies: true,
+      },
+    ],
+
     // Allow while (true) infinite loops
     // 'no-constant-condition': ['error', { checkLoops: false }],
 

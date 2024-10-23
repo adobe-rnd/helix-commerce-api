@@ -10,10 +10,14 @@
  * governing permissions and limitations under the License.
  */
 
+export const hasUppercase = (str) => /[A-Z]/.test(str);
+
 /**
- * @param {TemplateStringsArray} strs
- * @param  {...any} params
- * @returns {string}
+ * This function combines an array of strings with interpolated
+ * parameters to create a GraphQL query string.
+ * @param {string[]} strs - The string array representing parts of the GraphQL query.
+ * @param {...string} params - The parameters to be interpolated into the query.
+ * @returns {string} - The resulting GraphQL query string.
  */
 export function gql(strs, ...params) {
   let res = '';
@@ -27,51 +31,10 @@ export function gql(strs, ...params) {
 }
 
 /**
- * @param {number} status
- * @param {string} xError
- * @param {string|Record<string,unknown>} [body='']
- * @returns {Response}
+ * This function removes all undefined values from an object.
+ * @param {Record<string,unknown>} obj - The object to prune.
+ * @returns {Record<string,unknown>} - The pruned object.
  */
-export function errorResponse(status, xError, body = '') {
-  return new Response(typeof body === 'object' ? JSON.stringify(body) : body, {
-    status,
-    headers: { 'x-error': xError },
-  });
-}
-
-/**
- * @param {number} status
- * @param {string} xError
- * @param {string|Record<string,unknown>} [body='']
- * @returns {Error & {response: Response}}
- */
-export function errorWithResponse(status, xError, body = '') {
-  const response = errorResponse(status, xError, body);
-  const error = new Error(xError);
-  error.response = response;
-  return error;
-}
-
-/**
- * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
- * @param {Request} req
- * @param {Record<string, string>} env
- * @returns {Context}
- */
-export function makeContext(pctx, req, env) {
-  /** @type {Context} */
-  // @ts-ignore
-  const ctx = pctx;
-  ctx.env = env;
-  ctx.url = new URL(req.url);
-  ctx.log = console;
-  ctx.info = {
-    method: req.method,
-    headers: Object.fromEntries(req.headers),
-  };
-  return ctx;
-}
-
 export function pruneUndefined(obj) {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
@@ -81,9 +44,9 @@ export function pruneUndefined(obj) {
  * If product doesn't contain an image, finds first in-stock variant image
  * If no in-stock variant, returns first variant image
  *
- * @param {Product} product
- * @param {Variant[]} [variants]
- * @returns {Product['images'][number]}
+ * @param {Product} product - The product object.
+ * @param {Variant[]} [variants] - The variants array.
+ * @returns {Product['images'][number]} - The product image.
  */
 export function findProductImage(product, variants = []) {
   if (product.images?.length || !variants.length) {
@@ -94,4 +57,14 @@ export function findProductImage(product, variants = []) {
     return inStock.images[0];
   }
   return variants.find((v) => v.images?.length)?.images?.[0];
+}
+
+/**
+ * @param {any} product
+ * @returns {asserts product is Product}
+ */
+export function assertValidProduct(product) {
+  if (typeof product !== 'object' || !product.sku) {
+    throw new Error('Invalid product');
+  }
 }

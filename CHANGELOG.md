@@ -1,3 +1,39 @@
+# [1.2.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.9...v1.2.0) (2024-10-22)
+
+
+### Bug Fixes
+
+* add ci r2 bindings ([dff1907](https://github.com/adobe-rnd/helix-commerce-api/commit/dff1907971d82879c72d9bdfaccf544f6b2658d4))
+* add envs to configs ([b733899](https://github.com/adobe-rnd/helix-commerce-api/commit/b73389958597660dec359349bb257d09632549e0))
+* add tests ([28cceb8](https://github.com/adobe-rnd/helix-commerce-api/commit/28cceb847c0d83c31e93fba5c3fbab8314c3afe5))
+* cleanup ([a4a3afa](https://github.com/adobe-rnd/helix-commerce-api/commit/a4a3afac3b5124c214d0de4546d94f5ef3988da6))
+* disable preview ([dd25a23](https://github.com/adobe-rnd/helix-commerce-api/commit/dd25a23a9ff794ca621d3cde961571b1af9f5837))
+* don't default org repo ([21ad084](https://github.com/adobe-rnd/helix-commerce-api/commit/21ad08478f3ee250863b66702f706414ed4cc396))
+* encoding ([11bb8bc](https://github.com/adobe-rnd/helix-commerce-api/commit/11bb8bcdc0e5c68826dc8a084ea525c7e9a87ddc))
+* more cleanup ([f1c2d27](https://github.com/adobe-rnd/helix-commerce-api/commit/f1c2d27c430b9bb15c54425a87683af7ceac8ff6))
+* org not owner ([478bf85](https://github.com/adobe-rnd/helix-commerce-api/commit/478bf85985f0fc81d8ec54a591ece26a099caa04))
+* pattern matching ([f58f18e](https://github.com/adobe-rnd/helix-commerce-api/commit/f58f18e89ddc68b6ce7e889761d75d596b1d89e0))
+* preview call ([4ba5ea8](https://github.com/adobe-rnd/helix-commerce-api/commit/4ba5ea8a754d19512a82e4462aafa8f07f1ab1f9))
+* pull from helix catalog ([918ca03](https://github.com/adobe-rnd/helix-commerce-api/commit/918ca03b432dbc3a2ea6a7a0742ae571aafa1669))
+* remove content type and body for 301 ([9280dab](https://github.com/adobe-rnd/helix-commerce-api/commit/9280dabe7594057f16f3d6e572127061700d0d53))
+* rename catalog functions ([28e4374](https://github.com/adobe-rnd/helix-commerce-api/commit/28e43745bd016da50f0cf96cb6adca90d721e377))
+* return 301 for urlKey lookup ([e0388d5](https://github.com/adobe-rnd/helix-commerce-api/commit/e0388d5f7232a2cc61c6e734dd585b399486376b))
+* switch to org--repo tenant ([5957e1a](https://github.com/adobe-rnd/helix-commerce-api/commit/5957e1a1f1374c1cfa52b9848143d50727c4bcdf))
+* switch to org/site ([44853a8](https://github.com/adobe-rnd/helix-commerce-api/commit/44853a8229d123b07b924a0a40a661cb8bed2295))
+* test and update ([71dc947](https://github.com/adobe-rnd/helix-commerce-api/commit/71dc94731a44a1b1a732be0221324e6e573e02d7))
+* tests ([e6fbd50](https://github.com/adobe-rnd/helix-commerce-api/commit/e6fbd50c6eff061f89f054ac68ea35d6b678f534))
+* tests ([29a006c](https://github.com/adobe-rnd/helix-commerce-api/commit/29a006ca8e881f5ee67867f7aebd803833451648))
+* tweak r2 paths ([c90abd4](https://github.com/adobe-rnd/helix-commerce-api/commit/c90abd415e549f1d43c42a8650e00262d0e6788d))
+* urlKey tests ([3a84208](https://github.com/adobe-rnd/helix-commerce-api/commit/3a842085164544f9dcb9ac4e352b0f4a117fa209))
+* use env in catalog route ([0959827](https://github.com/adobe-rnd/helix-commerce-api/commit/095982795f6cb0be072b6015f3d64584bacf6e74))
+* use sku from path and sanitize ([18d0009](https://github.com/adobe-rnd/helix-commerce-api/commit/18d0009d890331116df29b95cc67189a82f18530))
+* validation in put product ([739c10f](https://github.com/adobe-rnd/helix-commerce-api/commit/739c10f68c11cfd12ee1609c8d4995a6a4c441d4))
+
+
+### Features
+
+* wip catalog service ([069a010](https://github.com/adobe-rnd/helix-commerce-api/commit/069a010e2075d0562244818de9f05dcf53c9fd67))
+
 ## [1.1.9](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.8...v1.1.9) (2024-10-10)
 
 
