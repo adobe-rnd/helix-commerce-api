@@ -1,3 +1,13 @@
+## [1.2.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.0...v1.2.1) (2024-10-23)
+
+
+### Bug Fixes
+
+* debug fetch ([b29a1f6](https://github.com/adobe-rnd/helix-commerce-api/commit/b29a1f6519a9d91b67e9ea5256aa7176afac759a))
+* don't hardcode env ([523b0ee](https://github.com/adobe-rnd/helix-commerce-api/commit/523b0eec9ee21e9083734702dacf07fd37e0f24f))
+* only use dev bucket ([316858d](https://github.com/adobe-rnd/helix-commerce-api/commit/316858d1c149be8eacbd63d97522bb1e40887741))
+* r2 bindings ([963febf](https://github.com/adobe-rnd/helix-commerce-api/commit/963febf1a62ff99727a600f8e1418c68d2543aa2))
+
 # [1.2.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.1.9...v1.2.0) (2024-10-22)
 
 
