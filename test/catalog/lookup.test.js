@@ -59,7 +59,7 @@ describe('handleProductLookupRequest Tests', () => {
 
     const response = await handleProductLookupRequest(ctx, config);
 
-    assert.equal(response.headers.get('Location'), 'https://test-origin/test-org/test-site/test-store-code/test-store-view-code/product/1234');
+    assert.equal(response.headers.get('Location'), 'https://test-origin/test-org/test-site/catalog/test-store-code/test-store-view-code/product/1234');
     assert.equal(response.status, 301);
 
     assert(lookupSkuStub.calledOnceWith(ctx, config, 'some-url-key'));

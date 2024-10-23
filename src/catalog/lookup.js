@@ -30,7 +30,7 @@ export async function handleProductLookupRequest(ctx, config) {
       return new Response(undefined, {
         status: 301,
         headers: {
-          Location: `${ctx.url.origin}/${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
+          Location: `${ctx.url.origin}/${config.org}/${config.site}/catalog/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
         },
       });
     }
