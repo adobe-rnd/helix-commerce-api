@@ -7,11 +7,6 @@ declare global {
   export type ConfigMap = Record<string, Config>;
 
   /**
-   * { env => { pathPattern => Config } }
-   */
-  export type ConfigEnvMap = Record<string, ConfigMap>;
-
-  /**
    * Resolved config object
    */
   export interface Config {
@@ -23,14 +18,13 @@ declare global {
     apiKey: string;
     magentoEnvironmentId: string;
     magentoWebsiteCode: string;
-    env: string;
     storeViewCode: string;
     storeCode: string;
     coreEndpoint: string;
     catalogSource: string
     catalogEndpoint?: string;
     sku?: string;
-    confEnvMap: ConfigEnvMap;
+    confMap: ConfigMap;
     params: Record<string, string>;
     headers: Record<string, string>;
   }

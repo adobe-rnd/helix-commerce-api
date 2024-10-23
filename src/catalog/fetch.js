@@ -10,8 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-/* eslint-disable no-await-in-loop */
-
 import { errorResponse } from '../utils/http.js';
 import { fetchProduct } from '../utils/r2.js';
 
