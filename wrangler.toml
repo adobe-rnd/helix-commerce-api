@@ -33,7 +33,7 @@ kv_namespaces = [
 [[env.ci.r2_buckets]]
 binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog-dev"
-bucket_name = "adobe-commerce-catalog-ci"
+bucket_name = "adobe-commerce-catalog-dev"
 
 [env.ci.vars]
 VERSION = "@@VERSION@@-ci"
