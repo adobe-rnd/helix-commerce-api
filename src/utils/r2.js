@@ -22,7 +22,9 @@ import { errorWithResponse } from './http.js';
  * @returns {Promise<Product>} - A promise that resolves to the product.
  */
 export async function fetchProduct(ctx, config, sku) {
+  const { log } = ctx;
   const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
+  log.debug('Fetching product from R2:', key);
   const object = await ctx.env.CATALOG_BUCKET.get(key);
 
   if (!object) {
