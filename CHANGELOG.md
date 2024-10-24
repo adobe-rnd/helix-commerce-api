@@ -1,3 +1,12 @@
+## [1.2.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.1...v1.2.2) (2024-10-24)
+
+
+### Bug Fixes
+
+* add catalog to redirect ([f41c70e](https://github.com/adobe-rnd/helix-commerce-api/commit/f41c70e91d5379dd45c48f36c5bf973efe8bd19e))
+* remove env from catalog route ([ac08459](https://github.com/adobe-rnd/helix-commerce-api/commit/ac08459d2e966d43a04045147caa54a506fa1d4c))
+* remove env from paths ([eae3ec6](https://github.com/adobe-rnd/helix-commerce-api/commit/eae3ec6092345bba342cb17b500cc7694f7c715e))
+
 ## [1.2.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.0...v1.2.1) (2024-10-23)
 
 
