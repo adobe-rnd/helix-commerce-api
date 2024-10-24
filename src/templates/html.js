@@ -163,6 +163,7 @@ ${v.images?.map((img) => `\
               <div>sku</div>
               <div>${v.sku}</div>
               <div></div>
+              <div></div>
             </div>
             ${v.attributes?.map((attribute) => `\
               <div>
