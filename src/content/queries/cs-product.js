@@ -110,7 +110,7 @@ export default ({ sku }) => gql`{
         url
         label
       }
-      attributes(roles: []) {
+      attributes(roles: ["visible_in_pdp"]) {
         name
         label
         value
