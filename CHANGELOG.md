@@ -1,3 +1,12 @@
+## [1.2.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.2...v1.2.3) (2024-10-24)
+
+
+### Bug Fixes
+
+* add missing column for variant attributes ([6e6ce0a](https://github.com/adobe-rnd/helix-commerce-api/commit/6e6ce0aebce76db1c91170c2773a1a76278c2ed6))
+* add support for variant attributes and description ([682da6e](https://github.com/adobe-rnd/helix-commerce-api/commit/682da6ef426e175a078d12da3f3eb75376d6b852))
+* filter attributes on parent product ([6748bad](https://github.com/adobe-rnd/helix-commerce-api/commit/6748bad94f4ccfcf0086786a7f638f02bcd6ecef))
+
 ## [1.2.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.1...v1.2.2) (2024-10-24)
 
 
