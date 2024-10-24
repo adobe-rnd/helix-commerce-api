@@ -59,7 +59,7 @@ export async function handleProductSaveRequest(ctx, config, request) {
       }
     }
 
-    const { base: _ = undefined, ...otherPatterns } = config.confEnvMap[config.env] ?? {};
+    const { base: _ = undefined, ...otherPatterns } = config.confMap;
     const matchedPathPatterns = Object.entries(otherPatterns)
       .reduce((acc, [pattern, matchConf]) => {
         // find only configs that match the provided store & view codes

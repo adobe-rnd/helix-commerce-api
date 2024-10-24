@@ -21,14 +21,12 @@ describe('config tests', () => {
   it('should extract path params', async () => {
     const tenantConfigs = {
       'org--site': {
-        env: {
-          base: {
-            apiKey: 'bad',
-          },
-          '/us/p/{{urlkey}}/{{sku}}': {
-            pageType: 'product',
-            apiKey: 'good',
-          },
+        base: {
+          apiKey: 'bad',
+        },
+        '/us/p/{{urlkey}}/{{sku}}': {
+          pageType: 'product',
+          apiKey: 'good',
         },
       },
     };
@@ -40,17 +38,14 @@ describe('config tests', () => {
       pageType: 'product',
       org: 'org',
       site: 'site',
-      env: 'env',
       route: 'content',
-      confEnvMap: {
-        env: {
-          '/us/p/{{urlkey}}/{{sku}}': {
-            apiKey: 'good',
-            pageType: 'product',
-          },
-          base: {
-            apiKey: 'bad',
-          },
+      confMap: {
+        '/us/p/{{urlkey}}/{{sku}}': {
+          apiKey: 'good',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
         },
       },
     });
@@ -59,21 +54,19 @@ describe('config tests', () => {
   it('should combine headers objects', async () => {
     const tenantConfigs = {
       'org--site': {
-        env: {
-          base: {
-            apiKey: 'bad',
-            headers: {
-              foo: '1',
-              baz: '1',
-            },
+        base: {
+          apiKey: 'bad',
+          headers: {
+            foo: '1',
+            baz: '1',
           },
-          '/us/p/{{urlkey}}/{{sku}}': {
-            pageType: 'product',
-            apiKey: 'good',
-            headers: {
-              foo: '2',
-              bar: '2',
-            },
+        },
+        '/us/p/{{urlkey}}/{{sku}}': {
+          pageType: 'product',
+          apiKey: 'good',
+          headers: {
+            foo: '2',
+            bar: '2',
           },
         },
       },
@@ -86,24 +79,21 @@ describe('config tests', () => {
       pageType: 'product',
       org: 'org',
       site: 'site',
-      env: 'env',
       route: 'content',
-      confEnvMap: {
-        env: {
-          '/us/p/{{urlkey}}/{{sku}}': {
-            apiKey: 'good',
-            headers: {
-              bar: '2',
-              foo: '2',
-            },
-            pageType: 'product',
+      confMap: {
+        '/us/p/{{urlkey}}/{{sku}}': {
+          apiKey: 'good',
+          headers: {
+            bar: '2',
+            foo: '2',
           },
-          base: {
-            apiKey: 'bad',
-            headers: {
-              baz: '1',
-              foo: '1',
-            },
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
+          headers: {
+            baz: '1',
+            foo: '1',
           },
         },
       },
@@ -113,14 +103,12 @@ describe('config tests', () => {
   it('should allow wildcard path segments', async () => {
     const tenantConfigs = {
       'org--site': {
-        env: {
-          base: {
-            apiKey: 'bad',
-          },
-          '/us/p/*/{{sku}}': {
-            pageType: 'product',
-            apiKey: 'good',
-          },
+        base: {
+          apiKey: 'bad',
+        },
+        '/us/p/*/{{sku}}': {
+          pageType: 'product',
+          apiKey: 'good',
         },
       },
     };
@@ -132,17 +120,14 @@ describe('config tests', () => {
       pageType: 'product',
       org: 'org',
       site: 'site',
-      env: 'env',
       route: 'content',
-      confEnvMap: {
-        env: {
-          '/us/p/*/{{sku}}': {
-            apiKey: 'good',
-            pageType: 'product',
-          },
-          base: {
-            apiKey: 'bad',
-          },
+      confMap: {
+        '/us/p/*/{{sku}}': {
+          apiKey: 'good',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad',
         },
       },
     });
@@ -151,14 +136,12 @@ describe('config tests', () => {
   it('should allow overrides', async () => {
     const tenantConfigs = {
       'org--site': {
-        env: {
-          base: {
-            apiKey: 'bad1',
-          },
-          '/us/p/{{sku}}': {
-            pageType: 'product',
-            apiKey: 'bad2',
-          },
+        base: {
+          apiKey: 'bad1',
+        },
+        '/us/p/{{sku}}': {
+          pageType: 'product',
+          apiKey: 'bad2',
         },
       },
     };
@@ -173,17 +156,14 @@ describe('config tests', () => {
       headers: {},
       org: 'org',
       site: 'site',
-      env: 'env',
       route: 'content',
-      confEnvMap: {
-        env: {
-          '/us/p/{{sku}}': {
-            apiKey: 'bad2',
-            pageType: 'product',
-          },
-          base: {
-            apiKey: 'bad1',
-          },
+      confMap: {
+        '/us/p/{{sku}}': {
+          apiKey: 'bad2',
+          pageType: 'product',
+        },
+        base: {
+          apiKey: 'bad1',
         },
       },
     });
@@ -203,16 +183,9 @@ describe('config tests', () => {
     );
   });
 
-  it('should throw if env is missing', async () => {
-    await assert.rejects(
-      resolveConfig(TEST_CONTEXT('', defaultTenantConfigs, 'http://www.example.com/org/site')),
-      new Error('missing env'),
-    );
-  });
-
   it('should throw if route is missing', async () => {
     await assert.rejects(
-      resolveConfig(TEST_CONTEXT('', defaultTenantConfigs, 'http://www.example.com/org/site/env')),
+      resolveConfig(TEST_CONTEXT('', defaultTenantConfigs, 'http://www.example.com/org/site')),
       new Error('missing route'),
     );
   });

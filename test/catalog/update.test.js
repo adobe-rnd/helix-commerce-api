@@ -75,13 +75,10 @@ describe('Product Save Tests', () => {
     it('should return 201 when product is successfully saved and paths are purged', async () => {
       const config = {
         sku: '1234',
-        confEnvMap: {
-          test: {
-            '/path/to/{{sku}}': { env: 'test' },
-            '/path/to/{{urlkey}}/{{sku}}': { env: 'test' },
-          },
+        confMap: {
+          '/path/to/{{sku}}': {},
+          '/path/to/{{urlkey}}/{{sku}}': {},
         },
-        env: 'test',
       };
       const ctx = { log: { error: sinon.stub() } };
       const request = { json: sinon.stub().resolves({ sku: '1234', urlKey: 'product-url-key' }) };
@@ -99,13 +96,9 @@ describe('Product Save Tests', () => {
     it('should return 404 when no matching path patterns found', async () => {
       const config = {
         sku: '1234',
-        confEnvMap: {
-          prod: {
-            base: { },
-            '/path/to/{{sku}}': { env: 'other-env' },
-          },
+        confMap: {
+          base: {},
         },
-        env: 'dev',
       };
       const ctx = { log: { error: sinon.stub() } };
       const request = { json: sinon.stub().resolves({ sku: '1234' }) };
@@ -121,12 +114,9 @@ describe('Product Save Tests', () => {
     it('should return error when purging fails', async () => {
       const config = {
         sku: '1234',
-        confEnvMap: {
-          test: {
-            '/path/to/{{sku}}': { env: 'test' },
-          },
+        confMap: {
+          '/path/to/{{sku}}': {},
         },
-        env: 'test',
       };
       const ctx = { log: console };
       const request = { json: sinon.stub().resolves({ sku: '1234', urlKey: 'product-url-key' }) };

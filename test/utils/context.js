@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-export const TEST_CONTEXT = (path, configMap, baseUrl = 'https://www.example.com/org/site/env/content') => ({
+export const TEST_CONTEXT = (path, configMap, baseUrl = 'https://www.example.com/org/site/content') => ({
   env: {
     CONFIGS: {
       get: async (id) => configMap[id],

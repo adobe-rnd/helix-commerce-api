@@ -41,7 +41,7 @@ export default async function catalogHandler(ctx, config, request) {
   }
 
   if (pathSegments.length < catalogIndex + 4) {
-    return errorResponse(400, 'Invalid URL structure: Expected format: /{org}/{site}/{env}/catalog/{store}/{storeView}/product/{sku}');
+    return errorResponse(400, 'Invalid URL structure: Expected format: /{org}/{site}/catalog/{store}/{storeView}/product/{sku}');
   }
 
   const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(catalogIndex + 1);
