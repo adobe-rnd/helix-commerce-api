@@ -141,6 +141,7 @@ ${variants?.map((v) => `\
             <div>
               <div>${v.sku}</div>
               <div>${v.name}</div>
+              <div>${v.description}</div>
               <div>${v.inStock ? 'inStock' : ''}</div>
               <div>Regular: ${v.prices?.regular?.amount} ${v.prices?.regular?.currency}${priceRange(v.prices?.regular?.minimumAmount, v.prices?.regular?.maximumAmount)}</div>
               <div>Final: ${v.prices?.final?.amount} ${v.prices?.final?.currency}${priceRange(v.prices?.final?.minimumAmount, v.prices?.final?.maximumAmount)}</div>
@@ -154,8 +155,24 @@ ${v.images?.map((img) => `\
                 </picture>`).join('\n')}
               </div>
               <div>${v.selections?.join(', ')}</div>
-            </div>`).join('\n')}
-        </div>
+            </div>`).join('\n')};
+          </div>
+        <div class="variant-attributes">
+          ${variants?.map((v) => `\
+            <div>
+              <div>sku</div>
+              <div>${v.sku}</div>
+              <div></div>
+              <div></div>
+            </div>
+            ${v.attributes?.map((attribute) => `\
+              <div>
+                <div>attribute</div>
+                <div>${attribute.name}</div>
+                <div>${attribute.label}</div>
+                <div>${attribute.value}</div>
+              </div>`).join('\n')}`).join('\n')}
+          </div>
       </main>
       <footer></footer>
     </body>

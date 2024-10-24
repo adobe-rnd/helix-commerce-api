@@ -79,11 +79,13 @@ declare global {
   export interface Variant {
     sku: string;
     name: string;
+    description?: string;
     url: string;
     inStock: boolean;
     images: Image[];
     prices: Pick<Prices, 'regular' | 'final'>;
     selections: string[];
+    attributes: Attribute[];
   }
 
   interface Image {
