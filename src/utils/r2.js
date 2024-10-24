@@ -23,7 +23,7 @@ import { errorWithResponse } from './http.js';
  */
 export async function fetchProduct(ctx, config, sku) {
   const { log } = ctx;
-  const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
+  const key = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
   log.debug('Fetching product from R2:', key);
   const object = await ctx.env.CATALOG_BUCKET.get(key);
 
@@ -55,7 +55,7 @@ export async function saveProducts(ctx, config, products) {
       try {
         const { name, urlKey } = product;
         const { sku } = config;
-        const key = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
+        const key = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
         const body = JSON.stringify(product);
         const customMetadata = { sku, name, urlKey };
 
@@ -65,7 +65,7 @@ export async function saveProducts(ctx, config, products) {
         });
 
         if (urlKey) {
-          const metadataKey = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
+          const metadataKey = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
           const metadataPromise = ctx.env.CATALOG_BUCKET.put(metadataKey, '', {
             httpMetadata: { contentType: 'application/octet-stream' },
             customMetadata,
@@ -98,7 +98,7 @@ export async function saveProducts(ctx, config, products) {
  */
 export async function lookupSku(ctx, config, urlKey) {
   // Make a HEAD request to retrieve the SKU from metadata based on the URL key
-  const urlKeyPath = `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
+  const urlKeyPath = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
   const headResponse = await ctx.env.CATALOG_BUCKET.head(urlKeyPath);
 
   if (!headResponse || !headResponse.customMetadata?.sku) {
@@ -118,7 +118,7 @@ export async function lookupSku(ctx, config, urlKey) {
 export async function listAllProducts(ctx, config) {
   const bucket = ctx.env.CATALOG_BUCKET;
 
-  const listResponse = await bucket.list({ prefix: `${config.org}/${config.site}/${config.env}/${config.storeCode}/${config.storeViewCode}/products/` });
+  const listResponse = await bucket.list({ prefix: `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/` });
   const files = listResponse.objects;
 
   const batchSize = 50; // Define the batch size
@@ -152,7 +152,7 @@ export async function listAllProducts(ctx, config) {
           return {
             ...customMetadata,
             links: {
-              product: `${ctx.url.origin}/${config.org}/${config.site}/${config.env}/catalog/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
+              product: `${ctx.url.origin}/${config.org}/${config.site}/catalog/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
             },
           };
         } else {
