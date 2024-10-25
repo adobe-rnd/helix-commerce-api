@@ -1,3 +1,11 @@
+## [1.2.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.5...v1.2.6) (2024-10-25)
+
+
+### Bug Fixes
+
+* handle null prices on complex product ([6c7305c](https://github.com/adobe-rnd/helix-commerce-api/commit/6c7305cbecc2515b8a78d483107dfe37613371e4))
+* html template ([e3096e9](https://github.com/adobe-rnd/helix-commerce-api/commit/e3096e9f3135a3735bed57b909daa917944ddeb0))
+
 ## [1.2.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.4...v1.2.5) (2024-10-25)
 
 
