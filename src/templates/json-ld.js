@@ -44,7 +44,7 @@ export default (product, variants) => {
     image,
     productID: sku,
     offers: [
-      {
+      prices ? ({
         '@type': 'Offer',
         sku,
         url,
@@ -52,7 +52,7 @@ export default (product, variants) => {
         availability: inStock ? 'InStock' : 'OutOfStock',
         price: prices?.final?.amount,
         priceCurrency: prices?.final?.currency,
-      },
+      }) : undefined,
       ...variants.map((v) => ({
         '@type': 'Offer',
         sku: v.sku,
@@ -62,7 +62,7 @@ export default (product, variants) => {
         price: v.prices?.final?.amount,
         priceCurrency: v.prices?.final?.currency,
 
-      })),
+      })).filter(Boolean),
     ],
     ...(brandName
       ? {

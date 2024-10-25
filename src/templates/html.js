@@ -155,17 +155,18 @@ ${v.images?.map((img) => `\
                 </picture>`).join('\n')}
               </div>
               <div>${v.selections?.join(', ')}</div>
-            </div>`).join('\n')};
+            </div>`).join('\n')}
           </div>
-        <div class="variant-attributes">
-          ${variants?.map((v) => `\
+
+          <div class="variant-attributes">
+${variants?.map((v) => `\
             <div>
               <div>sku</div>
               <div>${v.sku}</div>
               <div></div>
               <div></div>
             </div>
-            ${v.attributes?.map((attribute) => `\
+${v.attributes?.map((attribute) => `\
               <div>
                 <div>attribute</div>
                 <div>${attribute.name}</div>
@@ -173,6 +174,7 @@ ${v.images?.map((img) => `\
                 <div>${attribute.value}</div>
               </div>`).join('\n')}`).join('\n')}
           </div>
+        </div>
       </main>
       <footer></footer>
     </body>
