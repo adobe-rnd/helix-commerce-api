@@ -20,6 +20,8 @@ export const adapter = (variants) => variants.map(({ selections, product }) => {
   const minPrice = product.priceRange?.minimum ?? product.price;
   const maxPrice = product.priceRange?.maximum ?? product.price;
 
+  console.debug('minPrice, maxPrice: ', minPrice, maxPrice);
+
   /** @type {Variant} */
   const variant = {
     name: product.name,
