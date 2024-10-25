@@ -17,10 +17,14 @@ import { gql } from '../../utils/product.js';
  * @returns {Product}
  */
 export const adapter = (productData) => {
-  const minPrice = productData.priceRange?.minimum ?? productData.price;
-  const maxPrice = productData.priceRange?.maximum ?? productData.price;
+  let minPrice = productData.priceRange?.minimum ?? productData.price;
+  let maxPrice = productData.priceRange?.maximum ?? productData.price;
 
-  console.debug('[cs-product] minPrice, maxPrice: ', minPrice, maxPrice);
+  if (minPrice == null) {
+    minPrice = maxPrice;
+  } else if (maxPrice == null) {
+    maxPrice = minPrice;
+  }
 
   /** @type {Product} */
   const product = {
@@ -65,7 +69,7 @@ export const adapter = (productData) => {
         isDefault: value.isDefault,
       })),
     })),
-    prices: {
+    prices: (minPrice && maxPrice) ? {
       regular: {
         // TODO: determine whether to use min or max
         amount: minPrice.regular.amount.value,
@@ -83,7 +87,7 @@ export const adapter = (productData) => {
         // TODO: add variant?
       },
       visible: minPrice.roles?.includes('visible'),
-    },
+    } : null,
   };
 
   return product;
