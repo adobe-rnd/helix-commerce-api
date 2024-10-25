@@ -20,6 +20,8 @@ export const adapter = (productData) => {
   const minPrice = productData.priceRange?.minimum ?? productData.price;
   const maxPrice = productData.priceRange?.maximum ?? productData.price;
 
+  console.debug('[cs-product] minPrice, maxPrice: ', minPrice, maxPrice);
+
   /** @type {Product} */
   const product = {
     sku: productData.sku,
