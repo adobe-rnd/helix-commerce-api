@@ -1,3 +1,10 @@
+## [1.2.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.3...v1.2.4) (2024-10-25)
+
+
+### Bug Fixes
+
+* temp log ([bc5181e](https://github.com/adobe-rnd/helix-commerce-api/commit/bc5181e0ec473606c2d9e8a169b9990f4502f938))
+
 ## [1.2.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.2...v1.2.3) (2024-10-24)
 
 
