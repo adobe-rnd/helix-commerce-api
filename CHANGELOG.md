@@ -1,3 +1,10 @@
+## [1.2.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.6...v1.2.7) (2024-10-29)
+
+
+### Bug Fixes
+
+* add some test coverage of rendered html ([b79b0a7](https://github.com/adobe-rnd/helix-commerce-api/commit/b79b0a7e162edd18b0fec1a0929061b68c851fa3))
+
 ## [1.2.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.5...v1.2.6) (2024-10-25)
 
 
