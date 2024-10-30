@@ -50,7 +50,7 @@ async function fetchProduct(sku, config) {
 
   const json = await resp.json();
   try {
-    const [productData] = json.data.products;
+    const [productData] = json.data?.products ?? [];
     if (!productData) {
       throw errorWithResponse(404, 'could not find product', json.errors);
     }
@@ -136,7 +136,7 @@ async function lookupProductSKU(urlkey, config) {
 
   const json = await resp.json();
   try {
-    const [product] = json.data.products.items;
+    const [product] = json.data?.products?.items ?? [];
     if (!product) {
       throw errorWithResponse(404, 'could not find product sku', json.errors);
     }
