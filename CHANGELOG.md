@@ -1,3 +1,12 @@
+## [1.2.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.7...v1.2.8) (2024-10-30)
+
+
+### Bug Fixes
+
+* 404s for missing skus ([349d7a4](https://github.com/adobe-rnd/helix-commerce-api/commit/349d7a4688db7f6fff3b97fef7c1bd7e62d77f1b))
+* await in try ([583deb9](https://github.com/adobe-rnd/helix-commerce-api/commit/583deb9a3fbe62259bcf26985d641c6f51297259))
+* json parse in try: ([5011954](https://github.com/adobe-rnd/helix-commerce-api/commit/5011954e3a9ba1762ca475e49d0046f97445ea12))
+
 ## [1.2.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.6...v1.2.7) (2024-10-29)
 
 
