@@ -48,9 +48,9 @@ async function fetchProduct(sku, config) {
     throw errorWithResponse(resp.status, 'failed to fetch product');
   }
 
-  const json = await resp.json();
   try {
-    const [productData] = json.data.products;
+    const json = await resp.json();
+    const [productData] = json?.data?.products ?? [];
     if (!productData) {
       throw errorWithResponse(404, 'could not find product', json.errors);
     }
@@ -93,9 +93,9 @@ async function fetchVariants(sku, config) {
     throw errorWithResponse(resp.status, 'failed to fetch variants');
   }
 
-  const json = await resp.json();
   try {
-    const { variants } = json.data.variants;
+    const json = await resp.json();
+    const { variants } = json?.data?.variants ?? {};
     return variantsAdapter(variants);
   } catch (e) {
     console.error('failed to parse variants: ', e);
@@ -134,10 +134,10 @@ async function lookupProductSKU(urlkey, config) {
     throw errorWithResponse(resp.status, 'failed to fetch product sku');
   }
 
-  const json = await resp.json();
   try {
-    const [product] = json.data.products.items;
-    if (!product) {
+    const json = await resp.json();
+    const [product] = json?.data?.products?.items ?? [];
+    if (!product?.sku) {
       throw errorWithResponse(404, 'could not find product sku', json.errors);
     }
     return product.sku;
