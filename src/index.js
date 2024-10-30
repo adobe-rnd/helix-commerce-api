@@ -63,7 +63,7 @@ export default {
         return errorResponse(404, 'config not found');
       }
 
-      return handlers[config.route](ctx, config, request);
+      return await handlers[config.route](ctx, config, request);
     } catch (e) {
       if (e.response) {
         return e.response;
