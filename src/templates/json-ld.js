@@ -22,7 +22,7 @@ export default (product, variants) => {
     sku,
     url,
     name,
-    description,
+    metaDescription,
     images,
     reviewCount,
     ratingValue,
@@ -33,14 +33,13 @@ export default (product, variants) => {
 
   const image = images?.[0]?.url ?? findProductImage(product, variants)?.url;
   const brandName = attributes?.find((attr) => attr.name === 'brand')?.value;
-
   return JSON.stringify(pruneUndefined({
     '@context': 'http://schema.org',
     '@type': 'Product',
     '@id': url,
     name,
     sku,
-    description,
+    description: metaDescription,
     image,
     productID: sku,
     offers: [
