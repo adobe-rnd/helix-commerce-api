@@ -46,7 +46,7 @@ describe('Render Product HTML', () => {
 
   it('should have the correct meta description', () => {
     const metaDescription = document.querySelector('meta[property="description"]');
-    const expectedDescription = product.metaDescription || product.description;
+    const expectedDescription = product.metaDescription;
     assert.strictEqual(metaDescription.getAttribute('content'), expectedDescription, 'Meta description does not match expected value');
   });
 
@@ -64,7 +64,7 @@ describe('Render Product HTML', () => {
 
   it('should have the correct Twitter description', () => {
     const twitterDescription = document.querySelector('meta[name="twitter:description"]');
-    const expectedDescription = product.metaDescription || product.description;
+    const expectedDescription = product.metaDescription;
     assert.strictEqual(twitterDescription.getAttribute('content'), expectedDescription, 'Twitter description does not match expected value');
   });
 
@@ -76,7 +76,7 @@ describe('Render Product HTML', () => {
     assert.strictEqual(jsonLd['@type'], 'Product', 'JSON-LD @type should be Product');
     assert.strictEqual(jsonLd.name, product.name, 'JSON-LD name does not match product name');
     assert.strictEqual(jsonLd.sku, product.sku, 'JSON-LD SKU does not match product SKU');
-    assert.strictEqual(jsonLd.description, product.description, 'JSON-LD description does not match product description');
+    assert.strictEqual(jsonLd.description, product.metaDescription, 'JSON-LD description does not match product description');
     assert.strictEqual(jsonLd.image, product.images[0]?.url || '', 'JSON-LD image does not match product image');
     assert.strictEqual(jsonLd.productID, product.sku, 'JSON-LD productID does not match product SKU');
     assert.ok(Array.isArray(jsonLd.offers), 'JSON-LD offers should be an array');
