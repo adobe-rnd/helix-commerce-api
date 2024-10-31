@@ -27,7 +27,7 @@ const metaName = (name, content) => (content ? `<meta name="${name}" content="${
  * @param {string|boolean|number|undefined|null} [content]
  * @returns {string}
  */
-const metaProperty = (name, content) => (content ? `<meta property="${name}" content="${content}">` : '');
+const metaProperty = (name, content) => `<meta property="${name}" content="${content}">`;
 
 /**
  * Create a price range string
@@ -89,7 +89,7 @@ export const renderCommerceMetaTags = (product) => /* html */ `
   ${metaName('urlKey', product.urlKey)}
   ${metaName('externalId', product.externalId)}
   ${metaName('addToCartAllowed', product.addToCartAllowed)}
-  ${metaName('inStock', product.inStock)}
+  ${metaName('inStock', product.inStock ? 'true' : 'false')}
   ${metaProperty('product:availability', product.inStock ? 'In stock' : 'Out of stock')}
   ${metaProperty('product:price.amount', product.prices.final.amount)}
   ${metaProperty('product:price.currency', product.prices.final.currency)}
