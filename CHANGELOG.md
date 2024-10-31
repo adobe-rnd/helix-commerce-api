@@ -1,3 +1,12 @@
+## [1.2.9](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.8...v1.2.9) (2024-10-31)
+
+
+### Bug Fixes
+
+* address comments ([6431b8d](https://github.com/adobe-rnd/helix-commerce-api/commit/6431b8d9cd91b7b9ad7411a5c9eaa23744ff293c))
+* breakup html rendering ([42724aa](https://github.com/adobe-rnd/helix-commerce-api/commit/42724aa55632e60d858f4a8837258100706fe32b))
+* json-ld ([4997fa2](https://github.com/adobe-rnd/helix-commerce-api/commit/4997fa2e1e6f978343042ae702093f230879a464))
+
 ## [1.2.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.7...v1.2.8) (2024-10-30)
 
 
