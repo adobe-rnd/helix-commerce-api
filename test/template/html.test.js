@@ -93,7 +93,7 @@ describe('Render Product HTML', () => {
       const variant = index === 0 ? product : variations[index - 1];
       assert.strictEqual(offer['@type'], 'Offer', `Offer type for variant ${variant.sku} should be Offer`);
       assert.strictEqual(offer.sku, variant.sku, `Offer SKU for variant ${variant.sku} does not match`);
-      assert.strictEqual(offer.url, constructProductUrl(config, product, index === 0 ? undefined : variant), 'JSON-LD @id does not match product URL');
+      assert.strictEqual(offer.url, constructProductUrl(config, product, index === 0 ? undefined : variant), 'JSON-LD offer URL does not match');
       assert.strictEqual(offer.price, variant.prices.final.amount, `Offer price for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.priceCurrency, variant.prices.final.currency, `Offer priceCurrency for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.availability, variant.inStock ? 'InStock' : 'OutOfStock', `Offer availability for variant ${variant.sku} does not match`);
