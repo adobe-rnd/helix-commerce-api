@@ -32,7 +32,7 @@ describe('Render Product HTML', () => {
   let product;
   let variations;
 
-  before(() => {
+  beforeEach(() => {
     product = createProductFixture();
     variations = createDefaultVariations();
     config = {
@@ -117,6 +117,23 @@ describe('Render Product HTML', () => {
       const variant = index === 0 ? product : variations[index - 1];
       assert.strictEqual(offer.gtin, variant.gtin, `Offer gtin for variant ${variant.sku} does not match`);
     });
+  });
+
+  it('should have the correct JSON-LD schema with custom offer pattern', () => {
+    config.matchedPathConfig = {
+      offerPattern: '/us/p/{{urlkey}}?selected_product={{sku}}',
+    };
+    const html = htmlTemplate(config, product, variations);
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const jsonLdScript = document.querySelector('script[type="application/ld+json"]');
+    const jsonLd = JSON.parse(jsonLdScript.textContent);
+
+    assert.strictEqual(jsonLd.offers[0].url, 'https://example.com/us/p/test-product-url-key/test-sku', 'JSON-LD offer URL does not match');
+    assert.strictEqual(jsonLd.offers[1].url, 'https://example.com/us/p/test-product-url-key?selected_product=test-sku-1', 'JSON-LD offer URL does not match');
+    assert.strictEqual(jsonLd.offers[2].url, 'https://example.com/us/p/test-product-url-key?selected_product=test-sku-2', 'JSON-LD offer URL does not match');
+    assert.strictEqual(jsonLd.offers[3].url, 'https://example.com/us/p/test-product-url-key?selected_product=test-sku-3', 'JSON-LD offer URL does not match');
   });
 
   it('should display the correct product name in <h1>', () => {
