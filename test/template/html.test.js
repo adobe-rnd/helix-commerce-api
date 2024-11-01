@@ -14,7 +14,8 @@
 
 import assert from 'node:assert';
 import { JSDOM } from 'jsdom';
-import { createDefaultVariations } from '../fixtures/variant.js';
+import { constructProductUrl } from '../../src/utils/product.js';
+import { createDefaultVariations, createProductVariationFixture } from '../fixtures/variant.js';
 import { createProductFixture } from '../fixtures/product.js';
 import htmlTemplate from '../../src/templates/html.js';
 
@@ -25,6 +26,7 @@ function priceRange(min, max) {
 }
 
 describe('Render Product HTML', () => {
+  let config;
   let dom;
   let document;
   let product;
@@ -33,7 +35,8 @@ describe('Render Product HTML', () => {
   before(() => {
     product = createProductFixture();
     variations = createDefaultVariations();
-    const config = {
+    config = {
+      host: 'https://example.com',
       matchedPath: '/us/p/{{urlkey}}/{{sku}}',
     };
     const html = htmlTemplate(config, product, variations);
@@ -77,6 +80,7 @@ describe('Render Product HTML', () => {
 
     const jsonLd = JSON.parse(jsonLdScript.textContent);
     assert.strictEqual(jsonLd['@type'], 'Product', 'JSON-LD @type should be Product');
+    assert.strictEqual(jsonLd['@id'], constructProductUrl(config, product), 'JSON-LD @id does not match product URL');
     assert.strictEqual(jsonLd.name, product.name, 'JSON-LD name does not match product name');
     assert.strictEqual(jsonLd.sku, product.sku, 'JSON-LD SKU does not match product SKU');
     assert.strictEqual(jsonLd.description, product.metaDescription, 'JSON-LD description does not match product description');
@@ -89,10 +93,29 @@ describe('Render Product HTML', () => {
       const variant = index === 0 ? product : variations[index - 1];
       assert.strictEqual(offer['@type'], 'Offer', `Offer type for variant ${variant.sku} should be Offer`);
       assert.strictEqual(offer.sku, variant.sku, `Offer SKU for variant ${variant.sku} does not match`);
+      assert.strictEqual(offer.url, constructProductUrl(config, product, index === 0 ? undefined : variant), 'JSON-LD @id does not match product URL');
       assert.strictEqual(offer.price, variant.prices.final.amount, `Offer price for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.priceCurrency, variant.prices.final.currency, `Offer priceCurrency for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.availability, variant.inStock ? 'InStock' : 'OutOfStock', `Offer availability for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.image, variant.images[0].url || '', `Offer image for variant ${variant.sku} does not match`);
+    });
+  });
+
+  it('should have the correct JSON-LD schema with attribute overrides', () => {
+    variations = [
+      createProductVariationFixture({ gtin: '123' }),
+      createProductVariationFixture({ gtin: '456' }),
+    ];
+    const html = htmlTemplate(config, product, variations);
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const jsonLdScript = document.querySelector('script[type="application/ld+json"]');
+    const jsonLd = JSON.parse(jsonLdScript.textContent);
+
+    jsonLd.offers.forEach((offer, index) => {
+      const variant = index === 0 ? product : variations[index - 1];
+      assert.strictEqual(offer.gtin, variant.gtin, `Offer gtin for variant ${variant.sku} does not match`);
     });
   });
 
