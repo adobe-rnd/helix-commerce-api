@@ -112,7 +112,9 @@ export function constructProductUrl(config, product, variant) {
   const productUrl = `${host}${productPath}`;
 
   if (variant) {
-    if (config.host === 'https://www.bulk.com') {
+    // Temporarily hardcoded
+    const orgSite = `${config.org}--${config.site}`;
+    if (orgSite === 'thepixel--bul-eds') {
       const options = variant.selections.map((selection) => atob(selection)).join(',').replace(/configurable\//g, '').replace(/\//g, '-');
       return `${productUrl}?pid=${variant.externalId}&o=${btoa(options)}`;
     }
