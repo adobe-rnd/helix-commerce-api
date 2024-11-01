@@ -114,7 +114,7 @@ export function constructProductUrl(config, product, variant) {
   if (variant) {
     const offerPattern = config.matchedPathConfig?.offerPattern;
     if (!offerPattern) {
-      return `${productUrl}/?optionsUIDs=${variant.selections.join(encodeURIComponent('=,'))}`;
+      return `${productUrl}/?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
     }
 
     const variantPath = offerPattern
