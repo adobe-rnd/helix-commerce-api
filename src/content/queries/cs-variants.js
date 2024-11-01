@@ -29,6 +29,7 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     inStock: product.inStock,
     images: product.images ?? [],
     attributes: product.attributes ?? [],
+    externalId: product.externalId,
     prices: {
       regular: {
         // TODO: determine whether to use min or max
@@ -70,6 +71,7 @@ export default (sku) => gql`
         name
         sku
         inStock
+        externalId
         images {
           url
           label

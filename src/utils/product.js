@@ -107,11 +107,16 @@ export function constructProductUrl(config, product, variant) {
   const { host, matchedPath } = config;
   const productPath = matchedPath
     .replace('{{urlkey}}', product.urlKey)
-    .replace('{{sku}}', encodeURIComponent(product.sku));
+    .replace('{{sku}}', encodeURIComponent(product.sku.toLowerCase()));
 
   const productUrl = `${host}${productPath}`;
 
   if (variant) {
+    if (config.host === 'https://www.bulk.com') {
+      const options = variant.selections.map((selection) => atob(selection)).join(',').replace(/configurable\//g, '').replace(/\//g, '-');
+      return `${productUrl}?pid=${variant.externalId}&o=${btoa(options)}`;
+    }
+
     const offerPattern = config.matchedPathConfig?.offerPattern;
     if (!offerPattern) {
       return `${productUrl}/?optionsUIDs=${variant.selections.join(encodeURIComponent('=,'))}`;

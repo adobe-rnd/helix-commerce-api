@@ -97,6 +97,7 @@ declare global {
     prices: Pick<Prices, 'regular' | 'final'>;
     selections: string[];
     attributes: Attribute[];
+    externalId: string;
     gtin?: string;
   }
 
