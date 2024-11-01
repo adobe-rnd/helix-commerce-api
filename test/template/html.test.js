@@ -121,7 +121,7 @@ describe('Render Product HTML', () => {
 
   it('should have the correct JSON-LD schema with custom offer pattern', () => {
     config.matchedPathConfig = {
-      offerPattern: '/us/p/{{urlkey}}?selected_product={{sku}}',
+      offerVariantURLTemplate: '/us/p/{{urlkey}}?selected_product={{sku}}',
     };
     const html = htmlTemplate(config, product, variations);
     dom = new JSDOM(html);

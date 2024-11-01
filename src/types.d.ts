@@ -34,7 +34,7 @@ declare global {
     params: Record<string, string>;
     headers: Record<string, string>;
     host: string;
-    offerPattern: string;
+    offerVariantURLTemplate: string;
     matchedPath: string;
     matchedPathConfig: Config;
     attributeOverrides: AttributeOverrides;

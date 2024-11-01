@@ -119,12 +119,12 @@ export function constructProductUrl(config, product, variant) {
       return `${productUrl}?pid=${variant.externalId}&o=${btoa(options)}`;
     }
 
-    const offerPattern = config.matchedPathConfig?.offerPattern;
-    if (!offerPattern) {
+    const offerVariantURLTemplate = config.matchedPathConfig?.offerVariantURLTemplate;
+    if (!offerVariantURLTemplate) {
       return `${productUrl}/?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
     }
 
-    const variantPath = offerPattern
+    const variantPath = offerVariantURLTemplate
       .replace('{{urlkey}}', product.urlKey)
       .replace('{{sku}}', encodeURIComponent(variant.sku));
     return `${config.host}${variantPath}`;
