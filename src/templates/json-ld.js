@@ -10,17 +10,16 @@
  * governing permissions and limitations under the License.
  */
 
-import { findProductImage, pruneUndefined } from '../utils/product.js';
+import { constructProductUrl, findProductImage, pruneUndefined } from '../utils/product.js';
 
 /**
  * @param {Product} product
  * @param {Variant[]} variants
  * @returns {string}
  */
-export default (product, variants) => {
+export default (config, product, variants) => {
   const {
     sku,
-    url,
     name,
     metaDescription,
     images,
@@ -31,12 +30,13 @@ export default (product, variants) => {
     prices,
   } = product;
 
+  const productUrl = constructProductUrl(config, product);
   const image = images?.[0]?.url ?? findProductImage(product, variants)?.url;
   const brandName = attributes?.find((attr) => attr.name === 'brand')?.value;
   return JSON.stringify(pruneUndefined({
     '@context': 'http://schema.org',
     '@type': 'Product',
-    '@id': url,
+    '@id': productUrl,
     name,
     sku,
     description: metaDescription,
@@ -46,22 +46,31 @@ export default (product, variants) => {
       prices ? ({
         '@type': 'Offer',
         sku,
-        url,
+        url: productUrl,
         image,
         availability: inStock ? 'InStock' : 'OutOfStock',
         price: prices?.final?.amount,
         priceCurrency: prices?.final?.currency,
       }) : undefined,
-      ...variants.map((v) => ({
-        '@type': 'Offer',
-        sku: v.sku,
-        url: v.url,
-        image: v.images?.[0]?.url ?? image,
-        availability: v.inStock ? 'InStock' : 'OutOfStock',
-        price: v.prices?.final?.amount,
-        priceCurrency: v.prices?.final?.currency,
+      ...variants.map((v) => {
+        const offerUrl = constructProductUrl(config, product, v);
 
-      })).filter(Boolean),
+        const offer = {
+          '@type': 'Offer',
+          sku: v.sku,
+          url: offerUrl,
+          image: v.images?.[0]?.url ?? image,
+          availability: v.inStock ? 'InStock' : 'OutOfStock',
+          price: v.prices?.final?.amount,
+          priceCurrency: v.prices?.final?.currency,
+        };
+
+        if (v.gtin) {
+          offer.gtin = v.gtin;
+        }
+
+        return offer;
+      }).filter(Boolean),
     ],
     ...(brandName
       ? {

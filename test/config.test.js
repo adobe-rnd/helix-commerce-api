@@ -14,8 +14,8 @@
 
 import assert from 'node:assert';
 import { resolveConfig } from '../src/config.js';
-import { TEST_CONTEXT } from './utils/context.js';
-import { defaultTenantConfigs } from './utils/kv.js';
+import { TEST_CONTEXT } from './fixtures/context.js';
+import { defaultTenantConfigs } from './fixtures/kv.js';
 
 describe('config tests', () => {
   it('should extract path params', async () => {

@@ -43,6 +43,7 @@ const priceRange = (min, max) => (min !== max ? ` (${min} - ${max})` : '');
  * @returns {string}
  */
 export const renderDocumentMetaTags = (product) => /* html */ `
+  <meta charset="UTF-8">
   <title>${product.metaTitle || product.name}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   ${metaProperty('description', product.metaDescription)}
@@ -111,20 +112,22 @@ export const renderHelixDependencies = () => /* html */ `
  * @param {Variant[]} variants
  * @returns {string}
  */
-export const renderJSONLD = (product, variants) => /* html */ `
+export const renderJSONLD = (config, product, variants) => /* html */ `
   <script type="application/ld+json">
-    ${JSON_LD_TEMPLATE(product, variants)}
+    ${JSON_LD_TEMPLATE(config, product, variants)}
   </script>
 `;
 
 /**
  * Create the head tags
+ * @param {Config} config
  * @param {Product} product
  * @param {Variant[]} variants
  * @param {Object} [options]
  * @returns {string}
  */
 export const renderHead = (
+  config,
   product,
   variants,
   {
@@ -145,7 +148,7 @@ export const renderHead = (
       ${twitterMetaTags(product, image)}
       ${commerceMetaTags(product)}
       ${helixDependencies()}
-      ${JSONLD(product, variants)}
+      ${JSONLD(config, product, variants)}
     </head>
   `;
 };
@@ -302,7 +305,7 @@ const renderProductVariantsAttributes = (variants) => /* html */ `
  * @param {Variant[]} variants
  * @returns {string}
  */
-export default (product, variants) => {
+export default (config, product, variants) => {
   const {
     name,
     description,
@@ -314,7 +317,7 @@ export default (product, variants) => {
   return /* html */`
     <!DOCTYPE html>
     <html>
-      ${renderHead(product, variants)}
+      ${renderHead(config, product, variants)}
       <body>
         <header></header>
         <main>

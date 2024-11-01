@@ -16,7 +16,7 @@ import { gql } from '../../utils/product.js';
  * @param {any} variants
  * @returns {Variant[]}
  */
-export const adapter = (variants) => variants.map(({ selections, product }) => {
+export const adapter = (config, variants) => variants.map(({ selections, product }) => {
   const minPrice = product.priceRange?.minimum ?? product.price;
   const maxPrice = product.priceRange?.maximum ?? product.price;
 
@@ -47,6 +47,13 @@ export const adapter = (variants) => variants.map(({ selections, product }) => {
     },
     selections: selections ?? [],
   };
+
+  if (config.attributeOverrides?.variant) {
+    Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
+      variant[key] = product.attributes?.find((attr) => attr.name === value)?.value;
+    });
+  }
+
   return variant;
 });
 

@@ -33,7 +33,10 @@ describe('Render Product HTML', () => {
   before(() => {
     product = createProductFixture();
     variations = createDefaultVariations();
-    const html = htmlTemplate(product, variations);
+    const config = {
+      matchedPath: '/us/p/{{urlkey}}/{{sku}}',
+    };
+    const html = htmlTemplate(config, product, variations);
     dom = new JSDOM(html);
     document = dom.window.document;
   });

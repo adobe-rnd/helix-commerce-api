@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { strict as assert } from 'assert';
+import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
 import { ResponseError } from '../../src/utils/http.js';
