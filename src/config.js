@@ -11,6 +11,7 @@
  */
 
 import { errorWithResponse } from './utils/http.js';
+import { siteOverrides } from './overrides/index.js';
 
 /**
  * This function finds ordered matches between a list of patterns and a given path.
@@ -104,7 +105,9 @@ export async function resolveConfig(ctx, overrides = {}) {
     org,
     site,
     route,
+    siteOverrides: siteOverrides[siteKey],
     ...overrides,
   };
+
   return resolved;
 }

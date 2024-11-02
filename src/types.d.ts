@@ -38,6 +38,7 @@ declare global {
     matchedPath: string;
     matchedPathConfig: Config;
     attributeOverrides: AttributeOverrides;
+    siteOverrides: Record<string, Record<string, unknown>>;
   }
 
   export interface Env {
