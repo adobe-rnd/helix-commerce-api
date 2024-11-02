@@ -81,8 +81,8 @@ export function matchConfigPath(config, path) {
   for (const [key] of pathEntries) {
     // Replace `{{urlkey}}` and `{{sku}}` with regex patterns
     const pattern = key
-      .replace('{{urlkey}}', '([^/]+)')
-      .replace('{{sku}}', '([^/]+)');
+      .replace('{{urlkey}}', '([^]+)')
+      .replace('{{sku}}', '([^]+)');
 
     // Convert to regex and test against the path
     const regex = new RegExp(`^${pattern}$`);
@@ -112,13 +112,6 @@ export function constructProductUrl(config, product, variant) {
   const productUrl = `${host}${productPath}`;
 
   if (variant) {
-    // Temporarily hardcoded
-    const orgSite = `${config.org}--${config.site}`;
-    if (orgSite === 'thepixel--bul-eds') {
-      const options = variant.selections.map((selection) => atob(selection)).join(',').replace(/configurable\//g, '').replace(/\//g, '-');
-      return `${productUrl}?pid=${variant.externalId}&o=${btoa(options)}`;
-    }
-
     const offerVariantURLTemplate = config.matchedPathConfig?.offerVariantURLTemplate;
     if (!offerVariantURLTemplate) {
       return `${productUrl}/?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;

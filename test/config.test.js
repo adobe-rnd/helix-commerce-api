@@ -48,6 +48,7 @@ describe('config tests', () => {
           apiKey: 'bad',
         },
       },
+      siteOverrides: undefined,
     });
   });
 
@@ -97,6 +98,7 @@ describe('config tests', () => {
           },
         },
       },
+      siteOverrides: undefined,
     });
   });
 
@@ -130,6 +132,7 @@ describe('config tests', () => {
           apiKey: 'bad',
         },
       },
+      siteOverrides: undefined,
     });
   });
 
@@ -166,6 +169,7 @@ describe('config tests', () => {
           apiKey: 'bad1',
         },
       },
+      siteOverrides: undefined,
     });
   });
 

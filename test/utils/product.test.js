@@ -14,7 +14,47 @@
 /* eslint-disable max-len */
 
 import assert from 'node:assert';
-import { constructProductUrl } from '../../src/utils/product.js';
+import { constructProductUrl, matchConfigPath } from '../../src/utils/product.js';
+
+describe('matchConfigPath', () => {
+  const mockConfig = {
+    confMap: {
+      base: 'some-base-value',
+      '/products/{{urlkey}}/{{sku}}': 'product-detail',
+      '/products/{{urlkey}}': 'product-detail',
+    },
+  };
+
+  it('should match a product detail path with urlkey and sku', () => {
+    const path = '/products/some-product/123456';
+    const result = matchConfigPath(mockConfig, path);
+    assert.strictEqual(result, '/products/{{urlkey}}/{{sku}}');
+  });
+
+  it('should match a product detail path with urlkey', () => {
+    const path = '/products/some-product';
+    const result = matchConfigPath(mockConfig, path);
+    assert.strictEqual(result, '/products/{{urlkey}}');
+  });
+
+  it('should match a product detail path with urlkey with slash and sku', () => {
+    const path = '/products/some/product/123456';
+    const result = matchConfigPath(mockConfig, path);
+    assert.strictEqual(result, '/products/{{urlkey}}/{{sku}}');
+  });
+
+  it('should return null for unmatched paths', () => {
+    const path = '/non-existent-path';
+    const result = matchConfigPath(mockConfig, path);
+    assert.strictEqual(result, null);
+  });
+
+  it('should handle paths with special characters in urlkey', () => {
+    const path = '/products/special-product-name-123/ABC123';
+    const result = matchConfigPath(mockConfig, path);
+    assert.strictEqual(result, '/products/{{urlkey}}/{{sku}}');
+  });
+});
 
 describe('constructProductUrl', () => {
   const configWithOfferVariantURLTemplate = {
