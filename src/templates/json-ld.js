@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { constructProductUrl, findProductImage, pruneUndefined } from '../utils/product.js';
+import { constructProductUrl as constructProductUrlBase, findProductImage, pruneUndefined } from '../utils/product.js';
 
 /**
  * @param {Product} product
@@ -30,8 +30,9 @@ export default (config, product, variants) => {
     prices,
   } = product;
 
-  const productUrl = config.siteOverrides?.constructProductUrl(config, product)
-    ?? constructProductUrl(config, product);
+  const constructProductUrl = config.siteOverrides?.constructProductUrl ?? constructProductUrlBase;
+
+  const productUrl = constructProductUrl(config, product);
   const image = images?.[0]?.url ?? findProductImage(product, variants)?.url;
   const brandName = attributes?.find((attr) => attr.name === 'brand')?.value;
   return JSON.stringify(pruneUndefined({
@@ -54,9 +55,7 @@ export default (config, product, variants) => {
         priceCurrency: prices?.final?.currency,
       }) : undefined,
       ...variants.map((v) => {
-        const offerUrl = config.siteOverrides?.constructProductUrl(config, product, v)
-          ?? constructProductUrl(config, product, v);
-
+        const offerUrl = constructProductUrl(config, product, v);
         const offer = {
           '@type': 'Offer',
           sku: v.sku,
