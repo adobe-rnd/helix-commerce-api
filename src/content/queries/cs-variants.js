@@ -27,7 +27,7 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     description: product.description,
     url: product.url,
     inStock: product.inStock,
-    images: product.images ?? [],
+    images: product.images?.filter((img) => img.url.replace('http://', 'https://')) ?? [],
     attributes: product.attributes ?? [],
     externalId: product.externalId,
     prices: {

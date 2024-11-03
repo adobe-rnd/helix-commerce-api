@@ -25,7 +25,6 @@ export const adapter = (productData) => {
   } else if (maxPrice == null) {
     maxPrice = minPrice;
   }
-
   /** @type {Product} */
   const product = {
     sku: productData.sku,
@@ -40,7 +39,7 @@ export const adapter = (productData) => {
     addToCartAllowed: productData.addToCartAllowed,
     inStock: productData.inStock,
     externalId: productData.externalId,
-    images: productData.images ?? [],
+    images: productData.images?.filter((img) => img.url.replace('http://', 'https://')) ?? [],
     attributes: productData.attributes ?? [],
     options: (productData.options ?? []).map((option) => ({
       id: option.id,
