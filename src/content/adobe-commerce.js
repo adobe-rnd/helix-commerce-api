@@ -162,6 +162,10 @@ export async function handle(ctx, config) {
     return errorResponse(400, 'missing sku and coreEndpoint');
   }
 
+  if (config.uppercaseSkus) {
+    sku = sku?.toUpperCase();
+  }
+
   if (!sku) {
     // lookup sku by urlkey with core
     // TODO: test if livesearch if enabled

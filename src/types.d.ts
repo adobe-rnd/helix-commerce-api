@@ -37,6 +37,7 @@ declare global {
     offerVariantURLTemplate: string;
     matchedPath: string;
     matchedPathConfig: Config;
+    uppercaseSkus: boolean;
     attributeOverrides: AttributeOverrides;
     siteOverrides: Record<string, Record<string, unknown>>;
   }
