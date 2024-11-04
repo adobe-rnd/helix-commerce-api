@@ -5,6 +5,12 @@ declare global {
    * { pathPattern => Config }
    */
   export type ConfigMap = Record<string, Config>;
+  
+  export interface AttributeOverrides {
+    variant: {
+      [key: string]: string;
+    };
+  }
 
   /**
    * Resolved config object
@@ -27,6 +33,12 @@ declare global {
     confMap: ConfigMap;
     params: Record<string, string>;
     headers: Record<string, string>;
+    host: string;
+    offerVariantURLTemplate: string;
+    matchedPath: string;
+    matchedPathConfig: Config;
+    attributeOverrides: AttributeOverrides;
+    siteOverrides: Record<string, Record<string, unknown>>;
   }
 
   export interface Env {
@@ -86,6 +98,8 @@ declare global {
     prices: Pick<Prices, 'regular' | 'final'>;
     selections: string[];
     attributes: Attribute[];
+    externalId: string;
+    gtin?: string;
   }
 
   interface Image {

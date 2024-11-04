@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { forceImagesHTTPS } from '../../utils/http.js';
 import { gql } from '../../utils/product.js';
 
 /**
@@ -25,7 +26,6 @@ export const adapter = (productData) => {
   } else if (maxPrice == null) {
     maxPrice = minPrice;
   }
-
   /** @type {Product} */
   const product = {
     sku: productData.sku,
@@ -40,7 +40,7 @@ export const adapter = (productData) => {
     addToCartAllowed: productData.addToCartAllowed,
     inStock: productData.inStock,
     externalId: productData.externalId,
-    images: productData.images ?? [],
+    images: forceImagesHTTPS(productData.images) ?? [],
     attributes: productData.attributes ?? [],
     options: (productData.options ?? []).map((option) => ({
       id: option.id,

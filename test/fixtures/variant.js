@@ -35,6 +35,7 @@ export function createProductVariationFixture(overrides = {}) {
       { name: 'criteria_5', label: 'Criteria 5', value: 'Canopy: 4.5" Round' },
       { name: 'criteria_6', label: 'Criteria 6', value: 'Socket: E26 Keyless' },
       { name: 'criteria_7', label: 'Criteria 7', value: 'Wattage: 40 T10' },
+      { name: 'barcode', label: 'Barcode', value: '123456789012' },
       { name: 'weight', label: 'Weight', value: 219 },
     ],
     prices: {

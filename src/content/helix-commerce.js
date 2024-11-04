@@ -28,7 +28,7 @@ export async function handle(ctx, config) {
   }
 
   const product = await fetchProduct(ctx, config, sku);
-  const html = HTML_TEMPLATE(product, product.variants);
+  const html = HTML_TEMPLATE(config, product, product.variants);
   return new Response(html, {
     status: 200,
     headers: {

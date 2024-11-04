@@ -12,7 +12,7 @@
 
 // @ts-nocheck
 
-import { strict as assert } from 'assert';
+import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
 

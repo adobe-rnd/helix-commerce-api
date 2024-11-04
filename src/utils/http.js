@@ -70,3 +70,10 @@ export function errorWithResponse(status, xError, body = '') {
   const error = new ResponseError(xError, response);
   return error;
 }
+
+export function forceImagesHTTPS(images) {
+  return images?.map((img) => ({
+    ...img,
+    url: img.url.replace('http://', 'https://'),
+  }));
+}

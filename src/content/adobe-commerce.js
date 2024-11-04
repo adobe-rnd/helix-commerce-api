@@ -96,7 +96,7 @@ async function fetchVariants(sku, config) {
   try {
     const json = await resp.json();
     const { variants } = json?.data?.variants ?? {};
-    return variantsAdapter(variants);
+    return variantsAdapter(config, variants);
   } catch (e) {
     console.error('failed to parse variants: ', e);
     throw errorWithResponse(500, 'failed to parse variants response');
@@ -173,7 +173,7 @@ export async function handle(ctx, config) {
     fetchProduct(sku.toUpperCase(), config),
     fetchVariants(sku.toUpperCase(), config),
   ]);
-  const html = HTML_TEMPLATE(product, variants);
+  const html = HTML_TEMPLATE(config, product, variants);
   return new Response(html, {
     status: 200,
     headers: {

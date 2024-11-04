@@ -68,3 +68,60 @@ export function assertValidProduct(product) {
     throw new Error('Invalid product');
   }
 }
+
+/**
+ * @param {Config} config
+ * @param {string} path
+ * @returns {string} matched path key
+ */
+export function matchConfigPath(config, path) {
+  // Filter out any keys that are not paths
+  const pathEntries = Object.entries(config.confMap).filter(([key]) => key !== 'base');
+
+  for (const [key] of pathEntries) {
+    // Replace `{{urlkey}}` and `{{sku}}` with regex patterns
+    const pattern = key
+      .replace('{{urlkey}}', '([^]+)')
+      .replace('{{sku}}', '([^]+)');
+
+    // Convert to regex and test against the path
+    const regex = new RegExp(`^${pattern}$`);
+    const match = path.match(regex);
+
+    if (match) {
+      return key;
+    }
+  }
+  console.warn('No match found for path:', path);
+  return null;
+}
+
+/**
+ * Constructs product url
+ * @param {Config} config
+ * @param {Product} product
+ * @param {Variant} [variant]
+ * @returns {string}
+ */
+export function constructProductUrl(config, product, variant) {
+  const { host, matchedPath } = config;
+  const productPath = matchedPath
+    .replace('{{urlkey}}', product.urlKey)
+    .replace('{{sku}}', encodeURIComponent(product.sku.toLowerCase()));
+
+  const productUrl = `${host}${productPath}`;
+
+  if (variant) {
+    const offerVariantURLTemplate = config.matchedPathConfig?.offerVariantURLTemplate;
+    if (!offerVariantURLTemplate) {
+      return `${productUrl}/?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
+    }
+
+    const variantPath = offerVariantURLTemplate
+      .replace('{{urlkey}}', product.urlKey)
+      .replace('{{sku}}', encodeURIComponent(variant.sku));
+    return `${config.host}${variantPath}`;
+  }
+
+  return productUrl;
+}

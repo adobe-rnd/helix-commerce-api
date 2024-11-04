@@ -10,13 +10,14 @@
  * governing permissions and limitations under the License.
  */
 
+import { forceImagesHTTPS } from '../../utils/http.js';
 import { gql } from '../../utils/product.js';
 
 /**
  * @param {any} variants
  * @returns {Variant[]}
  */
-export const adapter = (variants) => variants.map(({ selections, product }) => {
+export const adapter = (config, variants) => variants.map(({ selections, product }) => {
   const minPrice = product.priceRange?.minimum ?? product.price;
   const maxPrice = product.priceRange?.maximum ?? product.price;
 
@@ -27,8 +28,9 @@ export const adapter = (variants) => variants.map(({ selections, product }) => {
     description: product.description,
     url: product.url,
     inStock: product.inStock,
-    images: product.images ?? [],
+    images: forceImagesHTTPS(product.images) ?? [],
     attributes: product.attributes ?? [],
+    externalId: product.externalId,
     prices: {
       regular: {
         // TODO: determine whether to use min or max
@@ -47,6 +49,12 @@ export const adapter = (variants) => variants.map(({ selections, product }) => {
     },
     selections: selections ?? [],
   };
+  if (config.attributeOverrides?.variant) {
+    Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
+      variant[key] = product.attributes?.find((attr) => attr.name === value)?.value;
+    });
+  }
+
   return variant;
 });
 
@@ -63,6 +71,7 @@ export default (sku) => gql`
         name
         sku
         inStock
+        externalId
         images {
           url
           label
