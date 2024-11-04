@@ -1,3 +1,29 @@
+# [1.3.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.9...v1.3.0) (2024-11-04)
+
+
+### Bug Fixes
+
+* add externalId.. hack override for bulk for now ([c101f00](https://github.com/adobe-rnd/helix-commerce-api/commit/c101f0067cf61c53f86a8735049dd0c4a66c7d02))
+* add site overrides setup ([b4de3e3](https://github.com/adobe-rnd/helix-commerce-api/commit/b4de3e384209f5c890e34dc7ffb4c9286fc0dc64))
+* add test for variant urls in json-ld ([654457f](https://github.com/adobe-rnd/helix-commerce-api/commit/654457faceb55e18d608fde0a4facff7a4b4e12d))
+* add tests ([1444e94](https://github.com/adobe-rnd/helix-commerce-api/commit/1444e9483ae090a89c7b4c46d5ab94973f330cf5))
+* add url tests for product json-ld ([bd799b6](https://github.com/adobe-rnd/helix-commerce-api/commit/bd799b6dc8f390ac2159d71208e00cf646a68490))
+* cleanup and tests ([8dc4fab](https://github.com/adobe-rnd/helix-commerce-api/commit/8dc4fabf8d1794d010438d7e638bc93841ac8cf0))
+* error label on offer url test ([03b3d55](https://github.com/adobe-rnd/helix-commerce-api/commit/03b3d55cd1f861f179ea7bb37ca8f79260cf8397))
+* force https for images ([85e0560](https://github.com/adobe-rnd/helix-commerce-api/commit/85e056017240bf3d82e5a1adb808c7f8115cb28b))
+* forceImagesHTTPS function ([710967c](https://github.com/adobe-rnd/helix-commerce-api/commit/710967c66d6bfe1de47c06ba2e8c00fbbe5e48df))
+* remove ([e98d8bb](https://github.com/adobe-rnd/helix-commerce-api/commit/e98d8bbad649c2d068f2cf59ec0ff5c0ef0b3311))
+* rename offerPattern to offerVariantURLTemplate ([e280e44](https://github.com/adobe-rnd/helix-commerce-api/commit/e280e445e652acdcb7c10e86ccefe18570a62da0))
+* resolve function once ([aa4b3a6](https://github.com/adobe-rnd/helix-commerce-api/commit/aa4b3a613318cccf4c9706924a44ecf549d83952))
+* support uppercase configurable skus ([6be4ac8](https://github.com/adobe-rnd/helix-commerce-api/commit/6be4ac8fb66f392b73581c0a5977a2c8132e5111))
+* tests ([91a48ff](https://github.com/adobe-rnd/helix-commerce-api/commit/91a48ff6e02a5fe8b4e3fb380a5de534b8f8ebbe))
+* use org--site ([fcca717](https://github.com/adobe-rnd/helix-commerce-api/commit/fcca71794fa64d000185416a328e250d94afdeee))
+
+
+### Features
+
+* fix offer urls and add variant overrides ([d92f938](https://github.com/adobe-rnd/helix-commerce-api/commit/d92f9382bdd086ff0838cd803ba99355c0426913))
+
 ## [1.2.9](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.8...v1.2.9) (2024-10-31)
 
 
