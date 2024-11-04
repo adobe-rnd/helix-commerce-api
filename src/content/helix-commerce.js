@@ -12,7 +12,7 @@
 
 import { errorResponse } from '../utils/http.js';
 import { fetchProduct } from '../utils/r2.js';
-import HTML_TEMPLATE from '../templates/html.js';
+import htmlTemplateFromContext from '../templates/html/index.js';
 
 /**
  * @param {Context} ctx
@@ -28,7 +28,7 @@ export async function handle(ctx, config) {
   }
 
   const product = await fetchProduct(ctx, config, sku);
-  const html = HTML_TEMPLATE(config, product, product.variants);
+  const html = htmlTemplateFromContext(ctx, product, product.variants).render();
   return new Response(html, {
     status: 200,
     headers: {

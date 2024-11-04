@@ -14,7 +14,7 @@
 /* eslint-disable max-len */
 
 import assert from 'node:assert';
-import { constructProductUrl, matchConfigPath } from '../../src/utils/product.js';
+import { matchConfigPath } from '../../src/utils/product.js';
 
 describe('matchConfigPath', () => {
   const mockConfig = {

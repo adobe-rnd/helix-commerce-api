@@ -95,33 +95,3 @@ export function matchConfigPath(config, path) {
   console.warn('No match found for path:', path);
   return null;
 }
-
-/**
- * Constructs product url
- * @param {Config} config
- * @param {Product} product
- * @param {Variant} [variant]
- * @returns {string}
- */
-export function constructProductUrl(config, product, variant) {
-  const { host, matchedPath } = config;
-  const productPath = matchedPath
-    .replace('{{urlkey}}', product.urlKey)
-    .replace('{{sku}}', encodeURIComponent(product.sku.toLowerCase()));
-
-  const productUrl = `${host}${productPath}`;
-
-  if (variant) {
-    const offerVariantURLTemplate = config.matchedPathConfig?.offerVariantURLTemplate;
-    if (!offerVariantURLTemplate) {
-      return `${productUrl}/?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
-    }
-
-    const variantPath = offerVariantURLTemplate
-      .replace('{{urlkey}}', product.urlKey)
-      .replace('{{sku}}', encodeURIComponent(variant.sku));
-    return `${config.host}${variantPath}`;
-  }
-
-  return productUrl;
-}
