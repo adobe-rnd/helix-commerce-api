@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { forceImagesHTTPS } from '../../utils/http.js';
 import { gql } from '../../utils/product.js';
 
 /**
@@ -39,7 +40,7 @@ export const adapter = (productData) => {
     addToCartAllowed: productData.addToCartAllowed,
     inStock: productData.inStock,
     externalId: productData.externalId,
-    images: productData.images?.filter((img) => img.url.replace('http://', 'https://')) ?? [],
+    images: forceImagesHTTPS(productData.images) ?? [],
     attributes: productData.attributes ?? [],
     options: (productData.options ?? []).map((option) => ({
       id: option.id,

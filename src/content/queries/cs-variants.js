@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { forceImagesHTTPS } from '../../utils/http.js';
 import { gql } from '../../utils/product.js';
 
 /**
@@ -27,7 +28,7 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     description: product.description,
     url: product.url,
     inStock: product.inStock,
-    images: product.images?.filter((img) => img.url.replace('http://', 'https://')) ?? [],
+    images: forceImagesHTTPS(product.images) ?? [],
     attributes: product.attributes ?? [],
     externalId: product.externalId,
     prices: {
@@ -48,7 +49,6 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     },
     selections: selections ?? [],
   };
-
   if (config.attributeOverrides?.variant) {
     Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
       variant[key] = product.attributes?.find((attr) => attr.name === value)?.value;
