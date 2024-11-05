@@ -47,7 +47,7 @@ export const adapter = (config, variants) => variants.map(({ selections, product
         minimumAmount: minPrice.final.amount.value,
       },
     },
-    selections: selections ?? [],
+    selections: (selections ?? []).sort(),
   };
 
   const specialToDate = parseSpecialToDate(product);
