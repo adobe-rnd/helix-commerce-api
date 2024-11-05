@@ -94,7 +94,13 @@ export const adapter = (productData) => {
 };
 
 // @ts-ignore
-export default ({ sku }) => gql`{
+/**
+ * @param {{
+ *  sku: string;
+ *  imageRoles?: string[];
+ * }} opts
+ */
+export default ({ sku, imageRoles = [] }) => gql`{
     products(
       skus: ["${sku}"]
     ) {
@@ -112,7 +118,7 @@ export default ({ sku }) => gql`{
       addToCartAllowed
       inStock
       externalId
-      images(roles: []) { 
+      images(roles: [${imageRoles.map((s) => `"${s}"`).join(',')}]) { 
         url
         label
       }
