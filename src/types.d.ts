@@ -90,6 +90,7 @@ declare global {
     urlKey?: string;
     externalId?: string;
     variants?: Variant[]; // variants exist on products in helix commerce but not on magento
+    specialToDate?: string;
 
     // not handled currently:
     externalParentId?: string;
@@ -110,6 +111,7 @@ declare global {
     selections: string[];
     attributes: Attribute[];
     externalId: string;
+    specialToDate?: string;
     gtin?: string;
   }
 
