@@ -1,3 +1,15 @@
+# [1.4.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.3.0...v1.4.0) (2024-11-05)
+
+
+### Bug Fixes
+
+* cleanup, rm dupe logic ([2163278](https://github.com/adobe-rnd/helix-commerce-api/commit/21632787bd3de8bc353037972fac31cc1b06ffa8))
+
+
+### Features
+
+* template overrides ([cf3cfde](https://github.com/adobe-rnd/helix-commerce-api/commit/cf3cfde7b33b36eb14d2ea19dda3da7e8f1f9235))
+
 # [1.3.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.9...v1.3.0) (2024-11-04)
 
 
