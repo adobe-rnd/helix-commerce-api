@@ -49,6 +49,16 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     },
     selections: selections ?? [],
   };
+
+  const specialToDate = product.attributes?.find((attr) => attr.name === 'special_to_date')?.value;
+  if (specialToDate) {
+    const today = new Date();
+    const specialPriceToDate = new Date(specialToDate);
+    if (specialPriceToDate.getTime() >= today.getTime()) {
+      variant.specialToDate = specialToDate.substring(0, specialToDate.indexOf(' '));
+    }
+  }
+
   if (config.attributeOverrides?.variant) {
     Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
       variant[key] = product.attributes?.find((attr) => attr.name === value)?.value;

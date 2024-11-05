@@ -110,6 +110,7 @@ declare global {
     selections: string[];
     attributes: Attribute[];
     externalId: string;
+    specialToDate?: string;
     gtin?: string;
   }
 

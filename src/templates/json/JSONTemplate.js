@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+/* eslint-disable class-methods-use-this */
+
 import { findProductImage, pruneUndefined } from '../../utils/product.js';
 
 export class JSONTemplate {
@@ -80,6 +82,58 @@ export class JSONTemplate {
     };
   }
 
+  renderOffers() {
+    const image = this.product.images?.[0]?.url
+      ?? findProductImage(this.product, this.variants)?.url;
+    const configurableProduct = this.variants && this.variants.length > 0;
+    const offers = configurableProduct ? this.variants : [this.product];
+    return {
+      offers: [
+        ...offers.map((v) => {
+          const offerUrl = this.constructProductURL(configurableProduct ? v : undefined);
+          const { prices: variantPrices } = v;
+          const finalPrice = variantPrices?.final?.amount;
+          const regularPrice = variantPrices?.regular?.amount;
+          const offer = {
+            '@type': 'Offer',
+            sku: v.sku,
+            url: offerUrl,
+            image: v.images?.[0]?.url ?? image,
+            availability: v.inStock ? 'InStock' : 'OutOfStock',
+            price: finalPrice,
+            priceCurrency: variantPrices.final?.currency,
+          };
+
+          if (finalPrice < regularPrice) {
+            offer.priceSpecification = this.renderOffersPriceSpecification(v);
+          }
+
+          if (v.gtin) {
+            offer.gtin = v.gtin;
+          }
+
+          if (v.specialToDate) {
+            offer.priceValidUntil = v.specialToDate;
+          }
+
+          return offer;
+        }).filter(Boolean),
+      ],
+    };
+  }
+
+  renderOffersPriceSpecification(variant) {
+    const { prices } = variant;
+    const { regular } = prices;
+    const { amount, currency } = regular;
+    return {
+      '@type': 'UnitPriceSpecification',
+      priceType: 'https://schema.org/ListPrice',
+      price: amount,
+      priceCurrency: currency,
+    };
+  }
+
   render() {
     const {
       sku,
@@ -88,8 +142,6 @@ export class JSONTemplate {
       images,
       reviewCount,
       ratingValue,
-      inStock,
-      prices,
     } = this.product;
 
     const productUrl = this.constructProductURL();
@@ -103,35 +155,7 @@ export class JSONTemplate {
       description: metaDescription,
       image,
       productID: sku,
-      offers: [
-        prices ? ({
-          '@type': 'Offer',
-          sku,
-          url: productUrl,
-          image,
-          availability: inStock ? 'InStock' : 'OutOfStock',
-          price: prices?.final?.amount,
-          priceCurrency: prices?.final?.currency,
-        }) : undefined,
-        ...this.variants.map((v) => {
-          const offerUrl = this.constructProductURL(v);
-          const offer = {
-            '@type': 'Offer',
-            sku: v.sku,
-            url: offerUrl,
-            image: v.images?.[0]?.url ?? image,
-            availability: v.inStock ? 'InStock' : 'OutOfStock',
-            price: v.prices?.final?.amount,
-            priceCurrency: v.prices?.final?.currency,
-          };
-
-          if (v.gtin) {
-            offer.gtin = v.gtin;
-          }
-
-          return offer;
-        }).filter(Boolean),
-      ],
+      ...this.renderOffers(),
       ...(this.renderBrand() ?? {}),
       ...(typeof reviewCount === 'number'
      && typeof ratingValue === 'number'
