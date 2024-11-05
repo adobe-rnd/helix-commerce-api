@@ -18,21 +18,21 @@ const ALLOWED_METHODS = ['GET'];
 
 /**
  * @param {Context} ctx
- * @param {Config} config
  * @returns {Promise<Response>}
  */
-export default async function contentHandler(ctx, config) {
+export default async function contentHandler(ctx) {
   if (!ALLOWED_METHODS.includes(ctx.info.method)) {
     return errorResponse(405, 'method not allowed');
   }
 
+  const { config } = ctx;
   if (!config.pageType) {
     return errorResponse(400, 'invalid config for tenant site (missing pageType)');
   }
   console.log('config: ', JSON.stringify(config, null, 2));
 
   if (config.catalogSource === 'helix') {
-    return handleHelixCommerce(ctx, config);
+    return handleHelixCommerce(ctx);
   }
-  return handleAdobeCommerce(ctx, config);
+  return handleAdobeCommerce(ctx);
 }

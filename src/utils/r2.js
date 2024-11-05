@@ -17,11 +17,11 @@ import { errorWithResponse } from './http.js';
 /**
  * Load product by SKU
  * @param {Context} ctx - The context object.
- * @param {Config} config - The config object.
  * @param {string} sku - The SKU of the product.
  * @returns {Promise<Product>} - A promise that resolves to the product.
  */
-export async function fetchProduct(ctx, config, sku) {
+export async function fetchProduct(ctx, sku) {
+  const { config } = ctx;
   const { log } = ctx;
   const key = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
   log.debug('Fetching product from R2:', key);
@@ -42,11 +42,11 @@ export async function fetchProduct(ctx, config, sku) {
 /**
  * Save products
  * @param {Context} ctx - The context object.
- * @param {Config} config - The config object.
  * @param {Product[]} products - The products to save.
  * @returns {Promise<void>} - A promise that resolves when the products are saved.
  */
-export async function saveProducts(ctx, config, products) {
+export async function saveProducts(ctx, products) {
+  const { config } = ctx;
   const { log } = ctx;
   const BATCH_SIZE = 50;
 
@@ -92,11 +92,11 @@ export async function saveProducts(ctx, config, products) {
 /**
  * Resolve SKU from a URL key
  * @param {Context} ctx - The context object.
- * @param {Config} config - The config object.
  * @param {string} urlKey - The URL key.
  * @returns {Promise<string>} - A promise that resolves to the SKU.
  */
-export async function lookupSku(ctx, config, urlKey) {
+export async function lookupSku(ctx, urlKey) {
+  const { config } = ctx;
   // Make a HEAD request to retrieve the SKU from metadata based on the URL key
   const urlKeyPath = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
   const headResponse = await ctx.env.CATALOG_BUCKET.head(urlKeyPath);
@@ -112,10 +112,10 @@ export async function lookupSku(ctx, config, urlKey) {
 /**
  * List all products from R2
  * @param {Context} ctx - The context object.
- * @param {Config} config - The config object.
  * @returns {Promise<Product[]>} - A promise that resolves to the products.
  */
-export async function listAllProducts(ctx, config) {
+export async function listAllProducts(ctx) {
+  const { config } = ctx;
   const bucket = ctx.env.CATALOG_BUCKET;
 
   const listResponse = await bucket.list({ prefix: `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/` });

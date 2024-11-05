@@ -18,28 +18,27 @@ import { saveProducts } from '../utils/r2.js';
 /**
  * Saves a product to R2.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Config} config - The configuration object with application settings.
  * @param {Object} product - The product object to be saved.
  * @returns {Promise<Object>} - A promise that resolves to the saved product.
  */
-export async function putProduct(ctx, config, product) {
+export async function putProduct(ctx, product) {
   if (!product.sku) {
     throw errorWithResponse(400, 'invalid request body: missing sku');
   }
 
-  await saveProducts(ctx, config, [product]);
+  await saveProducts(ctx, [product]);
   return product;
 }
 
 /**
  * Handles a PUT request to update a product.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Config} config - The configuration object with application settings.
  * @param {Request} request - The request object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductSaveRequest(ctx, config, request) {
+export async function handleProductSaveRequest(ctx, request) {
   try {
+    const { config } = ctx;
     let product;
 
     if (config.sku === '*') {
@@ -74,7 +73,7 @@ export async function handleProductSaveRequest(ctx, config, request) {
       return errorResponse(404, 'no path patterns found');
     }
 
-    await putProduct(ctx, config, product);
+    await putProduct(ctx, product);
 
     const purgePaths = matchedPathPatterns.map(
       (pattern) => pattern

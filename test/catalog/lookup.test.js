@@ -46,31 +46,31 @@ describe('handleProductLookupRequest Tests', () => {
     const ctx = {
       url: { origin: 'https://test-origin', search: '?urlkey=some-url-key' },
       log: { error: sinon.stub() },
-    };
-    const config = {
-      org: 'test-org',
-      site: 'test-site',
-      storeCode: 'test-store-code',
-      storeViewCode: 'test-store-view-code',
+      config: {
+        org: 'test-org',
+        site: 'test-site',
+        storeCode: 'test-store-code',
+        storeViewCode: 'test-store-view-code',
+      },
     };
 
     lookupSkuStub.resolves('1234');
     fetchProductStub.resolves({ sku: '1234', name: 'Test Product' });
 
-    const response = await handleProductLookupRequest(ctx, config);
+    const response = await handleProductLookupRequest(ctx);
 
     assert.equal(response.headers.get('Location'), 'https://test-origin/test-org/test-site/catalog/test-store-code/test-store-view-code/product/1234');
     assert.equal(response.status, 301);
 
-    assert(lookupSkuStub.calledOnceWith(ctx, config, 'some-url-key'));
+    assert(lookupSkuStub.calledOnceWith(ctx, 'some-url-key'));
   });
 
   it('should return a list of all products when no urlKey is provided', async () => {
     const ctx = {
       url: { search: '' },
       log: { error: sinon.stub() },
+      config: {},
     };
-    const config = {};
 
     const mockProducts = [
       { sku: '1234', name: 'Product 1' },
@@ -78,7 +78,7 @@ describe('handleProductLookupRequest Tests', () => {
     ];
     listAllProductsStub.resolves(mockProducts);
 
-    const response = await handleProductLookupRequest(ctx, config);
+    const response = await handleProductLookupRequest(ctx);
 
     assert.equal(response.status, 200);
     const responseBody = await response.json();
@@ -87,15 +87,15 @@ describe('handleProductLookupRequest Tests', () => {
       products: mockProducts,
     });
 
-    assert(listAllProductsStub.calledOnceWith(ctx, config));
+    assert(listAllProductsStub.calledOnceWith(ctx));
   });
 
   it('should return 500 if an unexpected error occurs', async () => {
     const ctx = {
       url: { search: '' },
       log: { error: sinon.stub() },
+      config: {},
     };
-    const config = {};
 
     const unexpectedError = new Error('Unexpected Error');
     listAllProductsStub.rejects(unexpectedError);
@@ -103,7 +103,7 @@ describe('handleProductLookupRequest Tests', () => {
     const mockErrorResponse = new Response(null, { status: 500, headers: { 'x-error': 'internal server error' } });
     errorResponseStub.returns(mockErrorResponse);
 
-    const response = await handleProductLookupRequest(ctx, config);
+    const response = await handleProductLookupRequest(ctx);
 
     assert.equal(response.status, 500);
     assert.equal(response.headers.get('x-error'), 'internal server error');
@@ -115,15 +115,15 @@ describe('handleProductLookupRequest Tests', () => {
     const ctx = {
       url: { search: '' },
       log: { error: sinon.stub() },
+      config: {},
     };
-    const config = {};
 
     const existingErrorResponse = new Response('Bad Request', { status: 400 });
     const existingError = new ResponseError('Bad Request', existingErrorResponse);
 
     listAllProductsStub.rejects(existingError);
 
-    const response = await handleProductLookupRequest(ctx, config);
+    const response = await handleProductLookupRequest(ctx);
 
     assert.equal(response.status, 400);
     const responseBody = await response.text();

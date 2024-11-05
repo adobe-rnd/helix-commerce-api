@@ -16,13 +16,13 @@ import content from './content/handler.js';
 import catalog from './catalog/handler.js';
 
 /**
- * @type {Record<string, (ctx: Context, config: Config, request: Request) => Promise<Response>>}
+ * @type {Record<string, (ctx: Context, request: Request) => Promise<Response>>}
  */
 const handlers = {
   content,
   catalog,
   // eslint-disable-next-line no-unused-vars
-  graphql: async (ctx, config) => errorResponse(501, 'not implemented'),
+  graphql: async (ctx) => errorResponse(501, 'not implemented'),
 };
 
 /**
@@ -67,7 +67,7 @@ export default {
         return errorResponse(404, 'config not found');
       }
 
-      return await handlers[config.route](ctx, config, request);
+      return await handlers[config.route](ctx, request);
     } catch (e) {
       if (e.response) {
         return e.response;
