@@ -43,7 +43,7 @@ export class JSONTemplate {
       ctx: { config },
     } = this;
     const { host, matchedPatterns, confMap } = config;
-    const matchedPathConfig = confMap[matchedPatterns[0]];
+    const matchedPathConfig = confMap?.[matchedPatterns[0]];
 
     const productPath = matchedPatterns[0]
       .replace('{{urlkey}}', product.urlKey)

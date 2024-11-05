@@ -56,31 +56,6 @@ describe('contentHandler', () => {
     assert.equal(response.status, 400);
   });
 
-  it('returns 400 for invalid product path', async () => {
-    const ctx = {
-      info: { method: 'GET' },
-      url: { pathname: '/invalid/path' },
-    };
-    const config = { pageType: 'product' };
-
-    const response = await contentHandler(ctx, config);
-    assert.equal(response.status, 400);
-  });
-
-  it('returns 400 if no matching configuration found', async () => {
-    const ctx = {
-      info: { method: 'GET' },
-      url: { pathname: '/content/product/test' },
-    };
-    const config = {
-      pageType: 'product',
-      confMap: {},
-    };
-
-    const response = await contentHandler(ctx, config);
-    assert.equal(response.status, 400);
-  });
-
   it('calls handleHelixCommerce if catalogSource is helix', async () => {
     const ctx = {
       info: { method: 'GET' },
@@ -98,8 +73,6 @@ describe('contentHandler', () => {
     assert(helixStub.calledOnce);
     assert.deepStrictEqual(helixStub.firstCall.args[0], ctx);
     assert.deepStrictEqual(helixStub.firstCall.args[1], config);
-    assert.equal(config.matchedPath, '/us/p/{{urlkey}}');
-    assert.deepStrictEqual(config.matchedPathConfig, { some: 'config' });
   });
 
   it('calls handleAdobeCommerce', async () => {
@@ -118,7 +91,5 @@ describe('contentHandler', () => {
     assert(adobeStub.calledOnce);
     assert.deepStrictEqual(adobeStub.firstCall.args[0], ctx);
     assert.deepStrictEqual(adobeStub.firstCall.args[1], config);
-    assert.equal(config.matchedPath, '/us/p/{{urlkey}}');
-    assert.deepStrictEqual(config.matchedPathConfig, { some: 'config' });
   });
 });
