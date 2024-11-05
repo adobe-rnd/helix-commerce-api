@@ -55,7 +55,8 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     const today = new Date();
     const specialPriceToDate = new Date(specialToDate);
     if (specialPriceToDate.getTime() >= today.getTime()) {
-      variant.specialToDate = specialToDate.substring(0, specialToDate.indexOf(' '));
+      const [date] = specialToDate.split(' ');
+      variant.specialToDate = date;
     }
   }
 
