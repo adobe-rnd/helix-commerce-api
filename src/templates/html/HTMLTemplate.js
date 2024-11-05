@@ -286,7 +286,7 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
         <div>${v.inStock ? 'inStock' : ''}</div>
         ${this.renderVariantPrices(v.prices)}
         <div>${this.renderVariantImages(v.images)}</div>
-        <div>${v.selections.join(', ')}</div>
+        <div>${(v.selections ?? []).sort().join(', ')}</div>
       </div>`).join('\n')}
   </div>`;
   }
