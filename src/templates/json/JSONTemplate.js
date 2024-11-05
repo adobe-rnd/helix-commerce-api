@@ -42,16 +42,17 @@ export class JSONTemplate {
       product,
       ctx: { config },
     } = this;
-    const { host, matchedPath } = config;
+    const { host, matchedPatterns, confMap } = config;
+    const matchedPathConfig = confMap[matchedPatterns[0]];
 
-    const productPath = matchedPath
+    const productPath = matchedPatterns[0]
       .replace('{{urlkey}}', product.urlKey)
       .replace('{{sku}}', encodeURIComponent(product.sku.toLowerCase()));
 
     const productUrl = `${host}${productPath}`;
 
     if (variant) {
-      const offerVariantURLTemplate = config.matchedPathConfig?.offerVariantURLTemplate;
+      const offerVariantURLTemplate = matchedPathConfig?.offerVariantURLTemplate;
       if (!offerVariantURLTemplate) {
         return `${productUrl}/?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
       }

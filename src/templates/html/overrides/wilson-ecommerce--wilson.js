@@ -10,10 +10,20 @@
  * governing permissions and limitations under the License.
  */
 
-/**
- * @type {Record<string, typeof import('../JSONTemplate.js').JSONTemplate>}
- */
-export default {
-  'thepixel--bul-eds': (await import('./thepixel--bul-eds.js')).default,
-  'wilson-ecommerce--wilson': (await import('./wilson-ecommerce--wilson.js')).default,
-};
+import { HTMLTemplate } from '../HTMLTemplate.js';
+
+export default class extends HTMLTemplate {
+  /**
+   * Create the document meta tags
+   * @returns {string}
+   */
+  renderDocumentMetaTags() {
+    const { product } = this;
+    return /* html */ `\
+<meta charset="UTF-8">
+<title>${product.metaTitle || product.name} | Wilson Sporting Goods</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+${HTMLTemplate.metaProperty('description', product.metaDescription)}
+${HTMLTemplate.metaName('keywords', product.metaKeyword)}`;
+  }
+}

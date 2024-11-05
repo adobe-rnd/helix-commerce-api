@@ -38,7 +38,8 @@ describe('Render Product HTML', () => {
     variations = createDefaultVariations();
     config = {
       host: 'https://example.com',
-      matchedPath: '/us/p/{{urlkey}}/{{sku}}',
+      matchedPatterns: ['/us/p/{{urlkey}}/{{sku}}'],
+      confMap: {},
     };
     // @ts-ignore
     const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
@@ -122,8 +123,10 @@ describe('Render Product HTML', () => {
   });
 
   it('should have the correct JSON-LD schema with custom offer pattern', () => {
-    config.matchedPathConfig = {
-      offerVariantURLTemplate: '/us/p/{{urlkey}}?selected_product={{sku}}',
+    config.confMap = {
+      '/us/p/{{urlkey}}/{{sku}}': {
+        offerVariantURLTemplate: '/us/p/{{urlkey}}?selected_product={{sku}}',
+      },
     };
     const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
     dom = new JSDOM(html);

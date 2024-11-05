@@ -10,11 +10,18 @@
  * governing permissions and limitations under the License.
  */
 
-import { HTMLTemplate } from '../HTMLTemplate.js';
+import { JSONTemplate } from '../JSONTemplate.js';
 
-export default class extends HTMLTemplate {
+export default class extends JSONTemplate {
   // eslint-disable-next-line class-methods-use-this
-  renderHelixDependencies() {
-    return undefined;
+  renderBrand() {
+    return {
+      brand: {
+        '@type': 'Organization',
+        name: 'Amersports',
+        url: 'https://www.wilson.com/en-us/',
+        image: 'https://www.wilson.com/en-us/static/version1730708006/frontend/Magento/blank/default/images/logo.svg',
+      },
+    };
   }
 }

@@ -22,8 +22,9 @@ export default class extends JSONTemplate {
       product,
       ctx: { config },
     } = this;
-    const { host, matchedPath } = config;
-    const productPath = matchedPath
+    const { host, matchedPatterns } = config;
+
+    const productPath = matchedPatterns[0]
       .replace('{{urlkey}}', product.urlKey)
       .replace('{{sku}}', encodeURIComponent(product.sku.toLowerCase()));
 

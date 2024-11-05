@@ -10,11 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-import thePixelBulEds from './thepixel--bul-eds.js';
-
 /**
  * @type {Record<string, typeof import('../HTMLTemplate.js').HTMLTemplate>}
  */
 export default {
-  'thepixel--bul-eds': thePixelBulEds,
+  'wilson-ecommerce--wilson': (await import('./wilson-ecommerce--wilson.js')).default,
 };

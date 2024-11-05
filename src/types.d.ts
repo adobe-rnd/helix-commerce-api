@@ -33,14 +33,15 @@ declare global {
     catalogSource: string
     catalogEndpoint?: string;
     sku?: string;
+    matchedPatterns: string[];
 
     confMap: ConfigMap;
     params: Record<string, string>;
     headers: Record<string, string>;
     host: string;
     offerVariantURLTemplate: string;
-    matchedPath: string;
-    matchedPathConfig: Config;
+    // matchedPath: string;
+    // matchedPathConfig: Config;
     attributeOverrides: AttributeOverrides;
     siteOverrides: Record<string, Record<string, unknown>>;
   }

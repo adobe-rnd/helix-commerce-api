@@ -15,31 +15,31 @@
 import { findProductImage } from '../../utils/product.js';
 import jsonTemplateFromContext from '../json/index.js';
 
-/**
- * Create a meta tag with a name attribute
- * @param {string} name
- * @param {string|boolean|number|undefined|null} [content]
- * @returns {string}
- */
-const metaName = (name, content) => (content ? `<meta name="${name}" content="${content}">` : '');
-
-/**
- * Create a meta tag with a property attribute
- * @param {string} name
- * @param {string|boolean|number|undefined|null} [content]
- * @returns {string}
- */
-const metaProperty = (name, content) => `<meta property="${name}" content="${content}">`;
-
-/**
- * Create a price range string
- * @param {number|undefined} min
- * @param {number|undefined} max
- * @returns {string}
- */
-const priceRange = (min, max) => (min !== max ? ` (${min} - ${max})` : '');
-
 export class HTMLTemplate {
+  /**
+   * Create a meta tag with a name attribute
+   * @param {string} name
+   * @param {string|boolean|number|undefined|null} [content]
+   * @returns {string}
+   */
+  static metaName = (name, content) => (content ? `<meta name="${name}" content="${content}">` : '');
+
+  /**
+   * Create a meta tag with a property attribute
+   * @param {string} name
+   * @param {string|boolean|number|undefined|null} [content]
+   * @returns {string}
+   */
+  static metaProperty = (name, content) => `<meta property="${name}" content="${content}">`;
+
+  /**
+   * Create a price range string
+   * @param {number|undefined} min
+   * @param {number|undefined} max
+   * @returns {string}
+   */
+  static priceRange = (min, max) => (min !== max ? ` (${min} - ${max})` : '');
+
   /** @type {Context} */
   ctx = undefined;
 
@@ -70,13 +70,12 @@ export class HTMLTemplate {
    */
   renderDocumentMetaTags() {
     const { product } = this;
-    return /* html */ `
+    return /* html */ `\
 <meta charset="UTF-8">
 <title>${product.metaTitle || product.name}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-${metaProperty('description', product.metaDescription)}
-${metaName('keywords', product.metaKeyword)} 
-`;
+${HTMLTemplate.metaProperty('description', product.metaDescription)}
+${HTMLTemplate.metaName('keywords', product.metaKeyword)}`;
   }
 
   /**
@@ -85,12 +84,11 @@ ${metaName('keywords', product.metaKeyword)}
    */
   renderOpenGraphMetaTags() {
     const { product, image } = this;
-    return /* html */ `
-${metaProperty('og:title', product.metaTitle || product.name)}
-${metaProperty('og:image', image?.url)}
-${metaProperty('og:image:secure_url', image?.url)}
-${metaProperty('og:type', 'product')}
-`;
+    return /* html */`\
+${HTMLTemplate.metaProperty('og:title', product.metaTitle || product.name)}
+${HTMLTemplate.metaProperty('og:image', image?.url)}
+${HTMLTemplate.metaProperty('og:image:secure_url', image?.url)}
+${HTMLTemplate.metaProperty('og:type', 'product')}`;
   }
 
   /**
@@ -99,16 +97,15 @@ ${metaProperty('og:type', 'product')}
    */
   renderTwitterMetaTags() {
     const { product, image } = this;
-    return /* html */ `
-${metaName('twitter:card', 'summary_large_image')}
-${metaName('twitter:title', product.name)}
-${metaName('twitter:image', image?.url)}
-${metaName('twitter:description', product.metaDescription)}
-${metaName('twitter:label1', 'Price')}
-${metaName('twitter:data1', product.prices.final.amount)}
-${metaName('twitter:label2', 'Availability')}
-${metaName('twitter:data2', product.inStock ? 'In stock' : 'Out of stock')}
-`;
+    return /* html */ `\
+${HTMLTemplate.metaName('twitter:card', 'summary_large_image')}
+${HTMLTemplate.metaName('twitter:title', product.name)}
+${HTMLTemplate.metaName('twitter:image', image?.url)}
+${HTMLTemplate.metaName('twitter:description', product.metaDescription)}
+${HTMLTemplate.metaName('twitter:label1', 'Price')}
+${HTMLTemplate.metaName('twitter:data1', product.prices.final.amount)}
+${HTMLTemplate.metaName('twitter:label2', 'Availability')}
+${HTMLTemplate.metaName('twitter:data2', product.inStock ? 'In stock' : 'Out of stock')}`;
   }
 
   /**
@@ -117,16 +114,15 @@ ${metaName('twitter:data2', product.inStock ? 'In stock' : 'Out of stock')}
    */
   renderCommerceMetaTags() {
     const { product } = this;
-    return /* html */ `
-${metaName('sku', product.sku)}
-${metaName('urlKey', product.urlKey)}
-${metaName('externalId', product.externalId)}
-${metaName('addToCartAllowed', product.addToCartAllowed)}
-${metaName('inStock', product.inStock ? 'true' : 'false')}
-${metaProperty('product:availability', product.inStock ? 'In stock' : 'Out of stock')}
-${metaProperty('product:price.amount', product.prices.final.amount)}
-${metaProperty('product:price.currency', product.prices.final.currency)}
-`;
+    return /* html */ `\
+${HTMLTemplate.metaName('sku', product.sku)}
+${HTMLTemplate.metaName('urlKey', product.urlKey)}
+${HTMLTemplate.metaName('externalId', product.externalId)}
+${HTMLTemplate.metaName('addToCartAllowed', product.addToCartAllowed)}
+${HTMLTemplate.metaName('inStock', product.inStock ? 'true' : 'false')}
+${HTMLTemplate.metaProperty('product:availability', product.inStock ? 'In stock' : 'Out of stock')}
+${HTMLTemplate.metaProperty('product:price.amount', product.prices.final.amount)}
+${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.currency)}`;
   }
 
   /**
@@ -134,11 +130,10 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderHelixDependencies() {
-    return /* html */ `
+    return /* html */ `\
 <script src="/scripts/aem.js" type="module"></script>
 <script src="/scripts/scripts.js" type="module"></script>
-<link rel="stylesheet" href="/styles/styles.css">
-`;
+<link rel="stylesheet" href="/styles/styles.css">`;
   }
 
   /**
@@ -147,11 +142,10 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    */
   renderJSONLD() {
     const jsonTemplate = jsonTemplateFromContext(this.ctx, this.product, this.variants);
-    return /* html */ `
+    return /* html */ `\
 <script type="application/ld+json">
   ${jsonTemplate.render()}
-</script>
-`;
+</script>`;
   }
 
   /**
@@ -159,16 +153,15 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderHead() {
-    return /* html */ `
-    <head>
-      ${this.renderDocumentMetaTags()}
-      ${this.renderOpenGraphMetaTags()}
-      ${this.renderTwitterMetaTags()}
-      ${this.renderCommerceMetaTags()}
-      ${this.renderHelixDependencies()}
-      ${this.renderJSONLD()}
-    </head>
-  `;
+    return /* html */ `\
+<head>
+  ${this.renderDocumentMetaTags()}
+  ${this.renderOpenGraphMetaTags()}
+  ${this.renderTwitterMetaTags()}
+  ${this.renderCommerceMetaTags()}
+  ${this.renderHelixDependencies()}
+  ${this.renderJSONLD()}
+</head>`;
   }
 
   /**
@@ -177,10 +170,10 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderProductImages(images) {
-    return /* html */ `
+    return /* html */ `\
   <div class="product-images">
     <div>
-      ${images.map((img) => /* html */ `
+      ${images.map((img) => /* html */ `\
         <div>
           <picture>
             <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
@@ -188,11 +181,9 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
             <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
             <img loading="lazy" alt="${img.label}" src="${img.url}">
           </picture>
-        </div>
-      `).join('\n')}
+        </div>`).join('\n')}
     </div>
-  </div>
-`;
+  </div>`;
   }
 
   /**
@@ -201,15 +192,14 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderProductAttributes(attributes) {
-    return /* html */ `
+    return /* html */ `\
 <div class="product-attributes">
-  ${attributes.map((attr) => `
+  ${attributes.map((attr) => /* html */`\
     <div>
       <div>${attr.name}</div>
       <div>${attr.label}</div>
       <div>${attr.value}</div>
-    </div>
-  `).join('\n')}
+    </div>`).join('\n')}
 </div>`;
   }
 
@@ -219,7 +209,7 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderProductItems(items) {
-    return items.map((item) => /* html */ `
+    return items.map((item) => /* html */`\
   <div>
     <div>option</div>
     <div>${item.id}</div>
@@ -227,8 +217,7 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
     <div>${item.value ?? ''}</div>
     <div>${item.selected ? 'selected' : ''}</div>
     <div>${item.inStock ? 'inStock' : ''}</div>
-  </div>
-`).join('\n');
+  </div>`).join('\n');
   }
 
   /**
@@ -237,9 +226,9 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderProductOptions(options) {
-    return /* html */ `
+    return /* html */ `\
   <div class="product-options">
-    ${options.map((opt) => /* html */ `
+    ${options.map((opt) => /* html */ `\
       <div>
         <div>${opt.id}</div>
         <div>${opt.label}</div>
@@ -248,10 +237,8 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
         <div>${opt.multiple ? 'multiple' : ''}</div>
         <div>${opt.required === true ? 'required' : ''}</div>
       </div>
-      ${this.renderProductItems(opt.items)}
-    `).join('\n')}
-  </div>
-`;
+      ${this.renderProductItems(opt.items)}`).join('\n')}
+  </div>`;
   }
 
   /**
@@ -260,14 +247,13 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderVariantImages(images) {
-    return images.map((img) => /* html */ `
+    return images.map((img) => /* html */ `\
   <picture>
     <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
     <source type="image/webp" srcset="${img.url}">
     <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
     <img loading="lazy" alt="${img.label}" src="${img.url}">
-  </picture>
-`).join('\n');
+  </picture>`).join('\n');
   }
 
   /**
@@ -276,10 +262,9 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderVariantPrices(prices) {
-    return /* html */ `
-  <div>Regular: ${prices.regular.amount} ${prices.regular.currency}${priceRange(prices.regular.minimumAmount, prices.regular.maximumAmount)}</div>
-  <div>Final: ${prices.final.amount} ${prices.final.currency}${priceRange(prices.final.minimumAmount, prices.final.maximumAmount)}</div>
-`;
+    return /* html */ `\
+  <div>Regular: ${prices.regular.amount} ${prices.regular.currency}${HTMLTemplate.priceRange(prices.regular.minimumAmount, prices.regular.maximumAmount)}</div>
+  <div>Final: ${prices.final.amount} ${prices.final.currency}${HTMLTemplate.priceRange(prices.final.minimumAmount, prices.final.maximumAmount)}</div>`;
   }
 
   /**
@@ -287,9 +272,9 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderProductVariants() {
-    return /* html */ `
+    return /* html */ `\
   <div class="product-variants">
-    ${this.variants.map((v) => /* html */ `
+    ${this.variants.map((v) => /* html */`\
       <div>
         <div>${v.sku}</div>
         <div>${v.name}</div>
@@ -298,10 +283,8 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
         ${this.renderVariantPrices(v.prices)}
         <div>${this.renderVariantImages(v.images)}</div>
         <div>${v.selections.join(', ')}</div>
-      </div>
-    `).join('\n')}
-  </div>
-`;
+      </div>`).join('\n')}
+  </div>`;
   }
 
   /**
@@ -309,26 +292,24 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
    * @returns {string}
    */
   renderProductVariantsAttributes() {
-    return /* html */ `
+    return /* html */ `\
   <div class="variant-attributes">
-  ${this.variants?.map((v) => `
+  ${this.variants?.map((v) => /* html */`\
     <div>
       <div>sku</div>
       <div>${v.sku}</div>
       <div></div>
       <div></div>
     </div>
-    ${v.attributes?.map((attribute) => `
+    ${v.attributes?.map((attribute) => /* html */`\
       <div>
         <div>attribute</div>
         <div>${attribute.name}</div>
         <div>${attribute.label}</div>
         <div>${attribute.value}</div>
-      </div>
-    `).join('\n')}
+      </div>`).join('\n')}\
   `).join('\n')}
-  </div>
-`;
+  </div>`;
   }
 
   /**
@@ -343,25 +324,25 @@ ${metaProperty('product:price.currency', product.prices.final.currency)}
       images,
     } = this.product;
 
-    return /* html */`
-      <!DOCTYPE html>
-      <html>
-        ${this.renderHead()}
-        <body>
-          <header></header>
-          <main>
-            <div>
-              <h1>${name}</h1>
-              ${description ? `<p>${description}</p>` : ''}
-              ${this.renderProductImages(images)}
-              ${this.renderProductAttributes(attributes)}
-              ${this.renderProductOptions(options)}
-              ${this.renderProductVariants()}
-              ${this.renderProductVariantsAttributes()}
-            </div>
-          </main>
-          <footer></footer>
-        </body>
-      </html>`;
+    return /* html */`\
+<!DOCTYPE html>
+<html>
+  ${this.renderHead()}
+  <body>
+    <header></header>
+    <main>
+      <div>
+        <h1>${name}</h1>
+        ${description ? `<p>${description}</p>` : ''}
+        ${this.renderProductImages(images)}
+        ${this.renderProductAttributes(attributes)}
+        ${this.renderProductOptions(options)}
+        ${this.renderProductVariants()}
+        ${this.renderProductVariantsAttributes()}
+      </div>
+    </main>
+    <footer></footer>
+  </body>
+</html>`;
   }
 }

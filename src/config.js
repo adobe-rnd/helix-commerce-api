@@ -105,6 +105,7 @@ export async function resolveConfig(ctx, overrides = {}) {
     site,
     route,
     siteKey,
+    matchedPatterns: paths,
     ...overrides,
   };
 
