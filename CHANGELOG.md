@@ -1,3 +1,12 @@
+## [1.5.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.0...v1.5.1) (2024-11-05)
+
+
+### Bug Fixes
+
+* image roles config option ([b299039](https://github.com/adobe-rnd/helix-commerce-api/commit/b2990396fe6060f3babce78575ca2de3c42428a6))
+* sort selections in adapter ([d17d352](https://github.com/adobe-rnd/helix-commerce-api/commit/d17d352288ee520aa6bcd47d7bf68e8499e0f140))
+* sort variant selections ([e2d489d](https://github.com/adobe-rnd/helix-commerce-api/commit/e2d489d63390d351b48e6d0a648eefc3796f72be))
+
 # [1.5.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.4.1...v1.5.0) (2024-11-05)
 
 
