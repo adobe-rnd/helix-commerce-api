@@ -109,16 +109,14 @@ describe('Render Product HTML', () => {
 
   it('should have the correct JSON-LD schema without variants (simple product)', () => {
     variations = undefined;
+    product.specialToDate = '2024-12-31';
+
     const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
     dom = new JSDOM(html);
     document = dom.window.document;
 
     const jsonLdScript = document.querySelector('script[type="application/ld+json"]');
 
-    product.attributes.push({
-      name: 'special_to_date',
-      value: '2024-12-31',
-    });
     // @ts-ignore
     const productTemplate = new JSONTemplate(DEFAULT_CONTEXT({ config }), product, undefined);
 
@@ -141,7 +139,7 @@ describe('Render Product HTML', () => {
       assert.strictEqual(offer.availability, product.inStock ? 'InStock' : 'OutOfStock', `Offer availability for variant ${product.sku} does not match`);
       assert.strictEqual(offer.image, product.images[0].url || '', `Offer image for variant ${product.sku} does not match`);
       assert.strictEqual(offer.priceSpecification, undefined, 'Offer contains priceSpecification for variant when it should not');
-      assert.strictEqual(offer.priceValidUntil, product.specialToDate, 'Offer does not contain priceValidUntil for variant');
+      assert.strictEqual(offer.priceValidUntil, '2024-12-31', 'Offer does not contain priceValidUntil for variant');
     });
   });
 
