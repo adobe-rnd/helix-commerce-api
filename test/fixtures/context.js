@@ -10,16 +10,50 @@
  * governing permissions and limitations under the License.
  */
 
-export const TEST_CONTEXT = (path, configMap, baseUrl = 'https://www.example.com/org/site/content') => ({
+/**
+ * @param {Partial<Context>} [overrides = {}]
+ * @param {{
+ *  path?: string;
+ *  configMap?: Record<string, Config>;
+ *  baseUrl?: string;
+ * }} opts
+ * @returns {Context}
+ */
+export const DEFAULT_CONTEXT = (
+  overrides = {},
+  {
+    path = '',
+    configMap = {},
+    baseUrl = 'https://www.example.com/org/site/content',
+  } = {},
+) => ({
+  url: new URL(`${baseUrl}${path}`),
+  log: console,
+  ...overrides,
+  attributes: {
+    ...(overrides.attributes ?? {}),
+  },
   env: {
     CONFIGS: {
+      // @ts-ignore
       get: async (id) => configMap[id],
     },
+    ...(overrides.env ?? {}),
   },
-  log: console,
-  url: new URL(`${baseUrl}${path}`),
   info: {
     method: 'GET',
     headers: {},
+    ...(overrides.info ?? {}),
   },
 });
+
+/**
+ * @param {string} path
+ * @param {Record<string, Config>} configMap
+ * @param {string} baseUrl
+ * @returns {Context}
+ */
+export const TEST_CONTEXT = (path, configMap, baseUrl) => DEFAULT_CONTEXT(
+  {},
+  { path, configMap, baseUrl },
+);

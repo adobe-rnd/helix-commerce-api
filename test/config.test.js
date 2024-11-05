@@ -35,9 +35,13 @@ describe('config tests', () => {
       apiKey: 'good',
       params: { urlkey: 'my-url-key', sku: 'some-sku' },
       headers: {},
+      matchedPatterns: [
+        '/us/p/{{urlkey}}/{{sku}}',
+      ],
       pageType: 'product',
       org: 'org',
       site: 'site',
+      siteKey: 'org--site',
       route: 'content',
       confMap: {
         '/us/p/{{urlkey}}/{{sku}}': {
@@ -48,7 +52,6 @@ describe('config tests', () => {
           apiKey: 'bad',
         },
       },
-      siteOverrides: undefined,
     });
   });
 
@@ -77,9 +80,13 @@ describe('config tests', () => {
       apiKey: 'good',
       params: { urlkey: 'my-url-key', sku: 'some-sku' },
       headers: { foo: '2', baz: '1', bar: '2' },
+      matchedPatterns: [
+        '/us/p/{{urlkey}}/{{sku}}',
+      ],
       pageType: 'product',
       org: 'org',
       site: 'site',
+      siteKey: 'org--site',
       route: 'content',
       confMap: {
         '/us/p/{{urlkey}}/{{sku}}': {
@@ -98,7 +105,6 @@ describe('config tests', () => {
           },
         },
       },
-      siteOverrides: undefined,
     });
   });
 
@@ -119,9 +125,13 @@ describe('config tests', () => {
       apiKey: 'good',
       params: { sku: 'some-sku' },
       headers: {},
+      matchedPatterns: [
+        '/us/p/*/{{sku}}',
+      ],
       pageType: 'product',
       org: 'org',
       site: 'site',
+      siteKey: 'org--site',
       route: 'content',
       confMap: {
         '/us/p/*/{{sku}}': {
@@ -132,7 +142,6 @@ describe('config tests', () => {
           apiKey: 'bad',
         },
       },
-      siteOverrides: undefined,
     });
   });
 
@@ -157,8 +166,12 @@ describe('config tests', () => {
       params: { sku: 'some-sku' },
       pageType: 'product',
       headers: {},
+      matchedPatterns: [
+        '/us/p/{{sku}}',
+      ],
       org: 'org',
       site: 'site',
+      siteKey: 'org--site',
       route: 'content',
       confMap: {
         '/us/p/{{sku}}': {
@@ -169,7 +182,6 @@ describe('config tests', () => {
           apiKey: 'bad1',
         },
       },
-      siteOverrides: undefined,
     });
   });
 

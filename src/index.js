@@ -35,6 +35,8 @@ export function makeContext(pctx, req, env) {
   /** @type {Context} */
   // @ts-ignore
   const ctx = pctx;
+  // @ts-ignore
+  ctx.attributes = {};
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;
@@ -58,6 +60,8 @@ export default {
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
       const config = await resolveConfig(ctx, overrides);
+      ctx.config = config;
+
       console.debug('resolved config: ', JSON.stringify(config));
       if (!config) {
         return errorResponse(404, 'config not found');
