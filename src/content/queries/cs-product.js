@@ -11,7 +11,7 @@
  */
 
 import { forceImagesHTTPS } from '../../utils/http.js';
-import { gql } from '../../utils/product.js';
+import { gql, parseSpecialToDate } from '../../utils/product.js';
 
 /**
  * @param {any} productData
@@ -89,6 +89,11 @@ export const adapter = (productData) => {
       visible: minPrice.roles?.includes('visible'),
     } : null,
   };
+
+  const specialToDate = parseSpecialToDate(product);
+  if (specialToDate) {
+    product.specialToDate = specialToDate;
+  }
 
   return product;
 };

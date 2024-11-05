@@ -1,3 +1,18 @@
+# [1.5.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.4.1...v1.5.0) (2024-11-05)
+
+
+### Bug Fixes
+
+* date parsing ([cebc0bc](https://github.com/adobe-rnd/helix-commerce-api/commit/cebc0bce7c9655e3b96ab328c9cd2998ac48fa68))
+* fix variants check ([d986afa](https://github.com/adobe-rnd/helix-commerce-api/commit/d986afa5f68775622af148cb3cec3ca110cdf73d))
+* support priceValidUntil in simple products ([3f79d8d](https://github.com/adobe-rnd/helix-commerce-api/commit/3f79d8d8a3cbf7c3dd39bfb19e31138d5eb36f6d))
+* test ([f484693](https://github.com/adobe-rnd/helix-commerce-api/commit/f484693165cab9e9d4ef21fbe29d3f4682ff1fa1))
+
+
+### Features
+
+* add support for ListPrice and priceValidUntil in JSON-LD ([f91bbae](https://github.com/adobe-rnd/helix-commerce-api/commit/f91bbaea681b9d687ac4e0e01b2f8e3aae201b2f))
+
 ## [1.4.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.4.0...v1.4.1) (2024-11-05)
 
 
