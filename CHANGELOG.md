@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.4.0...v1.4.1) (2024-11-05)
+
+
+### Bug Fixes
+
+* use ctx config ([90bce9d](https://github.com/adobe-rnd/helix-commerce-api/commit/90bce9d1805a4ff06178b8040e250b50a4ab2cdb))
+
 # [1.4.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.3.0...v1.4.0) (2024-11-05)
 
 
