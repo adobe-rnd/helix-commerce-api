@@ -85,7 +85,7 @@ export class JSONTemplate {
   renderOffers() {
     const image = this.product.images?.[0]?.url
       ?? findProductImage(this.product, this.variants)?.url;
-    const configurableProduct = this.variants && this.variants.length > 0;
+    const configurableProduct = this.variants?.length > 0;
     const offers = configurableProduct ? this.variants : [this.product];
     return {
       offers: [
