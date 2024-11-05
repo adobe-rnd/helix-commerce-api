@@ -38,10 +38,10 @@ describe('contentHandler', () => {
     const ctx = {
       info: { method: 'POST' },
       url: { pathname: '/content/product/test' },
+      config: { pageType: 'product' },
     };
-    const config = { pageType: 'product' };
 
-    const response = await contentHandler(ctx, config);
+    const response = await contentHandler(ctx);
     assert.equal(response.status, 405);
   });
 
@@ -49,10 +49,10 @@ describe('contentHandler', () => {
     const ctx = {
       info: { method: 'GET' },
       url: { pathname: '/content/product/test' },
+      config: {},
     };
-    const config = {};
 
-    const response = await contentHandler(ctx, config);
+    const response = await contentHandler(ctx);
     assert.equal(response.status, 400);
   });
 
@@ -60,36 +60,34 @@ describe('contentHandler', () => {
     const ctx = {
       info: { method: 'GET' },
       url: { pathname: '/content/product/us/p/product-urlkey' },
-    };
-    const config = {
-      pageType: 'product',
-      catalogSource: 'helix',
-      confMap: {
-        '/us/p/{{urlkey}}': { some: 'config' },
+      config: {
+        pageType: 'product',
+        catalogSource: 'helix',
+        confMap: {
+          '/us/p/{{urlkey}}': { some: 'config' },
+        },
       },
     };
 
-    await contentHandler(ctx, config);
+    await contentHandler(ctx);
     assert(helixStub.calledOnce);
     assert.deepStrictEqual(helixStub.firstCall.args[0], ctx);
-    assert.deepStrictEqual(helixStub.firstCall.args[1], config);
   });
 
   it('calls handleAdobeCommerce', async () => {
     const ctx = {
       info: { method: 'GET' },
       url: { pathname: '/content/product/us/p/product-urlkey' },
-    };
-    const config = {
-      pageType: 'product',
-      confMap: {
-        '/us/p/{{urlkey}}': { some: 'config' },
+      config: {
+        pageType: 'product',
+        confMap: {
+          '/us/p/{{urlkey}}': { some: 'config' },
+        },
       },
     };
 
-    await contentHandler(ctx, config);
+    await contentHandler(ctx);
     assert(adobeStub.calledOnce);
     assert.deepStrictEqual(adobeStub.firstCall.args[0], ctx);
-    assert.deepStrictEqual(adobeStub.firstCall.args[1], config);
   });
 });

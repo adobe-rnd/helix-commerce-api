@@ -149,10 +149,10 @@ async function lookupProductSKU(urlkey, config) {
 
 /**
  * @param {Context} ctx
- * @param {Config} config
  * @returns {Promise<Response>}
  */
-export async function handle(ctx, config) {
+export async function handle(ctx) {
+  const { config } = ctx;
   const { urlkey } = config.params;
   let { sku } = config.params;
 

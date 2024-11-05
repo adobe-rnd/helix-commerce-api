@@ -21,11 +21,11 @@ const ALLOWED_METHODS = ['GET', 'PUT'];
 /**
  * Handles the catalog request.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Config} config - The configuration object with application settings.
  * @param {Request} request - The request object.
  * @returns {Promise<Response>} - A promise that resolves to the catalog response.
  */
-export default async function catalogHandler(ctx, config, request) {
+export default async function catalogHandler(ctx, request) {
+  const { config } = ctx;
   const { method } = ctx.info;
 
   // Split the pathname into segments and filter out empty strings
@@ -56,13 +56,13 @@ export default async function catalogHandler(ctx, config, request) {
 
   if (subRoute === 'lookup') {
     if (ctx.info.method === 'GET') {
-      return handleProductLookupRequest(ctx, config);
+      return handleProductLookupRequest(ctx);
     }
     return errorResponse(405, 'method not allowed');
   }
 
   if (ctx.info.method === 'PUT') {
-    return handleProductSaveRequest(ctx, config, request);
+    return handleProductSaveRequest(ctx, request);
   }
-  return handleProductFetchRequest(ctx, config);
+  return handleProductFetchRequest(ctx);
 }

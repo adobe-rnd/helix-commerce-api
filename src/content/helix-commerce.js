@@ -16,10 +16,10 @@ import htmlTemplateFromContext from '../templates/html/index.js';
 
 /**
  * @param {Context} ctx
- * @param {Config} config
  * @returns {Promise<Response>}
  */
-export async function handle(ctx, config) {
+export async function handle(ctx) {
+  const { config } = ctx;
   const { urlkey } = config.params;
   const { sku } = config.params;
 
@@ -27,7 +27,7 @@ export async function handle(ctx, config) {
     return errorResponse(404, 'missing sku or urlkey');
   }
 
-  const product = await fetchProduct(ctx, config, sku);
+  const product = await fetchProduct(ctx, sku);
   const html = htmlTemplateFromContext(ctx, product, product.variants).render();
   return new Response(html, {
     status: 200,
