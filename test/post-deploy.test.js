@@ -13,8 +13,34 @@
 import assert from 'assert';
 import { h1NoCache } from '@adobe/fetch';
 import { config } from 'dotenv';
+import fs from 'fs/promises';
+import { resolve } from 'path';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { HtmlDiffer } from 'html-differ';
 
 config();
+
+/**
+ * @param {string} path
+ * @returns {{url: URL} & RequestInit}
+ */
+function getFetchOptions(path) {
+  return {
+    url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
+    cache: 'no-store',
+    redirect: 'manual',
+  };
+}
+
+/**
+ * @param {string} name
+ * @returns {Promise<string>}
+ */
+async function getHTMLFixture(name) {
+  // eslint-disable-next-line no-underscore-dangle
+  const content = await fs.readFile(resolve(global.__testdir, `./fixtures/post-deploy/${name}.html`), 'utf-8');
+  return content;
+}
 
 describe('Post-Deploy Tests', () => {
   const fetchContext = h1NoCache();
@@ -23,7 +49,24 @@ describe('Post-Deploy Tests', () => {
     await fetchContext.reset();
   });
 
-  it('placeholder passes', async () => {
-    assert.ok(true);
+  it('returns 404 for missing site param', async () => {
+    const { url, ...opts } = getFetchOptions('/missing');
+    const res = await fetch(url, opts);
+
+    assert.strictEqual(res.status, 404);
+    assert.strictEqual(res.headers.get('x-error'), 'missing site');
+  });
+
+  it('valid pdp renders html', async () => {
+    const { url, ...opts } = getFetchOptions('/dylandepass/commerce-boilerplate/content/product/products/bella-tank/wt01');
+    const res = await fetch(url, opts);
+    const expected = await getHTMLFixture('bella-tank');
+
+    assert.strictEqual(res.status, 200);
+    const actual = await res.text();
+    const differ = new HtmlDiffer();
+
+    // @ts-ignore
+    assert.ok(differ.isEqual(actual, expected));
   });
 });

@@ -19,4 +19,5 @@ global.__rootdir = resolve(fileURLToPath(import.meta.url), '..', '..');
 global.__testdir = resolve(fileURLToPath(import.meta.url), '..');
 
 // crypto is available since node 20
+// @ts-ignore
 global.crypto ??= webcrypto;

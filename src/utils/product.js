@@ -15,7 +15,7 @@ export const hasUppercase = (str) => /[A-Z]/.test(str);
 /**
  * This function combines an array of strings with interpolated
  * parameters to create a GraphQL query string.
- * @param {string[]} strs - The string array representing parts of the GraphQL query.
+ * @param {TemplateStringsArray} strs - The string array representing parts of the GraphQL query.
  * @param {...string} params - The parameters to be interpolated into the query.
  * @returns {string} - The resulting GraphQL query string.
  */

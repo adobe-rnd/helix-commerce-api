@@ -62,7 +62,7 @@ export class JSONTemplate {
       const variantPath = offerVariantURLTemplate
         .replace('{{urlkey}}', product.urlKey)
         .replace('{{sku}}', encodeURIComponent(variant.sku));
-      return `${config.host}${variantPath}`;
+      return `${host}${variantPath}`;
     }
 
     return productUrl;
