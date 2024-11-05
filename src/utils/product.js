@@ -95,3 +95,16 @@ export function matchConfigPath(config, path) {
   console.warn('No match found for path:', path);
   return null;
 }
+
+export function parseSpecialToDate(product) {
+  const specialToDate = product.attributes?.find((attr) => attr.name === 'special_to_date')?.value;
+  if (specialToDate) {
+    const today = new Date();
+    const specialPriceToDate = new Date(specialToDate);
+    if (specialPriceToDate.getTime() >= today.getTime()) {
+      const [date] = specialToDate.split(' ');
+      return date;
+    }
+  }
+  return undefined;
+}

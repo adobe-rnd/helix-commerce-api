@@ -272,6 +272,10 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
    * @returns {string}
    */
   renderProductVariants() {
+    if (!this.variants) {
+      return '';
+    }
+
     return /* html */ `\
   <div class="product-variants">
     ${this.variants.map((v) => /* html */`\
@@ -292,6 +296,10 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
    * @returns {string}
    */
   renderProductVariantsAttributes() {
+    if (!this.variants) {
+      return '';
+    }
+
     return /* html */ `\
   <div class="variant-attributes">
   ${this.variants?.map((v) => /* html */`\

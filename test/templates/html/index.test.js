@@ -77,10 +77,9 @@ describe('Render Product HTML', () => {
     assert.strictEqual(twitterDescription.getAttribute('content'), expectedDescription, 'Twitter description does not match expected value');
   });
 
-  it('should have the correct JSON-LD schema', () => {
+  it('should have the correct JSON-LD schema with variants', () => {
     const jsonLdScript = document.querySelector('script[type="application/ld+json"]');
     assert.ok(jsonLdScript, 'JSON-LD script tag should exist');
-
     // @ts-ignore
     const productTemplate = new JSONTemplate(DEFAULT_CONTEXT({ config }), product, variations);
 
@@ -105,6 +104,44 @@ describe('Render Product HTML', () => {
       assert.strictEqual(offer.availability, variant.inStock ? 'InStock' : 'OutOfStock', `Offer availability for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.image, variant.images[0].url || '', `Offer image for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.priceSpecification, undefined, 'Offer contains priceSpecification for variant when it should not');
+    });
+  });
+
+  it('should have the correct JSON-LD schema without variants (simple product)', () => {
+    variations = undefined;
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const jsonLdScript = document.querySelector('script[type="application/ld+json"]');
+
+    product.attributes.push({
+      name: 'special_to_date',
+      value: '2024-12-31',
+    });
+    // @ts-ignore
+    const productTemplate = new JSONTemplate(DEFAULT_CONTEXT({ config }), product, undefined);
+
+    const jsonLd = JSON.parse(jsonLdScript.textContent);
+    assert.strictEqual(jsonLd['@type'], 'Product', 'JSON-LD @type should be Product');
+    assert.strictEqual(jsonLd['@id'], productTemplate.constructProductURL(), 'JSON-LD @id does not match product URL');
+    assert.strictEqual(jsonLd.name, product.name, 'JSON-LD name does not match product name');
+    assert.strictEqual(jsonLd.sku, product.sku, 'JSON-LD SKU does not match product SKU');
+    assert.strictEqual(jsonLd.description, product.metaDescription, 'JSON-LD description does not match product description');
+    assert.strictEqual(jsonLd.image, product.images[0]?.url || '', 'JSON-LD image does not match product image');
+    assert.strictEqual(jsonLd.productID, product.sku, 'JSON-LD productID does not match product SKU');
+    assert.ok(Array.isArray(jsonLd.offers), 'JSON-LD offers should be an array');
+    assert.strictEqual(jsonLd.offers.length, 1, 'JSON-LD offers length does not match number of variants');
+    jsonLd.offers.forEach((offer) => {
+      assert.strictEqual(offer['@type'], 'Offer', `Offer type for variant ${product.sku} should be Offer`);
+      assert.strictEqual(offer.sku, product.sku, `Offer SKU for variant ${product.sku} does not match`);
+      assert.strictEqual(offer.url, productTemplate.constructProductURL(), 'JSON-LD offer URL does not match');
+      assert.strictEqual(offer.price, product.prices.final.amount, `Offer price for variant ${product.sku} does not match`);
+      assert.strictEqual(offer.priceCurrency, product.prices.final.currency, `Offer priceCurrency for variant ${product.sku} does not match`);
+      assert.strictEqual(offer.availability, product.inStock ? 'InStock' : 'OutOfStock', `Offer availability for variant ${product.sku} does not match`);
+      assert.strictEqual(offer.image, product.images[0].url || '', `Offer image for variant ${product.sku} does not match`);
+      assert.strictEqual(offer.priceSpecification, undefined, 'Offer contains priceSpecification for variant when it should not');
+      assert.strictEqual(offer.priceValidUntil, product.specialToDate, 'Offer does not contain priceValidUntil for variant');
     });
   });
 

@@ -11,7 +11,7 @@
  */
 
 import { forceImagesHTTPS } from '../../utils/http.js';
-import { gql } from '../../utils/product.js';
+import { gql, parseSpecialToDate } from '../../utils/product.js';
 
 /**
  * @param {any} variants
@@ -50,14 +50,9 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     selections: selections ?? [],
   };
 
-  const specialToDate = product.attributes?.find((attr) => attr.name === 'special_to_date')?.value;
+  const specialToDate = parseSpecialToDate(product);
   if (specialToDate) {
-    const today = new Date();
-    const specialPriceToDate = new Date(specialToDate);
-    if (specialPriceToDate.getTime() >= today.getTime()) {
-      const [date] = specialToDate.split(' ');
-      variant.specialToDate = date;
-    }
+    variant.specialToDate = specialToDate;
   }
 
   if (config.attributeOverrides?.variant) {
