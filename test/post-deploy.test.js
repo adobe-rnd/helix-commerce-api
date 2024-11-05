@@ -60,16 +60,11 @@ describe('Post-Deploy Tests', () => {
   it('valid pdp renders html', async () => {
     const { url, ...opts } = getFetchOptions('/dylandepass/commerce-boilerplate/content/product/products/bella-tank/wt01');
     const res = await fetch(url, opts);
-    const expected = await getHTMLFixture('expected1');
+    const expected = await getHTMLFixture('bella-tank');
 
     assert.strictEqual(res.status, 200);
     const actual = await res.text();
-
     const differ = new HtmlDiffer();
-
-    // @ts-ignore
-    // const resp = differ.diffHtml(actual, expected);
-    // console.log('diff: ', resp);
 
     // @ts-ignore
     assert.ok(differ.isEqual(actual, expected));
