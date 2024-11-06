@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.1...v1.5.2) (2024-11-06)
+
+
+### Bug Fixes
+
+* include image meta tag ([#40](https://github.com/adobe-rnd/helix-commerce-api/issues/40)) ([2d20d91](https://github.com/adobe-rnd/helix-commerce-api/commit/2d20d918b796dda2aebaa2d1b0608dadc9b7d7f5))
+
 ## [1.5.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.0...v1.5.1) (2024-11-05)
 
 
