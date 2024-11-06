@@ -74,7 +74,7 @@ export class JSONTemplate {
   constructMPN(variant) {
     return variant
       ? variant.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? this.constructMPN()
-      : this.product.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? this.product.sku;
+      : this.product.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? undefined;
   }
 
   renderBrand() {
