@@ -1,6 +1,6 @@
 {
   "name": "helix-commerce-api",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "private": true,
   "description": "API for markup content and a commerce graphql commerce proxy",
   "main": "src/index.js",

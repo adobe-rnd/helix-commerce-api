@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.2...v1.5.3) (2024-11-06)
+
+
+### Bug Fixes
+
+* include mpn in product and offer schemas ([#41](https://github.com/adobe-rnd/helix-commerce-api/issues/41)) ([eb5d223](https://github.com/adobe-rnd/helix-commerce-api/commit/eb5d223e13fdcb19f329fe7143a2617f89764e41))
+
 ## [1.5.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.1...v1.5.2) (2024-11-06)
 
 
