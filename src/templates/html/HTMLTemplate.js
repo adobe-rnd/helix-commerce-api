@@ -40,6 +40,13 @@ export class HTMLTemplate {
    */
   static priceRange = (min, max) => (min !== max ? ` (${min} - ${max})` : '');
 
+  /**
+   * @param {string} str
+   * @param {number} spaces
+   * @returns {string}
+   */
+  static indent = (str, spaces) => str.split('\n').map((line) => `${' '.repeat(spaces)}${line}`).join('\n');
+
   /** @type {Context} */
   ctx = undefined;
 
@@ -156,12 +163,12 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
   renderHead() {
     return /* html */ `\
 <head>
-  ${this.renderDocumentMetaTags()}
-  ${this.renderOpenGraphMetaTags()}
-  ${this.renderTwitterMetaTags()}
-  ${this.renderCommerceMetaTags()}
-  ${this.renderHelixDependencies()}
-  ${this.renderJSONLD()}
+${HTMLTemplate.indent(this.renderDocumentMetaTags(), 2)}
+${HTMLTemplate.indent(this.renderOpenGraphMetaTags(), 2)}
+${HTMLTemplate.indent(this.renderTwitterMetaTags(), 2)}
+${HTMLTemplate.indent(this.renderCommerceMetaTags(), 2)}
+${HTMLTemplate.indent(this.renderHelixDependencies(), 2)}
+${HTMLTemplate.indent(this.renderJSONLD(), 2)}
 </head>`;
   }
 
@@ -172,19 +179,19 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
    */
   renderProductImages(images) {
     return /* html */ `\
-  <div class="product-images">
-    <div>
-      ${images.map((img) => /* html */ `\
-        <div>
-          <picture>
-            <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
-            <source type="image/webp" srcset="${img.url}">
-            <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
-            <img loading="lazy" alt="${img.label}" src="${img.url}">
-          </picture>
-        </div>`).join('\n')}
-    </div>
-  </div>`;
+<div class="product-images">
+  <div>
+    ${images.map((img) => /* html */ `\
+      <div>
+        <picture>
+          <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
+          <source type="image/webp" srcset="${img.url}">
+          <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
+          <img loading="lazy" alt="${img.label}" src="${img.url}">
+        </picture>
+      </div>`).join('\n')}
+  </div>
+</div>`;
   }
 
   /**
@@ -195,12 +202,12 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
   renderProductAttributes(attributes) {
     return /* html */ `\
 <div class="product-attributes">
-  ${attributes.map((attr) => /* html */`\
-    <div>
-      <div>${attr.name}</div>
-      <div>${attr.label}</div>
-      <div>${attr.value}</div>
-    </div>`).join('\n')}
+${attributes.map((attr) => /* html */`\
+  <div>
+    <div>${attr.name}</div>
+    <div>${attr.label}</div>
+    <div>${attr.value}</div>
+  </div>`).join('\n')}
 </div>`;
   }
 
@@ -211,14 +218,14 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
    */
   renderProductItems(items) {
     return items.map((item) => /* html */`\
-  <div>
-    <div>option</div>
-    <div>${item.id}</div>
-    <div>${item.label}</div>
-    <div>${item.value ?? ''}</div>
-    <div>${item.selected ? 'selected' : ''}</div>
-    <div>${item.inStock ? 'inStock' : ''}</div>
-  </div>`).join('\n');
+<div>
+  <div>option</div>
+  <div>${item.id}</div>
+  <div>${item.label}</div>
+  <div>${item.value ?? ''}</div>
+  <div>${item.selected ? 'selected' : ''}</div>
+  <div>${item.inStock ? 'inStock' : ''}</div>
+</div>`).join('\n');
   }
 
   /**
@@ -228,18 +235,18 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
    */
   renderProductOptions(options) {
     return /* html */ `\
-  <div class="product-options">
-    ${options.map((opt) => /* html */ `\
-      <div>
-        <div>${opt.id}</div>
-        <div>${opt.label}</div>
-        <div>${opt.typename}</div>
-        <div>${opt.type ?? ''}</div>
-        <div>${opt.multiple ? 'multiple' : ''}</div>
-        <div>${opt.required === true ? 'required' : ''}</div>
-      </div>
-      ${this.renderProductItems(opt.items)}`).join('\n')}
-  </div>`;
+<div class="product-options">
+${options.map((opt) => /* html */ `\
+  <div>
+    <div>${opt.id}</div>
+    <div>${opt.label}</div>
+    <div>${opt.typename}</div>
+    <div>${opt.type ?? ''}</div>
+    <div>${opt.multiple ? 'multiple' : ''}</div>
+    <div>${opt.required === true ? 'required' : ''}</div>
+  </div>
+${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
+</div>`;
   }
 
   /**
@@ -249,12 +256,12 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
    */
   renderVariantImages(images) {
     return images.map((img) => /* html */ `\
-  <picture>
-    <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
-    <source type="image/webp" srcset="${img.url}">
-    <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
-    <img loading="lazy" alt="${img.label}" src="${img.url}">
-  </picture>`).join('\n');
+<picture>
+  <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
+  <source type="image/webp" srcset="${img.url}">
+  <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
+  <img loading="lazy" alt="${img.label}" src="${img.url}">
+</picture>`).join('\n');
   }
 
   /**
@@ -264,8 +271,8 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
    */
   renderVariantPrices(prices) {
     return /* html */ `\
-  <div>Regular: ${prices.regular.amount} ${prices.regular.currency}${HTMLTemplate.priceRange(prices.regular.minimumAmount, prices.regular.maximumAmount)}</div>
-  <div>Final: ${prices.final.amount} ${prices.final.currency}${HTMLTemplate.priceRange(prices.final.minimumAmount, prices.final.maximumAmount)}</div>`;
+<div>Regular: ${prices.regular.amount} ${prices.regular.currency}${HTMLTemplate.priceRange(prices.regular.minimumAmount, prices.regular.maximumAmount)}</div>
+<div>Final: ${prices.final.amount} ${prices.final.currency}${HTMLTemplate.priceRange(prices.final.minimumAmount, prices.final.maximumAmount)}</div>`;
   }
 
   /**
@@ -278,18 +285,20 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
     }
 
     return /* html */ `\
-  <div class="product-variants">
-    ${this.variants.map((v) => /* html */`\
-      <div>
-        <div>${v.sku}</div>
-        <div>${v.name}</div>
-        <div>${v.description}</div>
-        <div>${v.inStock ? 'inStock' : ''}</div>
-        ${this.renderVariantPrices(v.prices)}
-        <div>${this.renderVariantImages(v.images)}</div>
-        <div>${(v.selections ?? []).join(', ')}</div>
-      </div>`).join('\n')}
-  </div>`;
+<div class="product-variants">
+${this.variants.map((v) => /* html */`\
+  <div>
+    <div>${v.sku}</div>
+    <div>${v.name}</div>
+    <div>${v.description}</div>
+    <div>${v.inStock ? 'inStock' : ''}</div>
+${HTMLTemplate.indent(this.renderVariantPrices(v.prices), 4)}
+    <div>
+${HTMLTemplate.indent(this.renderVariantImages(v.images), 6)}
+    </div>
+    <div>${(v.selections ?? []).join(', ')}</div>
+  </div>`).join('\n')}
+</div>`;
   }
 
   /**
@@ -302,23 +311,23 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
     }
 
     return /* html */ `\
-  <div class="variant-attributes">
-  ${this.variants?.map((v) => /* html */`\
+<div class="variant-attributes">
+${this.variants?.map((v) => /* html */`\
+  <div>
+    <div>sku</div>
+    <div>${v.sku}</div>
+    <div></div>
+    <div></div>
+  </div>
+  ${v.attributes?.map((attribute) => /* html */`\
     <div>
-      <div>sku</div>
-      <div>${v.sku}</div>
-      <div></div>
-      <div></div>
-    </div>
-    ${v.attributes?.map((attribute) => /* html */`\
-      <div>
-        <div>attribute</div>
-        <div>${attribute.name}</div>
-        <div>${attribute.label}</div>
-        <div>${attribute.value}</div>
-      </div>`).join('\n')}\
-  `).join('\n')}
-  </div>`;
+      <div>attribute</div>
+      <div>${attribute.name}</div>
+      <div>${attribute.label}</div>
+      <div>${attribute.value}</div>
+    </div>`).join('\n')}\
+`).join('\n')}
+</div>`;
   }
 
   /**
@@ -336,18 +345,18 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
     return /* html */`\
 <!DOCTYPE html>
 <html>
-  ${this.renderHead()}
+${HTMLTemplate.indent(this.renderHead(), 2)}
   <body>
     <header></header>
     <main>
       <div>
         <h1>${name}</h1>
         ${description ? `<p>${description}</p>` : ''}
-        ${this.renderProductImages(images)}
-        ${this.renderProductAttributes(attributes)}
-        ${this.renderProductOptions(options)}
-        ${this.renderProductVariants()}
-        ${this.renderProductVariantsAttributes()}
+${HTMLTemplate.indent(this.renderProductImages(images), 8)}
+${HTMLTemplate.indent(this.renderProductAttributes(attributes), 8)}
+${HTMLTemplate.indent(this.renderProductOptions(options), 8)}
+${HTMLTemplate.indent(this.renderProductVariants(), 8)}
+${HTMLTemplate.indent(this.renderProductVariantsAttributes(), 8)}
       </div>
     </main>
     <footer></footer>
