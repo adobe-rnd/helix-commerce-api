@@ -24,4 +24,11 @@ export default class extends JSONTemplate {
       },
     };
   }
+
+  /**
+   * @param {Variant} [variant]
+   */
+  constructMPN(variant) {
+    return variant ? variant.sku : this.product.sku;
+  }
 }

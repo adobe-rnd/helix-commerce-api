@@ -68,6 +68,15 @@ export class JSONTemplate {
     return productUrl;
   }
 
+  /**
+   * @param {Variant} [variant]
+   */
+  constructMPN(variant) {
+    return variant
+      ? variant.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? this.constructMPN()
+      : this.product.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? undefined;
+  }
+
   renderBrand() {
     const { attributes } = this.product;
     const brandName = attributes?.find((attr) => attr.name === 'brand')?.value;
@@ -90,13 +99,16 @@ export class JSONTemplate {
     return {
       offers: [
         ...offers.map((v) => {
-          const offerUrl = this.constructProductURL(configurableProduct ? v : undefined);
           const { prices: variantPrices } = v;
+          const offerUrl = this.constructProductURL(configurableProduct ? v : undefined);
+          const mpn = this.constructMPN(configurableProduct ? v : undefined);
           const finalPrice = variantPrices?.final?.amount;
           const regularPrice = variantPrices?.regular?.amount;
+
           const offer = {
             '@type': 'Offer',
             sku: v.sku,
+            mpn,
             url: offerUrl,
             image: v.images?.[0]?.url ?? image,
             availability: v.inStock ? 'InStock' : 'OutOfStock',
@@ -116,7 +128,7 @@ export class JSONTemplate {
             offer.priceValidUntil = v.specialToDate;
           }
 
-          return offer;
+          return pruneUndefined(offer);
         }).filter(Boolean),
       ],
     };
@@ -145,6 +157,7 @@ export class JSONTemplate {
     } = this.product;
 
     const productUrl = this.constructProductURL();
+    const mpn = this.constructMPN();
     const image = images?.[0]?.url ?? findProductImage(this.product, this.variants)?.url;
     return JSON.stringify(pruneUndefined({
       '@context': 'http://schema.org',
@@ -152,6 +165,7 @@ export class JSONTemplate {
       '@id': productUrl,
       name,
       sku,
+      mpn,
       description: metaDescription,
       image,
       productID: sku,
