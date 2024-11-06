@@ -1,3 +1,10 @@
+## [1.5.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.3...v1.5.4) (2024-11-06)
+
+
+### Bug Fixes
+
+* indentation ([#42](https://github.com/adobe-rnd/helix-commerce-api/issues/42)) ([ea495e1](https://github.com/adobe-rnd/helix-commerce-api/commit/ea495e13778b3ebb15607b6cc37e1552e186c66e))
+
 ## [1.5.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.2...v1.5.3) (2024-11-06)
 
 
