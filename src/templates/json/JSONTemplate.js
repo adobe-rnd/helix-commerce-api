@@ -183,6 +183,6 @@ export class JSONTemplate {
           },
         }
         : {}),
-    }));
+    }), undefined, 2);
   }
 }
