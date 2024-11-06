@@ -31,4 +31,14 @@ export default class extends JSONTemplate {
   constructMPN(variant) {
     return variant ? variant.sku : this.product.sku;
   }
+
+  renderOffers() {
+    const { offers: baseOffers } = super.renderOffers();
+    return {
+      offers: baseOffers.map((o) => ({
+        ...o,
+        itemCondition: 'http://schema.org/NewCondition',
+      })),
+    };
+  }
 }
