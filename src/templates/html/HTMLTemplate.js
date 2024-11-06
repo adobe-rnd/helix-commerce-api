@@ -88,7 +88,8 @@ ${HTMLTemplate.metaName('keywords', product.metaKeyword)}`;
 ${HTMLTemplate.metaProperty('og:title', product.metaTitle || product.name)}
 ${HTMLTemplate.metaProperty('og:image', image?.url)}
 ${HTMLTemplate.metaProperty('og:image:secure_url', image?.url)}
-${HTMLTemplate.metaProperty('og:type', 'product')}`;
+${HTMLTemplate.metaProperty('og:type', 'product')}
+${HTMLTemplate.metaName('image', image?.url)}`; // html2md will treat this as the og:image
   }
 
   /**
