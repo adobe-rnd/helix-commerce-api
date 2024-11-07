@@ -14,6 +14,17 @@ import { HTMLTemplate } from '../HTMLTemplate.js';
 
 export default class extends HTMLTemplate {
   /**
+   * @param {Context} ctx
+   * @param {Product} product
+   * @param {Variant[]} variants
+   */
+  constructor(ctx, product, variants) {
+    super(ctx, product, variants);
+    // use description field for meta description, if not explicitly set
+    this.product.metaDescription = this.product.metaDescription || this.product.description;
+  }
+
+  /**
    * Create the document meta tags
    * @returns {string}
    */

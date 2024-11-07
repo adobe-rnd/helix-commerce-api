@@ -163,6 +163,7 @@ export class JSONTemplate {
       '@context': 'http://schema.org',
       '@type': 'Product',
       '@id': productUrl,
+      url: productUrl,
       name,
       sku,
       mpn,
