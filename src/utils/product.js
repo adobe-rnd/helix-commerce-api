@@ -32,10 +32,12 @@ export function gql(strs, ...params) {
 
 /**
  * This function removes all undefined values from an object.
- * @param {Record<string,unknown>} obj - The object to prune.
- * @returns {Record<string,unknown>} - The pruned object.
+ * @template {Record<string, unknown>} T
+ * @param {T} obj - The object to prune.
+ * @returns {Partial<T>} - The pruned object.
  */
 export function pruneUndefined(obj) {
+  // @ts-ignore
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
 
@@ -96,6 +98,9 @@ export function matchConfigPath(config, path) {
   return null;
 }
 
+/**
+ * @param {Product|Variant} product
+ */
 export function parseSpecialToDate(product) {
   const specialToDate = product.attributes?.find((attr) => attr.name === 'special_to_date')?.value;
   if (specialToDate) {
@@ -105,6 +110,32 @@ export function parseSpecialToDate(product) {
       const [date] = specialToDate.split(' ');
       return date;
     }
+  }
+  return undefined;
+}
+
+/**
+ * @param {Product|Variant} product
+ * @returns {Rating | undefined}
+ */
+export function parseRating(product) {
+  const { attributeMap: attrs } = product;
+  /** @type {Rating} */
+  // @ts-ignore
+  const rating = pruneUndefined({
+    count: Number.parseInt(attrs['rating-count'], 10),
+    reviews: Number.parseInt(attrs['review-count'], 10),
+    value: attrs['rating-value'],
+    best: attrs['best-rating'],
+    worst: attrs['worst-rating'],
+  });
+
+  // at least one of count, reviews, or value must exist
+  if (rating.value != null
+    || ['count', 'reviews'].some(
+      (key) => rating[key] != null && !Number.isNaN(rating[key]),
+    )) {
+    return rating;
   }
   return undefined;
 }

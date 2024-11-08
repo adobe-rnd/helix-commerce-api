@@ -91,6 +91,34 @@ export class JSONTemplate {
     };
   }
 
+  /**
+   * @param {Variant} [variant]
+   */
+  renderRating(variant) {
+    const { rating } = variant || this.product;
+    if (!rating) {
+      return undefined;
+    }
+
+    const {
+      count,
+      reviews,
+      value,
+      best,
+      worst,
+    } = rating;
+    return pruneUndefined({
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: value,
+        ratingCount: count,
+        reviewCount: reviews,
+        bestRating: best,
+        worstRating: worst,
+      },
+    });
+  }
+
   renderOffers() {
     const image = this.product.images?.[0]?.url
       ?? findProductImage(this.product, this.variants)?.url;
@@ -114,18 +142,13 @@ export class JSONTemplate {
             availability: v.inStock ? 'InStock' : 'OutOfStock',
             price: finalPrice,
             priceCurrency: variantPrices.final?.currency,
+            gtin: v.gtin,
+            priceValidUntil: v.specialToDate,
+            aggregateRating: this.renderRating(v),
           };
 
           if (finalPrice < regularPrice) {
             offer.priceSpecification = this.renderOffersPriceSpecification(v);
-          }
-
-          if (v.gtin) {
-            offer.gtin = v.gtin;
-          }
-
-          if (v.specialToDate) {
-            offer.priceValidUntil = v.specialToDate;
           }
 
           return pruneUndefined(offer);
@@ -152,8 +175,6 @@ export class JSONTemplate {
       name,
       metaDescription,
       images,
-      reviewCount,
-      ratingValue,
     } = this.product;
 
     const productUrl = this.constructProductURL();
@@ -172,17 +193,6 @@ export class JSONTemplate {
       productID: sku,
       ...this.renderOffers(),
       ...(this.renderBrand() ?? {}),
-      ...(typeof reviewCount === 'number'
-     && typeof ratingValue === 'number'
-     && reviewCount > 0
-        ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue,
-            reviewCount,
-          },
-        }
-        : {}),
     }), undefined, 2);
   }
 }
