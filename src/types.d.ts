@@ -1,11 +1,13 @@
 import type { ExecutionContext, KVNamespace } from "@cloudflare/workers-types/experimental";
+import type { HTMLTemplate } from "./templates/html/HTMLTemplate.js";
+import { JSONTemplate } from "./templates/json/JSONTemplate.js";
 
 declare global {
   /**
    * { pathPattern => Config }
    */
   export type ConfigMap = Record<string, Config>;
-  
+
   export interface AttributeOverrides {
     variant: {
       [key: string]: string;
@@ -18,6 +20,7 @@ declare global {
   export interface Config {
     org: string;
     site: string;
+    siteKey: string;
     route: string;
     pageType: 'product' | string;
     origin?: string;
@@ -31,13 +34,14 @@ declare global {
     catalogSource: string
     catalogEndpoint?: string;
     sku?: string;
+    matchedPatterns: string[];
+    imageRoles?: string[];
+
     confMap: ConfigMap;
     params: Record<string, string>;
     headers: Record<string, string>;
     host: string;
     offerVariantURLTemplate: string;
-    matchedPath: string;
-    matchedPathConfig: Config;
     attributeOverrides: AttributeOverrides;
     siteOverrides: Record<string, Record<string, unknown>>;
   }
@@ -56,9 +60,15 @@ declare global {
     url: URL;
     env: Env;
     log: Console;
+    config: Config;
     info: {
       method: string;
       headers: Record<string, string>;
+    }
+    attributes: {
+      htmlTemplate?: HTMLTemplate;
+      jsonTemplate?: JSONTemplate;
+      [key: string]: any;
     }
   }
 
@@ -80,6 +90,7 @@ declare global {
     urlKey?: string;
     externalId?: string;
     variants?: Variant[]; // variants exist on products in helix commerce but not on magento
+    specialToDate?: string;
 
     // not handled currently:
     externalParentId?: string;
@@ -100,6 +111,7 @@ declare global {
     selections: string[];
     attributes: Attribute[];
     externalId: string;
+    specialToDate?: string;
     gtin?: string;
   }
 

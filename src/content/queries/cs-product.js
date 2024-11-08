@@ -11,7 +11,7 @@
  */
 
 import { forceImagesHTTPS } from '../../utils/http.js';
-import { gql } from '../../utils/product.js';
+import { gql, parseSpecialToDate } from '../../utils/product.js';
 
 /**
  * @param {any} productData
@@ -90,11 +90,22 @@ export const adapter = (productData) => {
     } : null,
   };
 
+  const specialToDate = parseSpecialToDate(product);
+  if (specialToDate) {
+    product.specialToDate = specialToDate;
+  }
+
   return product;
 };
 
 // @ts-ignore
-export default ({ sku }) => gql`{
+/**
+ * @param {{
+ *  sku: string;
+ *  imageRoles?: string[];
+ * }} opts
+ */
+export default ({ sku, imageRoles = [] }) => gql`{
     products(
       skus: ["${sku}"]
     ) {
@@ -112,7 +123,7 @@ export default ({ sku }) => gql`{
       addToCartAllowed
       inStock
       externalId
-      images(roles: []) { 
+      images(roles: [${imageRoles.map((s) => `"${s}"`).join(',')}]) { 
         url
         label
       }

@@ -10,29 +10,18 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../utils/http.js';
-import { fetchProduct } from '../utils/r2.js';
-import htmlTemplateFromContext from '../templates/html/index.js';
+import { JSONTemplate } from './JSONTemplate.js';
+import OVERRIDES from './overrides/index.js';
 
 /**
  * @param {Context} ctx
- * @returns {Promise<Response>}
+ * @param {Product} product
+ * @param {Variant[]} variants
  */
-export async function handle(ctx) {
-  const { config } = ctx;
-  const { urlkey } = config.params;
-  const { sku } = config.params;
-
-  if (!sku && !urlkey) {
-    return errorResponse(404, 'missing sku or urlkey');
+export default function fromContext(ctx, product, variants) {
+  if (!ctx.attributes.jsonTemplate) {
+    const Cls = OVERRIDES[ctx.config.siteKey] ?? JSONTemplate;
+    ctx.attributes.jsonTemplate = new Cls(ctx, product, variants);
   }
-
-  const product = await fetchProduct(ctx, sku);
-  const html = htmlTemplateFromContext(ctx, product, product.variants).render();
-  return new Response(html, {
-    status: 200,
-    headers: {
-      'content-type': 'text/html',
-    },
-  });
+  return ctx.attributes.jsonTemplate;
 }

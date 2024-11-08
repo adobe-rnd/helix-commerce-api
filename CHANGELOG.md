@@ -1,3 +1,74 @@
+## [1.5.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.4...v1.5.5) (2024-11-07)
+
+
+### Bug Fixes
+
+* customizations ([#43](https://github.com/adobe-rnd/helix-commerce-api/issues/43)) ([9877e4f](https://github.com/adobe-rnd/helix-commerce-api/commit/9877e4f2e77404a0f4b67e45d63d9eeb881d73ba))
+
+## [1.5.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.3...v1.5.4) (2024-11-06)
+
+
+### Bug Fixes
+
+* indentation ([#42](https://github.com/adobe-rnd/helix-commerce-api/issues/42)) ([ea495e1](https://github.com/adobe-rnd/helix-commerce-api/commit/ea495e13778b3ebb15607b6cc37e1552e186c66e))
+
+## [1.5.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.2...v1.5.3) (2024-11-06)
+
+
+### Bug Fixes
+
+* include mpn in product and offer schemas ([#41](https://github.com/adobe-rnd/helix-commerce-api/issues/41)) ([eb5d223](https://github.com/adobe-rnd/helix-commerce-api/commit/eb5d223e13fdcb19f329fe7143a2617f89764e41))
+
+## [1.5.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.1...v1.5.2) (2024-11-06)
+
+
+### Bug Fixes
+
+* include image meta tag ([#40](https://github.com/adobe-rnd/helix-commerce-api/issues/40)) ([2d20d91](https://github.com/adobe-rnd/helix-commerce-api/commit/2d20d918b796dda2aebaa2d1b0608dadc9b7d7f5))
+
+## [1.5.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.0...v1.5.1) (2024-11-05)
+
+
+### Bug Fixes
+
+* image roles config option ([b299039](https://github.com/adobe-rnd/helix-commerce-api/commit/b2990396fe6060f3babce78575ca2de3c42428a6))
+* sort selections in adapter ([d17d352](https://github.com/adobe-rnd/helix-commerce-api/commit/d17d352288ee520aa6bcd47d7bf68e8499e0f140))
+* sort variant selections ([e2d489d](https://github.com/adobe-rnd/helix-commerce-api/commit/e2d489d63390d351b48e6d0a648eefc3796f72be))
+
+# [1.5.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.4.1...v1.5.0) (2024-11-05)
+
+
+### Bug Fixes
+
+* date parsing ([cebc0bc](https://github.com/adobe-rnd/helix-commerce-api/commit/cebc0bce7c9655e3b96ab328c9cd2998ac48fa68))
+* fix variants check ([d986afa](https://github.com/adobe-rnd/helix-commerce-api/commit/d986afa5f68775622af148cb3cec3ca110cdf73d))
+* support priceValidUntil in simple products ([3f79d8d](https://github.com/adobe-rnd/helix-commerce-api/commit/3f79d8d8a3cbf7c3dd39bfb19e31138d5eb36f6d))
+* test ([f484693](https://github.com/adobe-rnd/helix-commerce-api/commit/f484693165cab9e9d4ef21fbe29d3f4682ff1fa1))
+
+
+### Features
+
+* add support for ListPrice and priceValidUntil in JSON-LD ([f91bbae](https://github.com/adobe-rnd/helix-commerce-api/commit/f91bbaea681b9d687ac4e0e01b2f8e3aae201b2f))
+
+## [1.4.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.4.0...v1.4.1) (2024-11-05)
+
+
+### Bug Fixes
+
+* use ctx config ([90bce9d](https://github.com/adobe-rnd/helix-commerce-api/commit/90bce9d1805a4ff06178b8040e250b50a4ab2cdb))
+
+# [1.4.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.3.0...v1.4.0) (2024-11-05)
+
+
+### Bug Fixes
+
+* cleanup, rm dupe logic ([2163278](https://github.com/adobe-rnd/helix-commerce-api/commit/21632787bd3de8bc353037972fac31cc1b06ffa8))
+
+
+### Features
+
+* template overrides ([cf3cfde](https://github.com/adobe-rnd/helix-commerce-api/commit/cf3cfde7b33b36eb14d2ea19dda3da7e8f1f9235))
+
 # [1.3.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.2.9...v1.3.0) (2024-11-04)
 
 

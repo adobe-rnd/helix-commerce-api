@@ -17,7 +17,7 @@ export const hasUppercase = (str) => /[A-Z]/.test(str);
 /**
  * This function combines an array of strings with interpolated
  * parameters to create a GraphQL query string.
- * @param {string[]} strs - The string array representing parts of the GraphQL query.
+ * @param {TemplateStringsArray} strs - The string array representing parts of the GraphQL query.
  * @param {...string} params - The parameters to be interpolated into the query.
  * @returns {string} - The resulting GraphQL query string.
  */
@@ -98,34 +98,17 @@ export function matchConfigPath(config, path) {
   return null;
 }
 
-/**
- * Constructs product url
- * @param {Config} config
- * @param {Product} product
- * @param {Variant} [variant]
- * @returns {string}
- */
-export function constructProductUrl(config, product, variant) {
-  const { host, matchedPath } = config;
-  const productPath = matchedPath
-    .replace('{{urlkey}}', product.urlKey)
-    .replace('{{sku}}', encodeURIComponent(product.sku.toLowerCase()));
-
-  const productUrl = `${host}${productPath}`;
-
-  if (variant) {
-    const offerVariantURLTemplate = config.matchedPathConfig?.offerVariantURLTemplate;
-    if (!offerVariantURLTemplate) {
-      return `${productUrl}/?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
+export function parseSpecialToDate(product) {
+  const specialToDate = product.attributes?.find((attr) => attr.name === 'special_to_date')?.value;
+  if (specialToDate) {
+    const today = new Date();
+    const specialPriceToDate = new Date(specialToDate);
+    if (specialPriceToDate.getTime() >= today.getTime()) {
+      const [date] = specialToDate.split(' ');
+      return date;
     }
-
-    const variantPath = offerVariantURLTemplate
-      .replace('{{urlkey}}', product.urlKey)
-      .replace('{{sku}}', encodeURIComponent(variant.sku));
-    return `${config.host}${variantPath}`;
   }
-
-  return productUrl;
+  return undefined;
 }
 
 /**

@@ -11,7 +11,7 @@
  */
 
 import { forceImagesHTTPS } from '../../utils/http.js';
-import { gql } from '../../utils/product.js';
+import { gql, parseSpecialToDate } from '../../utils/product.js';
 
 /**
  * @param {any} variants
@@ -47,8 +47,14 @@ export const adapter = (config, variants) => variants.map(({ selections, product
         minimumAmount: minPrice.final.amount.value,
       },
     },
-    selections: selections ?? [],
+    selections: (selections ?? []).sort(),
   };
+
+  const specialToDate = parseSpecialToDate(product);
+  if (specialToDate) {
+    variant.specialToDate = specialToDate;
+  }
+
   if (config.attributeOverrides?.variant) {
     Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
       variant[key] = product.attributes?.find((attr) => attr.name === value)?.value;
@@ -59,10 +65,12 @@ export const adapter = (config, variants) => variants.map(({ selections, product
 });
 
 /**
- * @param {string} sku
+ * @param {{
+ *  sku: string;
+ *  imageRoles?: string[];
+ * }} opts
  */
-// @ts-ignore
-export default (sku) => gql`
+export default ({ sku, imageRoles = [] }) => gql`
 {
   variants(sku: "${sku}") {
     variants {
@@ -72,7 +80,7 @@ export default (sku) => gql`
         sku
         inStock
         externalId
-        images {
+        images(roles: [${imageRoles.map((s) => `"${s}"`).join(',')}]) {
           url
           label
         }

@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { matchConfigPath } from '../utils/product.js';
 import { errorResponse } from '../utils/http.js';
 import { handle as handleAdobeCommerce } from './adobe-commerce.js';
 import { handle as handleHelixCommerce } from './helix-commerce.js';
@@ -19,40 +18,21 @@ const ALLOWED_METHODS = ['GET'];
 
 /**
  * @param {Context} ctx
- * @param {Config} config
  * @returns {Promise<Response>}
  */
-export default async function contentHandler(ctx, config) {
+export default async function contentHandler(ctx) {
   if (!ALLOWED_METHODS.includes(ctx.info.method)) {
     return errorResponse(405, 'method not allowed');
   }
 
+  const { config } = ctx;
   if (!config.pageType) {
     return errorResponse(400, 'invalid config for tenant site (missing pageType)');
   }
-
-  const { pathname } = ctx.url;
-  const productPath = pathname.includes('/content/product')
-    ? pathname.split('/content/product')[1]
-    : null;
-
-  if (productPath) {
-    const matchedPath = matchConfigPath(config, productPath);
-    const matchedPathConfig = config.confMap && config.confMap[matchedPath]
-      ? config.confMap[matchedPath]
-      : null;
-    if (matchedPathConfig) {
-      config.matchedPath = matchedPath;
-      config.matchedPathConfig = matchedPathConfig;
-    } else {
-      return errorResponse(400, 'No matching configuration for product path');
-    }
-  } else {
-    return errorResponse(400, 'invalid product path');
-  }
+  console.log('config: ', JSON.stringify(config, null, 2));
 
   if (config.catalogSource === 'helix') {
-    return handleHelixCommerce(ctx, config);
+    return handleHelixCommerce(ctx);
   }
-  return handleAdobeCommerce(ctx, config);
+  return handleAdobeCommerce(ctx);
 }

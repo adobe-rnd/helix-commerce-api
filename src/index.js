@@ -16,13 +16,13 @@ import content from './content/handler.js';
 import catalog from './catalog/handler.js';
 
 /**
- * @type {Record<string, (ctx: Context, config: Config, request: Request) => Promise<Response>>}
+ * @type {Record<string, (ctx: Context, request: Request) => Promise<Response>>}
  */
 const handlers = {
   content,
   catalog,
   // eslint-disable-next-line no-unused-vars
-  graphql: async (ctx, config) => errorResponse(501, 'not implemented'),
+  graphql: async (ctx) => errorResponse(501, 'not implemented'),
 };
 
 /**
@@ -35,6 +35,8 @@ export function makeContext(pctx, req, env) {
   /** @type {Context} */
   // @ts-ignore
   const ctx = pctx;
+  // @ts-ignore
+  ctx.attributes = {};
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;
@@ -58,12 +60,14 @@ export default {
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
       const config = await resolveConfig(ctx, overrides);
+      ctx.config = config;
+
       console.debug('resolved config: ', JSON.stringify(config));
       if (!config) {
         return errorResponse(404, 'config not found');
       }
 
-      return await handlers[config.route](ctx, config, request);
+      return await handlers[config.route](ctx, request);
     } catch (e) {
       if (e.response) {
         return e.response;

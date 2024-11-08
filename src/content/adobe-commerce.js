@@ -14,7 +14,7 @@ import { errorResponse, errorWithResponse, ffetch } from '../utils/http.js';
 import getProductQuery, { adapter as productAdapter } from './queries/cs-product.js';
 import getVariantsQuery, { adapter as variantsAdapter } from './queries/cs-variants.js';
 import getProductSKUQuery from './queries/core-product-sku.js';
-import HTML_TEMPLATE from '../templates/html.js';
+import htmlTemplateFromContext from '../templates/html/index.js';
 
 /**
  * @param {string} sku
@@ -22,7 +22,7 @@ import HTML_TEMPLATE from '../templates/html.js';
  */
 async function fetchProduct(sku, config) {
   const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
-  const query = getProductQuery({ sku });
+  const query = getProductQuery({ sku, imageRoles: config.imageRoles });
   console.debug(query);
 
   const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.storeViewCode}`, {
@@ -68,7 +68,7 @@ async function fetchProduct(sku, config) {
  */
 async function fetchVariants(sku, config) {
   const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
-  const query = getVariantsQuery(sku);
+  const query = getVariantsQuery({ sku, imageRoles: config.imageRoles });
   console.debug(query);
 
   const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.storeViewCode}`, {
@@ -149,10 +149,10 @@ async function lookupProductSKU(urlkey, config) {
 
 /**
  * @param {Context} ctx
- * @param {Config} config
  * @returns {Promise<Response>}
  */
-export async function handle(ctx, config) {
+export async function handle(ctx) {
+  const { config } = ctx;
   const { urlkey } = config.params;
   let { sku } = config.params;
 
@@ -173,7 +173,7 @@ export async function handle(ctx, config) {
     fetchProduct(sku.toUpperCase(), config),
     fetchVariants(sku.toUpperCase(), config),
   ]);
-  const html = HTML_TEMPLATE(config, product, variants);
+  const html = htmlTemplateFromContext(ctx, product, variants).render();
   return new Response(html, {
     status: 200,
     headers: {

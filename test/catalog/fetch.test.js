@@ -20,7 +20,6 @@ describe('handleProductFetchRequest', () => {
   let fetchProductStub;
   let errorResponseStub;
   let ctx;
-  let config;
 
   beforeEach(async () => {
     fetchProductStub = sinon.stub();
@@ -38,8 +37,8 @@ describe('handleProductFetchRequest', () => {
       log: {
         error: sinon.stub(),
       },
+      config: {},
     };
-    config = {};
   });
 
   afterEach(async () => {
@@ -52,12 +51,12 @@ describe('handleProductFetchRequest', () => {
     const product = { id: sku, name: 'Test Product' };
     fetchProductStub.resolves(product);
 
-    const response = await handleProductFetchRequest(ctx, config);
+    const response = await handleProductFetchRequest(ctx);
 
     assert.equal(response.headers.get('Content-Type'), 'application/json');
     const responseBody = await response.text();
     assert.equal(responseBody, JSON.stringify(product));
-    sinon.assert.calledWith(fetchProductStub, ctx, config, sku);
+    sinon.assert.calledWith(fetchProductStub, ctx, sku);
   });
 
   it('should return e.response when fetchProduct throws an error with a response property', async () => {
@@ -65,7 +64,7 @@ describe('handleProductFetchRequest', () => {
     const error = new ResponseError('Product not found', errorResponse);
     fetchProductStub.rejects(error);
 
-    const response = await handleProductFetchRequest(ctx, config);
+    const response = await handleProductFetchRequest(ctx);
 
     assert.strictEqual(response, errorResponse);
     sinon.assert.notCalled(ctx.log.error);
@@ -77,7 +76,7 @@ describe('handleProductFetchRequest', () => {
     const errorResp = new Response('Internal Server Error', { status: 500 });
     errorResponseStub.returns(errorResp);
 
-    const response = await handleProductFetchRequest(ctx, config);
+    const response = await handleProductFetchRequest(ctx);
 
     assert.equal(response.status, 500);
     const responseBody = await response.text();

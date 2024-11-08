@@ -9,15 +9,10 @@
  * OF ANY KIND, either express or implied. See the License for the specific language
  * governing permissions and limitations under the License.
  */
-import { resolve } from 'path';
-import { fileURLToPath } from 'url';
-import { webcrypto } from 'node:crypto';
 
-// eslint-disable-next-line no-underscore-dangle
-global.__rootdir = resolve(fileURLToPath(import.meta.url), '..', '..');
-// eslint-disable-next-line no-underscore-dangle
-global.__testdir = resolve(fileURLToPath(import.meta.url), '..');
-
-// crypto is available since node 20
-// @ts-ignore
-global.crypto ??= webcrypto;
+/**
+ * @type {Record<string, typeof import('../HTMLTemplate.js').HTMLTemplate>}
+ */
+export default {
+  'wilson-ecommerce--wilson': (await import('./wilson-ecommerce--wilson.js')).default,
+};
