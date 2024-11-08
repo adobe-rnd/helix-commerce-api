@@ -58,6 +58,7 @@ describe('contentHandler', () => {
 
   it('calls handleHelixCommerce if catalogSource is helix', async () => {
     const ctx = {
+      log: { debug: () => {} },
       info: { method: 'GET' },
       url: { pathname: '/content/product/us/p/product-urlkey' },
       config: {
@@ -76,6 +77,7 @@ describe('contentHandler', () => {
 
   it('calls handleAdobeCommerce', async () => {
     const ctx = {
+      log: { debug: () => {} },
       info: { method: 'GET' },
       url: { pathname: '/content/product/us/p/product-urlkey' },
       config: {
