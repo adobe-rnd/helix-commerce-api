@@ -79,7 +79,6 @@ export const adapter = (config, productData) => {
         currency: minPrice.regular.amount.currency,
         maximumAmount: maxPrice.regular.amount.value,
         minimumAmount: minPrice.regular.amount.value,
-        // TODO: add variant?
       },
       final: {
         // TODO: determine whether to use min or max
@@ -87,7 +86,6 @@ export const adapter = (config, productData) => {
         currency: minPrice.final.amount.currency,
         maximumAmount: maxPrice.final.amount.value,
         minimumAmount: minPrice.final.amount.value,
-        // TODO: add variant?
       },
       visible: minPrice.roles?.includes('visible'),
     } : null,
@@ -95,7 +93,7 @@ export const adapter = (config, productData) => {
 
   if (config.attributeOverrides?.product) {
     Object.entries(config.attributeOverrides.product).forEach(([key, value]) => {
-      product[key] = product.attributes?.find((attr) => attr.name === value)?.value ?? product[key];
+      product[key] = product.attributeMap[value] ?? product[key];
     });
   }
 

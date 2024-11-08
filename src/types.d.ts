@@ -10,10 +10,12 @@ declare global {
 
   export interface AttributeOverrides {
     variant: {
+      // expected attribute name => actual attribute name
       [key: string]: string;
     };
     product: {
-
+      // expected attribute name => actual attribute name
+      [key: string]: string;
     }
   }
 

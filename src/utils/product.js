@@ -10,6 +10,10 @@
  * governing permissions and limitations under the License.
  */
 
+/**
+ * @param {string} str
+ * @returns {boolean}
+ */
 export const hasUppercase = (str) => /[A-Z]/.test(str);
 
 /**
@@ -47,7 +51,7 @@ export function pruneUndefined(obj) {
  * If no in-stock variant, returns first variant image
  *
  * @param {Product} product - The product object.
- * @param {Variant[]} [variants] - The variants array.
+ * @param {Variant[]} [variants=[]] - The variants array.
  * @returns {Product['images'][number]} - The product image.
  */
 export function findProductImage(product, variants = []) {
@@ -72,37 +76,10 @@ export function assertValidProduct(product) {
 }
 
 /**
- * @param {Config} config
- * @param {string} path
- * @returns {string} matched path key
- */
-export function matchConfigPath(config, path) {
-  // Filter out any keys that are not paths
-  const pathEntries = Object.entries(config.confMap).filter(([key]) => key !== 'base');
-
-  for (const [key] of pathEntries) {
-    // Replace `{{urlkey}}` and `{{sku}}` with regex patterns
-    const pattern = key
-      .replace('{{urlkey}}', '([^]+)')
-      .replace('{{sku}}', '([^]+)');
-
-    // Convert to regex and test against the path
-    const regex = new RegExp(`^${pattern}$`);
-    const match = path.match(regex);
-
-    if (match) {
-      return key;
-    }
-  }
-  console.warn('No match found for path:', path);
-  return null;
-}
-
-/**
  * @param {Product|Variant} product
  */
 export function parseSpecialToDate(product) {
-  const specialToDate = product.attributes?.find((attr) => attr.name === 'special_to_date')?.value;
+  const specialToDate = product.attributeMap.special_to_date;
   if (specialToDate) {
     const today = new Date();
     const specialPriceToDate = new Date(specialToDate);

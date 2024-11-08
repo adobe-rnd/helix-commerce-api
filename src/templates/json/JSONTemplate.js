@@ -72,14 +72,17 @@ export class JSONTemplate {
    * @param {Variant} [variant]
    */
   constructMPN(variant) {
+    const { attributeMap: productAttrs } = this.product;
+    const { attributeMap: variantAttrs } = variant || {};
+
     return variant
-      ? variant.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? this.constructMPN()
-      : this.product.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? undefined;
+      ? variantAttrs.mpn ?? this.constructMPN()
+      : productAttrs.mpn ?? undefined;
   }
 
   renderBrand() {
-    const { attributes } = this.product;
-    const brandName = attributes?.find((attr) => attr.name === 'brand')?.value;
+    const { attributeMap: attrs } = this.product;
+    const brandName = attrs.brand;
     if (!brandName) {
       return undefined;
     }
@@ -155,10 +158,11 @@ export class JSONTemplate {
     };
   }
 
+  /**
+   * @param {Variant} variant
+   */
   renderOffersPriceSpecification(variant) {
-    const { prices } = variant;
-    const { regular } = prices;
-    const { amount, currency } = regular;
+    const { prices: { regular: { amount, currency } } } = variant;
     return {
       '@type': 'UnitPriceSpecification',
       priceType: 'https://schema.org/ListPrice',
