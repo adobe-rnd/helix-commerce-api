@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../utils/http.js';
 import { fetchProduct } from '../utils/r2.js';
 
 /**
@@ -20,18 +19,10 @@ import { fetchProduct } from '../utils/r2.js';
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
 export async function handleProductFetchRequest(ctx, config) {
-  try {
-    const sku = ctx.url.pathname.split('/').pop();
-    const product = await fetchProduct(ctx, config, sku);
+  const sku = ctx.url.pathname.split('/').pop();
+  const product = await fetchProduct(ctx, config, sku);
 
-    return new Response(JSON.stringify(product), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (e) {
-    if (e.response) {
-      return e.response;
-    }
-    ctx.log.error(e);
-    return errorResponse(500, 'internal server error');
-  }
+  return new Response(JSON.stringify(product), {
+    headers: { 'Content-Type': 'application/json' },
+  });
 }

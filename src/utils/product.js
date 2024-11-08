@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import { errorWithResponse } from './http.js';
+
 export const hasUppercase = (str) => /[A-Z]/.test(str);
 
 /**
@@ -65,7 +67,7 @@ export function findProductImage(product, variants = []) {
  */
 export function assertValidProduct(product) {
   if (typeof product !== 'object' || !product.sku) {
-    throw new Error('Invalid product');
+    throw errorWithResponse(400, 'Invalid product');
   }
 }
 
@@ -124,4 +126,33 @@ export function constructProductUrl(config, product, variant) {
   }
 
   return productUrl;
+}
+
+/**
+ * @param {Config} config
+ * @param {string} sku
+ * @param {string} [urlKey]
+ * @returns {string[]}
+ */
+export function getPreviewPublishPaths(config, sku, urlKey) {
+  const { base: _ = undefined, ...otherPatterns } = config.confMap;
+  const matchedPathPatterns = Object.entries(otherPatterns)
+    .reduce((acc, [pattern, matchConf]) => {
+      // find only configs that match the provided store & view codes
+      if (config.storeCode === matchConf.storeCode
+        && config.storeViewCode === matchConf.storeViewCode) {
+        acc.push(pattern);
+      }
+      return acc;
+    }, []);
+
+  const previewPublishPaths = matchedPathPatterns
+    .map((pattern) => {
+      if (sku) pattern = pattern.replace('{{sku}}', sku);
+      if (urlKey) pattern = pattern.replace('{{urlkey}}', urlKey);
+      return pattern;
+    })
+    .filter((pattern) => !pattern.includes('{{sku}}') && !pattern.includes('{{urlkey}}'));
+
+  return previewPublishPaths;
 }

@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import { callPreviewPublish } from './admin.js';
+import { BatchProcessor } from './batch.js';
 import { errorWithResponse } from './http.js';
 
 /* eslint-disable no-await-in-loop */
@@ -25,8 +27,8 @@ export async function fetchProduct(ctx, config, sku) {
   const { log } = ctx;
   const key = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
   log.debug('Fetching product from R2:', key);
-  const object = await ctx.env.CATALOG_BUCKET.get(key);
 
+  const object = await ctx.env.CATALOG_BUCKET.get(key);
   if (!object) {
     // Product not found in R2
     throw errorWithResponse(404, 'Product not found');
@@ -40,53 +42,158 @@ export async function fetchProduct(ctx, config, sku) {
 }
 
 /**
- * Save products
+ * Save products in batches while tracking each product's response.
+ *
  * @param {Context} ctx - The context object.
  * @param {Config} config - The config object.
  * @param {Product[]} products - The products to save.
- * @returns {Promise<void>} - A promise that resolves when the products are saved.
+ * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
  */
 export async function saveProducts(ctx, config, products) {
-  const { log } = ctx;
-  const BATCH_SIZE = 50;
-
+  /**
+   * Handler function to process a batch of products.
+   *
+   * @param {Product[]} batch - An array of products to save.
+   * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
+   */
   const storeProductsBatch = async (batch) => {
     const storePromises = batch.map(async (product) => {
-      try {
-        const { name, urlKey } = product;
-        const { sku } = config;
-        const key = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
-        const body = JSON.stringify(product);
-        const customMetadata = { sku, name, urlKey };
+      const { sku, name } = product;
+      const key = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
+      const body = JSON.stringify(product);
 
-        const productPromise = ctx.env.CATALOG_BUCKET.put(key, body, {
+      try {
+        const customMetadata = { sku, name };
+
+        const { urlKey } = product;
+        if (urlKey) {
+          customMetadata.urlKey = urlKey;
+        }
+
+        // Attempt to save the product
+        const putResponse = await ctx.env.CATALOG_BUCKET.put(key, body, {
           httpMetadata: { contentType: 'application/json' },
           customMetadata,
         });
 
+        // If urlKey exists, save the urlKey metadata
         if (urlKey) {
           const metadataKey = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/urlkeys/${urlKey}`;
-          const metadataPromise = ctx.env.CATALOG_BUCKET.put(metadataKey, '', {
+          await ctx.env.CATALOG_BUCKET.put(metadataKey, '', {
             httpMetadata: { contentType: 'application/octet-stream' },
             customMetadata,
           });
-          return Promise.all([productPromise, metadataPromise]);
-        } else {
-          return productPromise;
         }
+
+        const adminResponse = await callPreviewPublish(config, 'POST', sku, urlKey);
+
+        /**
+         * @type {Partial<BatchResult>}
+         */
+        const result = {
+          sku,
+          status: putResponse.status || 200,
+          message: 'Product saved successfully.',
+          ...adminResponse.paths,
+        };
+
+        return result;
       } catch (error) {
-        log.error(`Error storing product ${JSON.stringify(product)}:`, error);
-        return Promise.resolve();
+        ctx.log.error(`Error storing product SKU: ${sku}:`, error);
+        return {
+          sku,
+          status: error.code || 500,
+          message: `Error: ${error.message}`,
+        };
       }
     });
 
-    return Promise.all(storePromises);
+    const batchResults = await Promise.all(storePromises);
+    return batchResults;
   };
 
-  for (let i = 0; i < products.length; i += BATCH_SIZE) {
-    const batch = products.slice(i, i + BATCH_SIZE);
-    await storeProductsBatch(batch);
-  }
+  const processor = new BatchProcessor(ctx, storeProductsBatch);
+  const saveResults = await processor.process(products);
+
+  ctx.log.info(`Completed saving ${products.length} products.`);
+
+  return saveResults;
+}
+
+/**
+ * Deletes multiple products by their SKUs in batches while tracking each deletion's response.
+ *
+ * @param {Context} ctx - The context object containing environment and logging utilities.
+ * @param {Config} config - The configuration object with organizational details.
+ * @param {string[]} skus - An array of SKUs of the products to delete.
+ * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of deletion results.
+ * @throws {Error} - Throws an error if the input parameters are invalid.
+ */
+export async function deleteProducts(ctx, config, skus) {
+  const { log, env } = ctx;
+  const {
+    org, site, storeCode, storeViewCode,
+  } = config;
+
+  /**
+   * Handler function to process a batch of SKUs for deletion.
+   *
+   * @param {string[]} batch - An array of SKUs to delete.
+   * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of deletion results.
+   */
+  const deleteBatch = async (batch) => {
+    const deletionPromises = batch.map(async (sku) => {
+      try {
+        const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
+        const productHead = await env.CATALOG_BUCKET.head(productKey);
+        if (!productHead) {
+          log.warn(`Product with SKU: ${sku} not found. Skipping deletion.`);
+          return {
+            sku,
+            statusCode: 404,
+            message: 'Product not found.',
+          };
+        }
+        const { customMetadata } = productHead;
+        const deleteProductResponse = await env.CATALOG_BUCKET.delete(productKey);
+
+        const { urlKey } = customMetadata;
+        if (urlKey) {
+          const urlKeyPath = `${org}/${site}/${storeCode}/${storeViewCode}/urlkeys/${urlKey}`;
+          await env.CATALOG_BUCKET.delete(urlKeyPath);
+        }
+
+        const adminResponse = await callPreviewPublish(config, 'DELETE', sku, urlKey);
+        /**
+         * @type {Partial<BatchResult>}
+         */
+        const result = {
+          sku,
+          status: deleteProductResponse?.status || 200,
+          message: 'Product deleted successfully.',
+          ...adminResponse.paths,
+        };
+        return result;
+      } catch (error) {
+        log.error(`Failed to delete product with SKU: ${sku}. Error: ${error.message}`);
+        return {
+          sku,
+          status: error.code || 500,
+          message: `Error: ${error.message}`,
+        };
+      }
+    });
+
+    const batchResults = await Promise.all(deletionPromises);
+    return batchResults;
+  };
+
+  const processor = new BatchProcessor(ctx, deleteBatch);
+  const deleteResults = await processor.process(skus);
+
+  log.info(`Completed deletion of ${skus.length} products.`);
+
+  return deleteResults;
 }
 
 /**
@@ -107,6 +214,30 @@ export async function lookupSku(ctx, config, urlKey) {
   }
   // Return the resolved SKU
   return headResponse.customMetadata.sku;
+}
+
+/**
+ * Resolve URL key from a SKU.
+ * @param {Context} ctx - The context object containing request information and utilities.
+ * @param {Config} config - The configuration object with application settings.
+ * @param {string} sku - The SKU of the product.
+ * @returns {Promise<string>} - A promise that resolves to the URL key.
+ */
+export async function lookupUrlKey(ctx, config, sku) {
+  // Construct the path to the product JSON file
+  const productKey = `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/products/${sku}.json`;
+
+  const headResponse = await ctx.env.CATALOG_BUCKET.head(productKey);
+  if (!headResponse || !headResponse.customMetadata) {
+    return undefined;
+  }
+  const { urlKey } = headResponse.customMetadata;
+
+  if (!urlKey) {
+    return undefined;
+  }
+
+  return urlKey;
 }
 
 /**

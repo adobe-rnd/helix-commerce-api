@@ -22,6 +22,7 @@ declare global {
     pageType: 'product' | string;
     origin?: string;
     apiKey: string;
+    helixApiKey: string;
     magentoEnvironmentId: string;
     magentoWebsiteCode: string;
     storeViewCode: string;
@@ -151,6 +152,23 @@ declare global {
     name: string;
     label: string;
     value: string;
+  }
+
+  interface BatchResult {
+    sku: string;
+    status: number;
+    message?: string;
+    paths: Record<string, AdminStatus>;
+  };
+
+  interface AdminStatus {
+    preview?: AdminResult;
+    live?: AdminResult;
+  }
+
+  interface AdminResult {
+    status: number;
+    message?: string;
   }
 }
 

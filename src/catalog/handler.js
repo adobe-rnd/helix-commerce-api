@@ -15,8 +15,9 @@ import { errorResponse } from '../utils/http.js';
 import { handleProductLookupRequest } from './lookup.js';
 import { handleProductFetchRequest } from './fetch.js';
 import { handleProductSaveRequest } from './update.js';
+import { handleProductDeleteRequest } from './delete.js';
 
-const ALLOWED_METHODS = ['GET', 'PUT'];
+const ALLOWED_METHODS = ['GET', 'PUT', 'DELETE'];
 
 /**
  * Handles the catalog request.
@@ -27,7 +28,6 @@ const ALLOWED_METHODS = ['GET', 'PUT'];
  */
 export default async function catalogHandler(ctx, config, request) {
   const { method } = ctx.info;
-
   // Split the pathname into segments and filter out empty strings
   const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
 
@@ -63,6 +63,10 @@ export default async function catalogHandler(ctx, config, request) {
 
   if (ctx.info.method === 'PUT') {
     return handleProductSaveRequest(ctx, config, request);
+  }
+
+  if (ctx.info.method === 'DELETE') {
+    return handleProductDeleteRequest(ctx, config);
   }
   return handleProductFetchRequest(ctx, config);
 }
