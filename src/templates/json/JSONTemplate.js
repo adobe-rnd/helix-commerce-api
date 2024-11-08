@@ -108,14 +108,12 @@ export class JSONTemplate {
       worst,
     } = rating;
     return pruneUndefined({
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: value,
-        ratingCount: count,
-        reviewCount: reviews,
-        bestRating: best,
-        worstRating: worst,
-      },
+      '@type': 'AggregateRating',
+      ratingValue: value,
+      ratingCount: count,
+      reviewCount: reviews,
+      bestRating: best,
+      worstRating: worst,
     });
   }
 
