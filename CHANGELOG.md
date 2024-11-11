@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.5...v1.6.0) (2024-11-11)
+
+
+### Features
+
+* add ratings to json-ld ([#44](https://github.com/adobe-rnd/helix-commerce-api/issues/44)) ([76858f4](https://github.com/adobe-rnd/helix-commerce-api/commit/76858f480bd826cdfebcbab3dff348e03787e8ae))
+
 ## [1.5.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.4...v1.5.5) (2024-11-07)
 
 
