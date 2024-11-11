@@ -10,8 +10,13 @@ declare global {
 
   export interface AttributeOverrides {
     variant: {
+      // expected attribute name => actual attribute name
       [key: string]: string;
     };
+    product: {
+      // expected attribute name => actual attribute name
+      [key: string]: string;
+    }
   }
 
   /**
@@ -35,14 +40,14 @@ declare global {
     sku?: string;
     matchedPatterns: string[];
     imageRoles?: string[];
-
-    confMap: ConfigMap;
+    host: string;
     params: Record<string, string>;
     headers: Record<string, string>;
-    host: string;
-    offerVariantURLTemplate: string;
-    attributeOverrides: AttributeOverrides;
-    siteOverrides: Record<string, Record<string, unknown>>;
+    offerVariantURLTemplate?: string;
+    attributeOverrides?: AttributeOverrides;
+    siteOverrides?: Record<string, Record<string, unknown>>;
+
+    confMap: ConfigMap;
   }
 
   export interface Env {
@@ -90,13 +95,15 @@ declare global {
     externalId?: string;
     variants?: Variant[]; // variants exist on products in helix commerce but not on magento
     specialToDate?: string;
+    rating?: Rating
 
     // not handled currently:
     externalParentId?: string;
     variantSku?: string;
-    reviewCount?: number;
-    ratingValue?: number;
     optionUIDs?: string[];
+
+    // internal use:
+    attributeMap: Record<string, string>;
   }
 
   export interface Variant {
@@ -112,6 +119,23 @@ declare global {
     externalId: string;
     specialToDate?: string;
     gtin?: string;
+    rating?: Rating;
+
+    // internal use:
+    attributeMap: Record<string, string>;
+  }
+
+  interface Rating {
+    // number of ratings
+    count?: number;
+    // number of reviews
+    reviews?: number;
+    // rating value
+    value: number | string;
+    // range of ratings, highest
+    best?: number | string;
+    // range of ratings, lowest
+    worst?: number | string;
   }
 
   interface Image {

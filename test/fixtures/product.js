@@ -98,6 +98,10 @@ export function createProductFixture(overrides = {}) {
     ...overrides,
   };
 
+  product.attributeMap = Object.fromEntries(
+    product.attributes.map(({ name, value }) => [name, value]),
+  );
+
   // Deep merge defaults with overrides
   return product;
 }

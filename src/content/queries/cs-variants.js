@@ -11,9 +11,10 @@
  */
 
 import { forceImagesHTTPS } from '../../utils/http.js';
-import { gql, parseSpecialToDate } from '../../utils/product.js';
+import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
 
 /**
+ * @param {Config} config
  * @param {any} variants
  * @returns {Variant[]}
  */
@@ -30,6 +31,8 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     inStock: product.inStock,
     images: forceImagesHTTPS(product.images) ?? [],
     attributes: product.attributes ?? [],
+    attributeMap: Object.fromEntries((product.attributes ?? [])
+      .map(({ name, value }) => [name, value])),
     externalId: product.externalId,
     prices: {
       regular: {
@@ -50,15 +53,20 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     selections: (selections ?? []).sort(),
   };
 
-  const specialToDate = parseSpecialToDate(product);
+  if (config.attributeOverrides?.variant) {
+    Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
+      variant[key] = variant.attributeMap[value] ?? variant[key];
+    });
+  }
+
+  const specialToDate = parseSpecialToDate(variant);
   if (specialToDate) {
     variant.specialToDate = specialToDate;
   }
 
-  if (config.attributeOverrides?.variant) {
-    Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
-      variant[key] = product.attributes?.find((attr) => attr.name === value)?.value;
-    });
+  const rating = parseRating(variant);
+  if (rating) {
+    variant.rating = rating;
   }
 
   return variant;

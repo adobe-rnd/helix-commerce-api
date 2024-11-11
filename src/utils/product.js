@@ -10,6 +10,10 @@
  * governing permissions and limitations under the License.
  */
 
+/**
+ * @param {string} str
+ * @returns {boolean}
+ */
 export const hasUppercase = (str) => /[A-Z]/.test(str);
 
 /**
@@ -32,10 +36,12 @@ export function gql(strs, ...params) {
 
 /**
  * This function removes all undefined values from an object.
- * @param {Record<string,unknown>} obj - The object to prune.
- * @returns {Record<string,unknown>} - The pruned object.
+ * @template {Record<string, unknown>} T
+ * @param {T} obj - The object to prune.
+ * @returns {Partial<T>} - The pruned object.
  */
 export function pruneUndefined(obj) {
+  // @ts-ignore
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
 
@@ -45,7 +51,7 @@ export function pruneUndefined(obj) {
  * If no in-stock variant, returns first variant image
  *
  * @param {Product} product - The product object.
- * @param {Variant[]} [variants] - The variants array.
+ * @param {Variant[]} [variants=[]] - The variants array.
  * @returns {Product['images'][number]} - The product image.
  */
 export function findProductImage(product, variants = []) {
@@ -70,34 +76,10 @@ export function assertValidProduct(product) {
 }
 
 /**
- * @param {Config} config
- * @param {string} path
- * @returns {string} matched path key
+ * @param {Product|Variant} product
  */
-export function matchConfigPath(config, path) {
-  // Filter out any keys that are not paths
-  const pathEntries = Object.entries(config.confMap).filter(([key]) => key !== 'base');
-
-  for (const [key] of pathEntries) {
-    // Replace `{{urlkey}}` and `{{sku}}` with regex patterns
-    const pattern = key
-      .replace('{{urlkey}}', '([^]+)')
-      .replace('{{sku}}', '([^]+)');
-
-    // Convert to regex and test against the path
-    const regex = new RegExp(`^${pattern}$`);
-    const match = path.match(regex);
-
-    if (match) {
-      return key;
-    }
-  }
-  console.warn('No match found for path:', path);
-  return null;
-}
-
 export function parseSpecialToDate(product) {
-  const specialToDate = product.attributes?.find((attr) => attr.name === 'special_to_date')?.value;
+  const specialToDate = product.attributeMap.special_to_date;
   if (specialToDate) {
     const today = new Date();
     const specialPriceToDate = new Date(specialToDate);
@@ -105,6 +87,32 @@ export function parseSpecialToDate(product) {
       const [date] = specialToDate.split(' ');
       return date;
     }
+  }
+  return undefined;
+}
+
+/**
+ * @param {Product|Variant} product
+ * @returns {Rating | undefined}
+ */
+export function parseRating(product) {
+  const { attributeMap: attrs } = product;
+  /** @type {Rating} */
+  // @ts-ignore
+  const rating = pruneUndefined({
+    count: Number.parseInt(attrs['rating-count'], 10),
+    reviews: Number.parseInt(attrs['review-count'], 10),
+    value: attrs['rating-value'],
+    best: attrs['best-rating'],
+    worst: attrs['worst-rating'],
+  });
+
+  // at least one of count, reviews, or value must exist
+  if (rating.value != null
+    || ['count', 'reviews'].some(
+      (key) => rating[key] != null && !Number.isNaN(rating[key]),
+    )) {
+    return rating;
   }
   return undefined;
 }

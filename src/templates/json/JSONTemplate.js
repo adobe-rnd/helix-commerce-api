@@ -72,14 +72,17 @@ export class JSONTemplate {
    * @param {Variant} [variant]
    */
   constructMPN(variant) {
+    const { attributeMap: productAttrs } = this.product;
+    const { attributeMap: variantAttrs } = variant || {};
+
     return variant
-      ? variant.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? this.constructMPN()
-      : this.product.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? undefined;
+      ? variantAttrs.mpn ?? this.constructMPN()
+      : productAttrs.mpn ?? undefined;
   }
 
   renderBrand() {
-    const { attributes } = this.product;
-    const brandName = attributes?.find((attr) => attr.name === 'brand')?.value;
+    const { attributeMap: attrs } = this.product;
+    const brandName = attrs.brand;
     if (!brandName) {
       return undefined;
     }
@@ -89,6 +92,32 @@ export class JSONTemplate {
         name: brandName,
       },
     };
+  }
+
+  /**
+   * @param {Variant} [variant]
+   */
+  renderRating(variant) {
+    const { rating } = variant || this.product;
+    if (!rating) {
+      return undefined;
+    }
+
+    const {
+      count,
+      reviews,
+      value,
+      best,
+      worst,
+    } = rating;
+    return pruneUndefined({
+      '@type': 'AggregateRating',
+      ratingValue: value,
+      ratingCount: count,
+      reviewCount: reviews,
+      bestRating: best,
+      worstRating: worst,
+    });
   }
 
   renderOffers() {
@@ -114,18 +143,13 @@ export class JSONTemplate {
             availability: v.inStock ? 'InStock' : 'OutOfStock',
             price: finalPrice,
             priceCurrency: variantPrices.final?.currency,
+            gtin: v.gtin,
+            priceValidUntil: v.specialToDate,
+            aggregateRating: this.renderRating(v),
           };
 
           if (finalPrice < regularPrice) {
             offer.priceSpecification = this.renderOffersPriceSpecification(v);
-          }
-
-          if (v.gtin) {
-            offer.gtin = v.gtin;
-          }
-
-          if (v.specialToDate) {
-            offer.priceValidUntil = v.specialToDate;
           }
 
           return pruneUndefined(offer);
@@ -134,10 +158,11 @@ export class JSONTemplate {
     };
   }
 
+  /**
+   * @param {Variant} variant
+   */
   renderOffersPriceSpecification(variant) {
-    const { prices } = variant;
-    const { regular } = prices;
-    const { amount, currency } = regular;
+    const { prices: { regular: { amount, currency } } } = variant;
     return {
       '@type': 'UnitPriceSpecification',
       priceType: 'https://schema.org/ListPrice',
@@ -152,8 +177,6 @@ export class JSONTemplate {
       name,
       metaDescription,
       images,
-      reviewCount,
-      ratingValue,
     } = this.product;
 
     const productUrl = this.constructProductURL();
@@ -172,17 +195,6 @@ export class JSONTemplate {
       productID: sku,
       ...this.renderOffers(),
       ...(this.renderBrand() ?? {}),
-      ...(typeof reviewCount === 'number'
-     && typeof ratingValue === 'number'
-     && reviewCount > 0
-        ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue,
-            reviewCount,
-          },
-        }
-        : {}),
     }), undefined, 2);
   }
 }

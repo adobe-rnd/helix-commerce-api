@@ -11,13 +11,14 @@
  */
 
 import { forceImagesHTTPS } from '../../utils/http.js';
-import { gql, parseSpecialToDate } from '../../utils/product.js';
+import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
 
 /**
+ * @param {Config} config
  * @param {any} productData
  * @returns {Product}
  */
-export const adapter = (productData) => {
+export const adapter = (config, productData) => {
   let minPrice = productData.priceRange?.minimum ?? productData.price;
   let maxPrice = productData.priceRange?.maximum ?? productData.price;
 
@@ -42,6 +43,8 @@ export const adapter = (productData) => {
     externalId: productData.externalId,
     images: forceImagesHTTPS(productData.images) ?? [],
     attributes: productData.attributes ?? [],
+    attributeMap: Object.fromEntries((productData.attributes ?? [])
+      .map(({ name, value }) => [name, value])),
     options: (productData.options ?? []).map((option) => ({
       id: option.id,
       label: option.title,
@@ -76,7 +79,6 @@ export const adapter = (productData) => {
         currency: minPrice.regular.amount.currency,
         maximumAmount: maxPrice.regular.amount.value,
         minimumAmount: minPrice.regular.amount.value,
-        // TODO: add variant?
       },
       final: {
         // TODO: determine whether to use min or max
@@ -84,15 +86,25 @@ export const adapter = (productData) => {
         currency: minPrice.final.amount.currency,
         maximumAmount: maxPrice.final.amount.value,
         minimumAmount: minPrice.final.amount.value,
-        // TODO: add variant?
       },
       visible: minPrice.roles?.includes('visible'),
     } : null,
   };
 
+  if (config.attributeOverrides?.product) {
+    Object.entries(config.attributeOverrides.product).forEach(([key, value]) => {
+      product[key] = product.attributeMap[value] ?? product[key];
+    });
+  }
+
   const specialToDate = parseSpecialToDate(product);
   if (specialToDate) {
     product.specialToDate = specialToDate;
+  }
+
+  const rating = parseRating(product);
+  if (rating) {
+    product.rating = rating;
   }
 
   return product;

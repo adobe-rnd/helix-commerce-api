@@ -59,6 +59,10 @@ export function createProductVariationFixture(overrides = {}) {
     ...overrides,
   };
 
+  variation.attributeMap = Object.fromEntries(
+    variation.attributes.map(({ name, value }) => [name, value]),
+  );
+
   return variation;
 }
 
