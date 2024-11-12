@@ -125,37 +125,33 @@ export class JSONTemplate {
       ?? findProductImage(this.product, this.variants)?.url;
     const configurableProduct = this.variants?.length > 0;
     const offers = configurableProduct ? this.variants : [this.product];
-    return {
-      offers: [
-        ...offers.map((v) => {
-          const { prices: variantPrices } = v;
-          const offerUrl = this.constructProductURL(configurableProduct ? v : undefined);
-          const mpn = this.constructMPN(configurableProduct ? v : undefined);
-          const finalPrice = variantPrices?.final?.amount;
-          const regularPrice = variantPrices?.regular?.amount;
+    return offers.map((v) => {
+      const { prices: variantPrices } = v;
+      const offerUrl = this.constructProductURL(configurableProduct ? v : undefined);
+      const mpn = this.constructMPN(configurableProduct ? v : undefined);
+      const finalPrice = variantPrices?.final?.amount;
+      const regularPrice = variantPrices?.regular?.amount;
 
-          const offer = {
-            '@type': 'Offer',
-            sku: v.sku,
-            mpn,
-            url: offerUrl,
-            image: v.images?.[0]?.url ?? image,
-            availability: v.inStock ? 'InStock' : 'OutOfStock',
-            price: finalPrice,
-            priceCurrency: variantPrices.final?.currency,
-            gtin: v.gtin,
-            priceValidUntil: v.specialToDate,
-            aggregateRating: this.renderRating(v),
-          };
+      const offer = {
+        '@type': 'Offer',
+        sku: v.sku,
+        mpn,
+        url: offerUrl,
+        image: v.images?.[0]?.url ?? image,
+        availability: v.inStock ? 'InStock' : 'OutOfStock',
+        price: finalPrice,
+        priceCurrency: variantPrices.final?.currency,
+        gtin: v.attributeMap.gtin,
+        priceValidUntil: v.specialToDate,
+        aggregateRating: this.renderRating(v),
+      };
 
-          if (finalPrice < regularPrice) {
-            offer.priceSpecification = this.renderOffersPriceSpecification(v);
-          }
+      if (finalPrice < regularPrice) {
+        offer.priceSpecification = this.renderOffersPriceSpecification(v);
+      }
 
-          return pruneUndefined(offer);
-        }).filter(Boolean),
-      ],
-    };
+      return pruneUndefined(offer);
+    });
   }
 
   /**
@@ -182,6 +178,16 @@ export class JSONTemplate {
     const productUrl = this.constructProductURL();
     const mpn = this.constructMPN();
     const image = images?.[0]?.url ?? findProductImage(this.product, this.variants)?.url;
+    const offers = this.renderOffers();
+
+    // if offers don't have an aggregate rating
+    // the top-level product may have one that applies to all variants
+    const offersHaveRating = offers.some((o) => o.aggregateRating);
+    let aggregateRating;
+    if (!offersHaveRating) {
+      aggregateRating = this.renderRating();
+    }
+
     return JSON.stringify(pruneUndefined({
       '@context': 'http://schema.org',
       '@type': 'Product',
@@ -193,7 +199,8 @@ export class JSONTemplate {
       description: metaDescription,
       image,
       productID: sku,
-      ...this.renderOffers(),
+      offers,
+      aggregateRating,
       ...(this.renderBrand() ?? {}),
     }), undefined, 2);
   }
