@@ -37,6 +37,7 @@ export function createProductVariationFixture(overrides = {}) {
       { name: 'criteria_7', label: 'Criteria 7', value: 'Wattage: 40 T10' },
       { name: 'barcode', label: 'Barcode', value: '123456789012' },
       { name: 'weight', label: 'Weight', value: 219 },
+      ...(overrides.attributes || []),
     ],
     prices: {
       regular: {
