@@ -38,11 +38,18 @@ export function gql(strs, ...params) {
  * This function removes all undefined values from an object.
  * @template {Record<string, unknown>} T
  * @param {T} obj - The object to prune.
+ * @param {boolean} [pruneNullish=false] - Whether to remove nullish values.
  * @returns {Partial<T>} - The pruned object.
  */
-export function pruneUndefined(obj) {
+export function pruneUndefined(obj, pruneNullish = false) {
   // @ts-ignore
-  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([, v]) => (pruneNullish
+        ? v != null
+        : v !== undefined
+      )),
+  );
 }
 
 /**
@@ -100,12 +107,12 @@ export function parseRating(product) {
   /** @type {Rating} */
   // @ts-ignore
   const rating = pruneUndefined({
-    count: Number.parseInt(attrs['rating-count'], 10),
-    reviews: Number.parseInt(attrs['review-count'], 10),
+    count: attrs['rating-count'] ? Number.parseInt(attrs['rating-count'], 10) : undefined,
+    reviews: attrs['review-count'] ? Number.parseInt(attrs['review-count'], 10) : undefined,
     value: attrs['rating-value'],
     best: attrs['best-rating'],
     worst: attrs['worst-rating'],
-  });
+  }, true);
 
   // at least one of count, reviews, or value must exist
   if (rating.value != null

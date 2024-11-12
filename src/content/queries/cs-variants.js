@@ -55,7 +55,7 @@ export const adapter = (config, variants) => variants.map(({ selections, product
 
   if (config.attributeOverrides?.variant) {
     Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
-      variant[key] = variant.attributeMap[value] ?? variant[key];
+      variant.attributeMap[key] = variant.attributeMap[value] ?? variant[key];
     });
   }
 

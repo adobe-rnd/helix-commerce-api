@@ -93,7 +93,7 @@ export const adapter = (config, productData) => {
 
   if (config.attributeOverrides?.product) {
     Object.entries(config.attributeOverrides.product).forEach(([key, value]) => {
-      product[key] = product.attributeMap[value] ?? product[key];
+      product.attributeMap[key] = product.attributeMap[value] ?? product[key];
     });
   }
 
