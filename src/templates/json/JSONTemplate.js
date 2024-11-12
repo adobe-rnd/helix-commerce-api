@@ -117,7 +117,7 @@ export class JSONTemplate {
       reviewCount: reviews,
       bestRating: best,
       worstRating: worst,
-    }, true);
+    });
   }
 
   renderOffers() {

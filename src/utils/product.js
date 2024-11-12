@@ -44,7 +44,11 @@ export function gql(strs, ...params) {
 export function pruneUndefined(obj, pruneNullish = false) {
   // @ts-ignore
   return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => (pruneNullish ? v != null : v !== undefined)),
+    Object.entries(obj)
+      .filter(([, v]) => (pruneNullish
+        ? v != null
+        : v !== undefined
+      )),
   );
 }
 
@@ -103,8 +107,8 @@ export function parseRating(product) {
   /** @type {Rating} */
   // @ts-ignore
   const rating = pruneUndefined({
-    count: Number.parseInt(attrs['rating-count'], 10),
-    reviews: Number.parseInt(attrs['review-count'], 10),
+    count: attrs['rating-count'] ? Number.parseInt(attrs['rating-count'], 10) : undefined,
+    reviews: attrs['review-count'] ? Number.parseInt(attrs['review-count'], 10) : undefined,
     value: attrs['rating-value'],
     best: attrs['best-rating'],
     worst: attrs['worst-rating'],
