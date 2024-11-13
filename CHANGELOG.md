@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.1...v1.6.2) (2024-11-13)
+
+
+### Bug Fixes
+
+* brand, itemCondition and hasMerchantReturnPolicy ([#46](https://github.com/adobe-rnd/helix-commerce-api/issues/46)) ([fe6970e](https://github.com/adobe-rnd/helix-commerce-api/commit/fe6970e5d8de48303fff33573bd24fc099b404c6))
+
 ## [1.6.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.0...v1.6.1) (2024-11-12)
 
 
