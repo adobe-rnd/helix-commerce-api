@@ -33,12 +33,10 @@ export default class extends JSONTemplate {
   }
 
   renderOffers() {
-    const { offers: baseOffers } = super.renderOffers();
-    return {
-      offers: baseOffers.map((o) => ({
-        ...o,
-        itemCondition: 'http://schema.org/NewCondition',
-      })),
-    };
+    const baseOffers = super.renderOffers();
+    return baseOffers.map((o) => ({
+      ...o,
+      itemCondition: 'http://schema.org/NewCondition',
+    }));
   }
 }
