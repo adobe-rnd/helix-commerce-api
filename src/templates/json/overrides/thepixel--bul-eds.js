@@ -49,20 +49,18 @@ export default class extends JSONTemplate {
   }
 
   renderOffers() {
-    const { offers: baseOffers } = super.renderOffers();
-    return {
-      offers: baseOffers.map((o) => ({
-        ...o,
-        itemCondition: 'http://schema.org/NewCondition',
-        hasMerchantReturnPolicy: {
-          '@type': 'MerchantReturnPolicy',
-          applicableCountry: 'UK',
-          returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
-          merchantReturnDays: 30,
-          returnMethod: 'https://schema.org/ReturnByMail',
-          returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
-        },
-      })),
-    };
+    const baseOffers = super.renderOffers();
+    return baseOffers.map((o) => ({
+      ...o,
+      itemCondition: 'http://schema.org/NewCondition',
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'UK',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 30,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+      },
+    }));
   }
 }
