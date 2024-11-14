@@ -145,8 +145,8 @@ describe('Render Product HTML', () => {
 
   it('should have the correct JSON-LD schema with attribute overrides', () => {
     variations = [
-      createProductVariationFixture({ gtin: '123' }),
-      createProductVariationFixture({ gtin: '456' }),
+      createProductVariationFixture({ attributes: [{ name: 'gtin', value: '123' }] }),
+      createProductVariationFixture({ attributes: [{ name: 'gtin', value: '456' }] }),
     ];
     const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
     dom = new JSDOM(html);
@@ -157,7 +157,7 @@ describe('Render Product HTML', () => {
 
     jsonLd.offers.forEach((offer, index) => {
       const variant = variations[index];
-      assert.strictEqual(offer.gtin, variant.gtin, `Offer gtin for variant ${variant.sku} does not match`);
+      assert.strictEqual(offer.gtin, variant.attributeMap.gtin, `Offer gtin for variant ${variant.sku} does not match`);
     });
   });
 

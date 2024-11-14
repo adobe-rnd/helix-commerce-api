@@ -29,7 +29,7 @@ export default async function contentHandler(ctx) {
   if (!config.pageType) {
     return errorResponse(400, 'invalid config for tenant site (missing pageType)');
   }
-  console.log('config: ', JSON.stringify(config, null, 2));
+  ctx.log.debug('config: ', JSON.stringify(config, null, 2));
 
   if (config.catalogSource === 'helix') {
     return handleHelixCommerce(ctx);

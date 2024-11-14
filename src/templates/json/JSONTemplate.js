@@ -72,14 +72,17 @@ export class JSONTemplate {
    * @param {Variant} [variant]
    */
   constructMPN(variant) {
+    const { attributeMap: productAttrs } = this.product;
+    const { attributeMap: variantAttrs } = variant || {};
+
     return variant
-      ? variant.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? this.constructMPN()
-      : this.product.attributes.find((attr) => attr.name.toLowerCase() === 'mpn')?.value ?? undefined;
+      ? variantAttrs.mpn ?? this.constructMPN()
+      : productAttrs.mpn ?? undefined;
   }
 
   renderBrand() {
-    const { attributes } = this.product;
-    const brandName = attributes?.find((attr) => attr.name === 'brand')?.value;
+    const { attributeMap: attrs } = this.product;
+    const brandName = attrs.brand;
     if (!brandName) {
       return undefined;
     }
@@ -91,53 +94,71 @@ export class JSONTemplate {
     };
   }
 
+  /**
+   * @param {Variant} [variant]
+   */
+  renderRating(variant) {
+    const { rating } = variant || this.product;
+    if (!rating) {
+      return undefined;
+    }
+
+    const {
+      count,
+      reviews,
+      value,
+      best,
+      worst,
+    } = rating;
+    return pruneUndefined({
+      '@type': 'AggregateRating',
+      ratingValue: value,
+      ratingCount: count,
+      reviewCount: reviews,
+      bestRating: best,
+      worstRating: worst,
+    });
+  }
+
   renderOffers() {
     const image = this.product.images?.[0]?.url
       ?? findProductImage(this.product, this.variants)?.url;
     const configurableProduct = this.variants?.length > 0;
     const offers = configurableProduct ? this.variants : [this.product];
-    return {
-      offers: [
-        ...offers.map((v) => {
-          const { prices: variantPrices } = v;
-          const offerUrl = this.constructProductURL(configurableProduct ? v : undefined);
-          const mpn = this.constructMPN(configurableProduct ? v : undefined);
-          const finalPrice = variantPrices?.final?.amount;
-          const regularPrice = variantPrices?.regular?.amount;
+    return offers.map((v) => {
+      const { prices: variantPrices } = v;
+      const offerUrl = this.constructProductURL(configurableProduct ? v : undefined);
+      const mpn = this.constructMPN(configurableProduct ? v : undefined);
+      const finalPrice = variantPrices?.final?.amount;
+      const regularPrice = variantPrices?.regular?.amount;
 
-          const offer = {
-            '@type': 'Offer',
-            sku: v.sku,
-            mpn,
-            url: offerUrl,
-            image: v.images?.[0]?.url ?? image,
-            availability: v.inStock ? 'InStock' : 'OutOfStock',
-            price: finalPrice,
-            priceCurrency: variantPrices.final?.currency,
-          };
+      const offer = {
+        '@type': 'Offer',
+        sku: v.sku,
+        mpn,
+        url: offerUrl,
+        image: v.images?.[0]?.url ?? image,
+        availability: v.inStock ? 'InStock' : 'OutOfStock',
+        price: finalPrice,
+        priceCurrency: variantPrices.final?.currency,
+        gtin: v.attributeMap.gtin,
+        priceValidUntil: v.specialToDate,
+        aggregateRating: this.renderRating(v),
+      };
 
-          if (finalPrice < regularPrice) {
-            offer.priceSpecification = this.renderOffersPriceSpecification(v);
-          }
+      if (finalPrice < regularPrice) {
+        offer.priceSpecification = this.renderOffersPriceSpecification(v);
+      }
 
-          if (v.gtin) {
-            offer.gtin = v.gtin;
-          }
-
-          if (v.specialToDate) {
-            offer.priceValidUntil = v.specialToDate;
-          }
-
-          return pruneUndefined(offer);
-        }).filter(Boolean),
-      ],
-    };
+      return pruneUndefined(offer);
+    });
   }
 
+  /**
+   * @param {Variant} variant
+   */
   renderOffersPriceSpecification(variant) {
-    const { prices } = variant;
-    const { regular } = prices;
-    const { amount, currency } = regular;
+    const { prices: { regular: { amount, currency } } } = variant;
     return {
       '@type': 'UnitPriceSpecification',
       priceType: 'https://schema.org/ListPrice',
@@ -152,13 +173,21 @@ export class JSONTemplate {
       name,
       metaDescription,
       images,
-      reviewCount,
-      ratingValue,
     } = this.product;
 
     const productUrl = this.constructProductURL();
     const mpn = this.constructMPN();
     const image = images?.[0]?.url ?? findProductImage(this.product, this.variants)?.url;
+    const offers = this.renderOffers();
+
+    // if offers don't have an aggregate rating
+    // the top-level product may have one that applies to all variants
+    const offersHaveRating = offers.some((o) => o.aggregateRating);
+    let aggregateRating;
+    if (!offersHaveRating) {
+      aggregateRating = this.renderRating();
+    }
+
     return JSON.stringify(pruneUndefined({
       '@context': 'http://schema.org',
       '@type': 'Product',
@@ -170,19 +199,9 @@ export class JSONTemplate {
       description: metaDescription,
       image,
       productID: sku,
-      ...this.renderOffers(),
+      offers,
+      aggregateRating,
       ...(this.renderBrand() ?? {}),
-      ...(typeof reviewCount === 'number'
-     && typeof ratingValue === 'number'
-     && reviewCount > 0
-        ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue,
-            reviewCount,
-          },
-        }
-        : {}),
     }), undefined, 2);
   }
 }

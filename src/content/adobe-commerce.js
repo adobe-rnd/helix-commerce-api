@@ -54,7 +54,7 @@ async function fetchProduct(sku, config) {
     if (!productData) {
       throw errorWithResponse(404, 'could not find product', json.errors);
     }
-    const product = productAdapter(productData);
+    const product = productAdapter(config, productData);
     return product;
   } catch (e) {
     console.error('failed to parse product: ', e);

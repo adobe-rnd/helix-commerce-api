@@ -1,3 +1,31 @@
+## [1.6.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.2...v1.6.3) (2024-11-14)
+
+
+### Bug Fixes
+
+* shortdescription instead of description ([#47](https://github.com/adobe-rnd/helix-commerce-api/issues/47)) ([c325894](https://github.com/adobe-rnd/helix-commerce-api/commit/c325894ff56f6942faf44993d485399535ae1b5e))
+
+## [1.6.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.1...v1.6.2) (2024-11-13)
+
+
+### Bug Fixes
+
+* brand, itemCondition and hasMerchantReturnPolicy ([#46](https://github.com/adobe-rnd/helix-commerce-api/issues/46)) ([fe6970e](https://github.com/adobe-rnd/helix-commerce-api/commit/fe6970e5d8de48303fff33573bd24fc099b404c6))
+
+## [1.6.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.0...v1.6.1) (2024-11-12)
+
+
+### Bug Fixes
+
+* various stuff ([#45](https://github.com/adobe-rnd/helix-commerce-api/issues/45)) ([a77f3d5](https://github.com/adobe-rnd/helix-commerce-api/commit/a77f3d577ff30c10a18721def3630576b8424611))
+
+# [1.6.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.5...v1.6.0) (2024-11-11)
+
+
+### Features
+
+* add ratings to json-ld ([#44](https://github.com/adobe-rnd/helix-commerce-api/issues/44)) ([76858f4](https://github.com/adobe-rnd/helix-commerce-api/commit/76858f480bd826cdfebcbab3dff348e03787e8ae))
+
 ## [1.5.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.5.4...v1.5.5) (2024-11-07)
 
 
