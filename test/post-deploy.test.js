@@ -112,7 +112,13 @@ describe('Post-Deploy Tests', () => {
       const lookupRes = await fetch(lookupOptions.url, lookupOptions);
       assert.strictEqual(lookupRes.status, 301, 'Lookup request should succeed');
 
-      const lookupProduct = await lookupRes.json();
+      const lookupLocation = lookupRes.headers.get('Location');
+      assert.strictEqual(lookupLocation, `https://adobe-commerce-api-ci.adobeaem.workers.dev/dylandepass/commerce-boilerplate/catalog/main_website_store/default/product/${testProduct.sku}`);
+
+      const lookupRes2 = await fetch(lookupLocation, lookupOptions);
+      assert.strictEqual(lookupRes2.status, 200, 'Lookup request should succeed');
+
+      const lookupProduct = await lookupRes2.json();
       assert.strictEqual(lookupProduct.sku, testProduct.sku);
 
       const deleteOptions = {
