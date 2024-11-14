@@ -20,8 +20,8 @@ export default class extends HTMLTemplate {
    */
   constructor(ctx, product, variants) {
     super(ctx, product, variants);
-    // use description field for meta description, if not explicitly set
-    this.product.metaDescription = this.product.metaDescription || this.product.description;
+    // use shortDescription field for meta description, if not explicitly set
+    this.product.metaDescription = this.product.metaDescription || this.product.shortDescription;
   }
 
   /**
