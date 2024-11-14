@@ -95,7 +95,7 @@ describe('Post-Deploy Tests', () => {
         body: JSON.stringify(testProduct),
       };
       const putRes = await fetch(putOpts.url, putOpts);
-      assert.strictEqual(putRes.status, 200, 'PUT request should succeed');
+      assert.strictEqual(putRes.status, 201, 'PUT request should succeed');
 
       const { url, ...getOpts } = getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/product/${testProduct.sku}`);
       const getRes = await fetch(url, getOpts);
