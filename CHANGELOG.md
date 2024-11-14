@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.2...v1.6.3) (2024-11-14)
+
+
+### Bug Fixes
+
+* shortdescription instead of description ([#47](https://github.com/adobe-rnd/helix-commerce-api/issues/47)) ([c325894](https://github.com/adobe-rnd/helix-commerce-api/commit/c325894ff56f6942faf44993d485399535ae1b5e))
+
 ## [1.6.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.1...v1.6.2) (2024-11-13)
 
 
