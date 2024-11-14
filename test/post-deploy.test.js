@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+/* eslint-disable max-len */
+
 import assert from 'assert';
 import { h1NoCache } from '@adobe/fetch';
 import { config } from 'dotenv';
@@ -68,5 +70,69 @@ describe('Post-Deploy Tests', () => {
 
     // @ts-ignore
     assert.ok(differ.isEqual(actual, expected));
+  });
+
+  describe('Catalog', () => {
+    let testProduct;
+
+    before(() => {
+      const sku = `sku${Math.floor(Math.random() * 1000)}`;
+      testProduct = {
+        name: 'Test Product',
+        sku,
+        urlKey: `product-${sku}`,
+        description: 'A test product for integration testing',
+      };
+    });
+
+    it('can PUT, GET, lookup, and DELETE a product', async () => {
+      const putOpts = {
+        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/product/${testProduct.sku}`),
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testProduct),
+      };
+      const putRes = await fetch(putOpts.url, putOpts);
+      assert.strictEqual(putRes.status, 200, 'PUT request should succeed');
+
+      const { url, ...getOpts } = getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/product/${testProduct.sku}`);
+      const getRes = await fetch(url, getOpts);
+      assert.strictEqual(getRes.status, 200, 'GET request should succeed');
+
+      const retrievedProduct = await getRes.json();
+      assert.strictEqual(retrievedProduct.name, testProduct.name);
+      assert.strictEqual(retrievedProduct.sku, testProduct.sku);
+      assert.strictEqual(retrievedProduct.description, testProduct.description);
+
+      const lookupOptions = {
+        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/lookup?urlKey=${testProduct.urlKey}`),
+      };
+      const lookupRes = await fetch(lookupOptions.url, lookupOptions);
+      assert.strictEqual(lookupRes.status, 200, 'Lookup request should succeed');
+
+      const lookupProduct = await lookupRes.json();
+      assert.strictEqual(lookupProduct.sku, testProduct.sku);
+
+      const deleteOptions = {
+        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/product/${testProduct.sku}`),
+        method: 'DELETE',
+      };
+      const deleteRes = await fetch(deleteOptions.url, deleteOptions);
+      assert.strictEqual(deleteRes.status, 200, 'DELETE request should succeed');
+
+      const lookupAfterDeleteOptions = {
+        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/lookup?urlKey=${testProduct.urlKey}`),
+      };
+      const lookupAfterDeleteRes = await fetch(lookupAfterDeleteOptions.url, lookupAfterDeleteOptions);
+      assert.strictEqual(lookupAfterDeleteRes.status, 404, 'Lookup request should return 404 after deletion');
+
+      const getAfterDeleteOptions = {
+        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/product/${testProduct.sku}`),
+      };
+      const getAfterDeleteRes = await fetch(getAfterDeleteOptions.url, getAfterDeleteOptions);
+      assert.strictEqual(getAfterDeleteRes.status, 404, 'GET request should return 404 after deletion');
+    });
   });
 });

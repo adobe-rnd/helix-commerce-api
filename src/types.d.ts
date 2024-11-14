@@ -182,6 +182,63 @@ declare global {
     status: number;
     message?: string;
   }
+
+  interface StorageClient {
+    /**
+     * Fetches a product by its SKU.
+     * @param sku - The SKU of the product.
+     * @returns A promise that resolves to the product.
+     */
+    fetchProduct(sku: string): Promise<Product>;
+
+    /**
+     * Saves multiple products.
+     * @param products - An array of products to save.
+     * @returns A promise that resolves to an array of save results.
+     */
+    saveProducts(products: Product[]): Promise<Partial<BatchResult>[]>;
+
+    /**
+     * Processes a batch of products for saving.
+     * @param batch - An array of products.
+     * @returns A promise that resolves to an array of batch results.
+     */
+    storeProductsBatch(batch: Product[]): Promise<Partial<BatchResult>[]>;
+
+    /**
+     * Deletes multiple products by their SKUs.
+     * @param skus - An array of SKUs of the products to delete.
+     * @returns A promise that resolves to an array of deletion results.
+     */
+    deleteProducts(skus: string[]): Promise<Partial<BatchResult>[]>;
+
+    /**
+     * Processes a batch of SKUs for deletion.
+     * @param batch - An array of SKUs.
+     * @returns A promise that resolves to an array of deletion results.
+     */
+    deleteProductsBatch(batch: string[]): Promise<Partial<BatchResult>[]>;
+
+    /**
+     * Resolves a SKU from a URL key.
+     * @param urlKey - The URL key.
+     * @returns A promise that resolves to the SKU.
+     */
+    lookupSku(urlKey: string): Promise<string>;
+
+    /**
+     * Resolves a URL key from a SKU.
+     * @param sku - The SKU of the product.
+     * @returns A promise that resolves to the URL key or undefined.
+     */
+    lookupUrlKey(sku: string): Promise<string | undefined>;
+
+    /**
+     * Lists all products.
+     * @returns A promise that resolves to an array of products.
+     */
+    listAllProducts(): Promise<ProductListItem[]>;
+  }
 }
 
 export { };

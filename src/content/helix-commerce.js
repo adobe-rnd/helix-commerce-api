@@ -10,8 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import StorageClient from '../catalog/storage/r2.js';
 import { errorResponse } from '../utils/http.js';
-import { fetchProduct } from '../utils/r2.js';
 import htmlTemplateFromContext from '../templates/html/index.js';
 
 /**
@@ -27,7 +27,9 @@ export async function handle(ctx) {
     return errorResponse(404, 'missing sku or urlkey');
   }
 
-  const product = await fetchProduct(ctx, sku);
+  const storageClient = new StorageClient(ctx, config);
+
+  const product = await storageClient.fetchProduct(sku);
   const html = htmlTemplateFromContext(ctx, product, product.variants).render();
   return new Response(html, {
     status: 200,

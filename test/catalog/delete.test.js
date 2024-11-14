@@ -16,26 +16,20 @@ import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
 
-describe('Product Delete Tests', () => {
+describe('handleProductDeleteRequest Tests', () => {
   let handleProductDeleteRequest;
-  let lookupUrlKeyStub;
-  let callAdminStub;
+  /** @type {sinon.SinonStub} */
   let errorResponseStub;
+  /** @type {sinon.SinonStub} */
+  let storageStub;
 
   beforeEach(async () => {
-    deleteProductsStub = sinon.stub();
-    lookupUrlKeyStub = sinon.stub();
-    callAdminStub = sinon.stub();
     errorResponseStub = sinon.stub();
+    storageStub = sinon.stub();
+    storageStub.deleteProducts = sinon.stub();
+    storageStub.deleteProducts.resolves({ success: true, sku: '12345' });
 
     const mocks = {
-      '../../src/utils/r2.js': {
-        deleteProducts: deleteProductsStub,
-        lookupUrlKey: lookupUrlKeyStub,
-      },
-      '../../src/utils/admin.js': {
-        callAdmin: callAdminStub,
-      },
       '../../src/utils/http.js': {
         errorResponse: errorResponseStub,
       },
@@ -49,209 +43,139 @@ describe('Product Delete Tests', () => {
     sinon.restore();
   });
 
-  it('should return 400 if SKU is missing', async () => {
-    const config = {};
-    const ctx = { log: { error: sinon.stub(), info: sinon.stub() } };
-
-    errorResponseStub.withArgs(400, 'Invalid or missing SKU').returns(new Response('Invalid or missing SKU', { status: 400 }));
-
-    const response = await handleProductDeleteRequest(ctx, config);
-
-    assert(errorResponseStub.calledOnceWithExactly(400, 'Invalid or missing SKU'));
-    assert.strictEqual(response.status, 400);
-    assert.strictEqual(await response.text(), 'Invalid or missing SKU');
-  });
-
-  it('should return 400 if SKU is "*" (wildcard)', async () => {
-    const config = { sku: '*' };
-    const ctx = { log: { error: sinon.stub(), info: sinon.stub() } };
-
-    errorResponseStub.withArgs(400, 'Wildcard SKU deletions is not currently supported').returns(new Response('Wildcard SKU deletions is not currently supported', { status: 400 }));
-
-    const response = await handleProductDeleteRequest(ctx, config);
-
-    assert(errorResponseStub.calledOnceWithExactly(400, 'Wildcard SKU deletions is not currently supported'));
-    assert.strictEqual(response.status, 400);
-    assert.strictEqual(await response.text(), 'Wildcard SKU deletions is not currently supported');
-  });
-
-  it('should successfully delete a product and purge paths', async () => {
-    const config = {
-      sku: '1234',
-      helixApiKey: 'test-api-key',
-      storeCode: 'store1',
-      storeViewCode: 'view1',
-      confMap: {
-        '/path/to/{{sku}}': { storeCode: 'store1', storeViewCode: 'view1' },
-        '/another/path/{{urlkey}}/{{sku}}': { storeCode: 'store1', storeViewCode: 'view1' },
-        base: {},
-      },
-    };
-    const ctx = { log: { error: sinon.stub(), info: sinon.stub() } };
-    const sku = '1234';
-    const urlKey = 'product-url-key';
-
-    lookupUrlKeyStub.resolves(urlKey);
-    deleteProductsStub.resolves([
-      {
-        sku: '1234',
-        status: 200,
-        message: 'Product deleted successfully.',
-        paths: {
-          '/products/bella-tank/wt01': {
-            preview: {
-              status: 204,
-              method: 'DELETE',
-              message: 'No Content',
-              path: '/products/bella-tank/wt01',
-            },
-            live: {
-              status: 204,
-              method: 'DELETE',
-              message: 'No Content',
-              path: '/products/bella-tank/wt01',
-            },
-          },
+  describe('handleProductDeleteRequest', () => {
+    it('should return 400 if SKU is "*" (wildcard)', async () => {
+      const config = { sku: '*' };
+      const ctx = {
+        config,
+        log: {
+          info: sinon.stub(),
+          error: sinon.stub(),
         },
-      },
-    ]);
+      };
 
-    callAdminStub.resolves(new Response(null, { status: 200 }));
+      const mockResponse = new Response('Wildcard SKU deletions is not currently supported', { status: 400 });
+      errorResponseStub.withArgs(400, 'Wildcard SKU deletions is not currently supported').returns(mockResponse);
 
-    const response = await handleProductDeleteRequest(ctx, config);
+      const response = await handleProductDeleteRequest(ctx, storageStub);
 
-    assert(deleteProductsStub.calledOnceWithExactly(ctx, config, [sku]));
-
-    const deleteResults = await response.json();
-    console.log(deleteResults);
-    assert.strictEqual(response.status, 200);
-    assert.strictEqual(deleteResults, '');
-  });
-
-  it('should handle lookupUrlKey throwing an error with response', async () => {
-    const config = { sku: '1234' };
-    const ctx = { log: { error: sinon.stub(), info: sinon.stub() } };
-    const errorResponse = new Response('Lookup error', { status: 502 });
-
-    const error = new Error('Lookup failed');
-    error.response = errorResponse;
-
-    lookupUrlKeyStub.rejects(error);
-
-    const response = await handleProductDeleteRequest(ctx, config);
-
-    assert.strictEqual(response, errorResponse);
-    assert(ctx.log.error.notCalled);
-  });
-
-  it('should handle lookupUrlKey throwing an error without response', async () => {
-    const config = { sku: '1234' };
-    const ctx = { log: { error: sinon.stub(), info: sinon.stub() } };
-    const error = new Error('Unexpected error');
-
-    lookupUrlKeyStub.rejects(error);
-
-    errorResponseStub.withArgs(500, 'Internal Server Error').returns(new Response('Internal Server Error', { status: 500 }));
-
-    const response = await handleProductDeleteRequest(ctx, config);
-
-    assert(errorResponseStub.calledOnceWithExactly(500, 'Internal Server Error'));
-    assert(ctx.log.error.calledOnceWithExactly({
-      message: error.message,
-      stack: error.stack,
-      timestamp: sinon.match.string,
-    }));
-    assert.strictEqual(response.status, 500);
-    assert.strictEqual(await response.text(), 'Internal Server Error');
-  });
-
-  it('should handle deleteProducts throwing an error with response', async () => {
-    const config = { sku: '1234' };
-    const ctx = { log: { error: sinon.stub(), info: sinon.stub() } };
-    const errorResponse = new Response('Delete error', { status: 503 });
-
-    const error = new Error('Delete failed');
-    error.response = errorResponse;
-
-    lookupUrlKeyStub.resolves('url-key');
-    deleteProductsStub.rejects(error);
-
-    const response = await handleProductDeleteRequest(ctx, config);
-
-    assert.strictEqual(response, errorResponse);
-    assert(ctx.log.error.notCalled);
-  });
-
-  it('should handle deleteProducts throwing an error without response', async () => {
-    const config = { sku: '1234' };
-    const ctx = { log: { error: sinon.stub(), info: sinon.stub() } };
-    const error = new Error('Unexpected delete error');
-
-    lookupUrlKeyStub.resolves('url-key');
-    deleteProductsStub.rejects(error);
-
-    errorResponseStub.withArgs(500, 'Internal Server Error').returns(new Response('Internal Server Error', { status: 500 }));
-
-    const response = await handleProductDeleteRequest(ctx, config);
-
-    assert(errorResponseStub.calledOnceWithExactly(500, 'Internal Server Error'));
-    assert(ctx.log.error.calledOnceWithExactly({
-      message: error.message,
-      stack: error.stack,
-      timestamp: sinon.match.string,
-    }));
-    assert.strictEqual(response.status, 500);
-    assert.strictEqual(await response.text(), 'Internal Server Error');
-  });
-
-  it('should handle callAdmin failures and still return 204', async () => {
-    const config = {
-      sku: '1234',
-      helixApiKey: 'test-api-key',
-      storeCode: 'store1',
-      storeViewCode: 'view1',
-      confMap: {
-        '/path/to/{{sku}}': { storeCode: 'store1', storeViewCode: 'view1' },
-      },
-    };
-    const ctx = { log: { error: sinon.stub(), info: sinon.stub() } };
-    const sku = '1234';
-    const urlKey = 'product-url-key';
-
-    lookupUrlKeyStub.resolves(urlKey);
-    deleteProductsStub.resolves();
-
-    callAdminStub.onFirstCall().resolves(new Response(null, { status: 200 }));
-    callAdminStub.onSecondCall().resolves(new Response('Deletion failed', { status: 500, headers: { 'x-error': 'Deletion failed' } }));
-
-    const response = await handleProductDeleteRequest(ctx, config);
-
-    assert(lookupUrlKeyStub.calledOnceWithExactly(ctx, config, sku));
-    assert(deleteProductsStub.calledOnceWithExactly(ctx, config, [sku]));
-
-    const expectedCallAdminCalls = [
-      [config, 'preview', '/path/to/1234', {
-        method: 'DELETE',
-        headers: { authorization: `token ${config.helixApiKey}` },
-      }],
-      [config, 'live', '/path/to/1234', {
-        method: 'DELETE',
-        headers: { authorization: `token ${config.helixApiKey}` },
-      }],
-    ];
-
-    assert.strictEqual(callAdminStub.callCount, expectedCallAdminCalls.length);
-    expectedCallAdminCalls.forEach((callArgs, index) => {
-      assert(callAdminStub.getCall(index).calledWithExactly(...callArgs));
+      assert(errorResponseStub.calledOnceWithExactly(400, 'Wildcard SKU deletions is not currently supported'));
+      assert.strictEqual(response.status, 400);
+      const responseText = await response.text();
+      assert.strictEqual(responseText, 'Wildcard SKU deletions is not currently supported');
+      assert(ctx.log.info.notCalled);
     });
 
-    assert(ctx.log.info.calledOnce);
-    const logArgs = ctx.log.info.getCall(0).args[0];
-    assert.strictEqual(logArgs.action, 'product_deletion');
-    assert.strictEqual(logArgs.sku, sku);
-    assert.ok(new Date(logArgs.timestamp).toString() !== 'Invalid Date');
+    it('should throw 400 error if helixApiKey is missing', async () => {
+      const config = { sku: '12345' }; // helixApiKey is missing
+      const ctx = {
+        config,
+        log: {
+          info: sinon.stub(),
+          error: sinon.stub(),
+        },
+      };
 
-    assert.strictEqual(response.status, 204);
-    assert.strictEqual(await response.text(), '');
+      const mockErrorResponse = new Response('Helix API key is required to delete or unpublish products.', { status: 400 });
+      errorResponseStub.withArgs(400, 'Helix API key is required to delete or unpublish products.').returns(mockErrorResponse);
+
+      let thrownError;
+      try {
+        await handleProductDeleteRequest(ctx, storageStub);
+      } catch (e) {
+        thrownError = e;
+      }
+
+      assert(errorResponseStub.calledOnceWithExactly(400, 'Helix API key is required to delete or unpublish products.'));
+      assert.strictEqual(thrownError, mockErrorResponse);
+      assert(ctx.log.info.notCalled);
+    });
+
+    it('should successfully delete a product and return 200 with results', async () => {
+      const config = {
+        sku: '12345',
+        helixApiKey: 'test-helix-api-key',
+      };
+      const ctx = {
+        config,
+        log: {
+          info: sinon.stub(),
+          error: sinon.stub(),
+        },
+      };
+      const deleteResults = { success: true, sku: '12345' };
+      const response = await handleProductDeleteRequest(ctx, storageStub);
+
+      assert(storageStub.deleteProducts.calledOnceWithExactly(['12345']));
+
+      assert(ctx.log.info.calledOnce);
+      const logArgs = ctx.log.info.getCall(0).args[0];
+      assert.strictEqual(logArgs.action, 'delete_products');
+      assert.strictEqual(logArgs.result, JSON.stringify(deleteResults));
+      assert.ok(new Date(logArgs.timestamp).toString() !== 'Invalid Date');
+
+      assert.strictEqual(response.status, 200);
+      const responseBody = await response.text();
+      assert.strictEqual(responseBody, JSON.stringify(deleteResults));
+    });
+
+    it('should propagate error thrown by deleteProducts', async () => {
+      const config = {
+        sku: '12345',
+        helixApiKey: 'test-helix-api-key',
+      };
+      const ctx = {
+        config,
+        log: {
+          info: sinon.stub(),
+          error: sinon.stub(),
+        },
+      };
+      const error = new Error('Deletion failed');
+
+      storageStub.deleteProducts.rejects(error);
+
+      let thrownError;
+      try {
+        await handleProductDeleteRequest(ctx, storageStub);
+      } catch (e) {
+        thrownError = e;
+      }
+
+      assert(storageStub.deleteProducts.calledOnceWithExactly(['12345']));
+      assert.strictEqual(thrownError, error);
+      assert(ctx.log.info.notCalled);
+    });
+
+    it('should handle deleteProducts returning unexpected results', async () => {
+      const config = {
+        sku: '12345',
+        helixApiKey: 'test-helix-api-key',
+      };
+      const ctx = {
+        config,
+        log: {
+          info: sinon.stub(),
+          error: sinon.stub(),
+        },
+      };
+      const deleteResults = { success: false, sku: '12345', reason: 'Not found' };
+
+      storageStub.deleteProducts.resolves(deleteResults);
+
+      const response = await handleProductDeleteRequest(ctx, storageStub);
+
+      assert(storageStub.deleteProducts.calledOnceWithExactly(['12345']));
+
+      assert(ctx.log.info.calledOnce);
+      const logArgs = ctx.log.info.getCall(0).args[0];
+      assert.strictEqual(logArgs.action, 'delete_products');
+      assert.strictEqual(logArgs.result, JSON.stringify(deleteResults));
+      assert.ok(new Date(logArgs.timestamp).toString() !== 'Invalid Date');
+
+      assert.strictEqual(response.status, 200);
+      const responseBody = await response.text();
+      assert.strictEqual(responseBody, JSON.stringify(deleteResults));
+    });
   });
 });

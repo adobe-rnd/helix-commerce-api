@@ -10,21 +10,19 @@
  * governing permissions and limitations under the License.
  */
 
-import { listAllProducts, lookupSku } from '../utils/r2.js';
-
 /**
  * Handles a product lookup request.
  * @param {Context} ctx - The context object.
- * @param {Config} config - The configuration object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductLookupRequest(ctx, config) {
+export async function handleProductLookupRequest(ctx, storage) {
+  const { config } = ctx;
   const { search } = ctx.url;
   const params = new URLSearchParams(search);
 
   if (params.has('urlKey') || params.has('urlkey')) {
     const urlkey = params.get('urlKey') || params.get('urlkey');
-    const sku = await lookupSku(ctx, config, urlkey);
+    const sku = await storage.lookupSku(urlkey);
 
     const origin = (ctx.env.ENVIRONMENT === 'dev') ? 'https://adobe-commerce-api-ci.adobeaem.workers.dev' : ctx.url.origin;
     return new Response(undefined, {
@@ -35,7 +33,7 @@ export async function handleProductLookupRequest(ctx, config) {
     });
   }
 
-  const products = await listAllProducts(ctx, config);
+  const products = await storage.listAllProducts(ctx);
 
   const response = {
     total: products.length,

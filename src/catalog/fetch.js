@@ -10,17 +10,15 @@
  * governing permissions and limitations under the License.
  */
 
-import { fetchProduct } from '../utils/r2.js';
-
 /**
  * Handles a GET request for a product.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Config} config - The configuration object with application settings.
+ * @param {StorageClient} storage - The storage object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductFetchRequest(ctx, config) {
+export async function handleProductFetchRequest(ctx, storage) {
   const sku = ctx.url.pathname.split('/').pop();
-  const product = await fetchProduct(ctx, config, sku);
+  const product = await storage.fetchProduct(sku);
 
   return new Response(JSON.stringify(product), {
     headers: { 'Content-Type': 'application/json' },

@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+// @ts-nocheck
+
 import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
@@ -17,23 +19,24 @@ import { ResponseError } from '../../src/utils/http.js';
 
 describe('handleProductFetchRequest', () => {
   let handleProductFetchRequest;
-  let fetchProductStub;
   let errorResponseStub;
+  let storageStub;
   let ctx;
 
   beforeEach(async () => {
-    fetchProductStub = sinon.stub();
     errorResponseStub = sinon.stub();
 
+    storageStub = sinon.stub();
+    storageStub.fetchProduct = sinon.stub();
+
     const moduleUnderTest = await esmock('../../src/catalog/fetch.js', {
-      '../../src/utils/r2.js': { fetchProduct: fetchProductStub },
       '../../src/utils/http.js': { errorResponse: errorResponseStub },
     });
 
     ({ handleProductFetchRequest } = moduleUnderTest);
 
     ctx = {
-      url: new URL('https://example.com/products/12345'),
+      url: new URL('https://example.com/products/sku1'),
       log: {
         error: sinon.stub(),
       },
@@ -47,42 +50,29 @@ describe('handleProductFetchRequest', () => {
   });
 
   it('should return the product response when fetchProduct succeeds', async () => {
-    const sku = '12345';
-    const product = { id: sku, name: 'Test Product' };
-    fetchProductStub.resolves(product);
+    const product = { sku: 'sku1', name: 'Product 1' };
 
-    const response = await handleProductFetchRequest(ctx);
+    storageStub.fetchProduct.resolves(product);
+    const response = await handleProductFetchRequest(ctx, storageStub);
 
     assert.equal(response.headers.get('Content-Type'), 'application/json');
     const responseBody = await response.text();
     assert.equal(responseBody, JSON.stringify(product));
-    sinon.assert.calledWith(fetchProductStub, ctx, sku);
+    assert(storageStub.fetchProduct.calledOnceWith('sku1'));
   });
 
   it('should return e.response when fetchProduct throws an error with a response property', async () => {
     const errorResponse = new Response('Not Found', { status: 404 });
     const error = new ResponseError('Product not found', errorResponse);
-    fetchProductStub.rejects(error);
+    storageStub.fetchProduct.rejects(error);
 
-    const response = await handleProductFetchRequest(ctx);
+    let thrownError;
+    try {
+      await handleProductFetchRequest(ctx, storageStub);
+    } catch (e) {
+      thrownError = e;
+    }
 
-    assert.strictEqual(response, errorResponse);
-    sinon.assert.notCalled(ctx.log.error);
-  });
-
-  it('should log error and return 500 response when fetchProduct throws an error without a response property', async () => {
-    const error = new Error('Internal Server Error');
-    fetchProductStub.rejects(error);
-    const errorResp = new Response('Internal Server Error', { status: 500 });
-    errorResponseStub.returns(errorResp);
-
-    const response = await handleProductFetchRequest(ctx);
-
-    assert.equal(response.status, 500);
-    const responseBody = await response.text();
-    assert.equal(responseBody, 'Internal Server Error');
-    sinon.assert.calledOnce(ctx.log.error);
-    sinon.assert.calledWith(ctx.log.error, error);
-    sinon.assert.calledWith(errorResponseStub, 500, 'internal server error');
+    assert.strictEqual(thrownError, error);
   });
 });

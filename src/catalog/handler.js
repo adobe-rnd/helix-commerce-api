@@ -16,17 +16,18 @@ import { handleProductLookupRequest } from './lookup.js';
 import { handleProductFetchRequest } from './fetch.js';
 import { handleProductSaveRequest } from './update.js';
 import { handleProductDeleteRequest } from './delete.js';
+import StorageR2 from './storage/r2.js';
 
 const ALLOWED_METHODS = ['GET', 'PUT', 'DELETE'];
 
 /**
  * Handles the catalog request.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Config} config - The configuration object with application settings.
  * @param {Request} request - The request object.
  * @returns {Promise<Response>} - A promise that resolves to the catalog response.
  */
-export default async function catalogHandler(ctx, config, request) {
+export default async function catalogHandler(ctx, request) {
+  const { config } = ctx;
   const { method } = ctx.info;
   // Split the pathname into segments and filter out empty strings
   const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
@@ -54,19 +55,23 @@ export default async function catalogHandler(ctx, config, request) {
     storeCode, storeViewCode, subRoute, sku,
   });
 
-  if (subRoute === 'lookup') {
-    if (ctx.info.method === 'GET') {
-      return handleProductLookupRequest(ctx, config);
-    }
+  const storage = new StorageR2(ctx, config);
+
+  const routeHandlers = {
+    lookup: {
+      GET: () => handleProductLookupRequest(ctx, storage),
+    },
+    product: {
+      GET: () => handleProductFetchRequest(ctx, storage),
+      PUT: () => handleProductSaveRequest(ctx, request, storage),
+      DELETE: () => handleProductDeleteRequest(ctx, storage),
+    },
+  };
+
+  const handler = routeHandlers[subRoute]?.[method];
+  if (!handler) {
     return errorResponse(405, 'method not allowed');
   }
 
-  if (ctx.info.method === 'PUT') {
-    return handleProductSaveRequest(ctx, config, request);
-  }
-
-  if (ctx.info.method === 'DELETE') {
-    return handleProductDeleteRequest(ctx, config);
-  }
-  return handleProductFetchRequest(ctx, config);
+  return handler();
 }

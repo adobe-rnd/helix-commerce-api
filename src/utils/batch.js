@@ -14,11 +14,14 @@
 
 const DEFAULT_BATCH_SIZE = 50;
 
+/**
+ * @template T
+ */
 export class BatchProcessor {
   /**
-   * @param {Context} ctx - The context object containing utilities like logging.
-   * @param {(batch: Product[] | string[]) => Promise<Partial<BatchResult>[]>} batchHandler - The function to process each batch.
-   * @param {number} [batchSize] - The number of items per batch.
+   * @param {Context} ctx - The context object
+   * @param {(batch: T[]) => Promise<Partial<BatchResult>[]>} batchHandler - The function to process each batch
+   * @param {number} [batchSize] - The number of items per batch
    */
   constructor(ctx, batchHandler, batchSize = DEFAULT_BATCH_SIZE) {
     this.batchSize = batchSize;
@@ -28,9 +31,8 @@ export class BatchProcessor {
 
   /**
    * Processes the provided items in batches and collects their responses.
-   *
-   * @template T
-   * @param {Product[] | string[]} items - The array of items to process.
+   *t
+   * @param {T[]} items - The array of items to process.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of BatchResult objects.
    */
   async process(items) {
@@ -51,7 +53,8 @@ export class BatchProcessor {
         this.log.error(`Error processing batch ${batchNumber}:`, error);
         batch.forEach((item) => {
           results.push({
-            sku: item.sku || 'unknown', // Adjust based on item structure
+            // @ts-ignore
+            sku: item.sku || 'unknown',
             status: 500,
             message: `Batch processing error: ${error.message}`,
           });

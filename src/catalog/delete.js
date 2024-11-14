@@ -10,12 +10,16 @@
  * governing permissions and limitations under the License.
  */
 
-/* eslint-disable no-await-in-loop */
-
-import { deleteProducts } from '../utils/r2.js';
 import { errorResponse } from '../utils/http.js';
 
-export async function handleProductDeleteRequest(ctx, config) {
+/**
+ * Handles a DELETE request for a product.
+ * @param {Context} ctx - The context object containing request information and utilities.
+ * @param {StorageClient} storage - The storage object.
+ * @returns {Promise<Response>} - A promise that resolves to the product response.
+ */
+export async function handleProductDeleteRequest(ctx, storage) {
+  const { config } = ctx;
   const { sku } = config;
 
   if (sku === '*') {
@@ -26,7 +30,7 @@ export async function handleProductDeleteRequest(ctx, config) {
     throw errorResponse(400, 'Helix API key is required to delete or unpublish products.');
   }
 
-  const deleteResults = await deleteProducts(ctx, config, [sku]);
+  const deleteResults = await storage.deleteProducts([sku]);
 
   ctx.log.info({
     action: 'delete_products',

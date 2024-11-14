@@ -12,16 +12,15 @@
 
 import { assertValidProduct } from '../utils/product.js';
 import { errorResponse } from '../utils/http.js';
-import { saveProducts } from '../utils/r2.js';
 
 /**
  * Handles a PUT request to update a product.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Config} config - The configuration object with application settings.
  * @param {Request} request - The request object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductSaveRequest(ctx, config, request) {
+export async function handleProductSaveRequest(ctx, request, storage) {
+  const { config } = ctx;
   if (config.sku === '*') {
     return errorResponse(501, 'not implemented');
   }
@@ -36,7 +35,7 @@ export async function handleProductSaveRequest(ctx, config, request) {
 
   assertValidProduct(product);
 
-  const saveResults = await saveProducts(ctx, config, [product]);
+  const saveResults = await storage.saveProducts([product]);
 
   ctx.log.info({
     action: 'save_products',
