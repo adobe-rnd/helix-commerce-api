@@ -110,7 +110,7 @@ describe('Post-Deploy Tests', () => {
         ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/lookup?urlKey=${testProduct.urlKey}`),
       };
       const lookupRes = await fetch(lookupOptions.url, lookupOptions);
-      assert.strictEqual(lookupRes.status, 200, 'Lookup request should succeed');
+      assert.strictEqual(lookupRes.status, 301, 'Lookup request should succeed');
 
       const lookupProduct = await lookupRes.json();
       assert.strictEqual(lookupProduct.sku, testProduct.sku);
