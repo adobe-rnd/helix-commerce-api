@@ -1,3 +1,10 @@
+## [1.6.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.3...v1.6.4) (2024-11-15)
+
+
+### Bug Fixes
+
+* rework catalog api's and implement delete ([#48](https://github.com/adobe-rnd/helix-commerce-api/issues/48)) ([3152543](https://github.com/adobe-rnd/helix-commerce-api/commit/3152543ad0072a3f094612484c32e35f3fb1b03d))
+
 ## [1.6.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.2...v1.6.3) (2024-11-14)
 
 
