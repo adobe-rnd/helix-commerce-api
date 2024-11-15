@@ -15,8 +15,10 @@ import { errorResponse } from '../utils/http.js';
 import { handleProductLookupRequest } from './lookup.js';
 import { handleProductFetchRequest } from './fetch.js';
 import { handleProductSaveRequest } from './update.js';
+import { handleProductDeleteRequest } from './delete.js';
+import StorageR2 from './storage/r2.js';
 
-const ALLOWED_METHODS = ['GET', 'PUT'];
+const ALLOWED_METHODS = ['GET', 'PUT', 'DELETE'];
 
 /**
  * Handles the catalog request.
@@ -27,7 +29,6 @@ const ALLOWED_METHODS = ['GET', 'PUT'];
 export default async function catalogHandler(ctx, request) {
   const { config } = ctx;
   const { method } = ctx.info;
-
   // Split the pathname into segments and filter out empty strings
   const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
 
@@ -54,15 +55,23 @@ export default async function catalogHandler(ctx, request) {
     storeCode, storeViewCode, subRoute, sku,
   });
 
-  if (subRoute === 'lookup') {
-    if (ctx.info.method === 'GET') {
-      return handleProductLookupRequest(ctx);
-    }
+  const storage = new StorageR2(ctx, config);
+
+  const routeHandlers = {
+    lookup: {
+      GET: () => handleProductLookupRequest(ctx, storage),
+    },
+    product: {
+      GET: () => handleProductFetchRequest(ctx, storage),
+      PUT: () => handleProductSaveRequest(ctx, request, storage),
+      DELETE: () => handleProductDeleteRequest(ctx, storage),
+    },
+  };
+
+  const handler = routeHandlers[subRoute]?.[method];
+  if (!handler) {
     return errorResponse(405, 'method not allowed');
   }
 
-  if (ctx.info.method === 'PUT') {
-    return handleProductSaveRequest(ctx, request);
-  }
-  return handleProductFetchRequest(ctx);
+  return handler();
 }

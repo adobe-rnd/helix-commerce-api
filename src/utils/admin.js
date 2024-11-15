@@ -10,6 +10,10 @@
  * governing permissions and limitations under the License.
  */
 
+/* eslint-disable no-await-in-loop */
+
+import { getPreviewPublishPaths } from './product.js';
+
 /**
  * @typedef {Object} AdminUrlConfig
  * @property {string} [org] The owner of the repository.
@@ -63,6 +67,7 @@ export function createAdminUrl(
  * @param {Object} [opts] The request options
  * @param {string} [opts.method] The method to use
  * @param {Object} [opts.body] The body to send
+ * @param {Object} [opts.headers] The headers to send
  * @param {URLSearchParams} [opts.searchParams] The search parameters
  * @returns {Promise<Response>} The admin response
  */
@@ -73,13 +78,60 @@ export async function callAdmin(
   {
     method = 'get',
     body = undefined,
+    headers = {},
     searchParams = new URLSearchParams(),
   } = {},
 ) {
   const url = createAdminUrl(config, api, path, searchParams);
+  const requestHeaders = {
+    ...(body ? { 'Content-Type': 'application/json' } : {}),
+    ...headers,
+  };
   return fetch(url, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: Object.keys(requestHeaders).length > 0 ? requestHeaders : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
+}
+
+/**
+ * Calls the Admin API to publish a product to the preview and live environments.
+ * @param {Config} config The config object
+ * @param {string} method The method to use (e.g., POST or DELETE)
+ * @param {string} sku The SKU of the product
+ * @param {string} urlKey The URL key of the product
+ */
+export async function callPreviewPublish(config, method, sku, urlKey) {
+  const purgePaths = getPreviewPublishPaths(config, sku, urlKey);
+  const result = { paths: {} };
+
+  for (const path of purgePaths) {
+    result.paths[path] = {};
+
+    const requestOptions = {
+      method,
+      headers: config.helixApiKey ? { authorization: `token ${config.helixApiKey}` } : {},
+    };
+
+    const callAdminWithOp = async (op) => {
+      const response = await callAdmin(config, op, path, requestOptions);
+      const error = response.headers.get('x-error');
+      return {
+        op,
+        status: response.status,
+        message: error || null,
+      };
+    };
+
+    // Conditional sequencing or parallel execution based on the method
+    const operations = method === 'POST'
+      ? [await callAdminWithOp('preview'), await callAdminWithOp('live')]
+      : await Promise.all(['preview', 'live'].map(callAdminWithOp));
+
+    operations.forEach(({ op, status, message }) => {
+      result.paths[path][op] = { status, ...(message && { message }) };
+    });
+  }
+
+  return result;
 }

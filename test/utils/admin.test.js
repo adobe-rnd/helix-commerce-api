@@ -13,8 +13,11 @@
 // @ts-nocheck
 
 import { strict as assert } from 'node:assert';
+import esmock from 'esmock';
 import sinon from 'sinon';
-import { createAdminUrl, callAdmin, ADMIN_ORIGIN } from '../../src/utils/admin.js';
+import {
+  createAdminUrl, callAdmin, ADMIN_ORIGIN,
+} from '../../src/utils/admin.js';
 
 describe('admin utils', () => {
   let fetchStub;
@@ -149,6 +152,100 @@ describe('admin utils', () => {
       assert(fetchStub.calledOnce);
       const [url] = fetchStub.firstCall.args;
       assert.equal(url.searchParams.get('test'), 'value');
+    });
+  });
+
+  describe('callPreviewPublish', () => {
+    let callPreviewPublish;
+    const mockPaths = ['/products/sku1'];
+
+    beforeEach(async () => {
+      const adminModule = await esmock('../../src/utils/admin.js', {
+        '../../src/utils/product.js': {
+          getPreviewPublishPaths: () => mockPaths,
+        },
+      });
+
+      callPreviewPublish = adminModule.callPreviewPublish;
+    });
+
+    it('handles POST requests with API key', async () => {
+      const config = {
+        org: 'adobe',
+        site: 'blog',
+        ref: 'main',
+        helixApiKey: 'test-key',
+      };
+
+      fetchStub.resolves(new Response(null, { status: 200 }));
+
+      const result = await callPreviewPublish(config, 'POST', 'sku1', 'product-1');
+
+      assert.equal(fetchStub.callCount, 2);
+
+      fetchStub.getCalls().forEach((call) => {
+        assert.equal(call.args[1].headers.authorization, 'token test-key');
+      });
+
+      const calls = fetchStub.getCalls();
+      assert(calls[0].args[0].pathname.includes('/preview'));
+      assert(calls[1].args[0].pathname.includes('/live'));
+
+      assert.deepEqual(result, {
+        paths: {
+          '/products/sku1': {
+            preview: { status: 200 },
+            live: { status: 200 },
+          },
+        },
+      });
+    });
+
+    it('handles DELETE requests without API key', async () => {
+      const config = {
+        org: 'adobe',
+        site: 'blog',
+        ref: 'main',
+      };
+
+      fetchStub.resolves(new Response(null, { status: 200 }));
+
+      await callPreviewPublish(config, 'DELETE', 'sku1', 'product-1');
+
+      assert.equal(fetchStub.callCount, 2);
+
+      fetchStub.getCalls().forEach((call) => {
+        assert.equal(call.args[1].headers, undefined);
+      });
+
+      const calls = fetchStub.getCalls();
+      assert(calls[0].args[0].pathname.includes('/preview') || calls[0].args[0].pathname.includes('/live'));
+      assert(calls[1].args[0].pathname.includes('/preview') || calls[1].args[0].pathname.includes('/live'));
+    });
+
+    it('handles error responses', async () => {
+      const config = {
+        org: 'adobe',
+        site: 'blog',
+        ref: 'main',
+      };
+
+      const errorResponse = new Response(null, {
+        status: 404,
+        headers: { 'x-error': 'Not found' },
+      });
+      fetchStub.resolves(errorResponse);
+
+      const result = await callPreviewPublish(config, 'POST', 'sku1', 'product-1');
+
+      assert.deepEqual(result, {
+        paths: {
+          '/products/sku1': {
+            preview: { status: 404, message: 'Not found' },
+            live: { status: 404, message: 'Not found' },
+          },
+        },
+      });
     });
   });
 });

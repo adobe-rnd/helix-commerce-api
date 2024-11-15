@@ -17,47 +17,27 @@ import sinon from 'sinon';
 import esmock from 'esmock';
 
 describe('Product Save Tests', () => {
-  let putProduct;
   /** @type {import('../../src/catalog/update.js').handleProductSaveRequest} */
   let handleProductSaveRequest;
   /** @type {sinon.SinonStub} */
-  let saveProductsStub;
-  /** @type {sinon.SinonStub} */
   let callAdminStub;
+  /** @type {sinon.SinonStub} */
+  let storageStub;
 
   beforeEach(async () => {
-    saveProductsStub = sinon.stub();
     callAdminStub = sinon.stub();
+    storageStub = sinon.stub();
+    storageStub.saveProducts = sinon.stub();
 
     const mocks = {
-      '../../src/utils/r2.js': { saveProducts: saveProductsStub },
       '../../src/utils/admin.js': { callAdmin: callAdminStub },
     };
 
-    ({ putProduct, handleProductSaveRequest } = await esmock('../../src/catalog/update.js', mocks));
+    ({ handleProductSaveRequest } = await esmock('../../src/catalog/update.js', mocks));
   });
 
   afterEach(() => {
     sinon.restore();
-  });
-
-  describe('putProduct', () => {
-    it('should throw error when product SKU is missing', async () => {
-      const product = {};
-      await assert.rejects(async () => {
-        await putProduct({}, {}, product);
-      }, /invalid request body: missing sku/);
-    });
-
-    it('should save the product when SKU is present', async () => {
-      const product = { sku: '1234' };
-      saveProductsStub.resolves();
-
-      const result = await putProduct({}, product);
-
-      assert(saveProductsStub.calledOnce);
-      assert.deepEqual(result, product);
-    });
   });
 
   describe('handleProductSaveRequest', () => {
@@ -65,7 +45,7 @@ describe('Product Save Tests', () => {
       const ctx = { log: { error: sinon.stub() }, config: { sku: '*' } };
       const request = { json: sinon.stub().resolves({ sku: '1234' }) };
 
-      const response = await handleProductSaveRequest(ctx, request);
+      const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       assert.equal(response.status, 501);
       assert.equal(response.headers.get('x-error'), 'not implemented');
@@ -73,7 +53,7 @@ describe('Product Save Tests', () => {
 
     it('should return 201 when product is successfully saved and paths are purged', async () => {
       const ctx = {
-        log: { error: sinon.stub() },
+        log: { error: sinon.stub(), info: sinon.stub() },
         config: {
           sku: '1234',
           confMap: {
@@ -84,74 +64,18 @@ describe('Product Save Tests', () => {
       };
       const request = { json: sinon.stub().resolves({ sku: '1234', urlKey: 'product-url-key' }) };
 
-      saveProductsStub.resolves();
-      callAdminStub.resolves({ ok: true });
-
-      const response = await handleProductSaveRequest(ctx, request);
+      storageStub.saveProducts.resolves();
+      const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       assert.equal(response.status, 201);
-      assert(saveProductsStub.calledOnce);
-      assert.equal(callAdminStub.callCount, 4);
-    });
-
-    it('should return 404 when no matching path patterns found', async () => {
-      const ctx = {
-        log: { error: sinon.stub() },
-        config: {
-          sku: '1234',
-          confMap: {
-            base: {},
-          },
-        },
-      };
-      const request = { json: sinon.stub().resolves({ sku: '1234' }) };
-
-      saveProductsStub.resolves();
-      const response = await handleProductSaveRequest(ctx, request);
-
-      assert(callAdminStub.notCalled);
-      assert.equal(response.status, 404);
-      assert.equal(response.headers.get('x-error'), 'no path patterns found');
-    });
-
-    it('should return error when purging fails', async () => {
-      const ctx = {
-        log: console,
-        config: {
-          sku: '1234',
-          confMap: {
-            '/path/to/{{sku}}': {},
-          },
-        },
-      };
-      const request = { json: sinon.stub().resolves({ sku: '1234', urlKey: 'product-url-key' }) };
-
-      saveProductsStub.resolves();
-      callAdminStub.onFirstCall().resolves(new Response('', { status: 500, headers: { 'x-error': 'bad thing happen' } }));
-
-      const response = await handleProductSaveRequest(ctx, request);
-
-      assert.equal(response.status, 500);
-      assert.ok(callAdminStub.calledOnce);
-      assert.equal(response.headers.get('x-error'), 'purge errors');
-      const respBody = await response.json();
-      assert.deepStrictEqual(respBody, {
-        errors: [
-          {
-            op: 'preview',
-            path: '/path/to/1234',
-            status: 500,
-            message: 'bad thing happen',
-          },
-        ],
-      });
+      assert(storageStub.saveProducts.calledOnce);
     });
 
     it('should return 400 if request.json throws a JSON parsing error', async () => {
       const ctx = { log: { error: sinon.stub() }, config: { sku: '1234', confEnvMap: {} } };
       const request = { json: sinon.stub().rejects(new Error('Unexpected token < in JSON at position 0')) };
 
-      const response = await handleProductSaveRequest(ctx, request);
+      const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       assert.equal(response.status, 400);
       assert.equal(response.headers.get('x-error'), 'invalid JSON');

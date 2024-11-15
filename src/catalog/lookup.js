@@ -10,46 +10,37 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../utils/http.js';
-import { listAllProducts, lookupSku } from '../utils/r2.js';
-
 /**
  * Handles a product lookup request.
  * @param {Context} ctx - The context object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductLookupRequest(ctx) {
-  try {
-    const { config } = ctx;
-    const { search } = ctx.url;
-    const params = new URLSearchParams(search);
+export async function handleProductLookupRequest(ctx, storage) {
+  const { config } = ctx;
+  const { search } = ctx.url;
+  const params = new URLSearchParams(search);
 
-    if (params.has('urlKey') || params.has('urlkey')) {
-      const urlkey = params.get('urlKey') || params.get('urlkey');
-      const sku = await lookupSku(ctx, urlkey);
-      return new Response(undefined, {
-        status: 301,
-        headers: {
-          Location: `${ctx.url.origin}/${config.org}/${config.site}/catalog/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
-        },
-      });
-    }
+  if (params.has('urlKey') || params.has('urlkey')) {
+    const urlkey = params.get('urlKey') || params.get('urlkey');
+    const sku = await storage.lookupSku(urlkey);
 
-    const products = await listAllProducts(ctx);
-
-    const response = {
-      total: products.length,
-      products,
-    };
-
-    return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
+    const origin = (ctx.env.ENVIRONMENT === 'dev') ? 'https://adobe-commerce-api-ci.adobeaem.workers.dev' : ctx.url.origin;
+    return new Response(undefined, {
+      status: 301,
+      headers: {
+        Location: `${origin}/${config.org}/${config.site}/catalog/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
+      },
     });
-  } catch (e) {
-    if (e.response) {
-      return e.response;
-    }
-    ctx.log.error(e);
-    return errorResponse(500, 'internal server error');
   }
+
+  const products = await storage.listAllProducts(ctx);
+
+  const response = {
+    total: products.length,
+    products,
+  };
+
+  return new Response(JSON.stringify(response), {
+    headers: { 'Content-Type': 'application/json' },
+  });
 }

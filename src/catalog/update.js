@@ -11,24 +11,7 @@
  */
 
 import { assertValidProduct } from '../utils/product.js';
-import { callAdmin } from '../utils/admin.js';
-import { errorResponse, errorWithResponse } from '../utils/http.js';
-import { saveProducts } from '../utils/r2.js';
-
-/**
- * Saves a product to R2.
- * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Object} product - The product object to be saved.
- * @returns {Promise<Object>} - A promise that resolves to the saved product.
- */
-export async function putProduct(ctx, product) {
-  if (!product.sku) {
-    throw errorWithResponse(400, 'invalid request body: missing sku');
-  }
-
-  await saveProducts(ctx, [product]);
-  return product;
-}
+import { errorResponse } from '../utils/http.js';
 
 /**
  * Handles a PUT request to update a product.
@@ -36,89 +19,29 @@ export async function putProduct(ctx, product) {
  * @param {Request} request - The request object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductSaveRequest(ctx, request) {
-  try {
-    const { config } = ctx;
-    let product;
-
-    if (config.sku === '*') {
-      return errorResponse(501, 'not implemented');
-    } else {
-      try {
-        product = await request.json();
-      } catch (jsonError) {
-        ctx.log.error('Invalid JSON in request body:', jsonError);
-        return errorResponse(400, 'invalid JSON');
-      }
-
-      try {
-        assertValidProduct(product);
-      } catch (e) {
-        return errorResponse(400, e.message);
-      }
-    }
-
-    const { base: _ = undefined, ...otherPatterns } = config.confMap;
-    const matchedPathPatterns = Object.entries(otherPatterns)
-      .reduce((acc, [pattern, matchConf]) => {
-        // find only configs that match the provided store & view codes
-        if (config.storeCode === matchConf.storeCode
-          && config.storeViewCode === matchConf.storeViewCode) {
-          acc.push(pattern);
-        }
-        return acc;
-      }, []);
-
-    if (!matchedPathPatterns.length) {
-      return errorResponse(404, 'no path patterns found');
-    }
-
-    await putProduct(ctx, product);
-
-    const purgePaths = matchedPathPatterns.map(
-      (pattern) => pattern
-        .replace('{{sku}}', product.sku)
-        .replace('{{urlkey}}', product.urlKey),
-    );
-
-    const errors = [];
-    await Promise.all(
-      purgePaths.map(async (path) => {
-        for (const op of ['preview', 'live']) {
-          // eslint-disable-next-line no-await-in-loop
-          const response = await callAdmin(config, op, path, { method: 'POST' });
-          if (!response.ok) {
-            errors.push({
-              op,
-              path,
-              status: response.status,
-              message: response.headers.get('x-error') ?? response.statusText,
-            });
-            break; // don't hit live if preview fails
-          }
-        }
-      }),
-    );
-
-    if (errors.length) {
-      // use highest error code as status,
-      // so 5xx will be forwarded but all 404s will be treated as a 404
-      const status = errors.reduce((errCode, { status: code }) => Math.max(errCode, code), 0);
-      return new Response(JSON.stringify({ errors }), {
-        status,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-error': 'purge errors',
-        },
-      });
-    }
-
-    return new Response(undefined, { status: 201 });
-  } catch (e) {
-    if (e.response) {
-      return e.response;
-    }
-    ctx.log.error(e);
-    return errorResponse(500, 'internal server error');
+export async function handleProductSaveRequest(ctx, request, storage) {
+  const { config } = ctx;
+  if (config.sku === '*') {
+    return errorResponse(501, 'not implemented');
   }
+
+  let product;
+  try {
+    product = await request.json();
+  } catch (jsonError) {
+    ctx.log.error('Invalid JSON in request body:', jsonError);
+    return errorResponse(400, 'invalid JSON');
+  }
+
+  assertValidProduct(product);
+
+  const saveResults = await storage.saveProducts([product]);
+
+  ctx.log.info({
+    action: 'save_products',
+    result: JSON.stringify(saveResults),
+    timestamp: new Date().toISOString(),
+  });
+
+  return new Response(JSON.stringify(saveResults), { status: 201 });
 }

@@ -10,17 +10,33 @@
  * governing permissions and limitations under the License.
  */
 
+import { errorResponse } from '../utils/http.js';
+
 /**
- * Handles a GET request for a product.
+ * Handles a DELETE request for a product.
  * @param {Context} ctx - The context object containing request information and utilities.
  * @param {StorageClient} storage - The storage object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductFetchRequest(ctx, storage) {
-  const sku = ctx.url.pathname.split('/').pop();
-  const product = await storage.fetchProduct(sku);
+export async function handleProductDeleteRequest(ctx, storage) {
+  const { config } = ctx;
+  const { sku } = config;
 
-  return new Response(JSON.stringify(product), {
-    headers: { 'Content-Type': 'application/json' },
+  if (sku === '*') {
+    return errorResponse(400, 'Wildcard SKU deletions is not currently supported');
+  }
+
+  if (!config.helixApiKey) {
+    throw errorResponse(400, 'Helix API key is required to delete or unpublish products.');
+  }
+
+  const deleteResults = await storage.deleteProducts([sku]);
+
+  ctx.log.info({
+    action: 'delete_products',
+    result: JSON.stringify(deleteResults),
+    timestamp: new Date().toISOString(),
   });
+
+  return new Response(JSON.stringify(deleteResults), { status: 200 });
 }

@@ -20,18 +20,20 @@ describe('catalogHandler Tests', () => {
   let handleProductLookupRequestStub;
   let handleProductFetchRequestStub;
   let handleProductSaveRequestStub;
-
+  let handleProductDeleteRequestStub;
   beforeEach(async () => {
     errorResponseStub = sinon.stub();
     handleProductLookupRequestStub = sinon.stub();
     handleProductFetchRequestStub = sinon.stub();
     handleProductSaveRequestStub = sinon.stub();
+    handleProductDeleteRequestStub = sinon.stub();
 
     catalogHandler = (await esmock('../../src/catalog/handler.js', {
       '../../src/utils/http.js': { errorResponse: errorResponseStub },
       '../../src/catalog/lookup.js': { handleProductLookupRequest: handleProductLookupRequestStub },
       '../../src/catalog/fetch.js': { handleProductFetchRequest: handleProductFetchRequestStub },
       '../../src/catalog/update.js': { handleProductSaveRequest: handleProductSaveRequestStub },
+      '../../src/catalog/delete.js': { handleProductDeleteRequest: handleProductDeleteRequestStub },
     })).default;
   });
 
@@ -41,8 +43,8 @@ describe('catalogHandler Tests', () => {
 
   it('should return 405 when method is not allowed', async () => {
     const ctx = {
-      info: { method: 'DELETE' },
-      url: { pathname: '/org/site/env/catalog/store/view/product/sku' },
+      info: { method: 'HEAD' },
+      url: { pathname: '/org/site/env/catalog/store/view/product/sku1' },
       config: {},
     };
     const request = {};
@@ -59,7 +61,7 @@ describe('catalogHandler Tests', () => {
   it('should return 400 when URL is missing "catalog" segment', async () => {
     const ctx = {
       info: { method: 'GET' },
-      url: { pathname: '/org/site/env/store/view/product/sku' },
+      url: { pathname: '/org/site/env/store/view/product/sku1' },
       config: {},
     };
     const request = {};
@@ -88,6 +90,23 @@ describe('catalogHandler Tests', () => {
 
     assert.equal(response.status, 400);
     assert(errorResponseStub.calledWith(400, 'Invalid URL structure: Expected format: /{org}/{site}/catalog/{store}/{storeView}/product/{sku}'));
+  });
+
+  it('should return 400 when sku is uppercase', async () => {
+    const ctx = {
+      info: { method: 'GET' },
+      url: { pathname: '/org/site/catalog/store/view/product/PRODUCT-SKU' },
+      config: {},
+    };
+    const request = {};
+
+    const mockResponse = new Response(null, { status: 400 });
+    errorResponseStub.returns(mockResponse);
+
+    const response = await catalogHandler(ctx, request);
+
+    assert.equal(response.status, 400);
+    assert(errorResponseStub.calledWith(400, 'Invalid SKU: SKU cannot contain uppercase letters'));
   });
 
   it('should call handleProductLookupRequest when method is GET and subRoute is "lookup"', async () => {
@@ -124,7 +143,7 @@ describe('catalogHandler Tests', () => {
     assert(errorResponseStub.calledWith(405, 'method not allowed'));
   });
 
-  it('should call handleProductSaveRequest when method is PUT and subRoute is not "lookup"', async () => {
+  it('should call handleProductSaveRequest when method is PUT', async () => {
     const ctx = {
       info: { method: 'PUT' },
       url: { pathname: '/org/site/catalog/store/view/product/sku' },
@@ -141,7 +160,7 @@ describe('catalogHandler Tests', () => {
     assert(handleProductSaveRequestStub.calledOnceWith(ctx, request));
   });
 
-  it('should call handleProductFetchRequest when method is GET and subRoute is not "lookup"', async () => {
+  it('should call handleProductFetchRequest when method is GET', async () => {
     const ctx = {
       info: { method: 'GET' },
       url: { pathname: '/org/site/catalog/store/view/product/sku' },
@@ -156,5 +175,22 @@ describe('catalogHandler Tests', () => {
 
     assert.equal(response.status, 200);
     assert(handleProductFetchRequestStub.calledOnceWith(ctx));
+  });
+
+  it('should call handleProductDeleteRequest when method is DELETE', async () => {
+    const ctx = {
+      info: { method: 'DELETE' },
+      url: { pathname: '/org/site/catalog/store/view/product/sku' },
+      config: {},
+    };
+    const request = {};
+
+    const mockResponse = new Response(null, { status: 200 });
+    handleProductDeleteRequestStub.returns(mockResponse);
+
+    const response = await catalogHandler(ctx, request);
+
+    assert.equal(response.status, 200);
+    assert(handleProductDeleteRequestStub.calledOnceWith(ctx));
   });
 });
