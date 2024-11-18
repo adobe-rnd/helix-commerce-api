@@ -41,6 +41,7 @@ declare global {
     sku?: string;
     matchedPatterns: string[];
     imageRoles?: string[];
+    linkTypes?: string[];
     host: string;
     params: Record<string, string>;
     headers: Record<string, string>;

@@ -115,9 +115,10 @@ export const adapter = (config, productData) => {
  * @param {{
  *  sku: string;
  *  imageRoles?: string[];
+ *  linkTypes?: string[];
  * }} opts
  */
-export default ({ sku, imageRoles = [] }) => gql`{
+export default ({ sku, imageRoles = [], linkTypes = [] }) => gql`{
     products(
       skus: ["${sku}"]
     ) {
@@ -138,6 +139,9 @@ export default ({ sku, imageRoles = [] }) => gql`{
       images(roles: [${imageRoles.map((s) => `"${s}"`).join(',')}]) { 
         url
         label
+      }
+      links(linkTypes: [${linkTypes.map((s) => `"${s}"`).join(',')}]) {
+
       }
       attributes(roles: ["visible_in_pdp"]) {
         name

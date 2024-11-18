@@ -22,7 +22,11 @@ import htmlTemplateFromContext from '../templates/html/index.js';
  */
 async function fetchProduct(sku, config) {
   const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
-  const query = getProductQuery({ sku, imageRoles: config.imageRoles });
+  const query = getProductQuery({
+    sku,
+    imageRoles: config.imageRoles,
+    linkTypes: config.linkTypes,
+  });
   console.debug(query);
 
   const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}&view=${config.storeViewCode}`, {
