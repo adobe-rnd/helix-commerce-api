@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { forceImagesHTTPS } from '../../utils/http.js';
+import { errorWithResponse, forceImagesHTTPS } from '../../utils/http.js';
 import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
 
 /**
@@ -37,21 +37,25 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     prices: {
       regular: {
         // TODO: determine whether to use min or max
-        amount: minPrice.regular.amount.value,
-        currency: minPrice.regular.amount.currency,
-        maximumAmount: maxPrice.regular.amount.value,
-        minimumAmount: minPrice.regular.amount.value,
+        amount: minPrice?.regular.amount.value,
+        currency: minPrice?.regular.amount.currency,
+        maximumAmount: maxPrice?.regular.amount.value,
+        minimumAmount: minPrice?.regular.amount.value,
       },
       final: {
         // TODO: determine whether to use min or max
-        amount: minPrice.final.amount.value,
-        currency: minPrice.final.amount.currency,
-        maximumAmount: maxPrice.final.amount.value,
-        minimumAmount: minPrice.final.amount.value,
+        amount: minPrice?.final.amount.value,
+        currency: minPrice?.final.amount.currency,
+        maximumAmount: maxPrice?.final.amount.value,
+        minimumAmount: minPrice?.final.amount.value,
       },
     },
     selections: (selections ?? []).sort(),
   };
+
+  if (!minPrice && !maxPrice) {
+    throw errorWithResponse(400, 'no variant price range found');
+  }
 
   if (config.attributeOverrides?.variant) {
     Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
