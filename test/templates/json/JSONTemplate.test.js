@@ -71,7 +71,7 @@ describe('JSONTemplate', () => {
 
       // @ts-ignore
       const url = template.constructProductURL(variant1);
-      const expectedUrl = 'https://www.example.com/products/utopia-small-pendant/kw5531/?optionsUIDs=Y29uZmlndXJhYmxlLzE2NTEvODI3MQ%3D%3D';
+      const expectedUrl = 'https://www.example.com/products/utopia-small-pendant/kw5531?optionsUIDs=Y29uZmlndXJhYmxlLzE2NTEvODI3MQ%3D%3D';
       assert.strictEqual(url, expectedUrl, 'Variant URL without offerVariantURLTemplate does not match expected URL');
     });
 
@@ -97,7 +97,7 @@ describe('JSONTemplate', () => {
 
       // @ts-ignore
       const url = template.constructProductURL(variantWithSpecialSelections);
-      const expectedUrl = 'https://www.example.com/products/summer-sun/kw%2055%2F31/?optionsUIDs=Y29uZmlndXJhYmxlLzE2NTEvODI3MQ%3D%3D%2CY29uZmlndXJhYmxlLzI0NjEvMzYzNDE%3D';
+      const expectedUrl = 'https://www.example.com/products/summer-sun/kw%2055%2F31?optionsUIDs=Y29uZmlndXJhYmxlLzE2NTEvODI3MQ%3D%3D%2CY29uZmlndXJhYmxlLzI0NjEvMzYzNDE%3D';
       assert.strictEqual(url, expectedUrl, 'Variant URL with special characters does not match expected URL');
     });
 
@@ -114,7 +114,7 @@ describe('JSONTemplate', () => {
       }), product1, [variantEmptySelections]);
       // @ts-ignore
       const url = template.constructProductURL(variantEmptySelections);
-      const expectedUrl = 'https://www.example.com/products/utopia-small-pendant/kw5531/?optionsUIDs=';
+      const expectedUrl = 'https://www.example.com/products/utopia-small-pendant/kw5531?optionsUIDs=';
       assert.strictEqual(url, expectedUrl, 'URL with empty variant selections does not match expected URL');
     });
 
