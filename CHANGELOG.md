@@ -1,3 +1,10 @@
+## [1.6.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.4...v1.6.5) (2024-11-18)
+
+
+### Bug Fixes
+
+* throw if no price range on product or variant ([#50](https://github.com/adobe-rnd/helix-commerce-api/issues/50)) ([8469058](https://github.com/adobe-rnd/helix-commerce-api/commit/8469058c82dace3cc843afbb5b89d6e5d13e57e5))
+
 ## [1.6.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.3...v1.6.4) (2024-11-15)
 
 
