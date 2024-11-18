@@ -57,7 +57,9 @@ async function fetchProduct(sku, config) {
     const product = productAdapter(config, productData);
     return product;
   } catch (e) {
-    console.error('failed to parse product: ', e);
+    if (e.response) {
+      throw errorWithResponse(e.response.status, e.message);
+    }
     throw errorWithResponse(500, 'failed to parse product response');
   }
 }
@@ -98,7 +100,9 @@ async function fetchVariants(sku, config) {
     const { variants } = json?.data?.variants ?? {};
     return variantsAdapter(config, variants);
   } catch (e) {
-    console.error('failed to parse variants: ', e);
+    if (e.response) {
+      throw errorWithResponse(e.response.status, e.message);
+    }
     throw errorWithResponse(500, 'failed to parse variants response');
   }
 }
@@ -143,6 +147,9 @@ async function lookupProductSKU(urlkey, config) {
     return product.sku;
   } catch (e) {
     console.error('failed to parse product sku: ', e);
+    if (e.response) {
+      throw errorWithResponse(e.response.status, e.message);
+    }
     throw errorWithResponse(500, 'failed to parse product sku response');
   }
 }
