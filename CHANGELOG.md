@@ -1,3 +1,10 @@
+## [1.6.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.5...v1.6.6) (2024-11-19)
+
+
+### Bug Fixes
+
+* json-ld tweaks ([#49](https://github.com/adobe-rnd/helix-commerce-api/issues/49)) ([45971c6](https://github.com/adobe-rnd/helix-commerce-api/commit/45971c69e65b43984d24397cbf0d3367d195e0f1))
+
 ## [1.6.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.4...v1.6.5) (2024-11-18)
 
 
