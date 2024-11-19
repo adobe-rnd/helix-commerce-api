@@ -169,7 +169,10 @@ export async function handle(ctx) {
     return errorResponse(400, 'missing sku and coreEndpoint');
   }
 
-  if (!sku) {
+  // If urlkey is provided, lookup sku by urlkey from core to ensure we have the right casing
+  // Sku is case-sensitive in Adobe Commerce
+  // TODO: Need a way to handle paths with only sku (where sku is uppercase...)
+  if (urlkey) {
     // lookup sku by urlkey with core
     // TODO: test if livesearch if enabled
     sku = await lookupProductSKU(urlkey, config);
@@ -177,8 +180,8 @@ export async function handle(ctx) {
 
   // const product = await fetchProductCore({ sku }, config);
   const [product, variants] = await Promise.all([
-    fetchProduct(sku.toUpperCase(), config),
-    fetchVariants(sku.toUpperCase(), config),
+    fetchProduct(sku, config),
+    fetchVariants(sku, config),
   ]);
   const html = htmlTemplateFromContext(ctx, product, variants).render();
   return new Response(html, {
