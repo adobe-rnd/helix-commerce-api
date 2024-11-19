@@ -1,3 +1,10 @@
+## [1.6.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.6...v1.6.7) (2024-11-19)
+
+
+### Bug Fixes
+
+* don't assume uppercase skus ([#51](https://github.com/adobe-rnd/helix-commerce-api/issues/51)) ([a3d1dc7](https://github.com/adobe-rnd/helix-commerce-api/commit/a3d1dc7dd757c473bf503bb628b4a01bbb3b864d))
+
 ## [1.6.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.5...v1.6.6) (2024-11-19)
 
 
