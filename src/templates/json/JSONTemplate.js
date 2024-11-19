@@ -56,7 +56,7 @@ export class JSONTemplate {
     if (variant) {
       const offerVariantURLTemplate = matchedPathConfig?.offerVariantURLTemplate;
       if (!offerVariantURLTemplate) {
-        return `${productUrl}/?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
+        return `${productUrl}?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
       }
 
       const variantPath = offerVariantURLTemplate
