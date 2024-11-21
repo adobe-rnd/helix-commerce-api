@@ -61,7 +61,9 @@ async function fetchProduct(sku, config) {
     const product = productAdapter(config, productData);
     return product;
   } catch (e) {
-    console.error('failed to parse product: ', e);
+    if (e.response) {
+      throw errorWithResponse(e.response.status, e.message);
+    }
     throw errorWithResponse(500, 'failed to parse product response');
   }
 }
@@ -102,7 +104,9 @@ async function fetchVariants(sku, config) {
     const { variants } = json?.data?.variants ?? {};
     return variantsAdapter(config, variants);
   } catch (e) {
-    console.error('failed to parse variants: ', e);
+    if (e.response) {
+      throw errorWithResponse(e.response.status, e.message);
+    }
     throw errorWithResponse(500, 'failed to parse variants response');
   }
 }
@@ -147,6 +151,9 @@ async function lookupProductSKU(urlkey, config) {
     return product.sku;
   } catch (e) {
     console.error('failed to parse product sku: ', e);
+    if (e.response) {
+      throw errorWithResponse(e.response.status, e.message);
+    }
     throw errorWithResponse(500, 'failed to parse product sku response');
   }
 }
@@ -160,22 +167,26 @@ export async function handle(ctx) {
   const { urlkey } = config.params;
   let { sku } = config.params;
 
-  if (!sku && !urlkey) {
-    return errorResponse(404, 'missing sku or urlkey');
-  } else if (!sku && !config.coreEndpoint) {
-    return errorResponse(400, 'missing sku and coreEndpoint');
+  const cslParams = new URLSearchParams(ctx.info.headers['x-content-source-location'] ?? '');
+  if (cslParams.has('sku')) {
+    // prefer sku from content-source-location
+    sku = cslParams.get('sku');
+  } else if (urlkey && config.coreEndpoint) {
+    // lookup sku by urlkey with core
+    sku = await lookupProductSKU(urlkey, config);
   }
 
+  if (!sku && !config.coreEndpoint) {
+    return errorResponse(400, 'missing sku and coreEndpoint');
+  }
   if (!sku) {
-    // lookup sku by urlkey with core
-    // TODO: test if livesearch if enabled
-    sku = await lookupProductSKU(urlkey, config);
+    return errorResponse(404, 'could not find sku');
   }
 
   // const product = await fetchProductCore({ sku }, config);
   const [product, variants] = await Promise.all([
-    fetchProduct(sku.toUpperCase(), config),
-    fetchVariants(sku.toUpperCase(), config),
+    fetchProduct(sku, config),
+    fetchVariants(sku, config),
   ]);
   const html = htmlTemplateFromContext(ctx, product, variants).render();
   return new Response(html, {

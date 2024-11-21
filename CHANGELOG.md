@@ -1,3 +1,31 @@
+# [1.7.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.7...v1.7.0) (2024-11-21)
+
+
+### Features
+
+* use content-source-location ([#52](https://github.com/adobe-rnd/helix-commerce-api/issues/52)) ([d6527be](https://github.com/adobe-rnd/helix-commerce-api/commit/d6527be6bf32a4ce93af444cc4ef479b152afebe))
+
+## [1.6.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.6...v1.6.7) (2024-11-19)
+
+
+### Bug Fixes
+
+* don't assume uppercase skus ([#51](https://github.com/adobe-rnd/helix-commerce-api/issues/51)) ([a3d1dc7](https://github.com/adobe-rnd/helix-commerce-api/commit/a3d1dc7dd757c473bf503bb628b4a01bbb3b864d))
+
+## [1.6.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.5...v1.6.6) (2024-11-19)
+
+
+### Bug Fixes
+
+* json-ld tweaks ([#49](https://github.com/adobe-rnd/helix-commerce-api/issues/49)) ([45971c6](https://github.com/adobe-rnd/helix-commerce-api/commit/45971c69e65b43984d24397cbf0d3367d195e0f1))
+
+## [1.6.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.4...v1.6.5) (2024-11-18)
+
+
+### Bug Fixes
+
+* throw if no price range on product or variant ([#50](https://github.com/adobe-rnd/helix-commerce-api/issues/50)) ([8469058](https://github.com/adobe-rnd/helix-commerce-api/commit/8469058c82dace3cc843afbb5b89d6e5d13e57e5))
+
 ## [1.6.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.3...v1.6.4) (2024-11-15)
 
 

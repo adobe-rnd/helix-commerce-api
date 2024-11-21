@@ -42,7 +42,10 @@ export function makeContext(pctx, req, env) {
   ctx.log = console;
   ctx.info = {
     method: req.method,
-    headers: Object.fromEntries(req.headers),
+    headers: Object.fromEntries(
+      [...req.headers.entries()]
+        .map(([k, v]) => [k.toLowerCase(), v]),
+    ),
   };
   return ctx;
 }
