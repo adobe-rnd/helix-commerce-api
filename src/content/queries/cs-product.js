@@ -41,6 +41,11 @@ export const adapter = (config, productData) => {
     addToCartAllowed: productData.addToCartAllowed,
     inStock: productData.inStock,
     externalId: productData.externalId,
+    links: (productData.links ?? []).map((l) => ({
+      sku: l.product.sku,
+      urlKey: l.product.urlKey,
+      types: l.types,
+    })),
     images: forceImagesHTTPS(productData.images) ?? [],
     attributes: productData.attributes ?? [],
     attributeMap: Object.fromEntries((productData.attributes ?? [])
@@ -145,7 +150,11 @@ export default ({ sku, imageRoles = [], linkTypes = [] }) => gql`{
         label
       }
       links(linkTypes: [${linkTypes.map((s) => `"${s}"`).join(',')}]) {
-
+        product {
+          sku
+          urlKey
+        }
+        linkTypes
       }
       attributes(roles: ["visible_in_pdp"]) {
         name
