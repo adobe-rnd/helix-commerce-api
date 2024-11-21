@@ -41,6 +41,11 @@ export const adapter = (config, productData) => {
     addToCartAllowed: productData.addToCartAllowed,
     inStock: productData.inStock,
     externalId: productData.externalId,
+    links: (productData.links ?? []).map((l) => ({
+      sku: l.product.sku,
+      urlKey: l.product.urlKey,
+      types: l.types,
+    })),
     images: forceImagesHTTPS(productData.images) ?? [],
     attributes: productData.attributes ?? [],
     attributeMap: Object.fromEntries((productData.attributes ?? [])
@@ -119,9 +124,10 @@ export const adapter = (config, productData) => {
  * @param {{
  *  sku: string;
  *  imageRoles?: string[];
+ *  linkTypes?: string[];
  * }} opts
  */
-export default ({ sku, imageRoles = [] }) => gql`{
+export default ({ sku, imageRoles = [], linkTypes = [] }) => gql`{
     products(
       skus: ["${sku}"]
     ) {
@@ -142,6 +148,13 @@ export default ({ sku, imageRoles = [] }) => gql`{
       images(roles: [${imageRoles.map((s) => `"${s}"`).join(',')}]) { 
         url
         label
+      }
+      links(linkTypes: [${linkTypes.map((s) => `"${s}"`).join(',')}]) {
+        product {
+          sku
+          urlKey
+        }
+        linkTypes
       }
       attributes(roles: ["visible_in_pdp"]) {
         name

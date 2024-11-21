@@ -15,13 +15,12 @@ import { JSONTemplate } from '../JSONTemplate.js';
 export default class extends JSONTemplate {
   /**
    * @param {Variant} [variant]
+   * @param {Pick<Product, 'sku'|'urlKey'>} [pproduct]
    * @returns {string}
    */
-  constructProductURL(variant) {
-    const {
-      product,
-      ctx: { config },
-    } = this;
+  constructProductURL(variant, pproduct) {
+    const product = pproduct || this.product;
+    const { ctx: { config } } = this;
     const { host, matchedPatterns } = config;
 
     const productPath = matchedPatterns[0]
@@ -29,13 +28,12 @@ export default class extends JSONTemplate {
       .replace('{{sku}}', encodeURIComponent(product.sku.toLowerCase()));
 
     const productUrl = `${host}${productPath}`;
-
-    if (variant) {
-      const options = variant.selections.map((selection) => atob(selection)).join(',').replace(/configurable\//g, '').replace(/\//g, '-');
-      return `${productUrl}?pid=${variant.externalId}&o=${btoa(options)}`;
+    if (!variant) {
+      return productUrl;
     }
 
-    return productUrl;
+    const options = variant.selections.map((selection) => atob(selection)).join(',').replace(/configurable\//g, '').replace(/\//g, '-');
+    return `${productUrl}?pid=${variant.externalId}&o=${btoa(options)}`;
   }
 
   // eslint-disable-next-line class-methods-use-this

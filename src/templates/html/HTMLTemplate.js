@@ -59,6 +59,9 @@ export class HTMLTemplate {
   /** @type {Image} */
   image = undefined;
 
+  /** @type {import('../json/JSONTemplate.js').JSONTemplate} */
+  jsonTemplate = undefined;
+
   /**
    * @param {Context} ctx
    * @param {Product} product
@@ -69,6 +72,7 @@ export class HTMLTemplate {
     this.product = product;
     this.variants = variants;
     this.image = findProductImage(product, variants);
+    this.jsonTemplate = jsonTemplateFromContext(this.ctx, this.product, this.variants);
   }
 
   /**
@@ -149,10 +153,9 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.curre
    * @returns {string}
    */
   renderJSONLD() {
-    const jsonTemplate = jsonTemplateFromContext(this.ctx, this.product, this.variants);
     return /* html */ `\
 <script type="application/ld+json">
-  ${jsonTemplate.render()}
+  ${this.jsonTemplate.render()}
 </script>`;
   }
 
@@ -333,6 +336,28 @@ ${this.variants?.map((v) => /* html */`\
   /**
    * @returns {string}
    */
+  renderProductLinks() {
+    const { links } = this.product;
+    if (!links) {
+      return '';
+    }
+    return /* html */ `\
+<div class="product-links">
+${links.map((link) => {
+    const url = this.jsonTemplate.constructProductURL(undefined, link);
+    return /* html */`\
+  <div>
+    <div>${link.sku}</div>
+    <div><a href="${url}">${url}</a></div>
+    <div>${(link.types ?? []).join(', ')}</div>
+  </div>`;
+  }).join('\n')
+}`;
+  }
+
+  /**
+   * @returns {string}
+   */
   render() {
     const {
       name,
@@ -357,6 +382,7 @@ ${HTMLTemplate.indent(this.renderProductAttributes(attributes), 8)}
 ${HTMLTemplate.indent(this.renderProductOptions(options), 8)}
 ${HTMLTemplate.indent(this.renderProductVariants(), 8)}
 ${HTMLTemplate.indent(this.renderProductVariantsAttributes(), 8)}
+${HTMLTemplate.indent(this.renderProductLinks(), 8)}
       </div>
     </main>
     <footer></footer>
