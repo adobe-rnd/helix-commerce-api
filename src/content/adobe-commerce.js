@@ -163,19 +163,20 @@ export async function handle(ctx) {
   const { urlkey } = config.params;
   let { sku } = config.params;
 
-  if (!sku && !urlkey) {
-    return errorResponse(404, 'missing sku or urlkey');
-  } else if (!sku && !config.coreEndpoint) {
-    return errorResponse(400, 'missing sku and coreEndpoint');
+  const cslParams = new URLSearchParams(ctx.info.headers['x-content-source-location'] ?? '');
+  if (cslParams.has('sku')) {
+    // prefer sku from content-source-location
+    sku = cslParams.get('sku');
+  } else if (urlkey && config.coreEndpoint) {
+    // lookup sku by urlkey with core
+    sku = await lookupProductSKU(urlkey, config);
   }
 
-  // If urlkey is provided, lookup sku by urlkey from core to ensure we have the right casing
-  // Sku is case-sensitive in Adobe Commerce
-  // TODO: Need a way to handle paths with only sku (where sku should be uppercase...)
-  if (urlkey) {
-    // lookup sku by urlkey with core
-    // TODO: test if livesearch if enabled
-    sku = await lookupProductSKU(urlkey, config);
+  if (!sku && !config.coreEndpoint) {
+    return errorResponse(400, 'missing sku and coreEndpoint');
+  }
+  if (!sku) {
+    return errorResponse(404, 'could not find sku');
   }
 
   // const product = await fetchProductCore({ sku }, config);
