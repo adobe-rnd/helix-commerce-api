@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.7...v1.7.0) (2024-11-21)
+
+
+### Features
+
+* use content-source-location ([#52](https://github.com/adobe-rnd/helix-commerce-api/issues/52)) ([d6527be](https://github.com/adobe-rnd/helix-commerce-api/commit/d6527be6bf32a4ce93af444cc4ef479b152afebe))
+
 ## [1.6.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.6...v1.6.7) (2024-11-19)
 
 
