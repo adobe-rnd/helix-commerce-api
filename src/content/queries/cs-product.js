@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorWithResponse, forceImagesHTTPS } from '../../utils/http.js';
+import { forceImagesHTTPS } from '../../utils/http.js';
 import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
 
 /**
@@ -90,10 +90,6 @@ export const adapter = (config, productData) => {
       visible: minPrice.roles?.includes('visible'),
     } : null,
   };
-
-  if (!minPrice && !maxPrice) {
-    throw errorWithResponse(400, 'no product price range found');
-  }
 
   if (config.attributeOverrides?.product) {
     Object.entries(config.attributeOverrides.product).forEach(([key, value]) => {
