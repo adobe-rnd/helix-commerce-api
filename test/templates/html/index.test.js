@@ -233,7 +233,7 @@ describe('Render Product HTML', () => {
     });
   });
 
-  it('JSON-LD should allow for missing prices', () => {
+  it('template should allow for missing prices', () => {
     config.confMap = {
       '/us/p/{{urlkey}}/{{sku}}': {},
     };
