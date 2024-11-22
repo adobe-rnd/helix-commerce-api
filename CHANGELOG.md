@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.0...v1.7.1) (2024-11-22)
+
+
+### Bug Fixes
+
+* allow products with no price ([#54](https://github.com/adobe-rnd/helix-commerce-api/issues/54)) ([2fb5915](https://github.com/adobe-rnd/helix-commerce-api/commit/2fb5915c87141a5f8e6b9534d3632c18b143d8d9))
+
 # [1.7.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.7...v1.7.0) (2024-11-21)
 
 
