@@ -233,6 +233,36 @@ describe('Render Product HTML', () => {
     });
   });
 
+  it('JSON-LD should allow for missing prices', () => {
+    config.confMap = {
+      '/us/p/{{urlkey}}/{{sku}}': {},
+    };
+
+    product.prices = undefined;
+    variations.forEach((variant) => {
+      variant.prices = undefined;
+    });
+
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const metaPriceAmount = document.querySelector('meta[property="product:price.amount"]');
+    assert.strictEqual(metaPriceAmount.getAttribute('content'), 'undefined', 'meta[property="product:price:amount"] should be undefined');
+
+    const metaPriceCurrency = document.querySelector('meta[property="product:price.currency"]');
+    assert.strictEqual(metaPriceCurrency.getAttribute('content'), 'undefined', 'meta[property="product:price.currency"] should be undefined');
+
+    const jsonLdScript = document.querySelector('script[type="application/ld+json"]');
+    const jsonLd = JSON.parse(jsonLdScript.textContent);
+
+    jsonLd.offers.forEach((offer) => {
+      assert.strictEqual(offer.price, undefined, 'price should be undefined');
+      assert.strictEqual(offer.priceCurrency, undefined, 'priceCurrency should be undefined');
+      assert.strictEqual(offer.priceSpecification, undefined, 'priceSpecification should be undefined');
+    });
+  });
+
   it('should display the correct product name in <h1>', () => {
     const h1 = document.querySelector('h1');
     assert.strictEqual(h1.textContent, product.name, '<h1> content does not match product name');
