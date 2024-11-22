@@ -111,7 +111,7 @@ ${HTMLTemplate.metaName('twitter:title', product.name)}
 ${HTMLTemplate.metaName('twitter:image', image?.url)}
 ${HTMLTemplate.metaName('twitter:description', product.metaDescription)}
 ${HTMLTemplate.metaName('twitter:label1', 'Price')}
-${HTMLTemplate.metaName('twitter:data1', product.prices.final.amount)}
+${HTMLTemplate.metaName('twitter:data1', product.prices?.final?.amount)}
 ${HTMLTemplate.metaName('twitter:label2', 'Availability')}
 ${HTMLTemplate.metaName('twitter:data2', product.inStock ? 'In stock' : 'Out of stock')}`;
   }
@@ -129,8 +129,8 @@ ${HTMLTemplate.metaName('externalId', product.externalId)}
 ${HTMLTemplate.metaName('addToCartAllowed', product.addToCartAllowed)}
 ${HTMLTemplate.metaName('inStock', product.inStock ? 'true' : 'false')}
 ${HTMLTemplate.metaProperty('product:availability', product.inStock ? 'In stock' : 'Out of stock')}
-${HTMLTemplate.metaProperty('product:price.amount', product.prices.final.amount)}
-${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.currency)}`;
+${HTMLTemplate.metaProperty('product:price.amount', product.prices?.final?.amount)}
+${HTMLTemplate.metaProperty('product:price.currency', product.prices?.final?.currency)}`;
   }
 
   /**
@@ -271,8 +271,8 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
    */
   renderVariantPrices(prices) {
     return /* html */ `\
-<div>Regular: ${prices.regular.amount} ${prices.regular.currency}${HTMLTemplate.priceRange(prices.regular.minimumAmount, prices.regular.maximumAmount)}</div>
-<div>Final: ${prices.final.amount} ${prices.final.currency}${HTMLTemplate.priceRange(prices.final.minimumAmount, prices.final.maximumAmount)}</div>`;
+<div>Regular: ${prices.regular?.amount} ${prices.regular?.currency}${HTMLTemplate.priceRange(prices.regular?.minimumAmount, prices.regular?.maximumAmount)}</div>
+<div>Final: ${prices.final?.amount} ${prices.final?.currency}${HTMLTemplate.priceRange(prices.final?.minimumAmount, prices.final?.maximumAmount)}</div>`;
   }
 
   /**
@@ -292,7 +292,7 @@ ${this.variants.map((v) => /* html */`\
     <div>${v.name}</div>
     <div>${v.description}</div>
     <div>${v.inStock ? 'inStock' : ''}</div>
-${HTMLTemplate.indent(this.renderVariantPrices(v.prices), 4)}
+${v.prices ? HTMLTemplate.indent(this.renderVariantPrices(v.prices), 4) : ''}
     <div>
 ${HTMLTemplate.indent(this.renderVariantImages(v.images), 6)}
     </div>
