@@ -233,6 +233,34 @@ describe('Render Product HTML', () => {
     });
   });
 
+  it('should not render product options table if there are none', () => {
+    product.options = [];
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const optionsTable = document.querySelector('.product-options');
+    assert.strictEqual(optionsTable, null, 'Options table should not be rendered');
+  });
+
+  it('should not render product variants table if there are none', () => {
+    variations = [];
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const variantsTable = document.querySelector('.product-variants');
+    assert.strictEqual(variantsTable, null, 'Variants table should not be rendered');
+  });
+
+  it('should not render variant attributes table if there are none', () => {
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, []).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+    const variantAttributesTable = document.querySelector('.variant-attributes');
+    assert.strictEqual(variantAttributesTable, null, 'Variant attributes table should not be rendered');
+  });
+
   it('template should allow for missing prices', () => {
     config.confMap = {
       '/us/p/{{urlkey}}/{{sku}}': {},
