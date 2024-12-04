@@ -234,7 +234,7 @@ ${attributes.map((attr) => /* html */`\
    * @returns {string}
    */
   renderProductOptions(options) {
-    return /* html */ `\
+    return options.length > 0 ? /* html */ `\
 <div class="product-options">
 ${options.map((opt) => /* html */ `\
   <div>
@@ -246,7 +246,7 @@ ${options.map((opt) => /* html */ `\
     <div>${opt.required === true ? 'required' : ''}</div>
   </div>
 ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
-</div>`;
+</div>` : '';
   }
 
   /**
@@ -280,7 +280,7 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
    * @returns {string}
    */
   renderProductVariants() {
-    if (!this.variants) {
+    if (!this.variants || this.variants.length === 0) {
       return '';
     }
 
@@ -306,7 +306,7 @@ ${HTMLTemplate.indent(this.renderVariantImages(v.images), 6)}
    * @returns {string}
    */
   renderProductVariantsAttributes() {
-    if (!this.variants) {
+    if (!this.variants || this.variants.length === 0) {
       return '';
     }
 
