@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.1...v1.7.2) (2024-12-04)
+
+
+### Bug Fixes
+
+* exclude tables if simple product ([#55](https://github.com/adobe-rnd/helix-commerce-api/issues/55)) ([d54eb85](https://github.com/adobe-rnd/helix-commerce-api/commit/d54eb85c570d2e98270dba7a35260b155ec40866))
+
 ## [1.7.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.0...v1.7.1) (2024-11-22)
 
 
