@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.3...v1.8.0) (2024-12-05)
+
+
+### Features
+
+* image params in config ([#57](https://github.com/adobe-rnd/helix-commerce-api/issues/57)) ([a516802](https://github.com/adobe-rnd/helix-commerce-api/commit/a516802a3249f87d049a07245af014ee9d464927))
+
 ## [1.7.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.2...v1.7.3) (2024-12-05)
 
 
