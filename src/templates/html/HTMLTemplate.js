@@ -267,8 +267,16 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
 
     // append image params
     const { url: purl, label } = image;
-    const url = new URL(purl);
     const params = new URLSearchParams(this.ctx.config.imageParams);
+    let url;
+
+    try {
+      url = new URL(purl);
+    } catch {
+      this.ctx.log.warn('Failed to parse image url: ', purl);
+      return image;
+    }
+
     url.search = params.toString();
     return {
       url: url.toString(),
