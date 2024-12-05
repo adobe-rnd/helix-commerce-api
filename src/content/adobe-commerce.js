@@ -121,11 +121,7 @@ async function lookupProductSKU(urlkey, config) {
   const resp = await ffetch(`${config.coreEndpoint}?query=${encodeURIComponent(query)}`, {
     headers: {
       origin: config.origin ?? 'https://api.adobecommerce.live',
-      'x-api-key': config.apiKey,
-      'Magento-Environment-Id': config.magentoEnvironmentId,
-      'Magento-Website-Code': config.magentoWebsiteCode,
-      'Magento-Store-View-Code': config.storeViewCode,
-      'Magento-Store-Code': config.storeCode,
+      Store: config.storeViewCode,
       ...config.headers,
     },
     // don't disable cache, since it's unlikely to change
