@@ -449,4 +449,27 @@ describe('Render Product HTML', () => {
       });
     });
   });
+
+  it('should allow imageParam overrides from config', () => {
+    config.imageParams = { foo: 'bar', baz: 'qux' };
+
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    assert.strictEqual(ogImage.getAttribute('content'), 'https://www.example.com/media/catalog/product/t/s/test-sku.png?foo=bar&baz=qux');
+  });
+
+  it('should handle invalid image url with overrides', () => {
+    config.imageParams = { foo: 'bar' };
+    product.images[0].url = '/media/catalog/product/t/s/test-sku.png'; // only a path
+
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    assert.strictEqual(ogImage.getAttribute('content'), '/media/catalog/product/t/s/test-sku.png');
+  });
 });
