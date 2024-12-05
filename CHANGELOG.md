@@ -1,3 +1,10 @@
+## [1.7.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.2...v1.7.3) (2024-12-05)
+
+
+### Bug Fixes
+
+* remove unneeded core headers and add Store ([#56](https://github.com/adobe-rnd/helix-commerce-api/issues/56)) ([6be9da9](https://github.com/adobe-rnd/helix-commerce-api/commit/6be9da9a93d75c5dd12d709c476a58959fb38147))
+
 ## [1.7.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.1...v1.7.2) (2024-12-04)
 
 
