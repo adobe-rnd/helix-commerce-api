@@ -68,7 +68,7 @@ export class HTMLTemplate {
     this.ctx = ctx;
     this.product = product;
     this.variants = variants;
-    this.image = findProductImage(product, variants);
+    this.image = this.constructImage(findProductImage(product, variants));
   }
 
   /**
@@ -181,7 +181,9 @@ ${HTMLTemplate.indent(this.renderJSONLD(), 2)}
     return /* html */ `\
 <div class="product-images">
   <div>
-    ${images.map((img) => /* html */ `\
+    ${images.map(this.constructImage.bind(this))
+    .filter((img) => Boolean(img))
+    .map((img) => /* html */ `\
       <div>
         <picture>
           <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
@@ -189,7 +191,8 @@ ${HTMLTemplate.indent(this.renderJSONLD(), 2)}
           <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
           <img loading="lazy" alt="${img.label}" src="${img.url}">
         </picture>
-      </div>`).join('\n')}
+      </div>`)
+    .join('\n')}
   </div>
 </div>`;
   }
@@ -250,18 +253,45 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
   }
 
   /**
+   * @param {Image} image
+   * @returns {Image | null}
+   */
+  constructImage(image) {
+    if (!image || !image.url) {
+      return null;
+    }
+
+    if (!this.ctx.config.imageParams) {
+      return image;
+    }
+
+    // append image params
+    const { url: purl, label } = image;
+    const url = new URL(purl);
+    const params = new URLSearchParams(this.ctx.config.imageParams);
+    url.search = params.toString();
+    return {
+      url: url.toString(),
+      label,
+    };
+  }
+
+  /**
    * Create the variant images
    * @param {Image[]} images
    * @returns {string}
    */
   renderVariantImages(images) {
-    return images.map((img) => /* html */ `\
+    return images.map(this.constructImage.bind(this))
+      .filter((img) => Boolean(img))
+      .map((img) => /* html */ `\
 <picture>
   <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
   <source type="image/webp" srcset="${img.url}">
   <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
   <img loading="lazy" alt="${img.label}" src="${img.url}">
-</picture>`).join('\n');
+</picture>`)
+      .join('\n');
   }
 
   /**

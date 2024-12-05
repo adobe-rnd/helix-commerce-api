@@ -47,6 +47,7 @@ declare global {
     offerVariantURLTemplate?: string;
     attributeOverrides?: AttributeOverrides;
     siteOverrides?: Record<string, Record<string, unknown>>;
+    imageParams?: Record<string, string | boolean | number>;
 
     confMap: ConfigMap;
   }
