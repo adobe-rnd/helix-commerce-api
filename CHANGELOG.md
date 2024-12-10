@@ -1,3 +1,45 @@
+# [1.9.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.8.1...v1.9.0) (2024-12-10)
+
+
+### Features
+
+* config auth ([#59](https://github.com/adobe-rnd/helix-commerce-api/issues/59)) ([fbf0000](https://github.com/adobe-rnd/helix-commerce-api/commit/fbf0000337201d9007c9fbdc7ab72772d61d28a9))
+
+## [1.8.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.8.0...v1.8.1) (2024-12-10)
+
+
+### Bug Fixes
+
+* only use image meta tag ([#58](https://github.com/adobe-rnd/helix-commerce-api/issues/58)) ([22a227f](https://github.com/adobe-rnd/helix-commerce-api/commit/22a227f47df461a326f5f3e06eb523081d4068ce))
+
+# [1.8.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.3...v1.8.0) (2024-12-05)
+
+
+### Features
+
+* image params in config ([#57](https://github.com/adobe-rnd/helix-commerce-api/issues/57)) ([a516802](https://github.com/adobe-rnd/helix-commerce-api/commit/a516802a3249f87d049a07245af014ee9d464927))
+
+## [1.7.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.2...v1.7.3) (2024-12-05)
+
+
+### Bug Fixes
+
+* remove unneeded core headers and add Store ([#56](https://github.com/adobe-rnd/helix-commerce-api/issues/56)) ([6be9da9](https://github.com/adobe-rnd/helix-commerce-api/commit/6be9da9a93d75c5dd12d709c476a58959fb38147))
+
+## [1.7.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.1...v1.7.2) (2024-12-04)
+
+
+### Bug Fixes
+
+* exclude tables if simple product ([#55](https://github.com/adobe-rnd/helix-commerce-api/issues/55)) ([d54eb85](https://github.com/adobe-rnd/helix-commerce-api/commit/d54eb85c570d2e98270dba7a35260b155ec40866))
+
+## [1.7.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.7.0...v1.7.1) (2024-11-22)
+
+
+### Bug Fixes
+
+* allow products with no price ([#54](https://github.com/adobe-rnd/helix-commerce-api/issues/54)) ([2fb5915](https://github.com/adobe-rnd/helix-commerce-api/commit/2fb5915c87141a5f8e6b9534d3632c18b143d8d9))
+
 # [1.7.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.6.7...v1.7.0) (2024-11-21)
 
 

@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorWithResponse, forceImagesHTTPS } from '../../utils/http.js';
+import { forceImagesHTTPS } from '../../utils/http.js';
 import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
 
 /**
@@ -52,10 +52,6 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     },
     selections: (selections ?? []).sort(),
   };
-
-  if (!minPrice && !maxPrice) {
-    throw errorWithResponse(400, 'no variant price range found');
-  }
 
   if (config.attributeOverrides?.variant) {
     Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {

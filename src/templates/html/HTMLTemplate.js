@@ -71,8 +71,8 @@ export class HTMLTemplate {
     this.ctx = ctx;
     this.product = product;
     this.variants = variants;
-    this.image = findProductImage(product, variants);
     this.jsonTemplate = jsonTemplateFromContext(this.ctx, this.product, this.variants);
+    this.image = this.constructImage(findProductImage(product, variants));
   }
 
   /**
@@ -97,8 +97,6 @@ ${HTMLTemplate.metaName('keywords', product.metaKeyword)}`;
     const { product, image } = this;
     return /* html */`\
 ${HTMLTemplate.metaProperty('og:title', product.metaTitle || product.name)}
-${HTMLTemplate.metaProperty('og:image', image?.url)}
-${HTMLTemplate.metaProperty('og:image:secure_url', image?.url)}
 ${HTMLTemplate.metaProperty('og:type', 'product')}
 ${HTMLTemplate.metaName('image', image?.url)}`; // html2md will treat this as the og:image
   }
@@ -108,14 +106,13 @@ ${HTMLTemplate.metaName('image', image?.url)}`; // html2md will treat this as th
    * @returns {string}
    */
   renderTwitterMetaTags() {
-    const { product, image } = this;
+    const { product } = this;
     return /* html */ `\
 ${HTMLTemplate.metaName('twitter:card', 'summary_large_image')}
 ${HTMLTemplate.metaName('twitter:title', product.name)}
-${HTMLTemplate.metaName('twitter:image', image?.url)}
 ${HTMLTemplate.metaName('twitter:description', product.metaDescription)}
 ${HTMLTemplate.metaName('twitter:label1', 'Price')}
-${HTMLTemplate.metaName('twitter:data1', product.prices.final.amount)}
+${HTMLTemplate.metaName('twitter:data1', product.prices?.final?.amount)}
 ${HTMLTemplate.metaName('twitter:label2', 'Availability')}
 ${HTMLTemplate.metaName('twitter:data2', product.inStock ? 'In stock' : 'Out of stock')}`;
   }
@@ -133,8 +130,8 @@ ${HTMLTemplate.metaName('externalId', product.externalId)}
 ${HTMLTemplate.metaName('addToCartAllowed', product.addToCartAllowed)}
 ${HTMLTemplate.metaName('inStock', product.inStock ? 'true' : 'false')}
 ${HTMLTemplate.metaProperty('product:availability', product.inStock ? 'In stock' : 'Out of stock')}
-${HTMLTemplate.metaProperty('product:price.amount', product.prices.final.amount)}
-${HTMLTemplate.metaProperty('product:price.currency', product.prices.final.currency)}`;
+${HTMLTemplate.metaProperty('product:price.amount', product.prices?.final?.amount)}
+${HTMLTemplate.metaProperty('product:price.currency', product.prices?.final?.currency)}`;
   }
 
   /**
@@ -184,7 +181,9 @@ ${HTMLTemplate.indent(this.renderJSONLD(), 2)}
     return /* html */ `\
 <div class="product-images">
   <div>
-    ${images.map((img) => /* html */ `\
+    ${images.map(this.constructImage.bind(this))
+    .filter((img) => Boolean(img))
+    .map((img) => /* html */ `\
       <div>
         <picture>
           <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
@@ -192,7 +191,8 @@ ${HTMLTemplate.indent(this.renderJSONLD(), 2)}
           <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
           <img loading="lazy" alt="${img.label}" src="${img.url}">
         </picture>
-      </div>`).join('\n')}
+      </div>`)
+    .join('\n')}
   </div>
 </div>`;
   }
@@ -237,7 +237,7 @@ ${attributes.map((attr) => /* html */`\
    * @returns {string}
    */
   renderProductOptions(options) {
-    return /* html */ `\
+    return options.length > 0 ? /* html */ `\
 <div class="product-options">
 ${options.map((opt) => /* html */ `\
   <div>
@@ -249,7 +249,39 @@ ${options.map((opt) => /* html */ `\
     <div>${opt.required === true ? 'required' : ''}</div>
   </div>
 ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
-</div>`;
+</div>` : '';
+  }
+
+  /**
+   * @param {Image} image
+   * @returns {Image | null}
+   */
+  constructImage(image) {
+    if (!image || !image.url) {
+      return null;
+    }
+
+    if (!this.ctx.config.imageParams) {
+      return image;
+    }
+
+    // append image params
+    const { url: purl, label } = image;
+    const params = new URLSearchParams(this.ctx.config.imageParams);
+    let url;
+
+    try {
+      url = new URL(purl);
+    } catch {
+      this.ctx.log.warn('Failed to parse image url: ', purl);
+      return image;
+    }
+
+    url.search = params.toString();
+    return {
+      url: url.toString(),
+      label,
+    };
   }
 
   /**
@@ -258,13 +290,16 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
    * @returns {string}
    */
   renderVariantImages(images) {
-    return images.map((img) => /* html */ `\
+    return images.map(this.constructImage.bind(this))
+      .filter((img) => Boolean(img))
+      .map((img) => /* html */ `\
 <picture>
   <source type="image/webp" srcset="${img.url}" alt="" media="(min-width: 600px)">
   <source type="image/webp" srcset="${img.url}">
   <source type="image/png" srcset="${img.url}" media="(min-width: 600px)">
   <img loading="lazy" alt="${img.label}" src="${img.url}">
-</picture>`).join('\n');
+</picture>`)
+      .join('\n');
   }
 
   /**
@@ -274,8 +309,8 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
    */
   renderVariantPrices(prices) {
     return /* html */ `\
-<div>Regular: ${prices.regular.amount} ${prices.regular.currency}${HTMLTemplate.priceRange(prices.regular.minimumAmount, prices.regular.maximumAmount)}</div>
-<div>Final: ${prices.final.amount} ${prices.final.currency}${HTMLTemplate.priceRange(prices.final.minimumAmount, prices.final.maximumAmount)}</div>`;
+<div>Regular: ${prices.regular?.amount} ${prices.regular?.currency}${HTMLTemplate.priceRange(prices.regular?.minimumAmount, prices.regular?.maximumAmount)}</div>
+<div>Final: ${prices.final?.amount} ${prices.final?.currency}${HTMLTemplate.priceRange(prices.final?.minimumAmount, prices.final?.maximumAmount)}</div>`;
   }
 
   /**
@@ -283,7 +318,7 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
    * @returns {string}
    */
   renderProductVariants() {
-    if (!this.variants) {
+    if (!this.variants || this.variants.length === 0) {
       return '';
     }
 
@@ -295,7 +330,7 @@ ${this.variants.map((v) => /* html */`\
     <div>${v.name}</div>
     <div>${v.description}</div>
     <div>${v.inStock ? 'inStock' : ''}</div>
-${HTMLTemplate.indent(this.renderVariantPrices(v.prices), 4)}
+${v.prices ? HTMLTemplate.indent(this.renderVariantPrices(v.prices), 4) : ''}
     <div>
 ${HTMLTemplate.indent(this.renderVariantImages(v.images), 6)}
     </div>
@@ -309,7 +344,7 @@ ${HTMLTemplate.indent(this.renderVariantImages(v.images), 6)}
    * @returns {string}
    */
   renderProductVariantsAttributes() {
-    if (!this.variants) {
+    if (!this.variants || this.variants.length === 0) {
       return '';
     }
 

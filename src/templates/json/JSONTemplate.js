@@ -138,14 +138,16 @@ export class JSONTemplate {
         image: v.images?.[0]?.url ?? image,
         availability: v.inStock ? 'InStock' : 'OutOfStock',
         price: finalPrice,
-        priceCurrency: variantPrices.final?.currency,
+        priceCurrency: variantPrices?.final?.currency,
         gtin: v.attributeMap.gtin,
         priceValidUntil: v.specialToDate,
         aggregateRating: this.renderRating(v),
       };
 
-      if (finalPrice < regularPrice) {
-        offer.priceSpecification = this.renderOffersPriceSpecification(v);
+      if (variantPrices) {
+        if (finalPrice < regularPrice) {
+          offer.priceSpecification = this.renderOffersPriceSpecification(v);
+        }
       }
 
       return pruneUndefined(offer);

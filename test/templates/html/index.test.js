@@ -65,12 +65,6 @@ describe('Render Product HTML', () => {
     assert.strictEqual(ogTitle.getAttribute('content'), expectedOGTitle, 'Open Graph title does not match expected value');
   });
 
-  it('should have the correct Open Graph image', () => {
-    const ogImage = document.querySelector('meta[property="og:image"]');
-    const expectedImage = product.images[0]?.url || '';
-    assert.strictEqual(ogImage.getAttribute('content'), expectedImage, 'Open Graph image does not match expected value');
-  });
-
   it('should have the correct Twitter description', () => {
     const twitterDescription = document.querySelector('meta[name="twitter:description"]');
     const expectedDescription = product.metaDescription;
@@ -233,6 +227,64 @@ describe('Render Product HTML', () => {
     });
   });
 
+  it('should not render product options table if there are none', () => {
+    product.options = [];
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const optionsTable = document.querySelector('.product-options');
+    assert.strictEqual(optionsTable, null, 'Options table should not be rendered');
+  });
+
+  it('should not render product variants table if there are none', () => {
+    variations = [];
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const variantsTable = document.querySelector('.product-variants');
+    assert.strictEqual(variantsTable, null, 'Variants table should not be rendered');
+  });
+
+  it('should not render variant attributes table if there are none', () => {
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, []).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+    const variantAttributesTable = document.querySelector('.variant-attributes');
+    assert.strictEqual(variantAttributesTable, null, 'Variant attributes table should not be rendered');
+  });
+
+  it('template should allow for missing prices', () => {
+    config.confMap = {
+      '/us/p/{{urlkey}}/{{sku}}': {},
+    };
+
+    product.prices = undefined;
+    variations.forEach((variant) => {
+      variant.prices = undefined;
+    });
+
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const metaPriceAmount = document.querySelector('meta[property="product:price.amount"]');
+    assert.strictEqual(metaPriceAmount.getAttribute('content'), 'undefined', 'meta[property="product:price:amount"] should be undefined');
+
+    const metaPriceCurrency = document.querySelector('meta[property="product:price.currency"]');
+    assert.strictEqual(metaPriceCurrency.getAttribute('content'), 'undefined', 'meta[property="product:price.currency"] should be undefined');
+
+    const jsonLdScript = document.querySelector('script[type="application/ld+json"]');
+    const jsonLd = JSON.parse(jsonLdScript.textContent);
+
+    jsonLd.offers.forEach((offer) => {
+      assert.strictEqual(offer.price, undefined, 'price should be undefined');
+      assert.strictEqual(offer.priceCurrency, undefined, 'priceCurrency should be undefined');
+      assert.strictEqual(offer.priceSpecification, undefined, 'priceSpecification should be undefined');
+    });
+  });
+
   it('should display the correct product name in <h1>', () => {
     const h1 = document.querySelector('h1');
     assert.strictEqual(h1.textContent, product.name, '<h1> content does not match product name');
@@ -390,5 +442,28 @@ describe('Render Product HTML', () => {
         assert.strictEqual(matchingDiv.children[3].textContent, String(attr.value), `Variant attribute ${attr.name} value does not match`);
       });
     });
+  });
+
+  it('should allow imageParam overrides from config', () => {
+    config.imageParams = { foo: 'bar', baz: 'qux' };
+
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const ogImage = document.querySelector('meta[name="image"]');
+    assert.strictEqual(ogImage.getAttribute('content'), 'https://www.example.com/media/catalog/product/t/s/test-sku.png?foo=bar&baz=qux');
+  });
+
+  it('should handle invalid image url with overrides', () => {
+    config.imageParams = { foo: 'bar' };
+    product.images[0].url = '/media/catalog/product/t/s/test-sku.png'; // only a path
+
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const ogImage = document.querySelector('meta[name="image"]');
+    assert.strictEqual(ogImage.getAttribute('content'), '/media/catalog/product/t/s/test-sku.png');
   });
 });

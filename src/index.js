@@ -11,9 +11,10 @@
  */
 
 import { errorResponse } from './utils/http.js';
-import { resolveConfig } from './config.js';
+import { resolveConfig } from './utils/config.js';
 import content from './content/handler.js';
 import catalog from './catalog/handler.js';
+import configHandler from './config/handler.js';
 
 /**
  * @type {Record<string, (ctx: Context, request: Request) => Promise<Response>>}
@@ -21,6 +22,7 @@ import catalog from './catalog/handler.js';
 const handlers = {
   content,
   catalog,
+  config: configHandler,
   // eslint-disable-next-line no-unused-vars
   graphql: async (ctx) => errorResponse(501, 'not implemented'),
 };
@@ -41,7 +43,7 @@ export function makeContext(pctx, req, env) {
   ctx.url = new URL(req.url);
   ctx.log = console;
   ctx.info = {
-    method: req.method,
+    method: req.method.toUpperCase(),
     headers: Object.fromEntries(
       [...req.headers.entries()]
         .map(([k, v]) => [k.toLowerCase(), v]),
