@@ -58,6 +58,7 @@ declare global {
 
     // KV namespaces
     CONFIGS: KVNamespace<string>;
+    KEYS: KVNamespace<string>;
 
     [key: string]: string | KVNamespace<string> | R2Bucket;
   }
@@ -74,6 +75,7 @@ declare global {
     attributes: {
       htmlTemplate?: HTMLTemplate;
       jsonTemplate?: JSONTemplate;
+      key?: string;
       [key: string]: any;
     }
   }
