@@ -26,7 +26,7 @@ export default async function configHandler(ctx) {
   await assertAuthorization(ctx);
 
   if (method === 'GET') {
-    return new Response(JSON.stringify(ctx.config.confMapStr), {
+    return new Response(ctx.config.confMapStr, {
       headers: {
         'Content-Type': 'application/json',
       },
