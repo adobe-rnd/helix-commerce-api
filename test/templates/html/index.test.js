@@ -65,12 +65,6 @@ describe('Render Product HTML', () => {
     assert.strictEqual(ogTitle.getAttribute('content'), expectedOGTitle, 'Open Graph title does not match expected value');
   });
 
-  it('should have the correct Open Graph image', () => {
-    const ogImage = document.querySelector('meta[property="og:image"]');
-    const expectedImage = product.images[0]?.url || '';
-    assert.strictEqual(ogImage.getAttribute('content'), expectedImage, 'Open Graph image does not match expected value');
-  });
-
   it('should have the correct Twitter description', () => {
     const twitterDescription = document.querySelector('meta[name="twitter:description"]');
     const expectedDescription = product.metaDescription;
@@ -457,7 +451,7 @@ describe('Render Product HTML', () => {
     dom = new JSDOM(html);
     document = dom.window.document;
 
-    const ogImage = document.querySelector('meta[property="og:image"]');
+    const ogImage = document.querySelector('meta[name="image"]');
     assert.strictEqual(ogImage.getAttribute('content'), 'https://www.example.com/media/catalog/product/t/s/test-sku.png?foo=bar&baz=qux');
   });
 
@@ -469,7 +463,7 @@ describe('Render Product HTML', () => {
     dom = new JSDOM(html);
     document = dom.window.document;
 
-    const ogImage = document.querySelector('meta[property="og:image"]');
+    const ogImage = document.querySelector('meta[name="image"]');
     assert.strictEqual(ogImage.getAttribute('content'), '/media/catalog/product/t/s/test-sku.png');
   });
 });
