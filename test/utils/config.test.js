@@ -13,9 +13,9 @@
 // @ts-nocheck
 
 import assert from 'node:assert';
-import { resolveConfig } from '../src/config.js';
-import { TEST_CONTEXT } from './fixtures/context.js';
-import { defaultTenantConfigs } from './fixtures/kv.js';
+import { resolveConfig } from '../../src/utils/config.js';
+import { TEST_CONTEXT } from '../fixtures/context.js';
+import { defaultTenantConfigs } from '../fixtures/kv.js';
 
 describe('config tests', () => {
   it('should extract path params', async () => {
@@ -52,6 +52,7 @@ describe('config tests', () => {
           apiKey: 'bad',
         },
       },
+      confMapStr: '{"base":{"apiKey":"bad"},"/us/p/{{urlkey}}/{{sku}}":{"pageType":"product","apiKey":"good"}}',
     });
   });
 
@@ -105,6 +106,7 @@ describe('config tests', () => {
           },
         },
       },
+      confMapStr: '{"base":{"apiKey":"bad","headers":{"foo":"1","baz":"1"}},"/us/p/{{urlkey}}/{{sku}}":{"pageType":"product","apiKey":"good","headers":{"foo":"2","bar":"2"}}}',
     });
   });
 
@@ -142,6 +144,7 @@ describe('config tests', () => {
           apiKey: 'bad',
         },
       },
+      confMapStr: '{"base":{"apiKey":"bad"},"/us/p/*/{{sku}}":{"pageType":"product","apiKey":"good"}}',
     });
   });
 
@@ -182,6 +185,7 @@ describe('config tests', () => {
           apiKey: 'bad1',
         },
       },
+      confMapStr: '{"base":{"apiKey":"bad1"},"/us/p/{{sku}}":{"pageType":"product","apiKey":"bad2"}}',
     });
   });
 
