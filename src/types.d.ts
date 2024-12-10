@@ -50,6 +50,7 @@ declare global {
     siteOverrides?: Record<string, Record<string, unknown>>;
     imageParams?: Record<string, string>;
 
+    liveSearchEnabled?: boolean;
     confMap: ConfigMap;
     confMapStr: string;
   }

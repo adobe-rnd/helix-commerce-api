@@ -13,7 +13,8 @@
 import { errorResponse, errorWithResponse, ffetch } from '../utils/http.js';
 import getProductQuery, { adapter as productAdapter } from './queries/cs-product.js';
 import getVariantsQuery, { adapter as variantsAdapter } from './queries/cs-variants.js';
-import getProductSKUQuery from './queries/core-product-sku.js';
+import getProductSKUQueryCore from './queries/core-product-sku.js';
+import getProductSKUQueryCS from './queries/cs-product-sku.js';
 import htmlTemplateFromContext from '../templates/html/index.js';
 
 /**
@@ -115,8 +116,55 @@ async function fetchVariants(sku, config) {
  * @param {string} urlkey
  * @param {Config} config
  */
-async function lookupProductSKU(urlkey, config) {
-  const query = getProductSKUQuery({ urlkey });
+async function lookupProductSKUCS(urlkey, config) {
+  const { catalogEndpoint = 'https://catalog-service.adobe.io/graphql' } = config;
+  const query = getProductSKUQueryCS({ urlkey });
+  console.debug(query);
+
+  const resp = await ffetch(`${catalogEndpoint}?query=${encodeURIComponent(query)}`, {
+    headers: {
+      origin: config.origin ?? 'https://api.adobecommerce.live',
+      'x-api-key': config.apiKey,
+      'Magento-Environment-Id': config.magentoEnvironmentId,
+      'Magento-Website-Code': config.magentoWebsiteCode,
+      'Magento-Store-View-Code': config.storeViewCode,
+      'Magento-Store-Code': config.storeCode,
+      ...config.headers,
+    },
+    // don't disable cache, since it's unlikely to change
+  });
+  if (!resp.ok) {
+    console.warn('failed to fetch product sku (cs): ', resp.status, resp.statusText);
+    try {
+      console.info('body: ', await resp.text());
+    } catch { /* noop */ }
+    throw errorWithResponse(resp.status, 'failed to fetch product sku (cs)');
+  }
+
+  try {
+    const json = await resp.json();
+    console.log('json: ', json.data.productSearch);
+    const [product] = json?.data?.productSearch.items ?? [];
+    console.log('products: ', product.product);
+    if (!product?.product?.sku) {
+      throw errorWithResponse(404, 'could not find product sku (cs)', json.errors);
+    }
+    return product.product.sku;
+  } catch (e) {
+    console.error('failed to parse product sku (cs): ', e);
+    if (e.response) {
+      throw errorWithResponse(e.response.status, e.message);
+    }
+    throw errorWithResponse(500, 'failed to parse product sku response (cs)');
+  }
+}
+
+/**
+ * @param {string} urlkey
+ * @param {Config} config
+ */
+async function lookupProductSKUCore(urlkey, config) {
+  const query = getProductSKUQueryCore({ urlkey });
   if (!config.coreEndpoint) {
     throw errorResponse(400, 'missing coreEndpoint');
   }
@@ -131,27 +179,38 @@ async function lookupProductSKU(urlkey, config) {
     // don't disable cache, since it's unlikely to change
   });
   if (!resp.ok) {
-    console.warn('failed to fetch product sku: ', resp.status, resp.statusText);
+    console.warn('failed to fetch product sku (core): ', resp.status, resp.statusText);
     try {
       console.info('body: ', await resp.text());
     } catch { /* noop */ }
-    throw errorWithResponse(resp.status, 'failed to fetch product sku');
+    throw errorWithResponse(resp.status, 'failed to fetch product sku (core)');
   }
 
   try {
     const json = await resp.json();
     const [product] = json?.data?.products?.items ?? [];
     if (!product?.sku) {
-      throw errorWithResponse(404, 'could not find product sku', json.errors);
+      throw errorWithResponse(404, 'could not find product sku (core)', json.errors);
     }
     return product.sku;
   } catch (e) {
-    console.error('failed to parse product sku: ', e);
+    console.error('failed to parse product sku (core): ', e);
     if (e.response) {
       throw errorWithResponse(e.response.status, e.message);
     }
-    throw errorWithResponse(500, 'failed to parse product sku response');
+    throw errorWithResponse(500, 'failed to parse product sku response (core)');
   }
+}
+
+/**
+ * @param {string} urlkey
+ * @param {Config} config
+ */
+function lookupProductSKU(urlkey, config) {
+  if (config.liveSearchEnabled) {
+    return lookupProductSKUCS(urlkey, config);
+  }
+  return lookupProductSKUCore(urlkey, config);
 }
 
 /**
