@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.8.1...v1.9.0) (2024-12-10)
+
+
+### Features
+
+* config auth ([#59](https://github.com/adobe-rnd/helix-commerce-api/issues/59)) ([fbf0000](https://github.com/adobe-rnd/helix-commerce-api/commit/fbf0000337201d9007c9fbdc7ab72772d61d28a9))
+
 ## [1.8.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.8.0...v1.8.1) (2024-12-10)
 
 
