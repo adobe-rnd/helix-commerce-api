@@ -37,4 +37,30 @@ export default class extends HTMLTemplate {
 ${HTMLTemplate.metaProperty('description', product.metaDescription)}
 ${HTMLTemplate.metaName('keywords', product.metaKeyword)}`;
   }
+
+  renderProductVariants() {
+    if (!this.variants || this.variants.length === 0) {
+      return '';
+    }
+    // only render the first variant in stock
+    const variant = this.variants.find((v) => v.inStock);
+    if (!variant) {
+      return '';
+    }
+
+    return /* html */ `\
+<div class="product-variants">
+  <div>
+    <div>${variant.sku}</div>
+    <div>${variant.name}</div>
+    <div>${variant.description}</div>
+    <div>${variant.inStock ? 'inStock' : ''}</div>
+${variant.prices ? HTMLTemplate.indent(this.renderVariantPrices(variant.prices), 4) : ''}
+    <div>
+${HTMLTemplate.indent(this.renderVariantImages(variant.images), 6)}
+    </div>
+    <div>${(variant.selections ?? []).join(', ')}</div>
+  </div>
+</div>`;
+  }
 }
