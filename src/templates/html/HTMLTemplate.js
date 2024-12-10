@@ -148,7 +148,7 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices?.final?.cur
   renderJSONLD() {
     const jsonTemplate = jsonTemplateFromContext(this.ctx, this.product, this.variants);
     return /* html */ `\
-<script type="application/ld+json">
+<script type="application/ld+json" data-name="product">
   ${jsonTemplate.render()}
 </script>`;
   }
@@ -225,6 +225,7 @@ ${attributes.map((attr) => /* html */`\
   <div>${item.value ?? ''}</div>
   <div>${item.selected ? 'selected' : ''}</div>
   <div>${item.inStock ? 'inStock' : ''}</div>
+  <div>${item.type}</div>
 </div>`).join('\n');
   }
 

@@ -57,6 +57,7 @@ export const adapter = (config, productData) => {
         label: value.title,
         inStock: value.inStock,
         type: value.type,
+        value: value.value,
         product: value.product
           ? {
             sku: value.product.sku,
