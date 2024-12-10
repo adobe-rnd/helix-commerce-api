@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorWithResponse } from './utils/http.js';
+import { errorWithResponse } from './http.js';
 
 /**
  * This function finds ordered matches between a list of patterns and a given path.
@@ -65,12 +65,30 @@ export async function resolveConfig(ctx, overrides = {}) {
    * @type {ConfigMap}
    */
   const confMap = await ctx.env.CONFIGS.get(siteKey, 'json');
+  const confMapStr = JSON.stringify(confMap);
   if (!confMap) {
     return null;
   }
   if (typeof confMap !== 'object') {
     ctx.log.warn('invalid config for ', siteKey);
     return null;
+  }
+
+  // if route is `config` don't resolve further
+  if (route === 'config') {
+    return {
+      ...confMap.base,
+      headers: confMap.base?.headers ?? {},
+      params: {},
+      confMap,
+      confMapStr,
+      org,
+      site,
+      route,
+      siteKey,
+      matchedPatterns: [],
+      ...overrides,
+    };
   }
 
   // order paths by preference
@@ -101,6 +119,7 @@ export async function resolveConfig(ctx, overrides = {}) {
       params: {},
     }),
     confMap,
+    confMapStr,
     org,
     site,
     route,
