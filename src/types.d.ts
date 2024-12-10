@@ -50,6 +50,7 @@ declare global {
     imageParams?: Record<string, string>;
 
     confMap: ConfigMap;
+    confMapStr: string;
   }
 
   export interface Env {
