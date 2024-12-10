@@ -4,9 +4,102 @@ import { JSONTemplate } from "./templates/json/JSONTemplate.js";
 
 declare global {
   /**
+   * The config for a single path pattern as stored in KV
+   */
+  export interface RawConfigEntry {
+    /**
+     * API key for Core and Catalog
+     */
+    apiKey?: string;
+
+    /**
+     * Magento env ID
+     */
+    magentoEnvironmentId?: string;
+
+    /**
+     * Magento website code
+     */
+    magentoWebsiteCode?: string;
+
+    /**
+     * Store code
+     */
+    storeCode?: string;
+
+    /**
+     * Core Commerce endpoint
+     */
+    coreEndpoint?: string;
+
+    /**
+     * Catalog Service endpoint, defaults to non-sandbox
+     */
+    catalogEndpoint?: string;
+
+    /**
+     * Store view code
+     */
+    storeViewCode?: string;
+
+    /**
+     * Sitekey to use for overrides filename
+     */
+    siteOverridesKey?: string;
+
+    /**
+     * Host to use for absolute urls
+     */
+    host?: string;
+
+    /**
+     * API key for Helix, used for preview/publish during Helix Catalog API PUTs
+     */
+    helixApiKey?: string;
+
+    /**
+     * Headers to send with requests to Core and Catalog
+     */
+    headers?: Record<string, string>;
+
+    /**
+     * Image roles to filter by, only include images with these roles
+     */
+    imageRoles?: string[];
+
+    /**
+     * Attributes to override using a different attribute name
+     */
+    attributeOverrides?: AttributeOverrides;
+
+    /**
+     * Path pattern to use for offer variant URLs in JSON-LD
+     */
+    offerVariantURLTemplate?: string;
+
+    /**
+     * Additional parameters to add to image URLs as query params.
+     */
+    imageParams?: Record<string, string>;
+
+    // required for non-base entries
+    pageType: 'product' | string;
+  }
+
+  /**
+   * The config as stored in KV
+   * Each key, other than `base`, is a path pattern
+   * Path patterns use `{{arg}}` to denote `arg` as a path parameter
+   */
+  export type RawConfig = {
+    base: RawConfigEntry;
+    [key: string]: RawConfigEntry;
+  }
+
+  /**
    * { pathPattern => Config }
    */
-  export type ConfigMap = Record<string, Config>;
+  export type ConfigMap = Record<string, RawConfig>;
 
   export interface AttributeOverrides {
     variant: {

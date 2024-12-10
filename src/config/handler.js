@@ -12,12 +12,15 @@
 
 import { errorResponse } from '../utils/http.js';
 import { assertAuthorization } from '../utils/auth.js';
+import { validate } from '../utils/validation.js';
+import ConfigSchema from '../schemas/Config.js';
 
 /**
  * @param {Context} ctx
+ * @param {Request} req
  * @returns {Promise<Response>}
  */
-export default async function configHandler(ctx) {
+export default async function configHandler(ctx, req) {
   const { method } = ctx.info;
   if (!['GET', 'POST'].includes(method)) {
     return errorResponse(405, 'method not allowed');
@@ -33,6 +36,24 @@ export default async function configHandler(ctx) {
     });
   }
 
-  // TODO: validate config body, set config in kv
-  return errorResponse(501, 'not implemented');
+  let json;
+  try {
+    json = await req.json();
+  } catch {
+    return errorResponse(400, 'invalid JSON');
+  }
+
+  const errors = validate(json, ConfigSchema);
+  if (errors && errors.length) {
+    return errorResponse(400, 'invalid body', { errors });
+  }
+
+  // valid, persist it
+  await ctx.env.CONFIGS.put(ctx.config.siteKey, JSON.stringify(json));
+  return new Response(JSON.stringify(json), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 }
