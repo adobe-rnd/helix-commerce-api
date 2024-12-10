@@ -93,8 +93,6 @@ ${HTMLTemplate.metaName('keywords', product.metaKeyword)}`;
     const { product, image } = this;
     return /* html */`\
 ${HTMLTemplate.metaProperty('og:title', product.metaTitle || product.name)}
-${HTMLTemplate.metaProperty('og:image', image?.url)}
-${HTMLTemplate.metaProperty('og:image:secure_url', image?.url)}
 ${HTMLTemplate.metaProperty('og:type', 'product')}
 ${HTMLTemplate.metaName('image', image?.url)}`; // html2md will treat this as the og:image
   }
@@ -104,11 +102,10 @@ ${HTMLTemplate.metaName('image', image?.url)}`; // html2md will treat this as th
    * @returns {string}
    */
   renderTwitterMetaTags() {
-    const { product, image } = this;
+    const { product } = this;
     return /* html */ `\
 ${HTMLTemplate.metaName('twitter:card', 'summary_large_image')}
 ${HTMLTemplate.metaName('twitter:title', product.name)}
-${HTMLTemplate.metaName('twitter:image', image?.url)}
 ${HTMLTemplate.metaName('twitter:description', product.metaDescription)}
 ${HTMLTemplate.metaName('twitter:label1', 'Price')}
 ${HTMLTemplate.metaName('twitter:data1', product.prices?.final?.amount)}
