@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.9.0...v1.10.0) (2024-12-10)
+
+
+### Features
+
+* config validation and post ([#60](https://github.com/adobe-rnd/helix-commerce-api/issues/60)) ([9cd6cfc](https://github.com/adobe-rnd/helix-commerce-api/commit/9cd6cfc6e55e2de48dd12d3b6a1bf6d123d6d7f7))
+
 # [1.9.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.8.1...v1.9.0) (2024-12-10)
 
 
