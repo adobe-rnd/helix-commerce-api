@@ -373,9 +373,10 @@ ${this.variants?.map((v) => /* html */`\
    */
   renderProductLinks() {
     const { links } = this.product;
-    if (!links) {
+    if (!links || !links.length) {
       return '';
     }
+
     return /* html */ `\
 <div class="product-links">
 ${links.map((link) => {
