@@ -318,11 +318,12 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
    * @returns {string}
    */
   renderLinkPrices(prices) {
-    return /* html */ `\
+    return /* html */ `
 <ul>
   <li>Regular: ${prices.regular?.amount} ${prices.regular?.currency}${HTMLTemplate.priceRange(prices.regular?.minimumAmount, prices.regular?.maximumAmount)}</li>
   <li>Final: ${prices.final?.amount} ${prices.final?.currency}${HTMLTemplate.priceRange(prices.final?.minimumAmount, prices.final?.maximumAmount)}</li>
-</ul>`;
+</ul>
+`;
   }
 
   /**
@@ -398,7 +399,9 @@ ${links.map((link) => {
     <div>${link.sku}</div>
     <div><a href="${url}">${url}</a></div>
     <div>${(link.types ?? []).join(', ')}</div>
-    <div>${this.renderLinkPrices(link.prices)}</div>
+    <div>
+      ${HTMLTemplate.indent(this.renderLinkPrices(link.prices), 6)}
+    </div>
   </div>`;
   }).join('\n')
 }`;
