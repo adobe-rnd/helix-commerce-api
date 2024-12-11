@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.0...v1.11.1) (2024-12-11)
+
+
+### Bug Fixes
+
+* force deploy ([ed845bd](https://github.com/adobe-rnd/helix-commerce-api/commit/ed845bda0badb01e362fc63263637b0ae3749143))
+
 # [1.11.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.10.0...v1.11.0) (2024-12-11)
 
 
