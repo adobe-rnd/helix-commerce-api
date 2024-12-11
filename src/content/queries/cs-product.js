@@ -44,7 +44,7 @@ export const adapter = (config, productData) => {
     links: (productData.links ?? []).map((l) => ({
       sku: l.product.sku,
       urlKey: l.product.urlKey,
-      types: l.types,
+      types: l.linkTypes,
     })),
     images: forceImagesHTTPS(productData.images) ?? [],
     attributes: productData.attributes ?? [],
