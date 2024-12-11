@@ -98,8 +98,9 @@ declare global {
 
   /**
    * { pathPattern => Config }
+   * alias
    */
-  export type ConfigMap = Record<string, RawConfig>;
+  export type ConfigMap = RawConfig;
 
   export interface AttributeOverrides {
     variant: {
@@ -134,6 +135,7 @@ declare global {
     sku?: string;
     matchedPatterns: string[];
     imageRoles?: string[];
+    linkTypes?: string[];
     host: string;
     params: Record<string, string>;
     headers: Record<string, string>;
@@ -142,6 +144,7 @@ declare global {
     siteOverrides?: Record<string, Record<string, unknown>>;
     imageParams?: Record<string, string>;
 
+    liveSearchEnabled?: boolean;
     confMap: ConfigMap;
     confMapStr: string;
   }
@@ -193,7 +196,8 @@ declare global {
     externalId?: string;
     variants?: Variant[]; // variants exist on products in helix commerce but not on magento
     specialToDate?: string;
-    rating?: Rating
+    rating?: Rating;
+    links?: Link[];
 
     // not handled currently:
     externalParentId?: string;
@@ -234,6 +238,13 @@ declare global {
     best?: number | string;
     // range of ratings, lowest
     worst?: number | string;
+  }
+
+  interface Link {
+    types: string[];
+    sku: string;
+    urlKey: string;
+    prices: Prices;
   }
 
   interface Image {

@@ -1,3 +1,17 @@
+# [1.11.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.10.0...v1.11.0) (2024-12-11)
+
+
+### Features
+
+* product links block ([#53](https://github.com/adobe-rnd/helix-commerce-api/issues/53)) ([6544924](https://github.com/adobe-rnd/helix-commerce-api/commit/65449243b95dd1b0e7a7e3111e9114a5a4bcfe19))
+
+# [1.10.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.9.0...v1.10.0) (2024-12-10)
+
+
+### Features
+
+* config validation and post ([#60](https://github.com/adobe-rnd/helix-commerce-api/issues/60)) ([9cd6cfc](https://github.com/adobe-rnd/helix-commerce-api/commit/9cd6cfc6e55e2de48dd12d3b6a1bf6d123d6d7f7))
+
 # [1.9.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.8.1...v1.9.0) (2024-12-10)
 
 

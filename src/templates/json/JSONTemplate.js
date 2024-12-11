@@ -37,13 +37,12 @@ export class JSONTemplate {
 
   /**
    * @param {Variant} [variant]
-   * @returns
+   * @param {Pick<Product, 'sku'|'urlKey'>} [pproduct]
+   * @returns {string}
    */
-  constructProductURL(variant) {
-    const {
-      product,
-      ctx: { config },
-    } = this;
+  constructProductURL(variant, pproduct) {
+    const product = pproduct || this.product;
+    const { ctx: { config } } = this;
     const { host, matchedPatterns, confMap } = config;
     const matchedPathConfig = confMap?.[matchedPatterns[0]];
 
@@ -52,20 +51,19 @@ export class JSONTemplate {
       .replace('{{sku}}', encodeURIComponent(product.sku.toLowerCase()));
 
     const productUrl = `${host}${productPath}`;
-
-    if (variant) {
-      const offerVariantURLTemplate = matchedPathConfig?.offerVariantURLTemplate;
-      if (!offerVariantURLTemplate) {
-        return `${productUrl}?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
-      }
-
-      const variantPath = offerVariantURLTemplate
-        .replace('{{urlkey}}', product.urlKey)
-        .replace('{{sku}}', encodeURIComponent(variant.sku));
-      return `${host}${variantPath}`;
+    if (!variant) {
+      return productUrl;
     }
 
-    return productUrl;
+    const offerVariantURLTemplate = matchedPathConfig?.offerVariantURLTemplate;
+    if (!offerVariantURLTemplate) {
+      return `${productUrl}?optionsUIDs=${encodeURIComponent(variant.selections.join(','))}`;
+    }
+
+    const variantPath = offerVariantURLTemplate
+      .replace('{{urlkey}}', product.urlKey)
+      .replace('{{sku}}', encodeURIComponent(variant.sku));
+    return `${host}${variantPath}`;
   }
 
   /**
