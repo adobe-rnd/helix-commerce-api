@@ -285,6 +285,7 @@ declare global {
     inStock: boolean;
     value: string;
     selected: boolean;
+    type: string;
     product?: {
       name: string;
       sku: string;
