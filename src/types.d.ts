@@ -98,8 +98,9 @@ declare global {
 
   /**
    * { pathPattern => Config }
+   * alias
    */
-  export type ConfigMap = Record<string, RawConfig>;
+  export type ConfigMap = RawConfig;
 
   export interface AttributeOverrides {
     variant: {
@@ -243,6 +244,7 @@ declare global {
     types: string[];
     sku: string;
     urlKey: string;
+    prices: Prices;
   }
 
   interface Image {

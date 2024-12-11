@@ -13,20 +13,26 @@
 import { forceImagesHTTPS } from '../../utils/http.js';
 import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
 
-/**
- * @param {Config} config
- * @param {any} productData
- * @returns {Product}
- */
-export const adapter = (config, productData) => {
-  let minPrice = productData.priceRange?.minimum ?? productData.price;
-  let maxPrice = productData.priceRange?.maximum ?? productData.price;
+function extractMinMaxPrice(data) {
+  let minPrice = data.priceRange?.minimum ?? data.price;
+  let maxPrice = data.priceRange?.maximum ?? data.price;
 
   if (minPrice == null) {
     minPrice = maxPrice;
   } else if (maxPrice == null) {
     maxPrice = minPrice;
   }
+  return { minPrice, maxPrice };
+}
+
+/**
+ * @param {Config} config
+ * @param {any} productData
+ * @returns {Product}
+ */
+export const adapter = (config, productData) => {
+  const { minPrice, maxPrice } = extractMinMaxPrice(productData);
+
   /** @type {Product} */
   const product = {
     sku: productData.sku,
@@ -41,11 +47,28 @@ export const adapter = (config, productData) => {
     addToCartAllowed: productData.addToCartAllowed,
     inStock: productData.inStock,
     externalId: productData.externalId,
-    links: (productData.links ?? []).map((l) => ({
-      sku: l.product.sku,
-      urlKey: l.product.urlKey,
-      types: l.linkTypes,
-    })),
+    links: (productData.links ?? []).map((l) => {
+      const { minPrice: lMinPrice, maxPrice: lMaxPrice } = extractMinMaxPrice(l.product);
+      return {
+        sku: l.product.sku,
+        urlKey: l.product.urlKey,
+        types: l.linkTypes,
+        prices: {
+          regular: {
+            amount: lMinPrice.regular.amount.value,
+            currency: lMinPrice.regular.amount.currency,
+            maximumAmount: lMaxPrice.regular.amount.value,
+            minimumAmount: lMinPrice.regular.amount.value,
+          },
+          final: {
+            amount: lMinPrice.final.amount.value,
+            currency: lMinPrice.final.amount.currency,
+            maximumAmount: lMaxPrice.final.amount.value,
+            minimumAmount: lMinPrice.final.amount.value,
+          },
+        },
+      };
+    }),
     images: forceImagesHTTPS(productData.images) ?? [],
     attributes: productData.attributes ?? [],
     attributeMap: Object.fromEntries((productData.attributes ?? [])
@@ -149,6 +172,57 @@ export default ({ sku, imageRoles = [], linkTypes = [] }) => gql`{
         product {
           sku
           urlKey
+          ... on SimpleProductView {
+            price {
+              final {
+                amount {
+                  value
+                  currency
+                }
+              }
+              regular {
+                amount {
+                  value
+                  currency
+                }
+              }
+              roles
+            }
+          }
+          ... on ComplexProductView {
+            priceRange {
+              maximum {
+                final {
+                  amount {
+                    value
+                    currency
+                  }
+                }
+                regular {
+                  amount {
+                    value
+                    currency
+                  }
+                }
+                roles
+              }
+              minimum {
+                final {
+                  amount {
+                    value
+                    currency
+                  }
+                }
+                regular {
+                  amount {
+                    value
+                    currency
+                  }
+                }
+                roles
+              }
+            }
+          }
         }
         linkTypes
       }

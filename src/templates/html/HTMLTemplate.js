@@ -314,6 +314,18 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
   }
 
   /**
+   * @param {Pick<Prices, 'regular' | 'final'>} prices
+   * @returns {string}
+   */
+  renderLinkPrices(prices) {
+    return /* html */ `\
+<ul>
+  <li>Regular: ${prices.regular?.amount} ${prices.regular?.currency}${HTMLTemplate.priceRange(prices.regular?.minimumAmount, prices.regular?.maximumAmount)}</li>
+  <li>Final: ${prices.final?.amount} ${prices.final?.currency}${HTMLTemplate.priceRange(prices.final?.minimumAmount, prices.final?.maximumAmount)}</li>
+</ul>`;
+  }
+
+  /**
    * Create the product variants
    * @returns {string}
    */
@@ -386,6 +398,7 @@ ${links.map((link) => {
     <div>${link.sku}</div>
     <div><a href="${url}">${url}</a></div>
     <div>${(link.types ?? []).join(', ')}</div>
+    <div>${this.renderLinkPrices(link.prices)}</div>
   </div>`;
   }).join('\n')
 }`;
