@@ -59,6 +59,9 @@ export class HTMLTemplate {
   /** @type {Image} */
   image = undefined;
 
+  /** @type {import('../json/JSONTemplate.js').JSONTemplate} */
+  jsonTemplate = undefined;
+
   /**
    * @param {Context} ctx
    * @param {Product} product
@@ -68,6 +71,7 @@ export class HTMLTemplate {
     this.ctx = ctx;
     this.product = product;
     this.variants = variants;
+    this.jsonTemplate = jsonTemplateFromContext(this.ctx, this.product, this.variants);
     this.image = this.constructImage(findProductImage(product, variants));
   }
 
@@ -146,10 +150,9 @@ ${HTMLTemplate.metaProperty('product:price.currency', product.prices?.final?.cur
    * @returns {string}
    */
   renderJSONLD() {
-    const jsonTemplate = jsonTemplateFromContext(this.ctx, this.product, this.variants);
     return /* html */ `\
 <script type="application/ld+json" data-name="product">
-  ${jsonTemplate.render()}
+  ${this.jsonTemplate.render()}
 </script>`;
   }
 
@@ -312,6 +315,19 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
   }
 
   /**
+   * @param {Pick<Prices, 'regular' | 'final'>} prices
+   * @returns {string}
+   */
+  renderLinkPrices(prices) {
+    return /* html */ `
+<ul>
+  <li>Regular: ${prices.regular?.amount} ${prices.regular?.currency}${HTMLTemplate.priceRange(prices.regular?.minimumAmount, prices.regular?.maximumAmount)}</li>
+  <li>Final: ${prices.final?.amount} ${prices.final?.currency}${HTMLTemplate.priceRange(prices.final?.minimumAmount, prices.final?.maximumAmount)}</li>
+</ul>
+`;
+  }
+
+  /**
    * Create the product variants
    * @returns {string}
    */
@@ -369,6 +385,32 @@ ${this.variants?.map((v) => /* html */`\
   /**
    * @returns {string}
    */
+  renderProductLinks() {
+    const { links } = this.product;
+    if (!links || !links.length) {
+      return '';
+    }
+
+    return /* html */ `\
+<div class="product-links">
+${links.map((link) => {
+    const url = this.jsonTemplate.constructProductURL(undefined, link);
+    return /* html */`\
+  <div>
+    <div>${link.sku}</div>
+    <div><a href="${url}">${url}</a></div>
+    <div>${(link.types ?? []).join(', ')}</div>
+    <div>
+      ${HTMLTemplate.indent(this.renderLinkPrices(link.prices), 6)}
+    </div>
+  </div>`;
+  }).join('\n')
+}`;
+  }
+
+  /**
+   * @returns {string}
+   */
   render() {
     const {
       name,
@@ -393,6 +435,7 @@ ${HTMLTemplate.indent(this.renderProductAttributes(attributes), 8)}
 ${HTMLTemplate.indent(this.renderProductOptions(options), 8)}
 ${HTMLTemplate.indent(this.renderProductVariants(), 8)}
 ${HTMLTemplate.indent(this.renderProductVariantsAttributes(), 8)}
+${HTMLTemplate.indent(this.renderProductLinks(), 8)}
       </div>
     </main>
     <footer></footer>
