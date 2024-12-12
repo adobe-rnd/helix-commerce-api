@@ -126,11 +126,21 @@ export class JSONTemplate {
     const configurableProduct = this.variants?.length > 0;
     const offers = configurableProduct ? this.variants : [this.product];
     return offers.map((v) => {
-      const { prices: variantPrices } = v;
       const offerUrl = this.constructProductURL(configurableProduct ? v : undefined);
       const mpn = this.constructMPN(configurableProduct ? v : undefined);
-      const finalPrice = variantPrices?.final?.amount;
-      const regularPrice = variantPrices?.regular?.amount;
+
+      let finalPrice;
+      let regularPrice;
+      let currency;
+      if (v.price) {
+        finalPrice = v.price.final.amount.value;
+        regularPrice = v.price.regular.amount.value;
+        currency = v.price.final.amount.currency;
+      } else if (v.priceRange) {
+        finalPrice = v.priceRange.minimum.final.amount.value;
+        regularPrice = v.priceRange.minimum.regular.amount.value;
+        currency = v.priceRange.minimum.final.amount.currency;
+      }
 
       const offer = {
         '@type': 'Offer',
@@ -140,16 +150,14 @@ export class JSONTemplate {
         image: v.images?.[0]?.url ?? image,
         availability: v.inStock ? 'InStock' : 'OutOfStock',
         price: finalPrice,
-        priceCurrency: variantPrices?.final?.currency,
+        priceCurrency: currency,
         gtin: v.attributeMap.gtin,
         priceValidUntil: v.specialToDate,
         aggregateRating: this.renderRating(v),
       };
 
-      if (variantPrices) {
-        if (finalPrice < regularPrice) {
-          offer.priceSpecification = this.renderOffersPriceSpecification(v);
-        }
+      if (finalPrice < regularPrice) {
+        offer.priceSpecification = this.renderOffersPriceSpecification(regularPrice, currency);
       }
 
       return pruneUndefined(offer);
@@ -157,14 +165,14 @@ export class JSONTemplate {
   }
 
   /**
-   * @param {Variant} variant
+   * @param {number} regularPrice
+   * @param {string} currency
    */
-  renderOffersPriceSpecification(variant) {
-    const { prices: { regular: { amount, currency } } } = variant;
+  renderOffersPriceSpecification(regularPrice, currency) {
     return {
       '@type': 'UnitPriceSpecification',
       priceType: 'https://schema.org/ListPrice',
-      price: amount,
+      price: regularPrice,
       priceCurrency: currency,
     };
   }

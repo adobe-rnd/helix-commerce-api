@@ -19,14 +19,6 @@ import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
  * @returns {Product}
  */
 export const adapter = (config, productData) => {
-  let minPrice = productData.priceRange?.minimum ?? productData.price;
-  let maxPrice = productData.priceRange?.maximum ?? productData.price;
-
-  if (minPrice == null) {
-    minPrice = maxPrice;
-  } else if (maxPrice == null) {
-    maxPrice = minPrice;
-  }
   /** @type {Product} */
   const product = {
     sku: productData.sku,
@@ -45,7 +37,12 @@ export const adapter = (config, productData) => {
     attributes: productData.attributes ?? [],
     attributeMap: Object.fromEntries((productData.attributes ?? [])
       .map(({ name, value }) => [name, value])),
-    options: (productData.options ?? []).map((option) => ({
+    // eslint-disable-next-line no-underscore-dangle
+    type: productData.__typename === 'SimpleProductView' ? 'simple' : 'complex',
+  };
+
+  if (productData.options) {
+    product.options = productData.options.map((option) => ({
       id: option.id,
       label: option.title,
       // eslint-disable-next-line no-underscore-dangle
@@ -62,7 +59,7 @@ export const adapter = (config, productData) => {
           ? {
             sku: value.product.sku,
             name: value.product.name,
-            prices: value.product.price ? {
+            price: value.product.price ? {
               regular: value.product.price.regular,
               final: value.product.price.final,
               visible: value.product.price.roles?.includes('visible'),
@@ -72,25 +69,31 @@ export const adapter = (config, productData) => {
         quantity: value.quantity,
         isDefault: value.isDefault,
       })),
-    })),
-    prices: (minPrice && maxPrice) ? {
-      regular: {
-        // TODO: determine whether to use min or max
-        amount: minPrice.regular.amount.value,
-        currency: minPrice.regular.amount.currency,
-        maximumAmount: maxPrice.regular.amount.value,
-        minimumAmount: minPrice.regular.amount.value,
+    }));
+  }
+
+  if (productData.price) {
+    product.price = {
+      regular: productData.price.regular,
+      final: productData.price.final,
+      visible: productData.price.roles?.includes('visible'),
+    };
+  }
+
+  if (productData.priceRange) {
+    product.priceRange = {
+      minimum: {
+        regular: productData.priceRange.minimum.regular,
+        final: productData.priceRange.minimum.final,
+        visible: productData.priceRange.minimum.roles?.includes('visible'),
       },
-      final: {
-        // TODO: determine whether to use min or max
-        amount: minPrice.final.amount.value,
-        currency: minPrice.final.amount.currency,
-        maximumAmount: maxPrice.final.amount.value,
-        minimumAmount: minPrice.final.amount.value,
+      maximum: {
+        regular: productData.priceRange.maximum.regular,
+        final: productData.priceRange.maximum.final,
+        visible: productData.priceRange.maximum.roles?.includes('visible'),
       },
-      visible: minPrice.roles?.includes('visible'),
-    } : null,
-  };
+    };
+  }
 
   if (config.attributeOverrides?.product) {
     Object.entries(config.attributeOverrides.product).forEach(([key, value]) => {
@@ -122,6 +125,7 @@ export default ({ sku, imageRoles = [] }) => gql`{
     products(
       skus: ["${sku}"]
     ) {
+      __typename
       id
       sku
       name

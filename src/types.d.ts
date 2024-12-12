@@ -185,15 +185,20 @@ declare global {
     metaTitle?: string;
     description?: string;
     images: Image[];
-    prices: Prices;
     attributes: Attribute[];
-    options: ProductOption[];
+    options?: ProductOption[];
     url?: string;
     urlKey?: string;
     externalId?: string;
     variants?: Variant[]; // variants exist on products in helix commerce but not on magento
     specialToDate?: string;
-    rating?: Rating
+    rating?: Rating;
+    price?: Price;
+    priceRange?: {
+      minimum: Price;
+      maximum: Price;
+    }
+    type: 'simple' | 'complex';
 
     // not handled currently:
     externalParentId?: string;
@@ -211,13 +216,18 @@ declare global {
     url: string;
     inStock: boolean;
     images: Image[];
-    prices: Pick<Prices, 'regular' | 'final'>;
     selections: string[];
     attributes: Attribute[];
     externalId: string;
     specialToDate?: string;
     gtin?: string;
     rating?: Rating;
+    price?: Price;
+    priceRange?: {
+      minimum: Price;
+      maximum: Price;
+    }
+    type: 'simple' | 'complex';
 
     // internal use:
     attributeMap: Record<string, string>;
@@ -242,16 +252,18 @@ declare global {
   }
 
   interface Price {
-    amount?: number;
-    currency?: string;
-    maximumAmount?: number;
-    minimumAmount?: number;
-    variant?: 'default' | 'strikethrough';
-  }
-
-  interface Prices {
-    regular: Price;
-    final: Price;
+    regular: {
+      amount: {
+        value: number;
+        currency: string;
+      }
+    },
+    final: {
+      amount: {
+        value: number;
+        currency: string;
+      }
+    },
     visible: boolean;
   }
 
@@ -278,7 +290,7 @@ declare global {
     product?: {
       name: string;
       sku: string;
-      prices?: Prices;
+      price?: Price;
     };
   }
 

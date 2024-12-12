@@ -38,7 +38,7 @@ export class HTMLTemplate {
    * @param {number|undefined} max
    * @returns {string}
    */
-  static priceRange = (min, max) => (min !== max ? ` (${min} - ${max})` : '');
+  static priceRange = (min, max) => (min !== max ? `${min} - ${max}` : `${min}`);
 
   /**
    * @param {string} str
@@ -108,7 +108,7 @@ ${HTMLTemplate.metaName('twitter:card', 'summary_large_image')}
 ${HTMLTemplate.metaName('twitter:title', product.name)}
 ${HTMLTemplate.metaName('twitter:description', product.metaDescription)}
 ${HTMLTemplate.metaName('twitter:label1', 'Price')}
-${HTMLTemplate.metaName('twitter:data1', product.prices?.final?.amount)}
+${HTMLTemplate.metaName('twitter:data1', product.price?.final?.amount?.value ?? product.priceRange?.minimum?.final?.amount?.value)}
 ${HTMLTemplate.metaName('twitter:label2', 'Availability')}
 ${HTMLTemplate.metaName('twitter:data2', product.inStock ? 'In stock' : 'Out of stock')}`;
   }
@@ -126,8 +126,9 @@ ${HTMLTemplate.metaName('externalId', product.externalId)}
 ${HTMLTemplate.metaName('addToCartAllowed', product.addToCartAllowed)}
 ${HTMLTemplate.metaName('inStock', product.inStock ? 'true' : 'false')}
 ${HTMLTemplate.metaProperty('product:availability', product.inStock ? 'In stock' : 'Out of stock')}
-${HTMLTemplate.metaProperty('product:price.amount', product.prices?.final?.amount)}
-${HTMLTemplate.metaProperty('product:price.currency', product.prices?.final?.currency)}`;
+${HTMLTemplate.metaProperty('product:price.amount', product.price?.final?.amount?.value ?? product.priceRange?.minimum?.final?.amount?.value)}
+${HTMLTemplate.metaProperty('product:price.currency', product.price?.final?.amount?.currency ?? product.priceRange?.minimum?.final?.amount?.currency)}
+${HTMLTemplate.metaProperty('product:type', product.type)}`;
   }
 
   /**
@@ -167,6 +168,38 @@ ${HTMLTemplate.indent(this.renderCommerceMetaTags(), 2)}
 ${HTMLTemplate.indent(this.renderHelixDependencies(), 2)}
 ${HTMLTemplate.indent(this.renderJSONLD(), 2)}
 </head>`;
+  }
+
+  /**
+   * Render product price block
+   * @param {Product} product
+   * @returns {string}
+   */
+  renderProductPrices(product) {
+    const { price, priceRange } = product;
+    const hasFinal = price
+      ? price.final?.amount?.value < price.regular?.amount?.value
+      : priceRange?.minimum?.final.amount.value < priceRange?.minimum?.regular.amount.value;
+    const isRange = !!priceRange
+      && priceRange.minimum?.final?.amount?.value !== priceRange.maximum?.final?.amount?.value;
+
+    const regularPrice = price ? price.regular?.amount : priceRange.minimum?.regular?.amount;
+    const finalPrice = price ? price.final?.amount : priceRange.minimum?.final?.amount;
+
+    return /* html */ `\
+<div class="product-prices">
+  <div>
+    <div>Regular</div>
+    <div>${regularPrice.value} ${regularPrice.currency}</div>
+    ${isRange ? `<div>${priceRange.maximum?.regular?.amount?.value} ${priceRange.maximum?.regular?.amount?.currency}</div>` : ''}
+  </div>
+  ${hasFinal ? /* html */ `\
+<div>
+  <div>${finalPrice.value} ${finalPrice.currency}</div>
+  <div>${price ? price.final?.amount?.value : priceRange.minimum?.final?.amount?.value}</div>
+  ${isRange ? `<div>${priceRange.maximum?.final?.amount?.value} ${priceRange.maximum?.final?.amount?.currency}</div>` : ''}
+</div>` : ''}
+</div>`;
   }
 
   /**
@@ -235,7 +268,7 @@ ${attributes.map((attr) => /* html */`\
    * @returns {string}
    */
   renderProductOptions(options) {
-    return options.length > 0 ? /* html */ `\
+    return options?.length > 0 ? /* html */ `\
 <div class="product-options">
 ${options.map((opt) => /* html */ `\
   <div>
@@ -302,13 +335,23 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
 
   /**
    * Create the variant prices
-   * @param {Pick<Prices, 'regular' | 'final'>} prices
+   * @param {Variant} variant
    * @returns {string}
    */
-  renderVariantPrices(prices) {
-    return /* html */ `\
-<div>Regular: ${prices.regular?.amount} ${prices.regular?.currency}${HTMLTemplate.priceRange(prices.regular?.minimumAmount, prices.regular?.maximumAmount)}</div>
-<div>Final: ${prices.final?.amount} ${prices.final?.currency}${HTMLTemplate.priceRange(prices.final?.minimumAmount, prices.final?.maximumAmount)}</div>`;
+  renderVariantPrices(variant) {
+    if (variant.price) {
+      const { price } = variant;
+      return /* html */ `\
+<div>Regular: ${price.regular?.amount?.value} ${price.regular?.amount?.currency}</div>
+<div>Final: ${price.final?.amount?.value} ${price.final?.amount?.currency}</div>`;
+    }
+    if (variant.priceRange) {
+      const { minimum, maximum } = variant.priceRange;
+      return /* html */ `\
+<div>Regular: ${HTMLTemplate.priceRange(minimum?.regular?.amount?.value, maximum?.regular?.amount?.value)} ${minimum?.regular?.amount?.currency}</div>
+<div>Final: ${HTMLTemplate.priceRange(minimum?.final?.amount?.value, maximum?.final?.amount?.value)} ${minimum?.final?.amount?.currency}</div>`;
+    }
+    return '';
   }
 
   /**
@@ -328,7 +371,7 @@ ${this.variants.map((v) => /* html */`\
     <div>${v.name}</div>
     <div>${v.description}</div>
     <div>${v.inStock ? 'inStock' : ''}</div>
-${v.prices ? HTMLTemplate.indent(this.renderVariantPrices(v.prices), 4) : ''}
+${v.price || v.priceRange ? HTMLTemplate.indent(this.renderVariantPrices(v), 4) : ''}
     <div>
 ${HTMLTemplate.indent(this.renderVariantImages(v.images), 6)}
     </div>
@@ -389,6 +432,7 @@ ${HTMLTemplate.indent(this.renderHead(), 2)}
         <h1>${name}</h1>
         ${description ? `<p>${description}</p>` : ''}
 ${HTMLTemplate.indent(this.renderProductImages(images), 8)}
+${HTMLTemplate.indent(this.renderProductPrices(this.product), 8)}
 ${HTMLTemplate.indent(this.renderProductAttributes(attributes), 8)}
 ${HTMLTemplate.indent(this.renderProductOptions(options), 8)}
 ${HTMLTemplate.indent(this.renderProductVariants(), 8)}

@@ -19,9 +19,6 @@ import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
  * @returns {Variant[]}
  */
 export const adapter = (config, variants) => variants.map(({ selections, product }) => {
-  const minPrice = product.priceRange?.minimum ?? product.price;
-  const maxPrice = product.priceRange?.maximum ?? product.price;
-
   /** @type {Variant} */
   const variant = {
     name: product.name,
@@ -34,24 +31,33 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     attributeMap: Object.fromEntries((product.attributes ?? [])
       .map(({ name, value }) => [name, value])),
     externalId: product.externalId,
-    prices: {
-      regular: {
-        // TODO: determine whether to use min or max
-        amount: minPrice?.regular.amount.value,
-        currency: minPrice?.regular.amount.currency,
-        maximumAmount: maxPrice?.regular.amount.value,
-        minimumAmount: minPrice?.regular.amount.value,
-      },
-      final: {
-        // TODO: determine whether to use min or max
-        amount: minPrice?.final.amount.value,
-        currency: minPrice?.final.amount.currency,
-        maximumAmount: maxPrice?.final.amount.value,
-        minimumAmount: minPrice?.final.amount.value,
-      },
-    },
     selections: (selections ?? []).sort(),
+    // eslint-disable-next-line no-underscore-dangle
+    type: product.__typename === 'SimpleProductView' ? 'simple' : 'complex',
   };
+
+  if (product.price) {
+    variant.price = {
+      regular: product.price.regular,
+      final: product.price.final,
+      visible: product.price.roles?.includes('visible'),
+    };
+  }
+
+  if (product.priceRange) {
+    variant.priceRange = {
+      minimum: {
+        regular: product.priceRange.minimum.regular,
+        final: product.priceRange.minimum.final,
+        visible: product.priceRange.minimum.roles?.includes('visible'),
+      },
+      maximum: {
+        regular: product.priceRange.maximum.regular,
+        final: product.priceRange.maximum.final,
+        visible: product.priceRange.maximum.roles?.includes('visible'),
+      },
+    };
+  }
 
   if (config.attributeOverrides?.variant) {
     Object.entries(config.attributeOverrides.variant).forEach(([key, value]) => {
@@ -84,6 +90,7 @@ export default ({ sku, imageRoles = [] }) => gql`
     variants {
       selections
       product {
+        __typename
         name
         sku
         inStock
