@@ -68,7 +68,8 @@ export default {
       ctx.config = config;
 
       console.debug('resolved config: ', JSON.stringify(config));
-      if (!config) {
+      // if config not defined and the request is not to set the config, 404
+      if (!config && (request.method !== 'POST' || ctx.url.pathname.split('/')[3] !== 'config')) {
         return errorResponse(404, 'config not found');
       }
 
