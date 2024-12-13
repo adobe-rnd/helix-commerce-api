@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.1...v1.11.2) (2024-12-13)
+
+
+### Bug Fixes
+
+* allow setting config from scratch ([#64](https://github.com/adobe-rnd/helix-commerce-api/issues/64)) ([6eaa9de](https://github.com/adobe-rnd/helix-commerce-api/commit/6eaa9debd8ed196287a480f4415b433a33184c55))
+
 ## [1.11.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.0...v1.11.1) (2024-12-11)
 
 
