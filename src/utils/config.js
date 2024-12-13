@@ -67,6 +67,18 @@ export async function resolveConfig(ctx, overrides = {}) {
   const confMap = await ctx.env.CONFIGS.get(siteKey, 'json');
   const confMapStr = JSON.stringify(confMap);
   if (!confMap) {
+    // allow setting config from scratch
+    if (route === 'config' && ctx.info.method === 'POST') {
+      // @ts-ignore
+      return {
+        ...overrides,
+        org,
+        site,
+        route,
+        siteKey,
+        matchedPatterns: [],
+      };
+    }
     return null;
   }
   if (typeof confMap !== 'object') {
@@ -74,8 +86,9 @@ export async function resolveConfig(ctx, overrides = {}) {
     return null;
   }
 
-  // if route is `config` don't resolve further
-  if (route === 'config') {
+  // if route is not `content` don't resolve further
+  if (route !== 'content') {
+    // @ts-ignore
     return {
       ...confMap.base,
       headers: confMap.base?.headers ?? {},
