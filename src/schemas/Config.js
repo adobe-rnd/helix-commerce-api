@@ -68,14 +68,12 @@ const ConfigEntry = {
 const Config = {
   type: 'object',
   properties: {
-    base: {
-      ...ConfigEntry,
-      required: [
-        'base',
-      ],
-    },
+    base: ConfigEntry,
   },
   additionalProperties: ConfigEntry,
+  required: [
+    'base',
+  ],
 };
 
 export default Config;
