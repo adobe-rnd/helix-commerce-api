@@ -1,3 +1,10 @@
+## [1.11.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.3...v1.11.4) (2024-12-13)
+
+
+### Bug Fixes
+
+* tweak config schema ([#66](https://github.com/adobe-rnd/helix-commerce-api/issues/66)) ([f79d256](https://github.com/adobe-rnd/helix-commerce-api/commit/f79d2567ea4b43d6caf347479925a5e79d5cd099))
+
 ## [1.11.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.2...v1.11.3) (2024-12-13)
 
 
