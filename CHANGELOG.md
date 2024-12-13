@@ -1,3 +1,10 @@
+## [1.11.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.2...v1.11.3) (2024-12-13)
+
+
+### Bug Fixes
+
+* config route tweak ([#65](https://github.com/adobe-rnd/helix-commerce-api/issues/65)) ([887484e](https://github.com/adobe-rnd/helix-commerce-api/commit/887484e913ca909a675fb8bbeb2b0d197e4da7ad))
+
 ## [1.11.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.1...v1.11.2) (2024-12-13)
 
 
