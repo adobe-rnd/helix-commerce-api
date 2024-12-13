@@ -64,16 +64,14 @@ export default {
 
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
-      const config = await resolveConfig(ctx, overrides);
-      ctx.config = config;
+      ctx.config = await resolveConfig(ctx, overrides);
 
-      console.debug('resolved config: ', JSON.stringify(config));
-      // if config not defined and the request is not to set the config, 404
-      if (!config && (request.method !== 'POST' || ctx.url.pathname.split('/')[3] !== 'config')) {
+      console.debug('resolved config: ', JSON.stringify(ctx.config));
+      if (!ctx.config) {
         return errorResponse(404, 'config not found');
       }
 
-      return await handlers[config.route](ctx, request);
+      return await handlers[ctx.config.route](ctx, request);
     } catch (e) {
       if (e.response) {
         return e.response;
