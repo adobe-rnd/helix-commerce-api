@@ -1,3 +1,10 @@
+## [1.11.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.4...v1.11.5) (2024-12-16)
+
+
+### Bug Fixes
+
+* add custom document title for vc ([#69](https://github.com/adobe-rnd/helix-commerce-api/issues/69)) ([6b74063](https://github.com/adobe-rnd/helix-commerce-api/commit/6b74063aa821ba2bbdc1d4163dbdc1e4e785168f))
+
 ## [1.11.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.3...v1.11.4) (2024-12-13)
 
 
