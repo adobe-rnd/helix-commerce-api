@@ -129,6 +129,7 @@ ${HTMLTemplate.metaName('urlKey', product.urlKey)}
 ${HTMLTemplate.metaName('externalId', product.externalId)}
 ${HTMLTemplate.metaName('addToCartAllowed', product.addToCartAllowed)}
 ${HTMLTemplate.metaName('inStock', product.inStock ? 'true' : 'false')}
+${HTMLTemplate.metaName('lastModifiedAtCS', product.lastModifiedAt)}
 ${HTMLTemplate.metaProperty('product:availability', product.inStock ? 'In stock' : 'Out of stock')}
 ${HTMLTemplate.metaProperty('product:price.amount', product.prices?.final?.amount)}
 ${HTMLTemplate.metaProperty('product:price.currency', product.prices?.final?.currency)}`;

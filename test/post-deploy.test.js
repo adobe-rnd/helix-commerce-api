@@ -65,8 +65,14 @@ describe('Post-Deploy Tests', () => {
     const expected = await getHTMLFixture('bella-tank');
 
     assert.strictEqual(res.status, 200);
-    const actual = await res.text();
+    let actual = await res.text();
     const differ = new HtmlDiffer();
+
+    const regex = /<meta\s+name="lastModifiedAtCS"\s+content="[^"]*"\s*>/;
+    const match = actual.match(regex);
+    assert(match, 'lastModifiedAtCS should be present');
+
+    actual = actual.replace(regex, '');
 
     // @ts-ignore
     assert.ok(differ.isEqual(actual, expected));
