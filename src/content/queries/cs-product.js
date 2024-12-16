@@ -37,6 +37,7 @@ export const adapter = (config, productData) => {
   const product = {
     sku: productData.sku,
     name: productData.name,
+    lastModifiedAt: productData.lastModifiedAt,
     metaTitle: productData.metaTitle,
     metaDescription: productData.metaDescription,
     metaKeyword: productData.metaKeyword,
@@ -153,6 +154,7 @@ export default ({ sku, imageRoles = [], linkTypes = [] }) => gql`{
     ) {
       id
       sku
+      lastModifiedAt
       name
       metaTitle
       metaDescription

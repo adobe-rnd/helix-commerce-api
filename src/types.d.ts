@@ -199,6 +199,9 @@ declare global {
     rating?: Rating;
     links?: Link[];
 
+    // Coming only from Catalog Service at the time of writing:
+    lastModifiedAt?: string;
+
     // not handled currently:
     externalParentId?: string;
     variantSku?: string;

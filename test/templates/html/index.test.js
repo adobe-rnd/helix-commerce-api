@@ -466,4 +466,16 @@ describe('Render Product HTML', () => {
     const ogImage = document.querySelector('meta[name="image"]');
     assert.strictEqual(ogImage.getAttribute('content'), '/media/catalog/product/t/s/test-sku.png');
   });
+
+  it('should allow for undefined lastModifiedAt', () => {
+    product.lastModifiedAt = undefined;
+
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+
+    dom = new JSDOM(html);
+    document = dom.window.document;
+
+    const metaProductLastModified = document.querySelector('meta[property="product:lastModifiedAt"]');
+    assert.strictEqual(metaProductLastModified.getAttribute('content'), 'undefined', 'meta[property="product:lastModifiedAt"] should be undefined');
+  });
 });
