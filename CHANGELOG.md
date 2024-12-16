@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.5...v1.12.0) (2024-12-16)
+
+
+### Features
+
+* product:lastModifiedAt from Catalog Service ([#68](https://github.com/adobe-rnd/helix-commerce-api/issues/68)) ([51663ff](https://github.com/adobe-rnd/helix-commerce-api/commit/51663ff19d7ac8d997fa4adf8bb82d9b105d2bb7))
+
 ## [1.11.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.4...v1.11.5) (2024-12-16)
 
 
