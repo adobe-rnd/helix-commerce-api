@@ -467,7 +467,7 @@ describe('Render Product HTML', () => {
     assert.strictEqual(ogImage.getAttribute('content'), '/media/catalog/product/t/s/test-sku.png');
   });
 
-  it('should allow for undefined lastModifiedAt', () => {
+  it('lastModifiedAtCS is not present if lastModifiedAt is undefined', () => {
     product.lastModifiedAt = undefined;
 
     const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
@@ -476,6 +476,6 @@ describe('Render Product HTML', () => {
     document = dom.window.document;
 
     const metaProductLastModified = document.querySelector('meta[name="lastModifiedAtCS"]');
-    assert.strictEqual(metaProductLastModified.getAttribute('content'), 'undefined', 'meta[name="lastModifiedAtCS"] should be undefined');
+    assert(!metaProductLastModified, 'meta[name="lastModifiedAtCS"] should not be in the document');
   });
 });
