@@ -475,7 +475,7 @@ describe('Render Product HTML', () => {
     dom = new JSDOM(html);
     document = dom.window.document;
 
-    const metaProductLastModified = document.querySelector('meta[property="product:lastModifiedAt"]');
-    assert.strictEqual(metaProductLastModified.getAttribute('content'), 'undefined', 'meta[property="product:lastModifiedAt"] should be undefined');
+    const metaProductLastModified = document.querySelector('meta[name="lastModifiedAtCS"]');
+    assert.strictEqual(metaProductLastModified.getAttribute('content'), 'undefined', 'meta[name="lastModifiedAtCS"] should be undefined');
   });
 });

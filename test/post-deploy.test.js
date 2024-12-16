@@ -68,9 +68,9 @@ describe('Post-Deploy Tests', () => {
     let actual = await res.text();
     const differ = new HtmlDiffer();
 
-    const regex = /<meta\s+property="product:lastModifiedAt"\s+content="[^"]*"\s*>/;
+    const regex = /<meta\s+name="lastModifiedAtCS"\s+content="[^"]*"\s*>/;
     const match = actual.match(regex);
-    assert(match, 'product:lastModifiedAt should be present');
+    assert(match, 'lastModifiedAtCS should be present');
 
     actual = actual.replace(regex, '');
 
