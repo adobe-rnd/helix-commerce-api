@@ -372,7 +372,8 @@ ${this.variants?.map((v) => /* html */`\
     <div></div>
     <div></div>
   </div>
-  ${v.attributes?.map((attribute) => /* html */`\
+  ${v.attributes?.filter((a) => (this.ctx.config?.variantAttributes
+    ? this.ctx.config.variantAttributes.includes(a.name) : true)).map((attribute) => /* html */`\
     <div>
       <div>attribute</div>
       <div>${attribute.name}</div>
