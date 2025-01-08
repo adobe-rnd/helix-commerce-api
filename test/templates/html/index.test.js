@@ -255,6 +255,25 @@ describe('Render Product HTML', () => {
     assert.strictEqual(variantAttributesTable, null, 'Variant attributes table should not be rendered');
   });
 
+  it('should filter variant attributes if variantAttributes is set', () => {
+    config.variantAttributes = ['criteria_1', 'criteria_2'];
+    const html = htmlTemplateFromContext(DEFAULT_CONTEXT({ config }), product, variations).render();
+    dom = new JSDOM(html);
+    document = dom.window.document;
+    const variantAttributesTable = document.querySelector('.variant-attributes');
+    const variantAttributes = variantAttributesTable.querySelectorAll('.variant-attributes > div');
+    assert.strictEqual(variantAttributes.length, 9, 'Variant attributes table should be rendered with 2 attributes');
+    assert.strictEqual(variantAttributes[0].querySelector('div:nth-child(1)').textContent, 'sku', 'Sku should be rendered');
+    assert.strictEqual(variantAttributes[1].querySelector('div:nth-child(2)').textContent, 'criteria_1', 'Variant attribute 1 should be rendered');
+    assert.strictEqual(variantAttributes[2].querySelector('div:nth-child(2)').textContent, 'criteria_2', 'Variant attribute 2 should be rendered');
+    assert.strictEqual(variantAttributes[3].querySelector('div:nth-child(1)').textContent, 'sku', 'Sku should not be rendered');
+    assert.strictEqual(variantAttributes[4].querySelector('div:nth-child(2)').textContent, 'criteria_1', 'Variant attribute 4 should not be rendered');
+    assert.strictEqual(variantAttributes[5].querySelector('div:nth-child(2)').textContent, 'criteria_2', 'Variant attribute 5 should not be rendered');
+    assert.strictEqual(variantAttributes[6].querySelector('div:nth-child(1)').textContent, 'sku', 'Sku should not be rendered');
+    assert.strictEqual(variantAttributes[7].querySelector('div:nth-child(2)').textContent, 'criteria_1', 'Variant attribute 4 should not be rendered');
+    assert.strictEqual(variantAttributes[8].querySelector('div:nth-child(2)').textContent, 'criteria_2', 'Variant attribute 5 should not be rendered');
+  });
+
   it('template should allow for missing prices', () => {
     config.confMap = {
       '/us/p/{{urlkey}}/{{sku}}': {},

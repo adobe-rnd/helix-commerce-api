@@ -84,6 +84,11 @@ declare global {
 
     // required for non-base entries
     pageType: 'product' | string;
+
+    /**
+     * Attributes to include in the variant attributes table
+     */
+    variantAttributes?: string[];
   }
 
   /**
@@ -143,7 +148,7 @@ declare global {
     attributeOverrides?: AttributeOverrides;
     siteOverrides?: Record<string, Record<string, unknown>>;
     imageParams?: Record<string, string>;
-
+    variantAttributes?: string[];
     liveSearchEnabled?: boolean;
     confMap: ConfigMap;
     confMapStr: string;
