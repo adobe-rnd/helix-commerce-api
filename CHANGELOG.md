@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.0...v1.12.1) (2025-01-08)
+
+
+### Bug Fixes
+
+* allow variant attribute filtering ([#70](https://github.com/adobe-rnd/helix-commerce-api/issues/70)) ([c926b3f](https://github.com/adobe-rnd/helix-commerce-api/commit/c926b3fb3a81d9b6ca2492e64f7a9a953279d1b2))
+
 # [1.12.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.11.5...v1.12.0) (2024-12-16)
 
 
