@@ -61,6 +61,10 @@ const ConfigEntry = {
       type: 'array',
       items: { type: 'string' },
     },
+    variantAttributes: {
+      type: 'array',
+      items: { type: 'string' },
+    },
   },
 };
 
