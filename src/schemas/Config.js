@@ -42,6 +42,7 @@ const ConfigEntry = {
     host: { type: 'string' },
     helixApiKey: { type: 'string' },
     offerVariantURLTemplate: { type: 'string' },
+    liveSearchEnabled: { type: 'boolean' },
     attributeOverrides: AttributeOverrides,
     imageParams: {
       type: 'object',
