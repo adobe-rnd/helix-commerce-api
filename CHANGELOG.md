@@ -1,3 +1,10 @@
+## [1.12.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.1...v1.12.2) (2025-01-16)
+
+
+### Bug Fixes
+
+* add live search config option ([#71](https://github.com/adobe-rnd/helix-commerce-api/issues/71)) ([b93e133](https://github.com/adobe-rnd/helix-commerce-api/commit/b93e1330f3846afcc654f03bf690e2b7f3ba244c))
+
 ## [1.12.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.0...v1.12.1) (2025-01-08)
 
 
