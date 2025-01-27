@@ -54,7 +54,7 @@ describe('Render Product HTML', () => {
   });
 
   it('should have the correct meta description', () => {
-    const metaDescription = document.querySelector('meta[property="description"]');
+    const metaDescription = document.querySelector('meta[name="description"]');
     const expectedDescription = product.metaDescription;
     assert.strictEqual(metaDescription.getAttribute('content'), expectedDescription, 'Meta description does not match expected value');
   });
