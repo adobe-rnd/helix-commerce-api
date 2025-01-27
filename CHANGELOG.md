@@ -1,3 +1,10 @@
+## [1.12.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.2...v1.12.3) (2025-01-27)
+
+
+### Bug Fixes
+
+* use meta name for description ([#72](https://github.com/adobe-rnd/helix-commerce-api/issues/72)) ([0922e30](https://github.com/adobe-rnd/helix-commerce-api/commit/0922e303c44ba17a2a34799c57395b04c8e6216e))
+
 ## [1.12.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.1...v1.12.2) (2025-01-16)
 
 
