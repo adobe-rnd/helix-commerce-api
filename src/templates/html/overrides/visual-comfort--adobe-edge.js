@@ -23,7 +23,7 @@ export default class extends HTMLTemplate {
 <meta charset="UTF-8">
 <title>${product.metaTitle || product.name} - ${product.sku} | Visual Comfort</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-${HTMLTemplate.metaProperty('description', product.metaDescription)}
+${HTMLTemplate.metaName('description', product.metaDescription)}
 ${HTMLTemplate.metaName('keywords', product.metaKeyword)}`;
   }
 }
