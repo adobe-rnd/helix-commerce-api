@@ -1,3 +1,10 @@
+## [1.12.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.3...v1.12.4) (2025-01-30)
+
+
+### Bug Fixes
+
+* sort images based on role order ([#73](https://github.com/adobe-rnd/helix-commerce-api/issues/73)) ([5474def](https://github.com/adobe-rnd/helix-commerce-api/commit/5474defbcbd744ff098773320090e49ce6123b99))
+
 ## [1.12.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.2...v1.12.3) (2025-01-27)
 
 
