@@ -27,7 +27,7 @@ export const adapter = (config, variants) => variants.map(({ selections, product
   const minPrice = product.priceRange?.minimum ?? product.price;
   const maxPrice = product.priceRange?.maximum ?? product.price;
 
-  const images = sortImagesByRole(forceImagesHTTPS(product.images) ?? []);
+  const images = sortImagesByRole(forceImagesHTTPS(product.images) ?? [], config.imageRoleOrder);
 
   /** @type {Variant} */
   const variant = {

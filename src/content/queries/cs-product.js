@@ -37,7 +37,11 @@ function extractMinMaxPrice(data) {
  */
 export const adapter = (config, productData) => {
   const { minPrice, maxPrice } = extractMinMaxPrice(productData);
-  const images = sortImagesByRole(forceImagesHTTPS(productData.images) ?? []);
+  const images = sortImagesByRole(
+    forceImagesHTTPS(productData.images)
+    ?? [],
+    config.imageRoleOrder,
+  );
 
   /** @type {Product} */
   const product = {
