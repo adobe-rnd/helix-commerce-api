@@ -11,7 +11,12 @@
  */
 
 import { forceImagesHTTPS } from '../../utils/http.js';
-import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
+import {
+  gql,
+  parseRating,
+  parseSpecialToDate,
+  sortImagesByRole,
+} from '../../utils/product.js';
 
 function extractMinMaxPrice(data) {
   let minPrice = data.priceRange?.minimum ?? data.price;
@@ -32,6 +37,11 @@ function extractMinMaxPrice(data) {
  */
 export const adapter = (config, productData) => {
   const { minPrice, maxPrice } = extractMinMaxPrice(productData);
+  const images = sortImagesByRole(
+    forceImagesHTTPS(productData.images)
+    ?? [],
+    config.imageRoleOrder,
+  );
 
   /** @type {Product} */
   const product = {
@@ -70,7 +80,7 @@ export const adapter = (config, productData) => {
         },
       };
     }),
-    images: forceImagesHTTPS(productData.images) ?? [],
+    images,
     attributes: productData.attributes ?? [],
     attributeMap: Object.fromEntries((productData.attributes ?? [])
       .map(({ name, value }) => [name, value])),
@@ -170,6 +180,7 @@ export default ({ sku, imageRoles = [], linkTypes = [] }) => gql`{
       images(roles: [${imageRoles.map((s) => `"${s}"`).join(',')}]) { 
         url
         label
+        roles
       }
       links(linkTypes: [${linkTypes.map((s) => `"${s}"`).join(',')}]) {
         product {

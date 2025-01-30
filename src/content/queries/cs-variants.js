@@ -11,7 +11,12 @@
  */
 
 import { forceImagesHTTPS } from '../../utils/http.js';
-import { gql, parseRating, parseSpecialToDate } from '../../utils/product.js';
+import {
+  gql,
+  parseRating,
+  parseSpecialToDate,
+  sortImagesByRole,
+} from '../../utils/product.js';
 
 /**
  * @param {Config} config
@@ -22,6 +27,8 @@ export const adapter = (config, variants) => variants.map(({ selections, product
   const minPrice = product.priceRange?.minimum ?? product.price;
   const maxPrice = product.priceRange?.maximum ?? product.price;
 
+  const images = sortImagesByRole(forceImagesHTTPS(product.images) ?? [], config.imageRoleOrder);
+
   /** @type {Variant} */
   const variant = {
     name: product.name,
@@ -29,7 +36,7 @@ export const adapter = (config, variants) => variants.map(({ selections, product
     description: product.description,
     url: product.url,
     inStock: product.inStock,
-    images: forceImagesHTTPS(product.images) ?? [],
+    images,
     attributes: product.attributes ?? [],
     attributeMap: Object.fromEntries((product.attributes ?? [])
       .map(({ name, value }) => [name, value])),
@@ -91,6 +98,7 @@ export default ({ sku, imageRoles = [] }) => gql`
         images(roles: [${imageRoles.map((s) => `"${s}"`).join(',')}]) {
           url
           label
+          roles
         }
         ... on SimpleProductView {
           description

@@ -268,7 +268,7 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
     }
 
     // append image params
-    const { url: purl, label } = image;
+    const { url: purl, label, roles = [] } = image;
     const params = new URLSearchParams(this.ctx.config.imageParams);
     let url;
 
@@ -283,6 +283,7 @@ ${HTMLTemplate.indent(this.renderProductItems(opt.items), 2)}`).join('\n')}
     return {
       url: url.toString(),
       label,
+      roles,
     };
   }
 
