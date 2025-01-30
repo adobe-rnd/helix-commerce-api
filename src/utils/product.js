@@ -154,3 +154,25 @@ export function parseRating(product) {
   }
   return undefined;
 }
+
+/**
+ * @param {Product['images']} images images with roles
+ * @param {string[]} [order] preference order
+ * @returns {Product['images']}
+ */
+export function sortImagesByRole(images, order) {
+  if (!order?.length) {
+    return images;
+  }
+
+  const sorted = [];
+  let remaining = images;
+  order.forEach((role) => {
+    const found = remaining.filter((img) => img.roles.includes(role));
+    if (found.length) {
+      sorted.push(...found);
+      remaining = remaining.filter((img) => !found.includes(img));
+    }
+  });
+  return sorted.concat(remaining);
+}

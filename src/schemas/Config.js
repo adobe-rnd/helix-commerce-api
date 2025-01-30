@@ -44,6 +44,10 @@ const ConfigEntry = {
     offerVariantURLTemplate: { type: 'string' },
     liveSearchEnabled: { type: 'boolean' },
     attributeOverrides: AttributeOverrides,
+    imageRoleOrder: {
+      type: 'array',
+      items: { type: 'string' },
+    },
     imageParams: {
       type: 'object',
       properties: {},

@@ -68,6 +68,13 @@ declare global {
     imageRoles?: string[];
 
     /**
+     * Order for images to appear in markup
+     * If not provided, images will not be sorted
+     * If image role doesn't exist in the order, it will be appended to the end
+     */
+    imageRoleOrder?: string[];
+
+    /**
      * Attributes to override using a different attribute name
      */
     attributeOverrides?: AttributeOverrides;
@@ -140,6 +147,7 @@ declare global {
     sku?: string;
     matchedPatterns: string[];
     imageRoles?: string[];
+    imageRoleOrder?: string[];
     linkTypes?: string[];
     host: string;
     params: Record<string, string>;
@@ -258,6 +266,7 @@ declare global {
   interface Image {
     url: string;
     label: string;
+    roles: string[];
   }
 
   interface Price {
