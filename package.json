@@ -15,6 +15,7 @@
     "test-postdeploy": "mocha --spec test/post-deploy.test.js",
     "deploy:dev": "node prepare-deploy.js && wrangler deploy -c wrangler-versioned.toml",
     "deploy:ci": "node prepare-deploy.js && wrangler deploy -e ci  -c wrangler-versioned.toml",
+    "deploy:next": "node prepare-deploy.js && wrangler deploy -e next  -c wrangler-versioned.toml",
     "deploy:production": "node prepare-deploy.js && wrangler deploy -e production -c wrangler-versioned.toml",
     "log": "wrangler tail --format pretty",
     "log:ci": "wrangler tail --format pretty -e ci",

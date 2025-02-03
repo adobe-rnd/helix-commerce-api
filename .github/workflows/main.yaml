@@ -73,3 +73,26 @@ jobs:
         run: npm run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-next:
+    name: Release next
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/next'
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      - run: npm install
+      - name: extracting last commit message
+        run: |
+          echo "CI_LAST_COMMIT_MSG=$(git show -s --format="%s")" >> $GITHUB_ENV
+          echo CI_LAST_COMMIT_MSG
+      - name: Next Deployment
+        run: npm run deploy:next
+      - name: Semantic Release (Dry Run)
+        run: npm run semantic-release-dry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
