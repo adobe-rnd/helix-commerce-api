@@ -74,7 +74,7 @@ describe('StorageClient Class Tests', () => {
         env: {
           CATALOG_BUCKET: {
             get: sinon.stub().resolves({
-              text: sinon.stub().resolves(JSON.stringify({ sku: 'sku1', name: 'Test Product' })),
+              json: sinon.stub().resolves({ sku: 'sku1', name: 'Test Product' }),
             }),
           },
         },
@@ -86,7 +86,9 @@ describe('StorageClient Class Tests', () => {
 
       assert(ctx.log.debug.calledOnceWithExactly('Fetching product from R2:', 'org/site/store/view/products/sku1.json'));
       assert(ctx.env.CATALOG_BUCKET.get.calledOnceWithExactly('org/site/store/view/products/sku1.json'));
-      assert.deepStrictEqual(product, { sku: 'sku1', name: 'Test Product' });
+      assert.deepStrictEqual(product, {
+        sku: 'sku1', attributeMap: {}, name: 'Test Product',
+      });
     });
 
     it('should throw 404 error if product not found', async () => {
@@ -115,33 +117,6 @@ describe('StorageClient Class Tests', () => {
       assert(ctx.log.debug.calledOnceWithExactly('Fetching product from R2:', 'org/site/store/view/products/nonexistent.json'));
       assert(ctx.env.CATALOG_BUCKET.get.calledOnceWithExactly('org/site/store/view/products/nonexistent.json'));
       assert.strictEqual(thrownError, error);
-    });
-
-    it('should throw error if JSON parsing fails', async () => {
-      const ctx = {
-        log: { debug: sinon.stub() },
-        env: {
-          CATALOG_BUCKET: {
-            get: sinon.stub().resolves({
-              text: sinon.stub().resolves('invalid json'),
-            }),
-          },
-        },
-      };
-
-      const sku = 'sku1';
-      const client = new StorageClient(ctx, config);
-
-      let thrownError;
-      try {
-        await client.fetchProduct(sku);
-      } catch (e) {
-        thrownError = e;
-      }
-
-      assert(ctx.log.debug.calledOnceWithExactly('Fetching product from R2:', 'org/site/store/view/products/sku1.json'));
-      assert(ctx.env.CATALOG_BUCKET.get.calledOnceWithExactly('org/site/store/view/products/sku1.json'));
-      assert(thrownError instanceof SyntaxError);
     });
 
     it('should propagate errors from CATALOG_BUCKET.get', async () => {

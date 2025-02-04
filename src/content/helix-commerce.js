@@ -21,13 +21,19 @@ import htmlTemplateFromContext from '../templates/html/index.js';
 export async function handle(ctx) {
   const { config } = ctx;
   const { urlkey } = config.params;
-  const { sku } = config.params;
+  let { sku } = config.params;
 
   if (!sku && !urlkey) {
     return errorResponse(404, 'missing sku or urlkey');
   }
 
   const storageClient = new StorageClient(ctx, config);
+  if (!sku) {
+    sku = await storageClient.lookupSku(urlkey);
+    if (!sku) {
+      return errorResponse(404, 'could not find sku');
+    }
+  }
 
   const product = await storageClient.fetchProduct(sku);
   const html = htmlTemplateFromContext(ctx, product, product.variants).render();

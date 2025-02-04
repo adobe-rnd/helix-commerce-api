@@ -43,8 +43,15 @@ export default class StorageClient {
       throw errorWithResponse(404, 'Product not found');
     }
 
-    const productData = await object.text();
-    return JSON.parse(productData);
+    const productData = await object.json();
+    productData.attributeMap = Object.fromEntries((productData.attributes ?? [])
+      .map(({ name, value }) => [name, value]));
+    (productData.variants ?? []).forEach((variant) => {
+      variant.attributeMap = Object.fromEntries((variant.attributes ?? [])
+        .map(({ name, value }) => [name, value]));
+    });
+
+    return productData;
   }
 
   /**
