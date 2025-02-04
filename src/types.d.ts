@@ -169,6 +169,7 @@ declare global {
     // KV namespaces
     CONFIGS: KVNamespace<string>;
     KEYS: KVNamespace<string>;
+    CATALOG_BUCKET: KVNamespace<string>;
 
     [key: string]: string | KVNamespace<string> | R2Bucket;
   }
