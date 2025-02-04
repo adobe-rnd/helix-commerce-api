@@ -46,8 +46,7 @@ export default class StorageClient {
     const productData = await object.json();
     productData.attributeMap = Object.fromEntries((productData.attributes ?? [])
       .map(({ name, value }) => [name, value]));
-    productData.variants = productData.variants || [];
-    productData.variants.forEach((variant) => {
+    (productData.variants ?? []).forEach((variant) => {
       variant.attributeMap = Object.fromEntries((variant.attributes ?? [])
         .map(({ name, value }) => [name, value]));
     });
