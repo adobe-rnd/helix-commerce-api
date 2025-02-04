@@ -1,3 +1,10 @@
+## [1.12.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.5...v1.12.6) (2025-02-04)
+
+
+### Bug Fixes
+
+* lookup urlkey for sku, adapt product ([#77](https://github.com/adobe-rnd/helix-commerce-api/issues/77)) ([0f54de5](https://github.com/adobe-rnd/helix-commerce-api/commit/0f54de51f587a7ff5861dd76a962d9baaab279e9))
+
 ## [1.12.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.4...v1.12.5) (2025-02-03)
 
 
