@@ -45,7 +45,7 @@ describe('contentHandler', () => {
     assert.equal(response.status, 405);
   });
 
-  it('returns 400 if pageType is missing', async () => {
+  it('returns 404 if pageType is missing', async () => {
     const ctx = {
       info: { method: 'GET' },
       url: { pathname: '/content/product/test' },
@@ -53,7 +53,7 @@ describe('contentHandler', () => {
     };
 
     const response = await contentHandler(ctx);
-    assert.equal(response.status, 400);
+    assert.equal(response.status, 404);
   });
 
   it('calls handleHelixCommerce if catalogSource is helix', async () => {
