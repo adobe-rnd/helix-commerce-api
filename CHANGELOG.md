@@ -1,3 +1,10 @@
+## [1.12.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.7...v1.12.8) (2025-02-05)
+
+
+### Bug Fixes
+
+* return 404 ([#78](https://github.com/adobe-rnd/helix-commerce-api/issues/78)) ([495bc85](https://github.com/adobe-rnd/helix-commerce-api/commit/495bc85df8ab815378a89f2eb04bb5d4480ba46e))
+
 ## [1.12.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.6...v1.12.7) (2025-02-05)
 
 
