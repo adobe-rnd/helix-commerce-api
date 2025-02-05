@@ -1,3 +1,10 @@
+## [1.12.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.6...v1.12.7) (2025-02-05)
+
+
+### Bug Fixes
+
+* add variant name and overrides for JSON LD ([#74](https://github.com/adobe-rnd/helix-commerce-api/issues/74)) ([5f3a287](https://github.com/adobe-rnd/helix-commerce-api/commit/5f3a28761307701ad2237c8efe535eb7dda379d2))
+
 ## [1.12.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.5...v1.12.6) (2025-02-04)
 
 
