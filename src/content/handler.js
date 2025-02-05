@@ -27,7 +27,7 @@ export default async function contentHandler(ctx) {
 
   const { config } = ctx;
   if (!config.pageType) {
-    return errorResponse(400, 'invalid config for tenant site (missing pageType)');
+    return errorResponse(404, 'invalid config for tenant site (missing pageType)');
   }
   ctx.log.debug('config: ', JSON.stringify(config, null, 2));
 

@@ -230,7 +230,7 @@ export async function handle(ctx) {
   }
 
   if (!sku && !config.coreEndpoint) {
-    return errorResponse(400, 'missing sku and coreEndpoint');
+    return errorResponse(404, 'missing sku and coreEndpoint');
   }
   if (!sku) {
     return errorResponse(404, 'could not find sku');
