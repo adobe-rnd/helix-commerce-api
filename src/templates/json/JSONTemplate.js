@@ -134,6 +134,7 @@ export class JSONTemplate {
         '@type': 'Offer',
         sku: v.sku,
         mpn,
+        name: v.name,
         url: offerUrl,
         image: v.images?.[0]?.url ?? image,
         availability: v.inStock ? 'InStock' : 'OutOfStock',

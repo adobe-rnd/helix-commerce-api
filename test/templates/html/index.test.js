@@ -94,6 +94,7 @@ describe('Render Product HTML', () => {
       assert.strictEqual(offer.sku, variant.sku, `Offer SKU for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.url, productTemplate.constructProductURL(variant), 'JSON-LD offer URL does not match');
       assert.strictEqual(offer.price, variant.prices.final.amount, `Offer price for variant ${variant.sku} does not match`);
+      assert.strictEqual(offer.name, variant.name, `Offer name for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.priceCurrency, variant.prices.final.currency, `Offer priceCurrency for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.availability, variant.inStock ? 'InStock' : 'OutOfStock', `Offer availability for variant ${variant.sku} does not match`);
       assert.strictEqual(offer.image, variant.images[0].url || '', `Offer image for variant ${variant.sku} does not match`);
@@ -129,6 +130,7 @@ describe('Render Product HTML', () => {
       assert.strictEqual(offer.sku, product.sku, `Offer SKU for variant ${product.sku} does not match`);
       assert.strictEqual(offer.url, productTemplate.constructProductURL(), 'JSON-LD offer URL does not match');
       assert.strictEqual(offer.price, product.prices.final.amount, `Offer price for variant ${product.sku} does not match`);
+      assert.strictEqual(offer.name, product.name, `Offer name for variant ${product.sku} does not match`);
       assert.strictEqual(offer.priceCurrency, product.prices.final.currency, `Offer priceCurrency for variant ${product.sku} does not match`);
       assert.strictEqual(offer.availability, product.inStock ? 'InStock' : 'OutOfStock', `Offer availability for variant ${product.sku} does not match`);
       assert.strictEqual(offer.image, product.images[0].url || '', `Offer image for variant ${product.sku} does not match`);

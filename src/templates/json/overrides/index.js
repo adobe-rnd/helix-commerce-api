@@ -16,4 +16,6 @@
 export default {
   'thepixel--bul-eds': (await import('./thepixel--bul-eds.js')).default,
   'wilson-ecommerce--wilson': (await import('./wilson-ecommerce--wilson.js')).default,
+  'visualcomfort--adobe-edge': (await import('./visualcomfort--adobe-edge.js')).default,
+  'visualcomfort--adobe-edge-stage': (await import('./visualcomfort--adobe-edge.js')).default,
 };
