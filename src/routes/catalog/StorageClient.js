@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Adobe. All rights reserved.
+ * Copyright 2025 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -14,17 +14,31 @@ import { callPreviewPublish } from '../../utils/admin.js';
 import { BatchProcessor } from '../../utils/batch.js';
 import { errorWithResponse } from '../../utils/http.js';
 
-/* eslint-disable no-await-in-loop, max-len */
-
 export default class StorageClient {
   /**
-   * Constructs a new StorageClient instance.
-   * @param {Context} ctx - The context object
-   * @param {Config} config - The configuration object.
+   * @param {Context} ctx
+   * @returns {StorageClient}
    */
-  constructor(ctx, config) {
+  static fromContext(ctx) {
+    if (!ctx.attributes.storageClient) {
+      ctx.attributes.storageClient = new StorageClient(ctx);
+    }
+    return ctx.attributes.storageClient;
+  }
+
+  /** @type {Context} */
+  ctx = undefined;
+
+  /**
+   * @param {Context} ctx
+   */
+  constructor(ctx) {
     this.ctx = ctx;
-    this.config = config;
+  }
+
+  /** @type {Config} */
+  get config() {
+    return this.ctx.config;
   }
 
   /**
@@ -33,11 +47,21 @@ export default class StorageClient {
    * @returns {Promise<Product>} - A promise that resolves to the product.
    */
   async fetchProduct(sku) {
-    const { log } = this.ctx;
-    const key = `${this.config.org}/${this.config.site}/${this.config.storeCode}/${this.config.storeViewCode}/products/${sku}.json`;
+    const {
+      log,
+      env,
+      config: {
+        org,
+        site,
+        storeCode,
+        storeViewCode,
+      },
+    } = this.ctx;
+
+    const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
     log.debug('Fetching product from R2:', key);
 
-    const object = await this.ctx.env.CATALOG_BUCKET.get(key);
+    const object = await env.CATALOG_BUCKET.get(key);
     if (!object) {
       // Product not found in R2
       throw errorWithResponse(404, 'Product not found');
@@ -74,29 +98,38 @@ export default class StorageClient {
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
    */
   async storeProductsBatch(batch) {
+    const {
+      env,
+      log,
+      config: {
+        org,
+        site,
+        storeCode,
+        storeViewCode,
+      },
+    } = this.ctx;
+
     const storePromises = batch.map(async (product) => {
-      const { sku, name } = product;
-      const key = `${this.config.org}/${this.config.site}/${this.config.storeCode}/${this.config.storeViewCode}/products/${sku}.json`;
+      const { sku, name, urlKey } = product;
+      const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
       const body = JSON.stringify(product);
 
       try {
         const customMetadata = { sku, name };
-
-        const { urlKey } = product;
         if (urlKey) {
           customMetadata.urlKey = urlKey;
         }
 
         // Attempt to save the product
-        const putResponse = await this.ctx.env.CATALOG_BUCKET.put(key, body, {
+        const putResponse = await env.CATALOG_BUCKET.put(key, body, {
           httpMetadata: { contentType: 'application/json' },
           customMetadata,
         });
 
         // If urlKey exists, save the urlKey metadata
         if (urlKey) {
-          const metadataKey = `${this.config.org}/${this.config.site}/${this.config.storeCode}/${this.config.storeViewCode}/urlkeys/${urlKey}`;
-          await this.ctx.env.CATALOG_BUCKET.put(metadataKey, '', {
+          const metadataKey = `${org}/${site}/${storeCode}/${storeViewCode}/urlkeys/${urlKey}`;
+          await env.CATALOG_BUCKET.put(metadataKey, '', {
             httpMetadata: { contentType: 'application/octet-stream' },
             customMetadata,
           });
@@ -116,7 +149,7 @@ export default class StorageClient {
 
         return result;
       } catch (error) {
-        this.ctx.log.error(`Error storing product SKU: ${sku}:`, error);
+        log.error(`Error storing product SKU: ${sku}:`, error);
         return {
           sku,
           status: error.code || 500,
@@ -152,10 +185,16 @@ export default class StorageClient {
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of deletion results.
    */
   async deleteProductsBatch(batch) {
-    const { log, env } = this.ctx;
     const {
-      org, site, storeCode, storeViewCode,
-    } = this.config;
+      log,
+      env,
+      config: {
+        org,
+        site,
+        storeCode,
+        storeViewCode,
+      },
+    } = this.ctx;
 
     const deletionPromises = batch.map(async (sku) => {
       try {
@@ -178,7 +217,7 @@ export default class StorageClient {
           await env.CATALOG_BUCKET.delete(urlKeyPath);
         }
 
-        const adminResponse = await callPreviewPublish(this.config, 'DELETE', sku, urlKey);
+        const adminResponse = await callPreviewPublish(this.ctx.config, 'DELETE', sku, urlKey);
         /**
          * @type {Partial<BatchResult>}
          */
@@ -209,9 +248,19 @@ export default class StorageClient {
    * @returns {Promise<string>} - A promise that resolves to the SKU.
    */
   async lookupSku(urlKey) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+        storeCode,
+        storeViewCode,
+      },
+    } = this.ctx;
+
     // Make a HEAD request to retrieve the SKU from metadata based on the URL key
-    const urlKeyPath = `${this.config.org}/${this.config.site}/${this.config.storeCode}/${this.config.storeViewCode}/urlkeys/${urlKey}`;
-    const headResponse = await this.ctx.env.CATALOG_BUCKET.head(urlKeyPath);
+    const urlKeyPath = `${org}/${site}/${storeCode}/${storeViewCode}/urlkeys/${urlKey}`;
+    const headResponse = await env.CATALOG_BUCKET.head(urlKeyPath);
 
     if (!headResponse || !headResponse.customMetadata?.sku) {
       // SKU not found for the provided URL key
@@ -227,10 +276,20 @@ export default class StorageClient {
    * @returns {Promise<string | undefined>} - A promise that resolves to the URL key or undefined.
    */
   async lookupUrlKey(sku) {
-    // Construct the path to the product JSON file
-    const productKey = `${this.config.org}/${this.config.site}/${this.config.storeCode}/${this.config.storeViewCode}/products/${sku}.json`;
+    const {
+      env,
+      config: {
+        org,
+        site,
+        storeCode,
+        storeViewCode,
+      },
+    } = this.ctx;
 
-    const headResponse = await this.ctx.env.CATALOG_BUCKET.head(productKey);
+    // Construct the path to the product JSON file
+    const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
+
+    const headResponse = await env.CATALOG_BUCKET.head(productKey);
     if (!headResponse || !headResponse.customMetadata) {
       return undefined;
     }
@@ -249,9 +308,18 @@ export default class StorageClient {
    * @returns {Promise<Product[]>} - A promise that resolves to the products.
    */
   async listAllProducts() {
-    const bucket = this.ctx.env.CATALOG_BUCKET;
-    const listResponse = await bucket.list({
-      prefix: `${this.config.org}/${this.config.site}/${this.config.storeCode}/${this.config.storeViewCode}/products/`,
+    const {
+      env,
+      config: {
+        org,
+        site,
+        storeCode,
+        storeViewCode,
+      },
+    } = this.ctx;
+
+    const listResponse = await env.CATALOG_BUCKET.list({
+      prefix: `${org}/${site}/${storeCode}/${storeViewCode}/products/`,
     });
     const files = listResponse.objects;
 
@@ -271,18 +339,19 @@ export default class StorageClient {
 
     // Process each chunk sequentially
     for (const chunk of fileChunks) {
+      // eslint-disable-next-line no-await-in-loop
       const chunkResults = await Promise.all(
         chunk.map(async (file) => {
           const objectKey = file.key;
 
-          const headResponse = await bucket.head(objectKey);
+          const headResponse = await env.CATALOG_BUCKET.head(objectKey);
           if (headResponse) {
             const { customMetadata } = headResponse;
             const { sku } = customMetadata;
             return {
               ...customMetadata,
               links: {
-                product: `${this.ctx.url.origin}/${this.config.org}/${this.config.site}/catalog/${this.config.storeCode}/${this.config.storeViewCode}/product/${sku}`,
+                product: `${this.ctx.url.origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/product/${sku}`,
               },
             };
           } else {

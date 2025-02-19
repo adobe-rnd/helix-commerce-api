@@ -12,28 +12,33 @@
 
 import { errorResponse } from './utils/http.js';
 import { resolveConfig } from './utils/config.js';
-import content from './content/handler.js';
-import catalog from './catalog/handler.js';
-import configHandler from './config/handler.js';
+import handlers from './routes/index.js';
 
 /**
- * @type {Record<string, (ctx: Context, request: Request) => Promise<Response>>}
+ * @param {Request} req
  */
-const handlers = {
-  content,
-  catalog,
-  config: configHandler,
-  // eslint-disable-next-line no-unused-vars
-  graphql: async (ctx) => errorResponse(501, 'not implemented'),
-};
+async function parseData(req) {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    return Object.fromEntries(new URL(req.url).searchParams.entries());
+  }
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    const text = await req.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+  return null;
+}
 
 /**
  * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
  * @param {Request} req
  * @param {Env} env
- * @returns {Context}
+ * @returns {Promise<Context>}
  */
-export function makeContext(pctx, req, env) {
+export async function makeContext(pctx, req, env) {
   /** @type {Context} */
   // @ts-ignore
   const ctx = pctx;
@@ -49,6 +54,7 @@ export function makeContext(pctx, req, env) {
         .map(([k, v]) => [k.toLowerCase(), v]),
     ),
   };
+  ctx.data = await parseData(req);
   return ctx;
 }
 
@@ -60,7 +66,7 @@ export default {
    * @returns {Promise<Response>}
    */
   async fetch(request, env, pctx) {
-    const ctx = makeContext(pctx, request, env);
+    const ctx = await makeContext(pctx, request, env);
 
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());

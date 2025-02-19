@@ -10,33 +10,37 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../utils/http.js';
+import { assertValidProduct } from '../../utils/product.js';
+import { errorResponse } from '../../utils/http.js';
+import StorageClient from './StorageClient.js';
 
 /**
- * Handles a DELETE request for a product.
+ * Handles a PUT request to update a product.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {StorageClient} storage - The storage object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductDeleteRequest(ctx, storage) {
-  const { config } = ctx;
-  const { sku } = config;
+export default async function update(ctx) {
+  const { config, log } = ctx;
 
-  if (sku === '*') {
-    return errorResponse(400, 'Wildcard SKU deletions is not currently supported');
+  if (config.sku === '*') {
+    return errorResponse(501, 'not implemented');
   }
 
-  if (!config.helixApiKey) {
-    throw errorResponse(400, 'Helix API key is required to delete or unpublish products.');
+  const product = ctx.data;
+  if (!product || typeof product !== 'object') {
+    return errorResponse(400, 'invalid product data');
   }
 
-  const deleteResults = await storage.deleteProducts([sku]);
+  assertValidProduct(product);
 
-  ctx.log.info({
-    action: 'delete_products',
-    result: JSON.stringify(deleteResults),
+  const storage = StorageClient.fromContext(ctx);
+  const saveResults = await storage.saveProducts([product]);
+
+  log.info({
+    action: 'save_products',
+    result: JSON.stringify(saveResults),
     timestamp: new Date().toISOString(),
   });
 
-  return new Response(JSON.stringify(deleteResults), { status: 200 });
+  return new Response(JSON.stringify(saveResults), { status: 201 });
 }

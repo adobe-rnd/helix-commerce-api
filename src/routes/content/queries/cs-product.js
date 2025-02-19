@@ -10,13 +10,13 @@
  * governing permissions and limitations under the License.
  */
 
-import { forceImagesHTTPS } from '../../utils/http.js';
+import { forceImagesHTTPS } from '../../../utils/http.js';
 import {
   gql,
   parseRating,
   parseSpecialToDate,
   sortImagesByRole,
-} from '../../utils/product.js';
+} from '../../../utils/product.js';
 
 function extractMinMaxPrice(data) {
   let minPrice = data.priceRange?.minimum ?? data.price;
