@@ -25,14 +25,14 @@ const handlers = {
     // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/lookup?urlkey={urlkey}
     GET: lookup,
   },
-  product: {
+  products: {
     // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
     GET: fetch,
-    // api:/{org}/{site}/products/{storeCode}/{viewCode}/products/{sku}.json
+    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
     PUT: update,
-    // api:/{org}/{site}/products/{storeCode}/{viewCode}/products/*
+    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/*
     POST: async () => errorResponse(501, 'not implemented'),
-    // api:/{org}/{site}/products/{storeCode}/{viewCode}/products/{sku}.json
+    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
     DELETE: remove,
   },
 };
@@ -54,8 +54,7 @@ export default async function handler(ctx, request) {
     return errorResponse(404, 'invalid path');
   }
 
-  const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(4);
-
+  const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(3);
   if (hasUppercase(sku)) {
     return errorResponse(400, 'Invalid SKU: SKU cannot contain uppercase letters');
   }

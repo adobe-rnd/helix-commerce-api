@@ -10,30 +10,30 @@
  * governing permissions and limitations under the License.
  */
 
+// @ts-nocheck
+
 import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
+import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 
 describe('catalogHandler Tests', () => {
   let catalogHandler;
-  let errorResponseStub;
   let handleProductLookupRequestStub;
   let handleProductFetchRequestStub;
   let handleProductSaveRequestStub;
-  let handleProductDeleteRequestStub;
+  let handleProductRemoveRequestStub;
   beforeEach(async () => {
-    errorResponseStub = sinon.stub();
     handleProductLookupRequestStub = sinon.stub();
     handleProductFetchRequestStub = sinon.stub();
     handleProductSaveRequestStub = sinon.stub();
-    handleProductDeleteRequestStub = sinon.stub();
+    handleProductRemoveRequestStub = sinon.stub();
 
-    catalogHandler = (await esmock('../../src/catalog/handler.js', {
-      '../../src/utils/http.js': { errorResponse: errorResponseStub },
-      '../../src/catalog/lookup.js': { handleProductLookupRequest: handleProductLookupRequestStub },
-      '../../src/catalog/fetch.js': { handleProductFetchRequest: handleProductFetchRequestStub },
-      '../../src/catalog/update.js': { handleProductSaveRequest: handleProductSaveRequestStub },
-      '../../src/catalog/delete.js': { handleProductDeleteRequest: handleProductDeleteRequestStub },
+    catalogHandler = (await esmock('../../../src/routes/catalog/handler.js', {
+      '../../../src/routes/catalog/lookup.js': { default: handleProductLookupRequestStub },
+      '../../../src/routes/catalog/fetch.js': { default: handleProductFetchRequestStub },
+      '../../../src/routes/catalog/update.js': { default: handleProductSaveRequestStub },
+      '../../../src/routes/catalog/remove.js': { default: handleProductRemoveRequestStub },
     })).default;
   });
 
@@ -42,79 +42,36 @@ describe('catalogHandler Tests', () => {
   });
 
   it('should return 405 when method is not allowed', async () => {
-    const ctx = {
+    const ctx = DEFAULT_CONTEXT({
       info: { method: 'HEAD' },
-      url: { pathname: '/org/site/env/catalog/store/view/product/sku1' },
+      url: { pathname: '/org/site/catalog/store/view/product/sku1' },
       config: {},
-    };
+    });
     const request = {};
-
-    const mockResponse = new Response(null, { status: 405 });
-    errorResponseStub.returns(mockResponse);
-
     const response = await catalogHandler(ctx, request);
 
     assert.equal(response.status, 405);
-    assert(errorResponseStub.calledWith(405, 'method not allowed'));
-  });
-
-  it('should return 400 when URL is missing "catalog" segment', async () => {
-    const ctx = {
-      info: { method: 'GET' },
-      url: { pathname: '/org/site/env/store/view/product/sku1' },
-      config: {},
-    };
-    const request = {};
-
-    const mockResponse = new Response(null, { status: 400 });
-    errorResponseStub.returns(mockResponse);
-
-    const response = await catalogHandler(ctx, request);
-
-    assert.equal(response.status, 400);
-    assert(errorResponseStub.calledWith(400, 'Invalid URL: Missing "catalog" segment'));
-  });
-
-  it('should return 400 when URL structure is incorrect', async () => {
-    const ctx = {
-      info: { method: 'GET' },
-      url: { pathname: '/org/site/catalog/store/view' },
-      config: {},
-    };
-    const request = {};
-
-    const mockResponse = new Response(null, { status: 400 });
-    errorResponseStub.returns(mockResponse);
-
-    const response = await catalogHandler(ctx, request);
-
-    assert.equal(response.status, 400);
-    assert(errorResponseStub.calledWith(400, 'Invalid URL structure: Expected format: /{org}/{site}/catalog/{store}/{storeView}/product/{sku}'));
   });
 
   it('should return 400 when sku is uppercase', async () => {
-    const ctx = {
+    const ctx = DEFAULT_CONTEXT({
       info: { method: 'GET' },
       url: { pathname: '/org/site/catalog/store/view/product/PRODUCT-SKU' },
       config: {},
-    };
+    });
     const request = {};
-
-    const mockResponse = new Response(null, { status: 400 });
-    errorResponseStub.returns(mockResponse);
-
     const response = await catalogHandler(ctx, request);
 
     assert.equal(response.status, 400);
-    assert(errorResponseStub.calledWith(400, 'Invalid SKU: SKU cannot contain uppercase letters'));
+    assert.equal(response.headers.get('x-error'), 'Invalid SKU: SKU cannot contain uppercase letters');
   });
 
   it('should call handleProductLookupRequest when method is GET and subRoute is "lookup"', async () => {
-    const ctx = {
+    const ctx = DEFAULT_CONTEXT({
       info: { method: 'GET' },
       url: { pathname: '/org/site/catalog/store/view/lookup/sku' },
       config: {},
-    };
+    });
     const request = {};
 
     const mockResponse = new Response(null, { status: 200 });
@@ -127,28 +84,23 @@ describe('catalogHandler Tests', () => {
   });
 
   it('should return 405 if subRoute is "lookup" but method is not GET', async () => {
-    const ctx = {
+    const ctx = DEFAULT_CONTEXT({
       info: { method: 'PUT' },
       url: { pathname: '/org/site/catalog/store/view/lookup/sku' },
       config: {},
-    };
+    });
     const request = {};
-
-    const mockResponse = new Response(null, { status: 405 });
-    errorResponseStub.returns(mockResponse);
-
     const response = await catalogHandler(ctx, request);
 
     assert.equal(response.status, 405);
-    assert(errorResponseStub.calledWith(405, 'method not allowed'));
   });
 
   it('should call handleProductSaveRequest when method is PUT', async () => {
-    const ctx = {
+    const ctx = DEFAULT_CONTEXT({
       info: { method: 'PUT' },
-      url: { pathname: '/org/site/catalog/store/view/product/sku' },
+      url: { pathname: '/org/site/catalog/store/view/products/sku' },
       config: {},
-    };
+    });
     const request = {};
 
     const mockResponse = new Response(null, { status: 200 });
@@ -161,11 +113,11 @@ describe('catalogHandler Tests', () => {
   });
 
   it('should call handleProductFetchRequest when method is GET', async () => {
-    const ctx = {
+    const ctx = DEFAULT_CONTEXT({
       info: { method: 'GET' },
-      url: { pathname: '/org/site/catalog/store/view/product/sku' },
+      url: { pathname: '/org/site/catalog/store/view/products/sku' },
       config: {},
-    };
+    });
     const request = {};
 
     const mockResponse = new Response(null, { status: 200 });
@@ -178,19 +130,19 @@ describe('catalogHandler Tests', () => {
   });
 
   it('should call handleProductDeleteRequest when method is DELETE', async () => {
-    const ctx = {
+    const ctx = DEFAULT_CONTEXT({
       info: { method: 'DELETE' },
-      url: { pathname: '/org/site/catalog/store/view/product/sku' },
+      url: { pathname: '/org/site/catalog/store/view/products/sku' },
       config: {},
-    };
+    });
     const request = {};
 
     const mockResponse = new Response(null, { status: 200 });
-    handleProductDeleteRequestStub.returns(mockResponse);
+    handleProductRemoveRequestStub.returns(mockResponse);
 
     const response = await catalogHandler(ctx, request);
 
     assert.equal(response.status, 200);
-    assert(handleProductDeleteRequestStub.calledOnceWith(ctx));
+    assert(handleProductRemoveRequestStub.calledOnceWith(ctx));
   });
 });

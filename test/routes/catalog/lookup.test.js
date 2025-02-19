@@ -14,24 +14,18 @@
 
 import assert from 'node:assert';
 import sinon from 'sinon';
-import esmock from 'esmock';
+import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import handleProductLookupRequest from '../../../src/routes/catalog/lookup.js';
 
 describe('handleProductLookupRequest Tests', () => {
-  let handleProductLookupRequest;
-  let errorResponseStub;
   /** @type {sinon.SinonStub} */
   let storageStub;
 
   beforeEach(async () => {
-    errorResponseStub = sinon.stub();
     storageStub = sinon.stub();
     storageStub.fetchProduct = sinon.stub();
     storageStub.lookupSku = sinon.stub();
     storageStub.listAllProducts = sinon.stub();
-
-    handleProductLookupRequest = (await esmock('../../src/catalog/lookup.js', {
-      '../../src/utils/http.js': { errorResponse: errorResponseStub },
-    })).handleProductLookupRequest;
   });
 
   afterEach(() => {
@@ -39,8 +33,8 @@ describe('handleProductLookupRequest Tests', () => {
   });
 
   it('should return a product when urlkey is provided', async () => {
-    const ctx = {
-      url: { origin: 'https://test-origin', search: '?urlkey=some-url-key' },
+    const ctx = DEFAULT_CONTEXT({
+      data: { urlkey: 'some-url-key' },
       log: { error: sinon.stub() },
       env: { ENVIRONMENT: 'prod' },
       config: {
@@ -49,22 +43,25 @@ describe('handleProductLookupRequest Tests', () => {
         storeCode: 'test-store-code',
         storeViewCode: 'test-store-view-code',
       },
-    };
+      attributes: {
+        storageClient: storageStub,
+      },
+    });
 
     storageStub.lookupSku.resolves('1234');
     storageStub.fetchProduct.resolves({ sku: '1234', name: 'Test Product' });
 
-    const response = await handleProductLookupRequest(ctx, storageStub);
+    const response = await handleProductLookupRequest(ctx);
 
-    assert.equal(response.headers.get('Location'), 'https://test-origin/test-org/test-site/catalog/test-store-code/test-store-view-code/product/1234');
+    assert.equal(response.headers.get('Location'), 'https://www.example.com/test-org/test-site/catalog/test-store-code/test-store-view-code/product/1234');
     assert.equal(response.status, 301);
 
     assert(storageStub.lookupSku.calledOnceWith('some-url-key'));
   });
 
   it('should use the correct origin when ENVIRONMENT is dev', async () => {
-    const ctx = {
-      url: { origin: 'https://test-origin', search: '?urlkey=some-url-key' },
+    const ctx = DEFAULT_CONTEXT({
+      data: { urlkey: 'some-url-key' },
       log: { error: sinon.stub() },
       env: { ENVIRONMENT: 'dev' },
       config: {
@@ -73,12 +70,15 @@ describe('handleProductLookupRequest Tests', () => {
         storeCode: 'test-store-code',
         storeViewCode: 'test-store-view-code',
       },
-    };
+      attributes: {
+        storageClient: storageStub,
+      },
+    });
 
     storageStub.lookupSku.resolves('1234');
     storageStub.fetchProduct.resolves({ sku: '1234', name: 'Test Product' });
 
-    const response = await handleProductLookupRequest(ctx, storageStub);
+    const response = await handleProductLookupRequest(ctx);
 
     assert.equal(response.headers.get('Location'), 'https://adobe-commerce-api-ci.adobeaem.workers.dev/test-org/test-site/catalog/test-store-code/test-store-view-code/product/1234');
     assert.equal(response.status, 301);
@@ -87,11 +87,13 @@ describe('handleProductLookupRequest Tests', () => {
   });
 
   it('should return a list of all products when no urlKey is provided', async () => {
-    const ctx = {
-      url: { search: '' },
+    const ctx = DEFAULT_CONTEXT({
       log: { error: sinon.stub() },
       config: {},
-    };
+      attributes: {
+        storageClient: storageStub,
+      },
+    });
 
     const mockProducts = [
       { sku: '1234', name: 'Product 1' },
@@ -99,7 +101,7 @@ describe('handleProductLookupRequest Tests', () => {
     ];
     storageStub.listAllProducts.resolves(mockProducts);
 
-    const response = await handleProductLookupRequest(ctx, storageStub);
+    const response = await handleProductLookupRequest(ctx);
 
     assert.equal(response.status, 200);
     const responseBody = await response.json();
@@ -108,6 +110,6 @@ describe('handleProductLookupRequest Tests', () => {
       products: mockProducts,
     });
 
-    assert(storageStub.listAllProducts.calledOnceWith(ctx));
+    assert(storageStub.listAllProducts.calledOnceWith());
   });
 });

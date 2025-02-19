@@ -164,7 +164,7 @@ async function lookupProductSKUCS(urlkey, config) {
 async function lookupProductSKUCore(urlkey, config) {
   const query = getProductSKUQueryCore({ urlkey });
   if (!config.coreEndpoint) {
-    throw errorResponse(400, 'missing coreEndpoint');
+    throw errorWithResponse(400, 'missing coreEndpoint');
   }
   console.debug(query);
 

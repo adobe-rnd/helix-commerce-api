@@ -17,6 +17,7 @@
 import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
+import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 
 describe('StorageClient Class Tests', () => {
   let StorageClient;
@@ -41,7 +42,7 @@ describe('StorageClient Class Tests', () => {
       }
     };
 
-    const module = await esmock('../../../src/catalog/storage/r2.js', {
+    const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
       '../../../src/utils/admin.js': {
         callPreviewPublish: (config, method, sku, urlKey) => callPreviewPublishStub(config, method, sku, urlKey),
       },
@@ -69,7 +70,7 @@ describe('StorageClient Class Tests', () => {
 
   describe('fetchProduct', () => {
     it('should successfully fetch a product', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { debug: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -78,10 +79,11 @@ describe('StorageClient Class Tests', () => {
             }),
           },
         },
-      };
+        config,
+      });
       const sku = 'sku1';
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
       const product = await client.fetchProduct(sku);
 
       assert(ctx.log.debug.calledOnceWithExactly('Fetching product from R2:', 'org/site/store/view/products/sku1.json'));
@@ -92,20 +94,21 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should throw 404 error if product not found', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { debug: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
             get: sinon.stub().resolves(null),
           },
         },
-      };
+        config,
+      });
       const sku = 'nonexistent';
 
       const error = new Error('Product not found');
       errorWithResponseStub.withArgs(404, 'Product not found').returns(error);
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
 
       let thrownError;
       try {
@@ -120,17 +123,18 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should propagate errors from CATALOG_BUCKET.get', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { debug: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
             get: sinon.stub().rejects(new Error('Bucket access error')),
           },
         },
-      };
+        config,
+      });
 
       const sku = 'sku1';
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
 
       let thrownError;
       try {
@@ -148,14 +152,15 @@ describe('StorageClient Class Tests', () => {
 
   describe('saveProducts', () => {
     it('should successfully save multiple products with urlKeys', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
             put: sinon.stub().resolves({ status: 200 }),
           },
         },
-      };
+        config,
+      });
       const products = [
         { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
         { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
@@ -211,7 +216,7 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/catalog/storage/r2.js', {
+      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
         '../../../src/utils/admin.js': {
           callPreviewPublish: callPreviewPublishStub,
         },
@@ -229,7 +234,7 @@ describe('StorageClient Class Tests', () => {
         }
       }
 
-      const client = new TestStorageClient(ctx, config);
+      const client = new TestStorageClient(ctx);
       const saveResults = await client.saveProducts(products);
 
       assert(storeProductsBatchStub.calledOnceWithExactly(products));
@@ -266,14 +271,15 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should handle products without urlKeys', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
             put: sinon.stub().resolves({ status: 200 }),
           },
         },
-      };
+        config,
+      });
       const products = [
         { sku: 'sku1', name: 'Product 1' }, // No urlKey
       ];
@@ -307,7 +313,7 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/catalog/storage/r2.js', {
+      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
         '../../../src/utils/admin.js': {
           callPreviewPublish: callPreviewPublishStub,
         },
@@ -325,7 +331,7 @@ describe('StorageClient Class Tests', () => {
         }
       }
 
-      const client = new TestStorageClient(ctx, config);
+      const client = new TestStorageClient(ctx);
       const saveResults = await client.saveProducts(products);
 
       assert(storeProductsBatchStub.calledOnceWithExactly(products));
@@ -349,14 +355,15 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should handle errors during saving a product', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
             put: sinon.stub().resolves({ status: 200 }),
           },
         },
-      };
+        config,
+      });
       const products = [
         { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
         { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
@@ -382,7 +389,7 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/catalog/storage/r2.js', {
+      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
         '../../../src/utils/admin.js': {
           callPreviewPublish: callPreviewPublishStub,
         },
@@ -400,7 +407,7 @@ describe('StorageClient Class Tests', () => {
         }
       }
 
-      const client = new TestStorageClient(ctx, config);
+      const client = new TestStorageClient(ctx);
       const saveResults = await client.saveProducts(products);
 
       assert(storeProductsBatchStub.calledOnceWithExactly(products));
@@ -428,21 +435,22 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should handle errors from BatchProcessor', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
             put: sinon.stub().resolves({ status: 200 }),
           },
         },
-      };
+        config,
+      });
       const products = [
         { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
       ];
 
       const storeProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
-      const module = await esmock('../../../src/catalog/storage/r2.js', {
+      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
         '../../../src/utils/admin.js': {
           callPreviewPublish: callPreviewPublishStub,
         },
@@ -460,7 +468,7 @@ describe('StorageClient Class Tests', () => {
         }
       }
 
-      const client = new TestStorageClient(ctx, config);
+      const client = new TestStorageClient(ctx);
 
       let thrownError;
       try {
@@ -480,18 +488,19 @@ describe('StorageClient Class Tests', () => {
       let ctx;
 
       beforeEach(async () => {
-        ctx = {
+        ctx = DEFAULT_CONTEXT({
           log: { debug: sinon.stub(), error: sinon.stub() },
           env: {
             CATALOG_BUCKET: {
               put: sinon.stub(),
             },
           },
-        };
+          config,
+        });
       });
 
       it('should successfully save products with urlKeys', async () => {
-        const client = new StorageClient(ctx, config);
+        const client = new StorageClient(ctx);
         const batch = [
           { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
@@ -616,7 +625,7 @@ describe('StorageClient Class Tests', () => {
       });
 
       it('should successfully save products without urlKeys', async () => {
-        const client = new StorageClient(ctx, config);
+        const client = new StorageClient(ctx);
         const batch = [
           { sku: 'sku1', name: 'Product 1' },
           { sku: 'sku2', name: 'Product 2' },
@@ -709,7 +718,7 @@ describe('StorageClient Class Tests', () => {
       });
 
       it('should handle errors during product save (CATALOG_BUCKET.put failure)', async () => {
-        const client = new StorageClient(ctx, config);
+        const client = new StorageClient(ctx);
         const batch = [
           { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
@@ -812,7 +821,7 @@ describe('StorageClient Class Tests', () => {
       });
 
       it('should handle errors during metadata save (CATALOG_BUCKET.put for urlKey failure)', async () => {
-        const client = new StorageClient(ctx, config);
+        const client = new StorageClient(ctx);
         const batch = [
           { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
         ];
@@ -870,7 +879,7 @@ describe('StorageClient Class Tests', () => {
       });
 
       it('should handle errors from callPreviewPublish', async () => {
-        const client = new StorageClient(ctx, config);
+        const client = new StorageClient(ctx);
         const batch = [
           { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
@@ -996,7 +1005,7 @@ describe('StorageClient Class Tests', () => {
       });
 
       it('should handle an empty batch', async () => {
-        const client = new StorageClient(ctx, config);
+        const client = new StorageClient(ctx);
         const batch = [];
 
         const results = await client.storeProductsBatch(batch);
@@ -1008,7 +1017,7 @@ describe('StorageClient Class Tests', () => {
       });
 
       it('should handle mixed scenarios in a batch', async () => {
-        const client = new StorageClient(ctx, config);
+        const client = new StorageClient(ctx);
         const batch = [
           { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           { sku: 'sku2', name: 'Product 2' }, // No urlKey
@@ -1195,7 +1204,7 @@ describe('StorageClient Class Tests', () => {
 
   describe('deleteProducts', () => {
     it('should successfully delete multiple products with urlKeys', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -1203,7 +1212,8 @@ describe('StorageClient Class Tests', () => {
             delete: sinon.stub().resolves({ status: 200 }),
           },
         },
-      };
+        config,
+      });
       const skus = ['sku1', 'sku2'];
 
       ctx.env.CATALOG_BUCKET.head.withArgs('org1/site1/store1/view1/products/sku1.json').resolves({
@@ -1263,7 +1273,7 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('.. /../../src/catalog/storage/r2.js', {
+      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
         '../../../src/utils/admin.js': {
           callPreviewPublish: callPreviewPublishStub,
         },
@@ -1281,7 +1291,7 @@ describe('StorageClient Class Tests', () => {
         }
       }
 
-      const client = new TestStorageClient(ctx, config);
+      const client = new TestStorageClient(ctx);
       const deleteResults = await client.deleteProducts(skus);
 
       assert(deleteProductsBatchStub.calledOnceWithExactly(skus));
@@ -1319,7 +1329,7 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should skip deletion for non-existent SKUs', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -1327,7 +1337,8 @@ describe('StorageClient Class Tests', () => {
             delete: sinon.stub().resolves({ status: 200 }),
           },
         },
-      };
+        config,
+      });
       const skus = ['sku1', 'nonexistent'];
 
       ctx.env.CATALOG_BUCKET.head.withArgs('org/site/store/view/products/sku1.json').resolves({
@@ -1342,7 +1353,7 @@ describe('StorageClient Class Tests', () => {
         { sku: 'nonexistent', statusCode: 404, message: 'Product not found.' },
       ]);
 
-      const module = await esmock('../../../src/catalog/storage/r2.js', {
+      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
         '../../../src/utils/admin.js': {
           callPreviewPublish: callPreviewPublishStub,
         },
@@ -1360,7 +1371,7 @@ describe('StorageClient Class Tests', () => {
         }
       }
 
-      const client = new TestStorageClient(ctx, config);
+      const client = new TestStorageClient(ctx);
       const deleteResults = await client.deleteProducts(skus);
 
       assert(deleteProductsBatchStub.calledOnceWithExactly(skus));
@@ -1375,7 +1386,7 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should handle errors during deletion of a product', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -1383,7 +1394,8 @@ describe('StorageClient Class Tests', () => {
             delete: sinon.stub().resolves({ status: 200 }),
           },
         },
-      };
+        config,
+      });
       const skus = ['sku1', 'sku2'];
 
       ctx.env.CATALOG_BUCKET.head.withArgs('org/site/store/view/products/sku1.json').resolves({
@@ -1403,7 +1415,7 @@ describe('StorageClient Class Tests', () => {
         { sku: 'sku2', status: 500, message: 'Error: Publish error' },
       ]);
 
-      const module = await esmock('../../../src/catalog/storage/r2.js', {
+      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
         '../../../src/utils/admin.js': {
           callPreviewPublish: callPreviewPublishStub,
         },
@@ -1421,7 +1433,7 @@ describe('StorageClient Class Tests', () => {
         }
       }
 
-      const client = new TestStorageClient(ctx, config);
+      const client = new TestStorageClient(ctx);
       const deleteResults = await client.deleteProducts(skus);
 
       assert(deleteProductsBatchStub.calledOnceWithExactly(skus));
@@ -1435,7 +1447,7 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should handle errors from BatchProcessor', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), warn: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -1443,12 +1455,13 @@ describe('StorageClient Class Tests', () => {
             delete: sinon.stub().resolves({ status: 200 }),
           },
         },
-      };
+        config,
+      });
       const skus = ['sku1'];
 
       const deleteProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
-      const module = await esmock('../../../src/catalog/storage/r2.js', {
+      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
         '../../../src/utils/admin.js': {
           callPreviewPublish: callPreviewPublishStub,
         },
@@ -1466,7 +1479,7 @@ describe('StorageClient Class Tests', () => {
         }
       }
 
-      const client = new TestStorageClient(ctx, config);
+      const client = new TestStorageClient(ctx);
 
       let thrownError;
       try {
@@ -1487,7 +1500,7 @@ describe('StorageClient Class Tests', () => {
       let client;
 
       beforeEach(() => {
-        ctx = {
+        ctx = DEFAULT_CONTEXT({
           log: { warn: sinon.stub(), error: sinon.stub() },
           env: {
             CATALOG_BUCKET: {
@@ -1495,9 +1508,10 @@ describe('StorageClient Class Tests', () => {
               delete: sinon.stub(),
             },
           },
-        };
+          config,
+        });
 
-        client = new StorageClient(ctx, config);
+        client = new StorageClient(ctx);
       });
 
       it('should successfully delete products with urlKeys', async () => {
@@ -1776,7 +1790,7 @@ describe('StorageClient Class Tests', () => {
 
   describe('lookupSku', () => {
     it('should successfully resolve SKU from urlKey', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         env: {
           CATALOG_BUCKET: {
             head: sinon.stub().resolves({
@@ -1784,10 +1798,11 @@ describe('StorageClient Class Tests', () => {
             }),
           },
         },
-      };
+        config,
+      });
       const urlKey = 'product-1';
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
       const sku = await client.lookupSku(urlKey);
 
       assert(ctx.env.CATALOG_BUCKET.head.calledOnceWithExactly('org/site/store/view/urlkeys/product-1'));
@@ -1795,19 +1810,20 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should throw 404 error if urlKey not found', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         env: {
           CATALOG_BUCKET: {
             head: sinon.stub().resolves(null),
           },
         },
-      };
+        config,
+      });
       const urlKey = 'nonexistent-key';
 
       const error = new Error('Product not found');
       errorWithResponseStub.withArgs(404, 'Product not found').returns(error);
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
 
       let thrownError;
       try {
@@ -1821,7 +1837,7 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should throw 404 error if sku is missing in customMetadata', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         env: {
           CATALOG_BUCKET: {
             head: sinon.stub().resolves({
@@ -1829,13 +1845,14 @@ describe('StorageClient Class Tests', () => {
             }),
           },
         },
-      };
+        config,
+      });
       const urlKey = 'product-2';
 
       const error = new Error('Product not found');
       errorWithResponseStub.withArgs(404, 'Product not found').returns(error);
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
 
       let thrownError;
       try {
@@ -1849,16 +1866,17 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should propagate errors from CATALOG_BUCKET.head', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         env: {
           CATALOG_BUCKET: {
             head: sinon.stub().rejects(new Error('Bucket access error')),
           },
         },
-      };
+        config,
+      });
       const urlKey = 'product-3';
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
 
       let thrownError;
       try {
@@ -1875,7 +1893,7 @@ describe('StorageClient Class Tests', () => {
 
   describe('lookupUrlKey', () => {
     it('should successfully resolve urlKey from SKU', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         env: {
           CATALOG_BUCKET: {
             head: sinon.stub().resolves({
@@ -1884,10 +1902,11 @@ describe('StorageClient Class Tests', () => {
           },
         },
         url: { origin: 'https://example.com' },
-      };
+        config,
+      });
       const sku = 'sku1';
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
       const urlKey = await client.lookupUrlKey(sku);
 
       assert(ctx.env.CATALOG_BUCKET.head.calledOnceWithExactly('org/site/store/view/products/sku1.json'));
@@ -1895,7 +1914,7 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should return undefined if urlKey is not present in customMetadata', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         env: {
           CATALOG_BUCKET: {
             head: sinon.stub().resolves({
@@ -1904,10 +1923,11 @@ describe('StorageClient Class Tests', () => {
           },
         },
         url: { origin: 'https://example.com' },
-      };
+        config,
+      });
       const sku = 'sku1';
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
       const urlKey = await client.lookupUrlKey(sku);
 
       assert(ctx.env.CATALOG_BUCKET.head.calledOnceWithExactly('org/site/store/view/products/sku1.json'));
@@ -1915,17 +1935,18 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should return undefined if product does not exist', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         env: {
           CATALOG_BUCKET: {
             head: sinon.stub().resolves(null),
           },
         },
         url: { origin: 'https://example.com' },
-      };
+        config,
+      });
       const sku = 'sku1';
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
       const urlKey = await client.lookupUrlKey(sku);
 
       assert(ctx.env.CATALOG_BUCKET.head.calledOnceWithExactly('org/site/store/view/products/sku1.json'));
@@ -1933,17 +1954,18 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should propagate errors from CATALOG_BUCKET.head', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         env: {
           CATALOG_BUCKET: {
             head: sinon.stub().rejects(new Error('Bucket access error')),
           },
         },
         url: { origin: 'https://example.com' },
-      };
+        config,
+      });
       const sku = 'sku2';
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
 
       let thrownError;
       try {
@@ -1960,7 +1982,7 @@ describe('StorageClient Class Tests', () => {
 
   describe('listAllProducts', () => {
     it('should successfully list all products', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -1978,9 +2000,10 @@ describe('StorageClient Class Tests', () => {
           },
         },
         url: { origin: 'https://example.com' },
-      };
+        config,
+      });
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
       const customMetadataArray = await client.listAllProducts();
 
       assert(ctx.env.CATALOG_BUCKET.list.calledOnceWithExactly({
@@ -2005,7 +2028,7 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should handle empty product list', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -2016,9 +2039,10 @@ describe('StorageClient Class Tests', () => {
           },
         },
         url: { origin: 'https://example.com' },
-      };
+        config,
+      });
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
       const customMetadataArray = await client.listAllProducts();
 
       assert(ctx.env.CATALOG_BUCKET.list.calledOnceWithExactly({
@@ -2031,7 +2055,7 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should handle multiple batches', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -2044,9 +2068,10 @@ describe('StorageClient Class Tests', () => {
           },
         },
         url: { origin: 'https://example.com' },
-      };
+        config,
+      });
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
 
       // Mock head responses for first 50 products
       for (let i = 1; i <= 50; i++) {
@@ -2089,7 +2114,7 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('should handle errors during head requests', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { info: sinon.stub(), error: sinon.stub() },
         env: {
           CATALOG_BUCKET: {
@@ -2103,9 +2128,10 @@ describe('StorageClient Class Tests', () => {
           },
         },
         url: { origin: 'https://example.com' },
-      };
+        config,
+      });
 
-      const client = new StorageClient(ctx, config);
+      const client = new StorageClient(ctx);
 
       let thrownError;
       try {

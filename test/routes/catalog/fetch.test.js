@@ -14,38 +14,28 @@
 
 import assert from 'node:assert';
 import sinon from 'sinon';
-import esmock from 'esmock';
-import { ResponseError } from '../../src/utils/http.js';
+import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import { ResponseError } from '../../../src/utils/http.js';
+import handleProductFetchRequest from '../../../src/routes/catalog/fetch.js';
 
 describe('handleProductFetchRequest', () => {
-  let handleProductFetchRequest;
-  let errorResponseStub;
   let storageStub;
   let ctx;
 
   beforeEach(async () => {
-    errorResponseStub = sinon.stub();
-
     storageStub = sinon.stub();
     storageStub.fetchProduct = sinon.stub();
 
-    const moduleUnderTest = await esmock('../../src/catalog/fetch.js', {
-      '../../src/utils/http.js': { errorResponse: errorResponseStub },
-    });
-
-    ({ handleProductFetchRequest } = moduleUnderTest);
-
-    ctx = {
+    ctx = DEFAULT_CONTEXT({
       url: new URL('https://example.com/products/sku1'),
-      log: {
-        error: sinon.stub(),
-      },
       config: {},
-    };
+      attributes: {
+        storageClient: storageStub,
+      },
+    });
   });
 
   afterEach(async () => {
-    await esmock.purge(handleProductFetchRequest);
     sinon.restore();
   });
 
@@ -53,7 +43,7 @@ describe('handleProductFetchRequest', () => {
     const product = { sku: 'sku1', name: 'Product 1' };
 
     storageStub.fetchProduct.resolves(product);
-    const response = await handleProductFetchRequest(ctx, storageStub);
+    const response = await handleProductFetchRequest(ctx);
 
     assert.equal(response.headers.get('Content-Type'), 'application/json');
     const responseBody = await response.text();
@@ -68,7 +58,7 @@ describe('handleProductFetchRequest', () => {
 
     let thrownError;
     try {
-      await handleProductFetchRequest(ctx, storageStub);
+      await handleProductFetchRequest(ctx);
     } catch (e) {
       thrownError = e;
     }
