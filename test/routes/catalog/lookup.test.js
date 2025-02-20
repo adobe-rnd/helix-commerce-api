@@ -53,7 +53,7 @@ describe('handleProductLookupRequest Tests', () => {
 
     const response = await handleProductLookupRequest(ctx);
 
-    assert.equal(response.headers.get('Location'), 'https://www.example.com/test-org/test-site/catalog/test-store-code/test-store-view-code/product/1234');
+    assert.equal(response.headers.get('Location'), 'https://www.example.com/test-org/test-site/catalog/test-store-code/test-store-view-code/products/1234');
     assert.equal(response.status, 301);
 
     assert(storageStub.lookupSku.calledOnceWith('some-url-key'));
@@ -80,7 +80,7 @@ describe('handleProductLookupRequest Tests', () => {
 
     const response = await handleProductLookupRequest(ctx);
 
-    assert.equal(response.headers.get('Location'), 'https://adobe-commerce-api-ci.adobeaem.workers.dev/test-org/test-site/catalog/test-store-code/test-store-view-code/product/1234');
+    assert.equal(response.headers.get('Location'), 'https://adobe-commerce-api-ci.adobeaem.workers.dev/test-org/test-site/catalog/test-store-code/test-store-view-code/products/1234');
     assert.equal(response.status, 301);
 
     assert(storageStub.lookupSku.calledOnceWith('some-url-key'));
