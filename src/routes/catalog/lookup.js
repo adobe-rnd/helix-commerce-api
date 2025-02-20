@@ -39,7 +39,7 @@ export default async function lookup(ctx) {
     return new Response(undefined, {
       status: 301,
       headers: {
-        Location: `${origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/product/${sku}`,
+        Location: `${origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/products/${sku}`,
       },
     });
   }
