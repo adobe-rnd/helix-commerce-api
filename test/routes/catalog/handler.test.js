@@ -44,7 +44,7 @@ describe('catalogHandler Tests', () => {
   it('should return 405 when method is not allowed', async () => {
     const ctx = DEFAULT_CONTEXT({
       info: { method: 'HEAD' },
-      url: { pathname: '/org/site/catalog/store/view/product/sku1' },
+      url: { pathname: '/org/site/catalog/store/view/products/sku1' },
       config: {},
     });
     const request = {};
@@ -53,23 +53,10 @@ describe('catalogHandler Tests', () => {
     assert.equal(response.status, 405);
   });
 
-  it('should return 400 when sku is uppercase', async () => {
-    const ctx = DEFAULT_CONTEXT({
-      info: { method: 'GET' },
-      url: { pathname: '/org/site/catalog/store/view/product/PRODUCT-SKU' },
-      config: {},
-    });
-    const request = {};
-    const response = await catalogHandler(ctx, request);
-
-    assert.equal(response.status, 400);
-    assert.equal(response.headers.get('x-error'), 'Invalid SKU: SKU cannot contain uppercase letters');
-  });
-
   it('should call handleProductLookupRequest when method is GET and subRoute is "lookup"', async () => {
     const ctx = DEFAULT_CONTEXT({
       info: { method: 'GET' },
-      url: { pathname: '/org/site/catalog/store/view/lookup/sku' },
+      url: { pathname: '/org/site/catalog/store/view/lookup' },
       config: {},
     });
     const request = {};
@@ -86,7 +73,7 @@ describe('catalogHandler Tests', () => {
   it('should return 405 if subRoute is "lookup" but method is not GET', async () => {
     const ctx = DEFAULT_CONTEXT({
       info: { method: 'PUT' },
-      url: { pathname: '/org/site/catalog/store/view/lookup/sku' },
+      url: { pathname: '/org/site/catalog/store/view/lookup' },
       config: {},
     });
     const request = {};

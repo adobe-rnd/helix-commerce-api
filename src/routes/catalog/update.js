@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertValidProduct } from '../../utils/product.js';
+import { assertValidProduct, hasUppercase } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
 
@@ -20,15 +20,22 @@ import StorageClient from './StorageClient.js';
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
 export default async function update(ctx) {
-  const { config, log } = ctx;
+  const { config, log, data: product } = ctx;
 
   if (config.sku === '*') {
     return errorResponse(501, 'not implemented');
   }
 
-  const product = ctx.data;
   if (!product || typeof product !== 'object') {
     return errorResponse(400, 'invalid product data');
+  }
+
+  if (hasUppercase(config.sku)) {
+    return errorResponse(400, 'sku must be lowercase');
+  }
+
+  if (config.sku !== product.sku) {
+    return errorResponse(400, 'sku must match the product data');
   }
 
   assertValidProduct(product);
