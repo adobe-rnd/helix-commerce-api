@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { hasUppercase } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import lookup from './lookup.js';
 import fetch from './fetch.js';
@@ -48,15 +47,13 @@ export default async function handler(ctx, request) {
     config,
     info: { method },
   } = ctx;
-  // Split the pathname into segments and filter out empty strings
   const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
-  if (pathSegments.length !== 7) {
-    return errorResponse(404, 'invalid path');
-  }
-
   const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(3);
-  if (hasUppercase(sku)) {
-    return errorResponse(400, 'Invalid SKU: SKU cannot contain uppercase letters');
+
+  if (!Object.keys(handlers).includes(subRoute)
+    || (subRoute === 'products' && !sku)
+    || (subRoute === 'lookup' && sku)) {
+    return errorResponse(404, 'invalid path');
   }
 
   Object.assign(config, {
