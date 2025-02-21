@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.9...v1.13.0) (2025-02-21)
+
+
+### Features
+
+* auth route ([#80](https://github.com/adobe-rnd/helix-commerce-api/issues/80)) ([440a29f](https://github.com/adobe-rnd/helix-commerce-api/commit/440a29f39bae01454c727ddba031f8c4d7ae2299))
+
 ## [1.12.9](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.8...v1.12.9) (2025-02-21)
 
 
