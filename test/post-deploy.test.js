@@ -29,6 +29,9 @@ config();
 function getFetchOptions(path) {
   return {
     url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
+    headers: {
+      authorization: `bearer ${process.env.SUPERUSER_KEY}`,
+    },
     cache: 'no-store',
     redirect: 'manual',
   };
