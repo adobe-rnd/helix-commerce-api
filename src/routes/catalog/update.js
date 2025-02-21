@@ -13,6 +13,7 @@
 import { assertValidProduct, hasUppercase } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
+import { assertAuthorization } from '../../utils/auth.js';
 
 /**
  * Handles a PUT request to update a product.
@@ -39,6 +40,8 @@ export default async function update(ctx) {
   }
 
   assertValidProduct(product);
+
+  await assertAuthorization(ctx);
 
   const storage = StorageClient.fromContext(ctx);
   const saveResults = await storage.saveProducts([product]);
