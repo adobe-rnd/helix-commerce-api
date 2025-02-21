@@ -29,6 +29,7 @@ export async function assertAuthorization(ctx) {
   if (!actual) {
     throw errorWithResponse(403, 'invalid key');
   }
+
   const expected = await ctx.env.KEYS.get(ctx.config.siteKey);
   if (!expected) {
     throw errorWithResponse(403, 'no key found for site');

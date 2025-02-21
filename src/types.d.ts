@@ -204,6 +204,7 @@ declare global {
   export interface Env {
     VERSION: string;
     ENVIRONMENT: string;
+    SUPERUSER_KEY: string;
 
     // KV namespaces
     CONFIGS: KVNamespace<string>;
