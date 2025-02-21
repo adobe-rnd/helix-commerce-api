@@ -1,3 +1,10 @@
+## [1.12.9](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.8...v1.12.9) (2025-02-21)
+
+
+### Bug Fixes
+
+* refactor ([#79](https://github.com/adobe-rnd/helix-commerce-api/issues/79)) ([9128220](https://github.com/adobe-rnd/helix-commerce-api/commit/912822009b5574b78e366a1148a55bcb07b60bd0))
+
 ## [1.12.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.7...v1.12.8) (2025-02-05)
 
 
