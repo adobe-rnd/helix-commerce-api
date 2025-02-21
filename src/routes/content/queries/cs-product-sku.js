@@ -10,17 +10,26 @@
  * governing permissions and limitations under the License.
  */
 
-/**
- * Handles a GET request for a product.
- * @param {Context} ctx - The context object containing request information and utilities.
- * @param {StorageClient} storage - The storage object.
- * @returns {Promise<Response>} - A promise that resolves to the product response.
- */
-export async function handleProductFetchRequest(ctx, storage) {
-  const sku = ctx.url.pathname.split('/').pop();
-  const product = await storage.fetchProduct(sku);
+import { gql } from '../../../utils/product.js';
 
-  return new Response(JSON.stringify(product), {
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+/**
+ * @param {{ urlkey: string; }} param0
+ */
+// @ts-ignore
+export default ({ urlkey }) => gql`{
+  productSearch (
+    phrase:""
+    page_size: 1
+    filter: {
+      attribute: "url_key"
+      eq: "${urlkey}"
+    }
+  ) {
+    items {
+      product {
+        sku
+        uid
+      }
+    }
+  }
+}`;

@@ -10,34 +10,40 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertValidProduct } from '../utils/product.js';
-import { errorResponse } from '../utils/http.js';
+import { assertValidProduct, hasUppercase } from '../../utils/product.js';
+import { errorResponse } from '../../utils/http.js';
+import StorageClient from './StorageClient.js';
 
 /**
  * Handles a PUT request to update a product.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Request} request - The request object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductSaveRequest(ctx, request, storage) {
-  const { config } = ctx;
+export default async function update(ctx) {
+  const { config, log, data: product } = ctx;
+
   if (config.sku === '*') {
     return errorResponse(501, 'not implemented');
   }
 
-  let product;
-  try {
-    product = await request.json();
-  } catch (jsonError) {
-    ctx.log.error('Invalid JSON in request body:', jsonError);
-    return errorResponse(400, 'invalid JSON');
+  if (!product || typeof product !== 'object') {
+    return errorResponse(400, 'invalid product data');
+  }
+
+  if (hasUppercase(config.sku)) {
+    return errorResponse(400, 'sku must be lowercase');
+  }
+
+  if (config.sku !== product.sku) {
+    return errorResponse(400, 'sku must match the product data');
   }
 
   assertValidProduct(product);
 
+  const storage = StorageClient.fromContext(ctx);
   const saveResults = await storage.saveProducts([product]);
 
-  ctx.log.info({
+  log.info({
     action: 'save_products',
     result: JSON.stringify(saveResults),
     timestamp: new Date().toISOString(),

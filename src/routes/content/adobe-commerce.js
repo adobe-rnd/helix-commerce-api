@@ -10,12 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse, errorWithResponse, ffetch } from '../utils/http.js';
+import { errorResponse, errorWithResponse, ffetch } from '../../utils/http.js';
 import getProductQuery, { adapter as productAdapter } from './queries/cs-product.js';
 import getVariantsQuery, { adapter as variantsAdapter } from './queries/cs-variants.js';
 import getProductSKUQueryCore from './queries/core-product-sku.js';
 import getProductSKUQueryCS from './queries/cs-product-sku.js';
-import htmlTemplateFromContext from '../templates/html/index.js';
+import htmlTemplateFromContext from '../../templates/html/index.js';
 
 /**
  * @param {string} sku
@@ -164,7 +164,7 @@ async function lookupProductSKUCS(urlkey, config) {
 async function lookupProductSKUCore(urlkey, config) {
   const query = getProductSKUQueryCore({ urlkey });
   if (!config.coreEndpoint) {
-    throw errorResponse(400, 'missing coreEndpoint');
+    throw errorWithResponse(400, 'missing coreEndpoint');
   }
   console.debug(query);
 
@@ -215,7 +215,7 @@ function lookupProductSKU(urlkey, config) {
  * @param {Context} ctx
  * @returns {Promise<Response>}
  */
-export async function handle(ctx) {
+export default async function handler(ctx) {
   const { config } = ctx;
   const { urlkey } = config.params;
   let { sku } = config.params;

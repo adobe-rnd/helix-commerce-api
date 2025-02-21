@@ -10,16 +10,16 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../utils/http.js';
+import { errorResponse, errorWithResponse } from '../../utils/http.js';
+import StorageClient from './StorageClient.js';
 
 /**
  * Handles a DELETE request for a product.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {StorageClient} storage - The storage object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductDeleteRequest(ctx, storage) {
-  const { config } = ctx;
+export default async function remove(ctx) {
+  const { log, config } = ctx;
   const { sku } = config;
 
   if (sku === '*') {
@@ -27,12 +27,13 @@ export async function handleProductDeleteRequest(ctx, storage) {
   }
 
   if (!config.helixApiKey) {
-    throw errorResponse(400, 'Helix API key is required to delete or unpublish products.');
+    throw errorWithResponse(400, 'Helix API key is required to delete or unpublish products.');
   }
 
+  const storage = StorageClient.fromContext(ctx);
   const deleteResults = await storage.deleteProducts([sku]);
 
-  ctx.log.info({
+  log.info({
     action: 'delete_products',
     result: JSON.stringify(deleteResults),
     timestamp: new Date().toISOString(),

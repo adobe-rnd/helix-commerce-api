@@ -10,17 +10,16 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../utils/http.js';
-import { assertAuthorization } from '../utils/auth.js';
-import { validate } from '../utils/validation.js';
-import ConfigSchema from '../schemas/Config.js';
+import { errorResponse } from '../../utils/http.js';
+import { assertAuthorization } from '../../utils/auth.js';
+import { validate } from '../../utils/validation.js';
+import ConfigSchema from '../../schemas/Config.js';
 
 /**
  * @param {Context} ctx
- * @param {Request} req
  * @returns {Promise<Response>}
  */
-export default async function configHandler(ctx, req) {
+export default async function configHandler(ctx) {
   const { method } = ctx.info;
   if (!['GET', 'POST'].includes(method)) {
     return errorResponse(405, 'method not allowed');
@@ -36,10 +35,8 @@ export default async function configHandler(ctx, req) {
     });
   }
 
-  let json;
-  try {
-    json = await req.json();
-  } catch {
+  const json = ctx.data;
+  if (!json) {
     return errorResponse(400, 'invalid JSON');
   }
 

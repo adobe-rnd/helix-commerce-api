@@ -1,8 +1,47 @@
 import type { ExecutionContext, KVNamespace } from "@cloudflare/workers-types/experimental";
+import type { R2Bucket } from "@cloudflare/workers-types";
 import type { HTMLTemplate } from "./templates/html/HTMLTemplate.js";
-import { JSONTemplate } from "./templates/json/JSONTemplate.js";
+import type { JSONTemplate } from "./templates/json/JSONTemplate.js";
+import type StorageClient from "./routes/products/StorageClient.js";
+
 
 declare global {
+  /**
+   * Helix product-bus entry
+   */
+  export interface ProductBusEntry {
+    /**
+     * Product data used to generate markup/json-ld
+     */
+    product: {
+      sku: string;
+      urlKey: string;
+      title: string;
+      metaTitle?: string;
+      description: string;
+      metaDescription?: string;
+      url?: string;
+      inStock?: boolean;
+      images: HelixProductImage[];
+      prices?: HelixProductPrice[];
+      attributes?: HelixProductAttribute[];
+      options?: HelixProductOption[];
+      variants?: HelixProductVariant[];
+      rating?: HelixProductRating;
+      links?: HelixProductLink[];
+    }
+
+    /**
+     * Override "escape hatch" for json-ld
+     */
+    jsonld?: any;
+
+    /**
+     * Additional data that can be retrieved via .json API
+     */
+    public?: any;
+  }
+
   /**
    * The config for a single path pattern as stored in KV
    */
@@ -169,6 +208,7 @@ declare global {
     // KV namespaces
     CONFIGS: KVNamespace<string>;
     KEYS: KVNamespace<string>;
+    CATALOG_BUCKET: R2Bucket
 
     [key: string]: string | KVNamespace<string> | R2Bucket;
   }
@@ -178,6 +218,8 @@ declare global {
     env: Env;
     log: Console;
     config: Config;
+    /** parsed from body or query params */
+    data: any;
     info: {
       method: string;
       headers: Record<string, string>;
@@ -185,6 +227,7 @@ declare global {
     attributes: {
       htmlTemplate?: HTMLTemplate;
       jsonTemplate?: JSONTemplate;
+      storageClient?: StorageClient;
       key?: string;
       [key: string]: any;
     }
@@ -331,63 +374,6 @@ declare global {
   interface AdminResult {
     status: number;
     message?: string;
-  }
-
-  interface StorageClient {
-    /**
-     * Fetches a product by its SKU.
-     * @param sku - The SKU of the product.
-     * @returns A promise that resolves to the product.
-     */
-    fetchProduct(sku: string): Promise<Product>;
-
-    /**
-     * Saves multiple products.
-     * @param products - An array of products to save.
-     * @returns A promise that resolves to an array of save results.
-     */
-    saveProducts(products: Product[]): Promise<Partial<BatchResult>[]>;
-
-    /**
-     * Processes a batch of products for saving.
-     * @param batch - An array of products.
-     * @returns A promise that resolves to an array of batch results.
-     */
-    storeProductsBatch(batch: Product[]): Promise<Partial<BatchResult>[]>;
-
-    /**
-     * Deletes multiple products by their SKUs.
-     * @param skus - An array of SKUs of the products to delete.
-     * @returns A promise that resolves to an array of deletion results.
-     */
-    deleteProducts(skus: string[]): Promise<Partial<BatchResult>[]>;
-
-    /**
-     * Processes a batch of SKUs for deletion.
-     * @param batch - An array of SKUs.
-     * @returns A promise that resolves to an array of deletion results.
-     */
-    deleteProductsBatch(batch: string[]): Promise<Partial<BatchResult>[]>;
-
-    /**
-     * Resolves a SKU from a URL key.
-     * @param urlKey - The URL key.
-     * @returns A promise that resolves to the SKU.
-     */
-    lookupSku(urlKey: string): Promise<string>;
-
-    /**
-     * Resolves a URL key from a SKU.
-     * @param sku - The SKU of the product.
-     * @returns A promise that resolves to the URL key or undefined.
-     */
-    lookupUrlKey(sku: string): Promise<string | undefined>;
-
-    /**
-     * Lists all products.
-     * @returns A promise that resolves to an array of products.
-     */
-    listAllProducts(): Promise<ProductListItem[]>;
   }
 }
 

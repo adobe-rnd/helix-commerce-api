@@ -82,4 +82,4 @@ VERSION = "@@VERSION@@"
 ENVIRONMENT = "prod"
 
 # [secrets]
-# ...
+# SUPERUSER_KEY

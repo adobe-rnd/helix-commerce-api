@@ -15,6 +15,7 @@
 import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
+import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 
 describe('Product Save Tests', () => {
   /** @type {import('../../src/catalog/update.js').handleProductSaveRequest} */
@@ -30,10 +31,10 @@ describe('Product Save Tests', () => {
     storageStub.saveProducts = sinon.stub();
 
     const mocks = {
-      '../../src/utils/admin.js': { callAdmin: callAdminStub },
+      '../../../src/utils/admin.js': { callAdmin: callAdminStub },
     };
 
-    ({ handleProductSaveRequest } = await esmock('../../src/catalog/update.js', mocks));
+    ({ default: handleProductSaveRequest } = await esmock('../../../src/routes/catalog/update.js', mocks));
   });
 
   afterEach(() => {
@@ -42,7 +43,7 @@ describe('Product Save Tests', () => {
 
   describe('handleProductSaveRequest', () => {
     it('should return 501 if config.sku is "*"', async () => {
-      const ctx = { log: { error: sinon.stub() }, config: { sku: '*' } };
+      const ctx = DEFAULT_CONTEXT({ log: { error: sinon.stub() }, config: { sku: '*' } });
       const request = { json: sinon.stub().resolves({ sku: '1234' }) };
 
       const response = await handleProductSaveRequest(ctx, request, storageStub);
@@ -52,8 +53,9 @@ describe('Product Save Tests', () => {
     });
 
     it('should return 201 when product is successfully saved and paths are purged', async () => {
-      const ctx = {
+      const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub(), info: sinon.stub() },
+        data: { sku: '1234', urlKey: 'product-url-key' },
         config: {
           sku: '1234',
           confMap: {
@@ -61,27 +63,17 @@ describe('Product Save Tests', () => {
             '/path/to/{{urlkey}}/{{sku}}': {},
           },
         },
-      };
-      const request = { json: sinon.stub().resolves({ sku: '1234', urlKey: 'product-url-key' }) };
+        attributes: {
+          storageClient: storageStub,
+        },
+      });
+      const request = { };
 
       storageStub.saveProducts.resolves();
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       assert.equal(response.status, 201);
       assert(storageStub.saveProducts.calledOnce);
-    });
-
-    it('should return 400 if request.json throws a JSON parsing error', async () => {
-      const ctx = { log: { error: sinon.stub() }, config: { sku: '1234', confEnvMap: {} } };
-      const request = { json: sinon.stub().rejects(new Error('Unexpected token < in JSON at position 0')) };
-
-      const response = await handleProductSaveRequest(ctx, request, storageStub);
-
-      assert.equal(response.status, 400);
-      assert.equal(response.headers.get('x-error'), 'invalid JSON');
-
-      assert(ctx.log.error.calledOnce);
-      assert(ctx.log.error.calledWith('Invalid JSON in request body:', sinon.match.instanceOf(Error)));
     });
   });
 });

@@ -10,31 +10,41 @@
  * governing permissions and limitations under the License.
  */
 
+import StorageClient from './StorageClient.js';
+
 /**
  * Handles a product lookup request.
  * @param {Context} ctx - The context object.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
-export async function handleProductLookupRequest(ctx, storage) {
-  const { config } = ctx;
-  const { search } = ctx.url;
-  const params = new URLSearchParams(search);
+export default async function lookup(ctx) {
+  const {
+    env,
+    config,
+    data = {},
+  } = ctx;
+  const {
+    org,
+    site,
+    storeCode,
+    storeViewCode,
+  } = config;
+  const storage = StorageClient.fromContext(ctx);
 
-  if (params.has('urlKey') || params.has('urlkey')) {
-    const urlkey = params.get('urlKey') || params.get('urlkey');
+  if (data.urlKey || data.urlkey) {
+    const urlkey = data.urlKey || data.urlkey;
     const sku = await storage.lookupSku(urlkey);
 
-    const origin = (ctx.env.ENVIRONMENT === 'dev') ? 'https://adobe-commerce-api-ci.adobeaem.workers.dev' : ctx.url.origin;
+    const origin = (env.ENVIRONMENT === 'dev') ? 'https://adobe-commerce-api-ci.adobeaem.workers.dev' : ctx.url.origin;
     return new Response(undefined, {
       status: 301,
       headers: {
-        Location: `${origin}/${config.org}/${config.site}/catalog/${config.storeCode}/${config.storeViewCode}/product/${sku}`,
+        Location: `${origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/products/${sku}`,
       },
     });
   }
 
-  const products = await storage.listAllProducts(ctx);
-
+  const products = await storage.listAllProducts();
   const response = {
     total: products.length,
     products,

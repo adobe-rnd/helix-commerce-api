@@ -10,32 +10,32 @@
  * governing permissions and limitations under the License.
  */
 
-import StorageClient from '../catalog/storage/r2.js';
-import { errorResponse } from '../utils/http.js';
-import htmlTemplateFromContext from '../templates/html/index.js';
+import StorageClient from '../catalog/StorageClient.js';
+import { errorResponse } from '../../utils/http.js';
+import htmlTemplateFromContext from '../../templates/html/index.js';
 
 /**
  * @param {Context} ctx
  * @returns {Promise<Response>}
  */
-export async function handle(ctx) {
-  const { config } = ctx;
-  const { urlkey } = config.params;
-  let { sku } = config.params;
+export default async function handler(ctx) {
+  const { config: { params } } = ctx;
+  const { urlkey } = params;
+  let { sku } = params;
 
   if (!sku && !urlkey) {
     return errorResponse(404, 'missing sku or urlkey');
   }
 
-  const storageClient = new StorageClient(ctx, config);
+  const storage = StorageClient.fromContext(ctx);
   if (!sku) {
-    sku = await storageClient.lookupSku(urlkey);
+    sku = await storage.lookupSku(urlkey);
     if (!sku) {
       return errorResponse(404, 'could not find sku');
     }
   }
 
-  const product = await storageClient.fetchProduct(sku);
+  const product = await storage.fetchProduct(sku);
   const html = htmlTemplateFromContext(ctx, product, product.variants).render();
   return new Response(html, {
     status: 200,

@@ -24,9 +24,9 @@ describe('contentHandler', () => {
   beforeEach(async () => {
     helixStub = sinon.stub().resolves();
     adobeStub = sinon.stub().resolves();
-    contentHandler = await esmock('../../src/content/handler.js', {
-      '../../src/content/helix-commerce.js': { handle: helixStub },
-      '../../src/content/adobe-commerce.js': { handle: adobeStub },
+    contentHandler = await esmock('../../../src/routes/content/handler.js', {
+      '../../../src/routes/content/helix-commerce.js': { default: helixStub },
+      '../../../src/routes/content/adobe-commerce.js': { default: adobeStub },
     });
   });
 

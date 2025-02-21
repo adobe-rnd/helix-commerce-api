@@ -10,9 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../utils/http.js';
-import { handle as handleAdobeCommerce } from './adobe-commerce.js';
-import { handle as handleHelixCommerce } from './helix-commerce.js';
+import { errorResponse } from '../../utils/http.js';
+import adobeCommerce from './adobe-commerce.js';
+import helixCommerce from './helix-commerce.js';
 
 const ALLOWED_METHODS = ['GET'];
 
@@ -21,18 +21,25 @@ const ALLOWED_METHODS = ['GET'];
  * @returns {Promise<Response>}
  */
 export default async function contentHandler(ctx) {
-  if (!ALLOWED_METHODS.includes(ctx.info.method)) {
+  const {
+    log,
+    // url,
+    config,
+    info: { method },
+  } = ctx;
+
+  if (!ALLOWED_METHODS.includes(method)) {
     return errorResponse(405, 'method not allowed');
   }
 
-  const { config } = ctx;
   if (!config.pageType) {
     return errorResponse(404, 'invalid config for tenant site (missing pageType)');
   }
-  ctx.log.debug('config: ', JSON.stringify(config, null, 2));
+  log.debug('config: ', JSON.stringify(config, null, 2));
 
   if (config.catalogSource === 'helix') {
-    return handleHelixCommerce(ctx);
+    // TODO: if ends with json, get from product bus
+    return helixCommerce(ctx);
   }
-  return handleAdobeCommerce(ctx);
+  return adobeCommerce(ctx);
 }
