@@ -16,18 +16,18 @@ import { errorWithResponse } from './http.js';
  * @param {Context} ctx
  */
 export async function assertAuthorization(ctx) {
-  let actual;
+  let actual = ctx.attributes.key;
   if (typeof ctx.attributes.key === 'undefined') {
     ctx.attributes.key = ctx.info.headers.authorization?.slice('Bearer '.length);
     actual = ctx.attributes.key;
   }
-  if (!actual) {
-    throw errorWithResponse(403, 'invalid key');
+  if (actual === ctx.env.SUPERUSER_KEY) {
+    ctx.log.debug('acting as superuser');
+    return;
   }
 
-  if (actual === ctx.env.SUPERUSER_KEY) {
-    ctx.log.info('acting as superuser');
-    return;
+  if (!actual) {
+    throw errorWithResponse(403, 'invalid key');
   }
 
   const expected = await ctx.env.KEYS.get(ctx.config.siteKey);

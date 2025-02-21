@@ -34,7 +34,7 @@ declare global {
     /**
      * Override "escape hatch" for json-ld
      */
-    jsonld?: any;
+    jsonld?: string;
 
     /**
      * Additional data that can be retrieved via .json API
@@ -204,6 +204,7 @@ declare global {
   export interface Env {
     VERSION: string;
     ENVIRONMENT: string;
+    SUPERUSER_KEY: string;
 
     // KV namespaces
     CONFIGS: KVNamespace<string>;

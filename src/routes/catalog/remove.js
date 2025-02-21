@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse, errorWithResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
 
@@ -29,6 +30,8 @@ export default async function remove(ctx) {
   if (!config.helixApiKey) {
     throw errorWithResponse(400, 'Helix API key is required to delete or unpublish products.');
   }
+
+  await assertAuthorization(ctx);
 
   const storage = StorageClient.fromContext(ctx);
   const deleteResults = await storage.deleteProducts([sku]);

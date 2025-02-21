@@ -10,17 +10,25 @@
  * governing permissions and limitations under the License.
  */
 
-import content from './content/handler.js';
-import catalog from './catalog/handler.js';
-import config from './config/handler.js';
-import auth from './auth/handler.js';
+import { assertAuthorization } from '../../utils/auth.js';
+import { errorResponse } from '../../utils/http.js';
 
 /**
- * @type {Record<string, (ctx: Context, request: Request) => Promise<Response>>}
+ * @param {Context} ctx
  */
-export default {
-  content,
-  catalog,
-  config,
-  auth,
-};
+export default async function fetch(ctx) {
+  const { config } = ctx;
+
+  await assertAuthorization(ctx);
+
+  const token = await ctx.env.KEYS.get(config.siteKey);
+  if (!token) {
+    return errorResponse(404);
+  }
+
+  return new Response(JSON.stringify({ token }), {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}

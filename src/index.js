@@ -23,13 +23,20 @@ async function parseData(req) {
   }
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
     const text = await req.text();
-    try {
-      return JSON.parse(text);
-    } catch {
-      return text;
+    if (text.trim().length) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    }
+
+    const params = new URL(req.url).searchParams;
+    if (params.size) {
+      return Object.fromEntries(params.entries());
     }
   }
-  return null;
+  return {};
 }
 
 /**

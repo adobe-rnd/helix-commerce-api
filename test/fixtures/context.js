@@ -29,11 +29,21 @@ export const DEFAULT_CONTEXT = (
 ) => ({
   url: new URL(`${baseUrl}${path}`),
   log: console,
+  // @ts-ignore
+  config: {
+    siteKey: 'org--site',
+  },
   ...overrides,
   attributes: {
+    key: 'test-key',
     ...(overrides.attributes ?? {}),
   },
   env: {
+    SUPERUSER_KEY: 'su-test-key',
+    KEYS: {
+      // @ts-ignore
+      get: async () => 'test-key',
+    },
     CONFIGS: {
       // @ts-ignore
       get: async (id) => configMap[id],
@@ -44,6 +54,17 @@ export const DEFAULT_CONTEXT = (
     method: 'GET',
     headers: {},
     ...(overrides.info ?? {}),
+  },
+  data: typeof overrides.data === 'string' ? overrides.data : {
+    ...(overrides.data ?? {}),
+  },
+});
+
+export const SUPERUSER_CONTEXT = (overrides = {}) => DEFAULT_CONTEXT({
+  ...overrides,
+  attributes: {
+    key: 'su-test-key',
+    ...(overrides.attributes ?? {}),
   },
 });
 

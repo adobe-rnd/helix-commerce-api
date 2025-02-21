@@ -24,13 +24,19 @@ config();
 
 /**
  * @param {string} path
+ * @param {RequestInit} [init]
  * @returns {{url: URL} & RequestInit}
  */
-function getFetchOptions(path) {
+function getFetchOptions(path, init = {}) {
   return {
     url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
     cache: 'no-store',
     redirect: 'manual',
+    ...init,
+    headers: {
+      authorization: `bearer ${process.env.SUPERUSER_KEY}`,
+      ...(init.headers ?? {}),
+    },
   };
 }
 
@@ -92,14 +98,16 @@ describe('Post-Deploy Tests', () => {
     });
 
     it('can PUT, GET, lookup, and DELETE a product', async () => {
-      const putOpts = {
-        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`),
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const putOpts = getFetchOptions(
+        `/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(testProduct),
         },
-        body: JSON.stringify(testProduct),
-      };
+      );
       const putRes = await fetch(putOpts.url, putOpts);
       assert.strictEqual(putRes.status, 201, 'PUT request should succeed');
 

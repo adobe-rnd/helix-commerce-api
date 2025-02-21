@@ -48,7 +48,7 @@ export class ResponseError extends Error {
 
 /**
  * @param {number} status - The HTTP status code.
- * @param {string} xError - The error message.
+ * @param {string} [xError] - The error message.
  * @param {string|Record<string,unknown>} [body=''] - The response body.
  * @returns {Response} - A response object.
  */
