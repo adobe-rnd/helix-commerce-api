@@ -29,6 +29,10 @@ export const DEFAULT_CONTEXT = (
 ) => ({
   url: new URL(`${baseUrl}${path}`),
   log: console,
+  // @ts-ignore
+  config: {
+    siteKey: 'org--site',
+  },
   ...overrides,
   attributes: {
     key: 'test-key',
@@ -50,6 +54,17 @@ export const DEFAULT_CONTEXT = (
     method: 'GET',
     headers: {},
     ...(overrides.info ?? {}),
+  },
+  data: typeof overrides.data === 'string' ? overrides.data : {
+    ...(overrides.data ?? {}),
+  },
+});
+
+export const SUPERUSER_CONTEXT = (overrides = {}) => DEFAULT_CONTEXT({
+  ...overrides,
+  attributes: {
+    key: 'su-test-key',
+    ...(overrides.attributes ?? {}),
   },
 });
 

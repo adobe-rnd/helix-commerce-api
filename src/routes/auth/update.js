@@ -27,7 +27,7 @@ export async function updateToken(ctx, token = generateToken()) {
     await ctx.env.KEYS.put(config.siteKey, token);
   } catch (e) {
     ctx.log.error('failed to update token', e);
-    throw errorWithResponse(500, 'failed to update token');
+    throw errorWithResponse(503, 'failed to update token');
   }
   return token;
 }
