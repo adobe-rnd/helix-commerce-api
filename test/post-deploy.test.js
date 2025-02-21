@@ -98,18 +98,16 @@ describe('Post-Deploy Tests', () => {
     });
 
     it('can PUT, GET, lookup, and DELETE a product', async () => {
-      const putOpts = {
-        ...getFetchOptions(
-          `/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(testProduct),
+      const putOpts = getFetchOptions(
+        `/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        ),
-      };
+          body: JSON.stringify(testProduct),
+        },
+      );
       const putRes = await fetch(putOpts.url, putOpts);
       assert.strictEqual(putRes.status, 201, 'PUT request should succeed');
 

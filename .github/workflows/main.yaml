@@ -48,6 +48,8 @@ jobs:
         run: npm run deploy:ci
       - name: Post-Deployment Integration Test
         run: npm run test-postdeploy
+        env:
+          SUPERUSER_KEY: ${{ secrets.SUPERUSER_KEY }}
       - name: Semantic Release (Dry Run)
         run: npm run semantic-release-dry
         env:
