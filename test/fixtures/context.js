@@ -31,9 +31,15 @@ export const DEFAULT_CONTEXT = (
   log: console,
   ...overrides,
   attributes: {
+    key: 'test-key',
     ...(overrides.attributes ?? {}),
   },
   env: {
+    SUPERUSER_KEY: 'su-test-key',
+    KEYS: {
+      // @ts-ignore
+      get: async () => 'test-key',
+    },
     CONFIGS: {
       // @ts-ignore
       get: async (id) => configMap[id],

@@ -16,13 +16,13 @@ import { errorWithResponse } from './http.js';
  * @param {Context} ctx
  */
 export async function assertAuthorization(ctx) {
-  let actual;
+  let actual = ctx.attributes.key;
   if (typeof ctx.attributes.key === 'undefined') {
     ctx.attributes.key = ctx.info.headers.authorization?.slice('Bearer '.length);
     actual = ctx.attributes.key;
   }
   if (actual === ctx.env.SUPERUSER_KEY) {
-    ctx.log.info('acting as superuser');
+    ctx.log.debug('acting as superuser');
     return;
   }
 
