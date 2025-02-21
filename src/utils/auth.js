@@ -21,15 +21,14 @@ export async function assertAuthorization(ctx) {
     ctx.attributes.key = ctx.info.headers.authorization?.slice('Bearer '.length);
     actual = ctx.attributes.key;
   }
-  if (!actual) {
-    throw errorWithResponse(403, 'invalid key');
-  }
-
   if (actual === ctx.env.SUPERUSER_KEY) {
     ctx.log.info('acting as superuser');
     return;
   }
 
+  if (!actual) {
+    throw errorWithResponse(403, 'invalid key');
+  }
   const expected = await ctx.env.KEYS.get(ctx.config.siteKey);
   if (!expected) {
     throw errorWithResponse(403, 'no key found for site');

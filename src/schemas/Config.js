@@ -44,6 +44,7 @@ const ConfigEntry = {
     offerVariantURLTemplate: { type: 'string' },
     liveSearchEnabled: { type: 'boolean' },
     attributeOverrides: AttributeOverrides,
+    catalogSource: { type: 'string', enum: ['helix', 'magento'] },
     imageRoleOrder: {
       type: 'array',
       items: { type: 'string' },

@@ -13,7 +13,7 @@
 import content from './content/handler.js';
 import catalog from './catalog/handler.js';
 import config from './config/handler.js';
-import { errorResponse } from '../utils/http.js';
+import auth from './auth/handler.js';
 
 /**
  * @type {Record<string, (ctx: Context, request: Request) => Promise<Response>>}
@@ -22,6 +22,5 @@ export default {
   content,
   catalog,
   config,
-  // eslint-disable-next-line no-unused-vars
-  graphql: async (ctx) => errorResponse(501, 'not implemented'),
+  auth,
 };

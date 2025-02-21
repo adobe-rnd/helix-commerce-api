@@ -13,6 +13,7 @@
 import { errorResponse } from '../../utils/http.js';
 import { assertAuthorization } from '../../utils/auth.js';
 import { validate } from '../../utils/validation.js';
+import { updateToken } from '../auth/update.js';
 import ConfigSchema from '../../schemas/Config.js';
 
 /**
@@ -46,7 +47,14 @@ export default async function configHandler(ctx) {
   }
 
   // valid, persist it
+  const exists = (await ctx.env.CONFIGS.list({ prefix: ctx.config.siteKey })).keys.length > 0;
   await ctx.env.CONFIGS.put(ctx.config.siteKey, JSON.stringify(json));
+
+  // add key
+  if (!exists) {
+    await updateToken(ctx);
+  }
+
   return new Response(JSON.stringify(json), {
     status: 200,
     headers: {

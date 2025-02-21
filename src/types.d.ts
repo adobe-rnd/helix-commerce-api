@@ -34,7 +34,7 @@ declare global {
     /**
      * Override "escape hatch" for json-ld
      */
-    jsonld?: any;
+    jsonld?: string;
 
     /**
      * Additional data that can be retrieved via .json API
