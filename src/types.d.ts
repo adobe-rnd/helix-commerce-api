@@ -6,6 +6,32 @@ import type StorageClient from "./routes/products/StorageClient.js";
 
 
 declare global {
+
+  export type SchemaOrgAvailability = 'BackOrder' | 'Discontinued' | 'InStock' | 'InStoreOnly' | 'LimitedAvailability' | 'MadeToOrder' | 'OnlineOnly' | 'OutOfStock' | 'PreOrder' | 'PreSale' | 'Reserved' | 'SoldOut';
+
+  export interface ProductBusVariant {
+    sku: string;
+    name: string;
+    price: string;
+    priceCurrency: string;
+    url: string;
+    image: string;
+    availability: SchemaOrgAvailability | string;
+  }
+
+  export interface ProductBusImage {
+    url: string;
+    label?: string;
+    roles?: string[];
+  }
+
+  export interface ProductBusPrice {
+    final: string;
+    currency: string;
+    regular?: string;
+    visible?: boolean;
+  }
+
   /**
    * Helix product-bus entry
    */
@@ -18,17 +44,13 @@ declare global {
       urlKey: string;
       title: string;
       metaTitle?: string;
-      description: string;
+      description?: string;
       metaDescription?: string;
       url?: string;
-      inStock?: boolean;
-      images: HelixProductImage[];
-      prices?: HelixProductPrice[];
-      attributes?: HelixProductAttribute[];
-      options?: HelixProductOption[];
-      variants?: HelixProductVariant[];
-      rating?: HelixProductRating;
-      links?: HelixProductLink[];
+      brand?: string;
+      images?: ProductBusImage[];
+      prices?: ProductBusPrice[];
+      variants?: SchemaOrgAvailability[];
     }
 
     /**
@@ -39,7 +61,7 @@ declare global {
     /**
      * Additional data that can be retrieved via .json API
      */
-    public?: any;
+    public?: Record<string, unknown>;
   }
 
   /**
