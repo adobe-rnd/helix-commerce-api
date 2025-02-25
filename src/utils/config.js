@@ -91,6 +91,7 @@ export async function resolveConfig(ctx, overrides = {}) {
     // @ts-ignore
     return {
       ...confMap.base,
+      // @ts-ignore
       headers: confMap.base?.headers ?? {},
       params: {},
       confMap,
