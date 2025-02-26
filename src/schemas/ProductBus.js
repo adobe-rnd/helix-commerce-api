@@ -10,29 +10,14 @@
  * governing permissions and limitations under the License.
  */
 
-// sku: string;
-// urlKey: string;
-// title: string;
-// metaTitle?: string;
-// description: string;
-// metaDescription?: string;
-// url?: string;
-// inStock?: boolean;
-// images: HelixProductImage[];
-// prices?: HelixProductPrice[];
-// attributes?: HelixProductAttribute[];
-// options?: HelixProductOption[];
-// variants?: HelixProductVariant[];
-// rating?: HelixProductRating;
-// links?: HelixProductLink[];
+const MAX_JSON_LD_LENGTH = 128_000;
 
 /** @type {import("../utils/validation.js").AnySchema} */
-const Product = {
+const ProductBusEntry = {
   type: 'object',
   properties: {
-    sku: { type: 'string' },
+    sku: { type: 'string', 'not.pattern': /^[A-Z\s]+$/ },
     urlKey: { type: 'string' },
-    name: { type: 'string' },
     description: { type: 'string' },
     title: { type: 'string' },
     metaTitle: { type: 'string' },
@@ -56,9 +41,8 @@ const Product = {
         type: 'object',
         properties: {
           currency: { type: 'string' },
-          regular: { type: 'string' },
-          final: { type: 'string' },
-          visible: { type: 'boolean' },
+          regular: { type: 'number' },
+          final: { type: 'number' },
         },
         required: ['currency', 'final'],
       },
@@ -70,7 +54,7 @@ const Product = {
         properties: {
           sku: { type: 'string' },
           name: { type: 'string' },
-          price: { type: 'string' },
+          price: { type: 'number' },
           priceCurrency: { type: 'string' },
           url: { type: 'string' },
           image: { type: 'string' },
@@ -95,23 +79,18 @@ const Product = {
         additionalProperties: true,
       },
     },
-  },
-  required: ['sku', 'urlKey', 'name'],
-  additionalProperties: true,
-};
-
-/** @type {import("../utils/validation.js").AnySchema} */
-const ProductBusEntry = {
-  type: 'object',
-  properties: {
-    product: Product,
-    jsonld: { type: 'string' },
-    public: {
+    jsonld: {
+      type: 'string',
+      maxLength: MAX_JSON_LD_LENGTH,
+    },
+    custom: {
       type: 'object',
       properties: {},
       additionalProperties: true,
     },
   },
+  required: ['sku', 'urlKey', 'title'],
+
 };
 
 export default ProductBusEntry;

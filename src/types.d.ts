@@ -16,7 +16,7 @@ declare global {
     priceCurrency: string;
     url: string;
     image: string;
-    availability: SchemaOrgAvailability | string;
+    availability: SchemaOrgAvailability;
   }
 
   export interface ProductBusImage {
@@ -29,7 +29,6 @@ declare global {
     final: string;
     currency: string;
     regular?: string;
-    visible?: boolean;
   }
 
   /**
@@ -39,19 +38,17 @@ declare global {
     /**
      * Product data used to generate markup/json-ld
      */
-    product: {
-      sku: string;
-      urlKey: string;
-      title: string;
-      metaTitle?: string;
-      description?: string;
-      metaDescription?: string;
-      url?: string;
-      brand?: string;
-      images?: ProductBusImage[];
-      prices?: ProductBusPrice[];
-      variants?: SchemaOrgAvailability[];
-    }
+    sku: string;
+    urlKey: string;
+    title: string;
+    metaTitle?: string;
+    description?: string;
+    metaDescription?: string;
+    url?: string;
+    brand?: string;
+    images?: ProductBusImage[];
+    prices?: ProductBusPrice[];
+    variants?: ProductBusVariant[];
 
     /**
      * Override "escape hatch" for json-ld
@@ -61,7 +58,7 @@ declare global {
     /**
      * Additional data that can be retrieved via .json API
      */
-    public?: Record<string, unknown>;
+    custom?: Record<string, unknown>;
   }
 
   /**

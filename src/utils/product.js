@@ -10,13 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
+import ProductBusEntry from '../schemas/ProductBus.js';
 import { errorWithResponse } from './http.js';
-
-/**
- * @param {string} str
- * @returns {boolean}
- */
-export const hasUppercase = (str) => /[A-Z]/.test(str);
+import { validate } from './validation.js';
 
 /**
  * This function combines an array of strings with interpolated
@@ -76,11 +72,13 @@ export function findProductImage(product, variants = []) {
 
 /**
  * @param {any} product
- * @returns {asserts product is Product}
+ * @returns {asserts product is ProductBusEntry}
  */
 export function assertValidProduct(product) {
-  if (typeof product !== 'object' || !product.sku) {
-    throw errorWithResponse(400, 'Invalid product');
+  try {
+    validate(product, ProductBusEntry);
+  } catch (err) {
+    throw errorWithResponse(400, 'Invalid product', err);
   }
 }
 

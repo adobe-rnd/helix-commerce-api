@@ -44,7 +44,7 @@ export default class StorageClient {
   /**
    * Load product by SKU.
    * @param {string} sku - The SKU of the product.
-   * @returns {Promise<Product>} - A promise that resolves to the product.
+   * @returns {Promise<ProductBusEntry>} - A promise that resolves to the product.
    */
   async fetchProduct(sku) {
     const {
@@ -68,19 +68,13 @@ export default class StorageClient {
     }
 
     const productData = await object.json();
-    productData.attributeMap = Object.fromEntries((productData.attributes ?? [])
-      .map(({ name, value }) => [name, value]));
-    (productData.variants ?? []).forEach((variant) => {
-      variant.attributeMap = Object.fromEntries((variant.attributes ?? [])
-        .map(({ name, value }) => [name, value]));
-    });
-
     return productData;
   }
 
   /**
    * Save products in batches
-   * @param {Product[]} products - The products to save.
+   *
+   * @param {ProductBusEntry[]} products - The products to save.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
    */
   async saveProducts(products) {
@@ -94,7 +88,7 @@ export default class StorageClient {
 
   /**
    * Handler function to process a batch of products.
-   * @param {Product[]} batch - An array of products to save.
+   * @param {ProductBusEntry[]} batch - An array of products to save.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
    */
   async storeProductsBatch(batch) {
@@ -110,12 +104,12 @@ export default class StorageClient {
     } = this.ctx;
 
     const storePromises = batch.map(async (product) => {
-      const { sku, name, urlKey } = product;
+      const { sku, title, urlKey } = product;
       const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
       const body = JSON.stringify(product);
 
       try {
-        const customMetadata = { sku, name };
+        const customMetadata = { sku, title };
         if (urlKey) {
           customMetadata.urlKey = urlKey;
         }
@@ -130,7 +124,7 @@ export default class StorageClient {
         if (urlKey) {
           const metadataKey = `${org}/${site}/${storeCode}/${storeViewCode}/urlkeys/${urlKey}`;
           await env.CATALOG_BUCKET.put(metadataKey, '', {
-            httpMetadata: { contentType: 'application/octet-stream' },
+            httpMetadata: { contentType: 'text/plain' },
             customMetadata,
           });
         }
@@ -305,7 +299,7 @@ export default class StorageClient {
   /**
    * List all products from R2.
    * TODO: Setup pagination
-   * @returns {Promise<Product[]>} - A promise that resolves to the products.
+   * @returns {Promise<ProductBusEntry[]>} - A promise that resolves to the products.
    */
   async listAllProducts() {
     const {
