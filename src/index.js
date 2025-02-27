@@ -79,12 +79,16 @@ export default {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
       ctx.config = await resolveConfig(ctx, overrides);
 
-      console.debug('resolved config: ', JSON.stringify(ctx.config));
+      console.debug('resolved config: ', JSON.stringify(ctx.config, null, 2));
       if (!ctx.config) {
         return errorResponse(404, 'config not found');
       }
 
-      return await handlers[ctx.config.route](ctx, request);
+      const fn = handlers[ctx.config.route];
+      if (!fn) {
+        return errorResponse(404, 'route not found');
+      }
+      return await fn(ctx, request);
     } catch (e) {
       if (e.response) {
         return e.response;
