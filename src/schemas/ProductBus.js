@@ -64,15 +64,15 @@ const ProductBusVariant = {
     gtin: { type: 'string' },
     availability: SchemaOrgAvailability,
   },
-  required: ['sku', 'title', 'url', 'image', 'availability'],
+  required: ['sku', 'title', 'url', 'image'],
 };
 
 /** @type {import("../utils/validation.js").AnySchema} */
 const ProductBusEntry = {
   type: 'object',
   properties: {
-    sku: { type: 'string', 'not.pattern': /^[A-Z\s]+$/ },
-    urlKey: { type: 'string' },
+    sku: { type: 'string' },
+    urlKey: { type: 'string', 'not.pattern': /^[A-Z\s]+$/ },
     description: { type: 'string' },
     title: { type: 'string' },
     metaTitle: { type: 'string' },
