@@ -9,26 +9,33 @@ declare global {
 
   export type SchemaOrgAvailability = 'BackOrder' | 'Discontinued' | 'InStock' | 'InStoreOnly' | 'LimitedAvailability' | 'MadeToOrder' | 'OnlineOnly' | 'OutOfStock' | 'PreOrder' | 'PreSale' | 'Reserved' | 'SoldOut';
 
-  export interface ProductBusVariant {
-    sku: string;
-    name: string;
-    price: string;
-    priceCurrency: string;
-    url: string;
-    image: string;
-    availability: SchemaOrgAvailability;
-  }
-
-  export interface ProductBusImage {
-    url: string;
-    label?: string;
-    roles?: string[];
+  export interface SchemaOrgAggregateRating {
+    ratingValue: number;
+    reviewCount: number;
+    bestRating?: number;
+    worstRating?: number;
   }
 
   export interface ProductBusPrice {
     final: string;
     currency: string;
     regular?: string;
+  }
+
+  export interface ProductBusVariant {
+    sku: string;
+    title: string;
+    price?: ProductBusPrice;
+    url: string;
+    image: string;
+    availability: SchemaOrgAvailability;
+    gtin?: string;
+  }
+
+  export interface ProductBusImage {
+    url: string;
+    label?: string;
+    roles?: string[];
   }
 
   /**
@@ -46,8 +53,10 @@ declare global {
     metaDescription?: string;
     url?: string;
     brand?: string;
+    aggregateRating?: SchemaOrgAggregateRating;
+    availability?: SchemaOrgAvailability;
     images?: ProductBusImage[];
-    prices?: ProductBusPrice[];
+    price?: ProductBusPrice;
     variants?: ProductBusVariant[];
 
     /**

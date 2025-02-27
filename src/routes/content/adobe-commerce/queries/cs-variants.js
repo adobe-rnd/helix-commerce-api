@@ -10,13 +10,13 @@
  * governing permissions and limitations under the License.
  */
 
-import { forceImagesHTTPS } from '../../../utils/http.js';
 import {
   gql,
   parseRating,
   parseSpecialToDate,
   sortImagesByRole,
-} from '../../../utils/product.js';
+  forceImagesHTTPS,
+} from '../util.js';
 
 /**
  * @param {Config} config

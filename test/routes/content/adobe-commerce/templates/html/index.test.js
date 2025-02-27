@@ -14,11 +14,11 @@
 
 import assert from 'node:assert';
 import { JSDOM } from 'jsdom';
-import { JSONTemplate } from '../../../src/templates/json/JSONTemplate.js';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
-import { createDefaultVariations, createProductVariationFixture } from '../../fixtures/variant.js';
-import { createProductFixture } from '../../fixtures/product.js';
-import htmlTemplateFromContext from '../../../src/templates/html/index.js';
+import { JSONTemplate } from '../../../../../../src/routes/content/adobe-commerce/templates/json/JSONTemplate.js';
+import { DEFAULT_CONTEXT } from '../../../../../fixtures/context.js';
+import { createDefaultVariations, createProductVariationFixture } from '../../../../../fixtures/variant.js';
+import { createProductFixture } from '../../../../../fixtures/product.js';
+import htmlTemplateFromContext from '../../../../../../src/routes/content/adobe-commerce/templates/html/index.js';
 
 // Helper function to format price range
 function priceRange(min, max) {

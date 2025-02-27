@@ -12,7 +12,8 @@
 
 /* eslint-disable class-methods-use-this */
 
-import { findProductImage, pruneUndefined } from '../../utils/product.js';
+import { pruneUndefined } from '../../../../../utils/product.js';
+import { findProductImage } from '../../util.js';
 
 export class JSONTemplate {
   /** @type {Context} */

@@ -12,6 +12,61 @@
 
 const MAX_JSON_LD_LENGTH = 128_000;
 
+/** @type {import("../utils/validation.js").StringSchema} */
+const SchemaOrgAvailability = {
+  type: 'string',
+  enum: [
+    'BackOrder',
+    'Discontinued',
+    'InStock',
+    'InStoreOnly',
+    'LimitedAvailability',
+    'MadeToOrder',
+    'OnlineOnly',
+    'OutOfStock',
+    'PreOrder',
+    'PreSale',
+    'Reserved',
+    'SoldOut',
+  ],
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusPrice = {
+  type: 'object',
+  properties: {
+    currency: { type: 'string' },
+    regular: { type: 'number' },
+    final: { type: 'number' },
+  },
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusImage = {
+  type: 'object',
+  properties: {
+    url: { type: 'string' },
+    label: { type: 'string' },
+    roles: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['url'],
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusVariant = {
+  type: 'object',
+  properties: {
+    sku: { type: 'string' },
+    title: { type: 'string' },
+    price: ProductBusPrice,
+    url: { type: 'string' },
+    image: { type: 'string' },
+    gtin: { type: 'string' },
+    availability: SchemaOrgAvailability,
+  },
+  required: ['sku', 'title', 'url', 'image', 'availability'],
+};
+
 /** @type {import("../utils/validation.js").AnySchema} */
 const ProductBusEntry = {
   type: 'object',
@@ -24,60 +79,24 @@ const ProductBusEntry = {
     metaDescription: { type: 'string' },
     url: { type: 'string' },
     brand: { type: 'string' },
-    images: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          url: { type: 'string' },
-          label: { type: 'string' },
-          roles: { type: 'array', items: { type: 'string' } },
-        },
+    availability: SchemaOrgAvailability,
+    price: ProductBusPrice,
+    aggregateRating: {
+      type: 'object',
+      properties: {
+        ratingValue: { type: 'number' },
+        reviewCount: { type: 'number' },
+        bestRating: { type: 'number' },
+        worstRating: { type: 'number' },
       },
     },
-    prices: {
+    images: {
       type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          currency: { type: 'string' },
-          regular: { type: 'number' },
-          final: { type: 'number' },
-        },
-        required: ['currency', 'final'],
-      },
+      items: ProductBusImage,
     },
     variants: {
       type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          sku: { type: 'string' },
-          name: { type: 'string' },
-          price: { type: 'number' },
-          priceCurrency: { type: 'string' },
-          url: { type: 'string' },
-          image: { type: 'string' },
-          availability: {
-            type: 'string',
-            enum: [
-              'BackOrder',
-              'Discontinued',
-              'InStock',
-              'InStoreOnly',
-              'LimitedAvailability',
-              'MadeToOrder',
-              'OnlineOnly',
-              'OutOfStock',
-              'PreOrder',
-              'PreSale',
-              'Reserved',
-              'SoldOut',
-            ],
-          },
-        },
-        additionalProperties: true,
-      },
+      items: ProductBusVariant,
     },
     jsonld: {
       type: 'string',
@@ -90,7 +109,6 @@ const ProductBusEntry = {
     },
   },
   required: ['sku', 'urlKey', 'title'],
-
 };
 
 export default ProductBusEntry;

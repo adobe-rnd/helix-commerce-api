@@ -11,9 +11,9 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { sortImagesByRole } from '../../src/utils/product.js';
+import { sortImagesByRole } from '../../../../src/routes/content/adobe-commerce/util.js';
 
-describe('product utils', () => {
+describe('adobe commerce utils', () => {
   describe('sortImagesByRole()', () => {
     it('should sort images by role', () => {
       /** @type {Product['images']} */

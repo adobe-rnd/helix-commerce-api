@@ -26,7 +26,7 @@ describe('contentHandler', () => {
     adobeStub = sinon.stub().resolves();
     contentHandler = await esmock('../../../src/routes/content/handler.js', {
       '../../../src/routes/content/helix-commerce.js': { default: helixStub },
-      '../../../src/routes/content/adobe-commerce.js': { default: adobeStub },
+      '../../../src/routes/content/adobe-commerce/index.js': { default: adobeStub },
     });
   });
 
@@ -82,6 +82,7 @@ describe('contentHandler', () => {
       url: { pathname: '/content/product/us/p/product-urlkey' },
       config: {
         pageType: 'product',
+        catalogSource: 'adobe-commerce',
         confMap: {
           '/us/p/{{urlkey}}': { some: 'config' },
         },
