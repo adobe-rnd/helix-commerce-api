@@ -25,9 +25,6 @@ export default async function update(ctx) {
   if (config.sku === '*') {
     return errorResponse(501, 'not implemented');
   }
-  if (config.sku.endsWith('.json')) {
-    config.sku = config.sku.slice(0, -5);
-  }
 
   assertValidProduct(data);
 

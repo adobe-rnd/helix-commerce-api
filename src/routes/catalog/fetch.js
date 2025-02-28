@@ -19,7 +19,7 @@ import StorageClient from './StorageClient.js';
  */
 export default async function fetch(ctx) {
   const storage = StorageClient.fromContext(ctx);
-  const sku = ctx.url.pathname.split('/').pop();
+  const { sku } = ctx.config;
   const product = await storage.fetchProduct(sku);
 
   // TODO: use long ttl, add cache keys

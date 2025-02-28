@@ -60,7 +60,7 @@ export default async function handler(ctx, request) {
     storeCode,
     storeViewCode,
     subRoute,
-    sku,
+    sku: sku.endsWith('.json') ? sku.slice(0, -5) : sku,
   });
 
   const fn = handlers[subRoute]?.[method];
