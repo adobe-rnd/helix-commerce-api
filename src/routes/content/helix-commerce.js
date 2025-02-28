@@ -15,6 +15,13 @@ import { errorResponse } from '../../utils/http.js';
 import { pruneUndefined } from '../../utils/product.js';
 
 /**
+ * @param {string} str
+ * @param {number} spaces
+ * @returns {string}
+ */
+const indent = (str, spaces) => str.split('\n').map((line) => `${' '.repeat(spaces)}${line}`).join('\n');
+
+/**
  * @param {ProductBusVariant} variant
  */
 const offerTemplate = (variant) => pruneUndefined({
@@ -68,7 +75,7 @@ const jsonldTemplate = (product) => JSON.stringify({
  * @returns {string}
  */
 const metaName = (name, value) => (value !== undefined ? `\
-  <meta name="${name}" content="${Array.isArray(value) ? value.join(',') : value}">
+<meta name="${name}" content="${Array.isArray(value) ? value.join(',') : value}">
 ` : '');
 
 /**
@@ -78,7 +85,7 @@ const metaName = (name, value) => (value !== undefined ? `\
  * @returns {string}
  */
 const metaProperty = (property, value) => (value !== undefined ? `\
-  <meta property="${property}" content="${Array.isArray(value) ? value.join(',') : value}">
+<meta property="${property}" content="${Array.isArray(value) ? value.join(',') : value}">
 ` : '');
 
 /**
@@ -86,13 +93,12 @@ const metaProperty = (property, value) => (value !== undefined ? `\
  * @returns {string}
  */
 const pictureTemplate = (image) => /* html */`\
-  <picture>
-    <source type="image/webp" srcset="${image.url}" alt="" media="(min-width: 600px)">
-    <source type="image/webp" srcset="${image.url}">
-    <source type="image/png" srcset="${image.url}" media="(min-width: 600px)">
-    <img loading="lazy" alt="${image.label}" src="${image.url}">
-  </picture>
-`;
+<picture>
+  <source type="image/webp" srcset="${image.url}" alt="" media="(min-width: 600px)">
+  <source type="image/webp" srcset="${image.url}">
+  <source type="image/png" srcset="${image.url}" media="(min-width: 600px)">
+  <img loading="lazy" alt="${image.label}" src="${image.url}">
+</picture>`;
 
 /**
  * @param {ProductBusEntry} product
@@ -105,26 +111,33 @@ const htmlTemplate = (product) => /* html */`\
     <meta charset="UTF-8">
     <title>${product.metaTitle}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    ${metaName('description', product.metaDescription)}
-    ${metaName('sku', product.sku)}
-    ${metaProperty('og:title', product.metaTitle)}
-    ${metaProperty('og:description', product.metaDescription)}
-    ${metaProperty('og:image', product.images?.[0]?.url)}
-    ${metaProperty('og:type', 'product')}
-    ${metaProperty('product:availability', product.availability)}
-    ${metaProperty('product:price.amount', product.price?.final)}
-    ${metaProperty('product:price.regular', product.price?.regular)}
-    ${metaProperty('product:price.currency', product.price?.currency)}
+    ${metaName('description', product.metaDescription)}\
+    ${metaName('sku', product.sku)}\
+    ${metaName('image', product.images?.[0]?.url)}\
+    ${metaProperty('og:image', product.images?.[0]?.url)}\
+    ${metaProperty('og:title', product.metaTitle)}\
+    ${metaProperty('og:description', product.metaDescription)}\
+    ${metaProperty('og:type', 'product')}\
+    ${metaProperty('product:availability', product.availability)}\
+    ${metaProperty('product:price', product.price?.final)}\
+    ${metaProperty('product:price.regular', product.price?.regular)}\
+    ${metaProperty('product:price.currency', product.price?.currency)}\
     <script type="application/ld+json">
-      ${product.jsonld ? product.jsonld : jsonldTemplate(product)}
+${product.jsonld ? product.jsonld : jsonldTemplate(product)}
     </script>
   </head>
   <body>
+    <header></header>
     <main>
-      <h1>${product.title}</h1>
-      <p>${product.description}</p>
-      ${product.images?.map(pictureTemplate).join('\n')}
+      <div>
+        <h1>${product.title}</h1>
+        <p>${product.description}</p>
+        <p>
+${indent(product.images?.map(pictureTemplate).join('\n'), 10)}
+        </p>
+      </div>
     </main>
+    <footer></footer>
   </body>
 </html>`;
 
