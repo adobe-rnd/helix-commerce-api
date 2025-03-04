@@ -251,8 +251,9 @@ declare global {
     /** parsed from body or query params */
     data: any;
     info: {
+      filename: string;
       method: string;
-      extension: string;
+      extension: string | undefined;
       headers: Record<string, string>;
     }
     attributes: {

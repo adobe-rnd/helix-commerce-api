@@ -56,15 +56,17 @@ export async function makeContext(pctx, req, env) {
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;
+  const filename = ctx.url.pathname.split('/').pop() ?? '';
   ctx.info = {
+    filename,
     method: req.method.toUpperCase(),
-    extension: ctx.url.pathname.split('.').pop(),
+    extension: filename.split('.').pop(),
     headers: Object.fromEntries(
       [...req.headers.entries()]
         .map(([k, v]) => [k.toLowerCase(), v]),
     ),
   };
-  console.debug('makeContext: ', ctx.url, ctx.url.pathname);
+  console.debug('makeContext: ', ctx.url, ctx.url.pathname, ctx.info.filename);
   ctx.data = await parseData(req);
   return ctx;
 }
