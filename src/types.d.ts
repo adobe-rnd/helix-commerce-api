@@ -242,7 +242,7 @@ declare global {
     [key: string]: string | KVNamespace<string> | R2Bucket;
   }
 
-  export interface Context extends ExecutionContext {
+  export interface Context {
     url: URL;
     env: Env;
     log: Console;
@@ -263,6 +263,7 @@ declare global {
       key?: string;
       [key: string]: any;
     }
+    executionContext: ExecutionContext;
   }
 
   export interface Product {

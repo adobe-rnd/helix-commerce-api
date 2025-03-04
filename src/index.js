@@ -40,15 +40,17 @@ async function parseData(req) {
 }
 
 /**
- * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
+ * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} eCtx
  * @param {import("@cloudflare/workers-types/experimental").Request} req
  * @param {Env} env
  * @returns {Promise<Context>}
  */
-export async function makeContext(pctx, req, env) {
+export async function makeContext(eCtx, req, env) {
   /** @type {Context} */
   // @ts-ignore
-  const ctx = pctx;
+  const ctx = {
+    executionContext: eCtx,
+  };
   // @ts-ignore
   ctx.attributes = {};
   // @ts-ignore
@@ -75,11 +77,11 @@ export default {
   /**
    * @param {import("@cloudflare/workers-types/experimental").Request} request
    * @param {Env} env
-   * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
+   * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} eCtx
    * @returns {Promise<Response>}
    */
-  async fetch(request, env, pctx) {
-    const ctx = await makeContext(pctx, request, env);
+  async fetch(request, env, eCtx) {
+    const ctx = await makeContext(eCtx, request, env);
 
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
