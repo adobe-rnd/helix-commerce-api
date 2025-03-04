@@ -22,10 +22,11 @@ export default async function handler(ctx) {
     log,
     config: { org, site },
   } = ctx;
+  log.debug('handling media: ', url.pathname);
 
   const filename = url.pathname.split('/').pop();
   const key = `${org}/${site}/media/${filename}`;
-  log.debug('fetching media: ', key);
+  log.debug('fetching media: ', key, filename);
   const resp = await env.CATALOG_BUCKET.get(key);
   if (!resp) {
     return errorResponse(404, 'File not found');
