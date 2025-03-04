@@ -11,6 +11,7 @@
  */
 
 import processQueue from '@adobe/helix-shared-process-queue';
+import { errorWithResponse } from './http.js';
 
 /**
  * @typedef {Object} ImageData
@@ -37,9 +38,10 @@ const extractExtension = (url) => {
  * @returns {Promise<ImageData | null>}
  */
 async function fetchImage(ctx, imageUrl) {
+  const { log } = ctx;
   const resp = await fetch(imageUrl);
   if (!resp.ok) {
-    throw new Error(`Failed to fetch image: ${resp.statusText}`);
+    throw errorWithResponse(502, `Failed to fetch image: ${imageUrl} (${resp.status})`);
   }
 
   const data = await resp.arrayBuffer();
@@ -47,6 +49,8 @@ async function fetchImage(ctx, imageUrl) {
   const hash = Array.from(new Uint8Array(arr))
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
+
+  log.debug('got hash: ', imageUrl, hash);
 
   return {
     data,
@@ -67,6 +71,7 @@ async function fetchImage(ctx, imageUrl) {
 async function uploadImage(ctx, image) {
   const {
     env,
+    log,
     config: { org, site },
   } = ctx;
   const {
@@ -81,6 +86,7 @@ async function uploadImage(ctx, image) {
   const key = `${org}/${site}/media/${filename}`;
   const resp = await env.CATALOG_BUCKET.head(key);
   if (resp) {
+    log.debug(`image already in storage: ${sourceUrl} (${hash})`);
     return `./${filename}`;
   }
 
@@ -101,6 +107,7 @@ async function uploadImage(ctx, image) {
  * @returns {Promise<ProductBusEntry>}
  */
 export async function extractAndReplaceImages(ctx, product) {
+  const { log } = ctx;
   /** @type {Map<string, Promise<string>>} */
   const processed = new Map();
 
@@ -110,6 +117,7 @@ export async function extractAndReplaceImages(ctx, product) {
    */
   const processImage = async (url) => {
     if (processed.has(url)) {
+      log.debug(`image already being processed: ${url}`);
       return processed.get(url);
     }
 
