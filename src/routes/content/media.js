@@ -22,9 +22,9 @@ export default async function handler(ctx) {
     log,
     config: { org, site },
   } = ctx;
-  log.debug('handling media: ', url.pathname);
+  log.debug('handling media: ', url.pathname, ctx.request.url);
 
-  const filename = url.pathname.split('/').pop();
+  const filename = ctx.request.url.split('/').pop();
   const key = `${org}/${site}/media/${filename}`;
   log.debug('fetching media: ', key, filename);
   const resp = await env.CATALOG_BUCKET.get(key);

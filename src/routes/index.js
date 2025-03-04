@@ -16,7 +16,13 @@ import config from './config/handler.js';
 import auth from './auth/handler.js';
 
 /**
- * @type {Record<string, (ctx: Context, request: Request) => Promise<Response>>}
+ * @type {Record<
+ *  string,
+ *  (
+ *    ctx: Context,
+ *    request: import("@cloudflare/workers-types/experimental").Request
+ *  ) => Promise<Response>
+ * >}
  */
 export default {
   content,

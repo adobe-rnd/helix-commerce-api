@@ -15,7 +15,7 @@ import { resolveConfig } from './utils/config.js';
 import handlers from './routes/index.js';
 
 /**
- * @param {Request} req
+ * @param {import("@cloudflare/workers-types/experimental").Request} req
  */
 async function parseData(req) {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -41,7 +41,7 @@ async function parseData(req) {
 
 /**
  * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
- * @param {Request} req
+ * @param {import("@cloudflare/workers-types/experimental").Request} req
  * @param {Env} env
  * @returns {Promise<Context>}
  */
@@ -51,6 +51,8 @@ export async function makeContext(pctx, req, env) {
   const ctx = pctx;
   // @ts-ignore
   ctx.attributes = {};
+  // @ts-ignore
+  ctx.request = req;
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;
@@ -69,7 +71,7 @@ export async function makeContext(pctx, req, env) {
 
 export default {
   /**
-   * @param {Request} request
+   * @param {import("@cloudflare/workers-types/experimental").Request} request
    * @param {Env} env
    * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
    * @returns {Promise<Response>}

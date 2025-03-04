@@ -247,6 +247,7 @@ declare global {
     env: Env;
     log: Console;
     config: Config;
+    request: Request;
     /** parsed from body or query params */
     data: any;
     info: {
