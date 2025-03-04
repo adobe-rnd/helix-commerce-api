@@ -62,6 +62,7 @@ export async function makeContext(pctx, req, env) {
         .map(([k, v]) => [k.toLowerCase(), v]),
     ),
   };
+  console.debug('makeContext: ', ctx.url, ctx.url.pathname);
   ctx.data = await parseData(req);
   return ctx;
 }
