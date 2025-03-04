@@ -18,11 +18,11 @@ import StorageClient from './StorageClient.js';
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
 export default async function fetch(ctx) {
-  const storage = StorageClient.fromContext(ctx);
   const { sku } = ctx.config;
+
+  const storage = StorageClient.fromContext(ctx);
   const product = await storage.fetchProduct(sku);
 
-  // TODO: use long ttl, add cache keys
   return new Response(JSON.stringify(product), {
     headers: { 'Content-Type': 'application/json' },
   });

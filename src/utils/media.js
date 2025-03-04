@@ -127,13 +127,13 @@ export async function extractAndReplaceImages(ctx, product) {
   };
 
   await Promise.all([
-    processQueue([...product.images], async (image) => {
+    processQueue([...product.images ?? []], async (image) => {
       const newUrl = await processImage(image.url);
       if (newUrl) {
         image.url = newUrl;
       }
     }),
-    processQueue([...product.variants], async (variant) => {
+    processQueue([...product.variants ?? []], async (variant) => {
       const newUrl = await processImage(variant.image);
       if (newUrl) {
         variant.image = newUrl;

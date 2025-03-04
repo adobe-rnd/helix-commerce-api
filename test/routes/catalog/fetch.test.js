@@ -41,6 +41,7 @@ describe('handleProductFetchRequest', () => {
 
   it('should return the product response when fetchProduct succeeds', async () => {
     const product = { sku: 'sku1', name: 'Product 1' };
+    ctx.config.sku = 'sku1';
 
     storageStub.fetchProduct.resolves(product);
     const response = await handleProductFetchRequest(ctx);
