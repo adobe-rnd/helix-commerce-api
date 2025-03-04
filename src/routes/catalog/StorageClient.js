@@ -87,6 +87,64 @@ export default class StorageClient {
   }
 
   /**
+   * Stores a file under `*.path` with content `*.location`
+   *
+   * @param {{ path: string; location: string; }[]} images
+   */
+  async saveImages(images) {
+    const {
+      env,
+      log,
+      config: {
+        org,
+        site,
+        storeCode,
+        storeViewCode,
+      },
+    } = this.ctx;
+
+    const promises = images.map(async (image) => {
+      try {
+        const key = `${org}/${site}/${storeCode}/${storeViewCode}/images/${image.path}`;
+        await env.CATALOG_BUCKET.put(key, '', {
+          httpMetadata: {
+            contentType: 'text/plain',
+          },
+          customMetadata: {
+            location: image.location,
+          },
+        });
+      } catch (e) {
+        log.error(`Error saving image ${image.path} => ${image.location}:`, e);
+      }
+    });
+    await Promise.all(promises);
+  }
+
+  /**
+   * @param {string} path
+   * @returns {Promise<string>}
+   */
+  async getImageLocation(path) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+        storeCode,
+        storeViewCode,
+      },
+    } = this.ctx;
+
+    const key = `${org}/${site}/${storeCode}/${storeViewCode}/images/${path}`;
+    const object = await env.CATALOG_BUCKET.head(key);
+    if (!object) {
+      throw errorWithResponse(404, 'Image not found');
+    }
+    return object.customMetadata.location;
+  }
+
+  /**
    * Handler function to process a batch of products.
    * @param {ProductBusEntry[]} batch - An array of products to save.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.

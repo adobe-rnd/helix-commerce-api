@@ -251,6 +251,7 @@ declare global {
     data: any;
     info: {
       method: string;
+      extension: string;
       headers: Record<string, string>;
     }
     attributes: {

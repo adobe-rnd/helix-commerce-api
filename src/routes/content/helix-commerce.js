@@ -149,7 +149,6 @@ export default async function handler(ctx) {
   const { config: { params } } = ctx;
   const { urlkey } = params;
   let { sku } = params;
-
   if (!sku && !urlkey) {
     return errorResponse(404, 'missing sku or urlkey');
   }

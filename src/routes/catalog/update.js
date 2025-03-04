@@ -14,7 +14,7 @@ import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
-
+import { extractAndReplaceImages } from '../../utils/media.js';
 /**
  * Handles a PUT request to update a product.
  * @param {Context} ctx - The context object containing request information and utilities.
@@ -34,8 +34,9 @@ export default async function update(ctx) {
 
   await assertAuthorization(ctx);
 
+  const product = await extractAndReplaceImages(ctx, data);
   const storage = StorageClient.fromContext(ctx);
-  const saveResults = await storage.saveProducts([data]);
+  const saveResults = await storage.saveProducts([product]);
 
   log.info({
     action: 'save_products',
@@ -43,5 +44,5 @@ export default async function update(ctx) {
     timestamp: new Date().toISOString(),
   });
 
-  return new Response(JSON.stringify(saveResults), { status: 201 });
+  return new Response(JSON.stringify({ ...saveResults, product }), { status: 201 });
 }

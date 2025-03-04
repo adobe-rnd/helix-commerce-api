@@ -56,6 +56,7 @@ export async function makeContext(pctx, req, env) {
   ctx.log = console;
   ctx.info = {
     method: req.method.toUpperCase(),
+    extension: ctx.url.pathname.split('.').pop(),
     headers: Object.fromEntries(
       [...req.headers.entries()]
         .map(([k, v]) => [k.toLowerCase(), v]),

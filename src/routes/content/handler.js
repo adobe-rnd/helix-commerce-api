@@ -13,6 +13,7 @@
 import { errorResponse } from '../../utils/http.js';
 import adobeCommerce from './adobe-commerce/index.js';
 import helixCommerce from './helix-commerce.js';
+import media from './media.js';
 
 const ALLOWED_METHODS = ['GET'];
 
@@ -25,11 +26,15 @@ export default async function contentHandler(ctx) {
     log,
     // url,
     config,
-    info: { method },
+    info,
   } = ctx;
 
-  if (!ALLOWED_METHODS.includes(method)) {
+  if (!ALLOWED_METHODS.includes(info.method)) {
     return errorResponse(405, 'method not allowed');
+  }
+
+  if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(info.extension)) {
+    return media(ctx);
   }
 
   if (!config.pageType) {
@@ -41,6 +46,5 @@ export default async function contentHandler(ctx) {
     return adobeCommerce(ctx);
   }
 
-  // TODO: handle .json requests like catalog GETs?
   return helixCommerce(ctx);
 }

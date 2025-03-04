@@ -105,7 +105,7 @@ export async function resolveConfig(ctx, overrides = {}) {
   }
 
   // order paths by preference
-  const suffix = `/${ctx.url.pathname.split('/').slice(3).join('/')}`;
+  const suffix = `/${ctx.url.pathname.split('/').slice(4).join('/')}`;
   const paths = findOrderedMatches(
     Object.keys(confMap).filter((p) => p !== 'base'),
     suffix,
