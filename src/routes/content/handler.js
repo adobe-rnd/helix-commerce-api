@@ -24,7 +24,6 @@ const ALLOWED_METHODS = ['GET'];
 export default async function contentHandler(ctx) {
   const {
     log,
-    // url,
     config,
     info,
   } = ctx;

@@ -17,7 +17,17 @@ import update from './update.js';
 import remove from './remove.js';
 
 /**
- * @type {Record<string, Record<string, (ctx: Context, req: Request) => Promise<Response>>>}
+ * @type {Record<
+ *    string,
+ *    Record<
+ *      string,
+ *      (
+ *        ctx: Context,
+ *        req: import("@cloudflare/workers-types/experimental").Request
+ *      ) => Promise<Response>
+ *    >
+ *  >
+ * }
  */
 const handlers = {
   lookup: {
@@ -39,7 +49,7 @@ const handlers = {
 /**
  * Handles productbus requests.
  * @param {Context} ctx - The context object containing request information and utilities.
- * @param {Request} request - The request object.
+ * @param {import("@cloudflare/workers-types/experimental").Request} request - The request object.
  * @returns {Promise<Response>} - A promise that resolves to the catalog response.
  */
 export default async function handler(ctx, request) {

@@ -16,7 +16,16 @@ import update from './update.js';
 import rotate from './rotate.js';
 
 /**
- * @type {Record<string, Record<string, (ctx: Context, req: Request) => Promise<Response>>>}
+ * @type {Record<
+ *  string,
+ *  Record<
+ *    string,
+ *    (
+ *      ctx: Context,
+ *      req: import("@cloudflare/workers-types/experimental").Request
+ *    ) => Promise<Response>
+ *  >
+ * >}
  */
 const handlers = {
   token: {
@@ -28,7 +37,7 @@ const handlers = {
 
 /**
  * @param {Context} ctx
- * @param {Request} req
+ * @param {import("@cloudflare/workers-types/experimental").Request} req
  * @returns {Promise<Response>}
  */
 export default async function handler(ctx, req) {

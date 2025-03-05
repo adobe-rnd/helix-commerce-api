@@ -53,8 +53,6 @@ export async function makeContext(eCtx, req, env) {
   };
   // @ts-ignore
   ctx.attributes = {};
-  // @ts-ignore
-  ctx.request = req;
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;
@@ -68,7 +66,6 @@ export async function makeContext(eCtx, req, env) {
         .map(([k, v]) => [k.toLowerCase(), v]),
     ),
   };
-  console.debug('makeContext: ', ctx.url, ctx.url.pathname, ctx.info.filename);
   ctx.data = await parseData(req);
   return ctx;
 }
