@@ -39,6 +39,7 @@ const extractExtension = (url) => {
  */
 async function fetchImage(ctx, imageUrl) {
   const { log } = ctx;
+  log.debug('fetching image: ', imageUrl);
   const resp = await fetch(imageUrl);
   if (!resp.ok) {
     throw errorWithResponse(502, `Failed to fetch image: ${imageUrl} (${resp.status})`);
@@ -49,8 +50,6 @@ async function fetchImage(ctx, imageUrl) {
   const hash = Array.from(new Uint8Array(arr))
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
-
-  log.debug('got hash: ', imageUrl, hash);
 
   return {
     data,
@@ -134,19 +133,29 @@ export async function extractAndReplaceImages(ctx, product) {
     return newUrl;
   };
 
-  await Promise.all([
-    processQueue([...product.images ?? []], async (image) => {
-      const newUrl = await processImage(image.url);
-      if (newUrl) {
+  /**
+   * @type {[img: string, setImage: (value: string) => void][]}
+   */
+  const arr = [
+    ...(product.images ?? []).map((image) => [
+      image.url,
+      (newUrl) => {
         image.url = newUrl;
-      }
-    }),
-    processQueue([...product.variants ?? []], async (variant) => {
-      const newUrl = await processImage(variant.image);
-      if (newUrl) {
+      },
+    ]),
+    ...(product.variants ?? []).map((variant) => [
+      variant.image,
+      (newUrl) => {
         variant.image = newUrl;
-      }
-    }),
-  ]);
+      },
+    ]),
+  ];
+
+  await processQueue(arr, async ([imageUrl, setImage]) => {
+    const newUrl = await processImage(imageUrl);
+    if (newUrl) {
+      setImage(newUrl);
+    }
+  });
   return product;
 }
