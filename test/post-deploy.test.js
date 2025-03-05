@@ -117,7 +117,7 @@ describe('Post-Deploy Tests', () => {
       assert.strictEqual(lookupRes.status, 301, 'Lookup request should succeed');
 
       const lookupLocation = lookupRes.headers.get('Location');
-      assert.strictEqual(lookupLocation, `https://adobe-commerce-api-ci.adobeaem.workers.dev/${apiPrefix}/products/${testProduct.sku}`);
+      assert.strictEqual(lookupLocation, `https://adobe-commerce-api-ci.adobeaem.workers.dev${apiPrefix}/products/${testProduct.sku}`);
 
       const lookupRes2 = await fetch(lookupLocation, lookupOptions);
       assert.strictEqual(lookupRes2.status, 200, 'Lookup request should succeed');
