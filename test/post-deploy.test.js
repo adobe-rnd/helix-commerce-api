@@ -66,40 +66,30 @@ describe('Post-Deploy Tests', () => {
   });
 
   it('valid pdp renders html', async () => {
-    const { url, ...opts } = getFetchOptions('/dylandepass/commerce-boilerplate/content/product/products/bella-tank/wt01');
+    const { url, ...opts } = getFetchOptions('/maxakuru/productbus-test/content/products/test-key');
     const res = await fetch(url, opts);
-    const expected = await getHTMLFixture('bella-tank');
+    const expected = await getHTMLFixture('productbus-test--test-key');
 
     assert.strictEqual(res.status, 200);
-    let actual = await res.text();
+    const actual = await res.text();
     const differ = new HtmlDiffer();
-
-    const regex = /<meta\s+name="lastModifiedAtCS"\s+content="[^"]*"\s*>/;
-    const match = actual.match(regex);
-    assert(match, 'lastModifiedAtCS should be present');
-
-    actual = actual.replace(regex, '');
-
     // @ts-ignore
     assert.ok(differ.isEqual(actual, expected));
   });
 
   describe('Catalog', () => {
-    let testProduct;
-
-    before(() => {
-      const sku = `sku${Math.floor(Math.random() * 1000)}`;
-      testProduct = {
-        name: 'Test Product',
-        sku,
-        urlKey: `product-${sku}`,
-        description: 'A test product for integration testing',
-      };
-    });
+    const sku = `sku${Math.floor(Math.random() * 1000)}`;
+    const testProduct = {
+      name: 'Test Product',
+      sku,
+      urlKey: `product-${sku}`,
+      description: 'A test product for integration testing',
+    };
+    const apiPrefix = '/maxakuru/productbus-test/catalog/main/default';
 
     it('can PUT, GET, lookup, and DELETE a product', async () => {
       const putOpts = getFetchOptions(
-        `/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`,
+        `${apiPrefix}/products/${testProduct.sku}`,
         {
           method: 'PUT',
           headers: {
@@ -111,7 +101,7 @@ describe('Post-Deploy Tests', () => {
       const putRes = await fetch(putOpts.url, putOpts);
       assert.strictEqual(putRes.status, 201, 'PUT request should succeed');
 
-      const { url, ...getOpts } = getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`);
+      const { url, ...getOpts } = getFetchOptions(`${apiPrefix}/products/${testProduct.sku}`);
       const getRes = await fetch(url, getOpts);
       assert.strictEqual(getRes.status, 200, 'GET request should succeed');
 
@@ -121,13 +111,13 @@ describe('Post-Deploy Tests', () => {
       assert.strictEqual(retrievedProduct.description, testProduct.description);
 
       const lookupOptions = {
-        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/lookup?urlKey=${testProduct.urlKey}`),
+        ...getFetchOptions(`${apiPrefix}/lookup?urlKey=${testProduct.urlKey}`),
       };
       const lookupRes = await fetch(lookupOptions.url, lookupOptions);
       assert.strictEqual(lookupRes.status, 301, 'Lookup request should succeed');
 
       const lookupLocation = lookupRes.headers.get('Location');
-      assert.strictEqual(lookupLocation, `https://adobe-commerce-api-ci.adobeaem.workers.dev/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`);
+      assert.strictEqual(lookupLocation, `https://adobe-commerce-api-ci.adobeaem.workers.dev/${apiPrefix}/products/${testProduct.sku}`);
 
       const lookupRes2 = await fetch(lookupLocation, lookupOptions);
       assert.strictEqual(lookupRes2.status, 200, 'Lookup request should succeed');
@@ -136,20 +126,20 @@ describe('Post-Deploy Tests', () => {
       assert.strictEqual(lookupProduct.sku, testProduct.sku);
 
       const deleteOptions = {
-        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`),
+        ...getFetchOptions(`${apiPrefix}/products/${testProduct.sku}`),
         method: 'DELETE',
       };
       const deleteRes = await fetch(deleteOptions.url, deleteOptions);
       assert.strictEqual(deleteRes.status, 200, 'DELETE request should succeed');
 
       const lookupAfterDeleteOptions = {
-        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/lookup?urlKey=${testProduct.urlKey}`),
+        ...getFetchOptions(`${apiPrefix}/lookup?urlKey=${testProduct.urlKey}`),
       };
       const lookupAfterDeleteRes = await fetch(lookupAfterDeleteOptions.url, lookupAfterDeleteOptions);
       assert.strictEqual(lookupAfterDeleteRes.status, 404, 'Lookup request should return 404 after deletion');
 
       const getAfterDeleteOptions = {
-        ...getFetchOptions(`/dylandepass/commerce-boilerplate/catalog/main_website_store/default/products/${testProduct.sku}`),
+        ...getFetchOptions(`${apiPrefix}/products/${testProduct.sku}`),
       };
       const getAfterDeleteRes = await fetch(getAfterDeleteOptions.url, getAfterDeleteOptions);
       assert.strictEqual(getAfterDeleteRes.status, 404, 'GET request should return 404 after deletion');
