@@ -27,12 +27,13 @@ const indent = (str, spaces) => str.split('\n').map((line) => `${' '.repeat(spac
 const offerTemplate = (variant) => pruneUndefined({
   '@type': 'Offer',
   sku: variant.sku,
-  name: variant.title,
+  name: variant.name,
   url: variant.url,
-  image: variant.image,
+  image: variant.images?.find((image) => image.roles?.includes('default'))?.url ?? variant.images?.[0]?.url,
   availability: variant.availability,
   price: variant.price?.final,
   priceCurrency: variant.price?.currency,
+  itemCondition: variant.itemCondition,
 });
 
 /**
@@ -44,11 +45,12 @@ const jsonldTemplate = (product) => JSON.stringify({
   '@type': 'Product',
   '@id': product.url,
   url: product.url,
-  name: product.title,
+  name: product.name,
   sku: product.sku,
   description: product.metaDescription,
   image: product.images?.find((image) => image.roles?.includes('default'))?.url ?? product.images?.[0]?.url,
   productID: product.sku,
+  itemCondition: product.itemCondition,
   ...(product.brand ? {
     brand: {
       '@type': 'Brand',
@@ -122,6 +124,7 @@ const htmlTemplate = (product) => /* html */`\
     ${metaProperty('product:price', product.price?.final)}\
     ${metaProperty('product:price.regular', product.price?.regular)}\
     ${metaProperty('product:price.currency', product.price?.currency)}\
+    ${metaProperty('product:condition', product.itemCondition)}\
     <script type="application/ld+json">
 ${product.jsonld ? product.jsonld : jsonldTemplate(product)}
     </script>

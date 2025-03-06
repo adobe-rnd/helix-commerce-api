@@ -12,6 +12,13 @@
 
 const MAX_JSON_LD_LENGTH = 128_000;
 
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const CustomObject = {
+  type: 'object',
+  properties: {},
+  additionalProperties: true,
+};
+
 /** @type {import("../utils/validation.js").StringSchema} */
 const SchemaOrgAvailability = {
   type: 'string',
@@ -28,6 +35,17 @@ const SchemaOrgAvailability = {
     'PreSale',
     'Reserved',
     'SoldOut',
+  ],
+};
+
+/** @type {import("../utils/validation.js").StringSchema} */
+const SchemaOrgItemCondition = {
+  type: 'string',
+  enum: [
+    'DamagedCondition',
+    'NewCondition',
+    'RefurbishedCondition',
+    'UsedCondition',
   ],
 };
 
@@ -57,14 +75,20 @@ const ProductBusVariant = {
   type: 'object',
   properties: {
     sku: { type: 'string' },
-    title: { type: 'string' },
+    name: { type: 'string' },
     price: ProductBusPrice,
     url: { type: 'string' },
-    image: { type: 'string' },
+    images: {
+      type: 'array',
+      items: ProductBusImage,
+    },
     gtin: { type: 'string' },
+    description: { type: 'string' },
     availability: SchemaOrgAvailability,
+    itemCondition: SchemaOrgItemCondition,
+    custom: CustomObject,
   },
-  required: ['sku', 'title', 'url', 'image'],
+  required: ['sku', 'title', 'url', 'images'],
 };
 
 /** @type {import("../utils/validation.js").AnySchema} */
@@ -74,6 +98,7 @@ const ProductBusEntry = {
     sku: { type: 'string' },
     urlKey: { type: 'string', 'not.pattern': /^[A-Z\s]+$/ },
     description: { type: 'string' },
+    name: { type: 'string' },
     title: { type: 'string' },
     metaTitle: { type: 'string' },
     metaDescription: { type: 'string' },
@@ -102,13 +127,9 @@ const ProductBusEntry = {
       type: 'string',
       maxLength: MAX_JSON_LD_LENGTH,
     },
-    custom: {
-      type: 'object',
-      properties: {},
-      additionalProperties: true,
-    },
+    custom: CustomObject,
   },
-  required: ['sku', 'urlKey', 'title'],
+  required: ['sku', 'urlKey', 'name'],
 };
 
 export default ProductBusEntry;

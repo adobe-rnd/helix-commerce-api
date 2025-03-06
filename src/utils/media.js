@@ -23,6 +23,9 @@ import { errorWithResponse } from './http.js';
  * @property {string} [extension]
  */
 
+// limit concurrency to max outgoing connections
+const CONCURRENCY = 6;
+
 /**
  * @param {string} url
  * @returns {string|undefined}
@@ -40,7 +43,13 @@ const extractExtension = (url) => {
 async function fetchImage(ctx, imageUrl) {
   const { log } = ctx;
   log.debug('fetching image: ', imageUrl);
-  const resp = await fetch(imageUrl);
+  const resp = await fetch(imageUrl, {
+    method: 'GET',
+    headers: {
+      'accept-encoding': 'identity',
+      accept: 'image/jpeg,image/jpg,image/png,image/gif,video/mp4,application/xml,image/x-icon,image/avif,image/webp,*/*;q=0.8',
+    },
+  });
   if (!resp.ok) {
     throw errorWithResponse(502, `Failed to fetch image: ${imageUrl} (${resp.status})`);
   }
@@ -133,29 +142,15 @@ export async function extractAndReplaceImages(ctx, product) {
     return newUrl;
   };
 
-  /**
-   * @type {[img: string, setImage: (value: string) => void][]}
-   */
-  const arr = [
-    ...(product.images ?? []).map((image) => [
-      image.url,
-      (newUrl) => {
-        image.url = newUrl;
-      },
-    ]),
-    ...(product.variants ?? []).map((variant) => [
-      variant.image,
-      (newUrl) => {
-        variant.image = newUrl;
-      },
-    ]),
+  const images = [
+    ...(product.images ?? []),
+    ...(product.variants ?? []).flatMap((v) => v.images ?? []),
   ];
-
-  await processQueue(arr, async ([imageUrl, setImage]) => {
-    const newUrl = await processImage(imageUrl);
+  await processQueue(images, async (image) => {
+    const newUrl = await processImage(image.url);
     if (newUrl) {
-      setImage(newUrl);
+      image.url = newUrl;
     }
-  });
+  }, CONCURRENCY);
   return product;
 }

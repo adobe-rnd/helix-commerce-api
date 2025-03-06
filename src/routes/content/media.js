@@ -30,6 +30,7 @@ export default async function handler(ctx) {
     return errorResponse(404, 'File not found');
   }
 
+  // @ts-ignore
   return new Response(resp.body, {
     headers: {
       'Content-Type': resp.httpMetadata.contentType,

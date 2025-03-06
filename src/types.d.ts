@@ -9,6 +9,8 @@ declare global {
 
   export type SchemaOrgAvailability = 'BackOrder' | 'Discontinued' | 'InStock' | 'InStoreOnly' | 'LimitedAvailability' | 'MadeToOrder' | 'OnlineOnly' | 'OutOfStock' | 'PreOrder' | 'PreSale' | 'Reserved' | 'SoldOut';
 
+  export type SchemaOrgItemCondition = 'DamagedCondition' | 'NewCondition' | 'RefurbishedCondition' | 'UsedCondition';
+
   export interface SchemaOrgAggregateRating {
     ratingValue: number;
     reviewCount: number;
@@ -24,12 +26,15 @@ declare global {
 
   export interface ProductBusVariant {
     sku: string;
-    title: string;
+    name: string;
     price?: ProductBusPrice;
     url: string;
-    image: string;
+    images: ProductBusImage[];
     availability: SchemaOrgAvailability;
     gtin?: string;
+    description?: string;
+    itemCondition?: SchemaOrgItemCondition;
+    custom?: Record<string, unknown>;
   }
 
   export interface ProductBusImage {
@@ -47,12 +52,14 @@ declare global {
      */
     sku: string;
     urlKey: string;
-    title: string;
-    metaTitle?: string;
+    name: string; // used for product name in json-ld
+    title?: string; // used for title in markup body
+    metaTitle?: string; // used for title in markup meta tag
     description?: string;
     metaDescription?: string;
     url?: string;
     brand?: string;
+    itemCondition?: SchemaOrgItemCondition;
     aggregateRating?: SchemaOrgAggregateRating;
     availability?: SchemaOrgAvailability;
     images?: ProductBusImage[];
