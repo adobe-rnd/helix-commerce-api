@@ -11,8 +11,9 @@
  */
 
 import { errorResponse } from '../../utils/http.js';
-import adobeCommerce from './adobe-commerce.js';
+import adobeCommerce from './adobe-commerce/index.js';
 import helixCommerce from './helix-commerce.js';
+import media from './media.js';
 
 const ALLOWED_METHODS = ['GET'];
 
@@ -23,13 +24,16 @@ const ALLOWED_METHODS = ['GET'];
 export default async function contentHandler(ctx) {
   const {
     log,
-    // url,
     config,
-    info: { method },
+    info,
   } = ctx;
 
-  if (!ALLOWED_METHODS.includes(method)) {
+  if (!ALLOWED_METHODS.includes(info.method)) {
     return errorResponse(405, 'method not allowed');
+  }
+
+  if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(info.extension)) {
+    return media(ctx);
   }
 
   if (!config.pageType) {
@@ -37,9 +41,9 @@ export default async function contentHandler(ctx) {
   }
   log.debug('config: ', JSON.stringify(config, null, 2));
 
-  if (config.catalogSource === 'helix') {
-    // TODO: if ends with json, get from product bus
-    return helixCommerce(ctx);
+  if (config.catalogSource === 'adobe-commerce') {
+    return adobeCommerce(ctx);
   }
-  return adobeCommerce(ctx);
+
+  return helixCommerce(ctx);
 }

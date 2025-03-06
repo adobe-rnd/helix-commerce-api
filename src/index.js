@@ -15,7 +15,7 @@ import { resolveConfig } from './utils/config.js';
 import handlers from './routes/index.js';
 
 /**
- * @param {Request} req
+ * @param {import("@cloudflare/workers-types/experimental").Request} req
  */
 async function parseData(req) {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -40,22 +40,27 @@ async function parseData(req) {
 }
 
 /**
- * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
- * @param {Request} req
+ * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} eCtx
+ * @param {import("@cloudflare/workers-types/experimental").Request} req
  * @param {Env} env
  * @returns {Promise<Context>}
  */
-export async function makeContext(pctx, req, env) {
+export async function makeContext(eCtx, req, env) {
   /** @type {Context} */
   // @ts-ignore
-  const ctx = pctx;
+  const ctx = {
+    executionContext: eCtx,
+  };
   // @ts-ignore
   ctx.attributes = {};
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;
+  const filename = ctx.url.pathname.split('/').pop() ?? '';
   ctx.info = {
+    filename,
     method: req.method.toUpperCase(),
+    extension: filename.split('.').pop(),
     headers: Object.fromEntries(
       [...req.headers.entries()]
         .map(([k, v]) => [k.toLowerCase(), v]),
@@ -67,24 +72,28 @@ export async function makeContext(pctx, req, env) {
 
 export default {
   /**
-   * @param {Request} request
+   * @param {import("@cloudflare/workers-types/experimental").Request} request
    * @param {Env} env
-   * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} pctx
+   * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} eCtx
    * @returns {Promise<Response>}
    */
-  async fetch(request, env, pctx) {
-    const ctx = await makeContext(pctx, request, env);
+  async fetch(request, env, eCtx) {
+    const ctx = await makeContext(eCtx, request, env);
 
     try {
       const overrides = Object.fromEntries(ctx.url.searchParams.entries());
       ctx.config = await resolveConfig(ctx, overrides);
 
-      console.debug('resolved config: ', JSON.stringify(ctx.config));
+      console.debug('resolved config: ', JSON.stringify(ctx.config, null, 2));
       if (!ctx.config) {
         return errorResponse(404, 'config not found');
       }
 
-      return await handlers[ctx.config.route](ctx, request);
+      const fn = handlers[ctx.config.route];
+      if (!fn) {
+        return errorResponse(404, 'route not found');
+      }
+      return await fn(ctx, request);
     } catch (e) {
       if (e.response) {
         return e.response;

@@ -11,8 +11,8 @@
  */
 
 import assert from 'node:assert';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
-import { JSONTemplate } from '../../../src/templates/json/JSONTemplate.js';
+import { DEFAULT_CONTEXT } from '../../../../../fixtures/context.js';
+import { JSONTemplate } from '../../../../../../src/routes/content/adobe-commerce/templates/json/JSONTemplate.js';
 
 describe('JSONTemplate', () => {
   describe('#constructProductURL()', () => {

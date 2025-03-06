@@ -6,6 +6,43 @@ import type StorageClient from "./routes/products/StorageClient.js";
 
 
 declare global {
+
+  export type SchemaOrgAvailability = 'BackOrder' | 'Discontinued' | 'InStock' | 'InStoreOnly' | 'LimitedAvailability' | 'MadeToOrder' | 'OnlineOnly' | 'OutOfStock' | 'PreOrder' | 'PreSale' | 'Reserved' | 'SoldOut';
+
+  export type SchemaOrgItemCondition = 'DamagedCondition' | 'NewCondition' | 'RefurbishedCondition' | 'UsedCondition';
+
+  export interface SchemaOrgAggregateRating {
+    ratingValue: number;
+    reviewCount: number;
+    bestRating?: number;
+    worstRating?: number;
+  }
+
+  export interface ProductBusPrice {
+    final: string;
+    currency: string;
+    regular?: string;
+  }
+
+  export interface ProductBusVariant {
+    sku: string;
+    name: string;
+    price?: ProductBusPrice;
+    url: string;
+    images: ProductBusImage[];
+    availability: SchemaOrgAvailability;
+    gtin?: string;
+    description?: string;
+    itemCondition?: SchemaOrgItemCondition;
+    custom?: Record<string, unknown>;
+  }
+
+  export interface ProductBusImage {
+    url: string;
+    label?: string;
+    roles?: string[];
+  }
+
   /**
    * Helix product-bus entry
    */
@@ -13,23 +50,21 @@ declare global {
     /**
      * Product data used to generate markup/json-ld
      */
-    product: {
-      sku: string;
-      urlKey: string;
-      title: string;
-      metaTitle?: string;
-      description: string;
-      metaDescription?: string;
-      url?: string;
-      inStock?: boolean;
-      images: HelixProductImage[];
-      prices?: HelixProductPrice[];
-      attributes?: HelixProductAttribute[];
-      options?: HelixProductOption[];
-      variants?: HelixProductVariant[];
-      rating?: HelixProductRating;
-      links?: HelixProductLink[];
-    }
+    sku: string;
+    urlKey: string;
+    name: string; // used for product name in json-ld
+    title?: string; // used for title in markup body
+    metaTitle?: string; // used for title in markup meta tag
+    description?: string;
+    metaDescription?: string;
+    url?: string;
+    brand?: string;
+    itemCondition?: SchemaOrgItemCondition;
+    aggregateRating?: SchemaOrgAggregateRating;
+    availability?: SchemaOrgAvailability;
+    images?: ProductBusImage[];
+    price?: ProductBusPrice;
+    variants?: ProductBusVariant[];
 
     /**
      * Override "escape hatch" for json-ld
@@ -39,7 +74,7 @@ declare global {
     /**
      * Additional data that can be retrieved via .json API
      */
-    public?: any;
+    custom?: Record<string, unknown>;
   }
 
   /**
@@ -214,7 +249,7 @@ declare global {
     [key: string]: string | KVNamespace<string> | R2Bucket;
   }
 
-  export interface Context extends ExecutionContext {
+  export interface Context {
     url: URL;
     env: Env;
     log: Console;
@@ -222,7 +257,9 @@ declare global {
     /** parsed from body or query params */
     data: any;
     info: {
+      filename: string;
       method: string;
+      extension: string | undefined;
       headers: Record<string, string>;
     }
     attributes: {
@@ -232,6 +269,7 @@ declare global {
       key?: string;
       [key: string]: any;
     }
+    executionContext: ExecutionContext;
   }
 
   export interface Product {

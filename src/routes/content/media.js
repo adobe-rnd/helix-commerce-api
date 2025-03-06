@@ -10,23 +10,30 @@
  * governing permissions and limitations under the License.
  */
 
-import content from './content/handler.js';
-import catalog from './catalog/handler.js';
-import config from './config/handler.js';
-import auth from './auth/handler.js';
+import { errorResponse } from '../../utils/http.js';
 
 /**
- * @type {Record<
- *  string,
- *  (
- *    ctx: Context,
- *    request: import("@cloudflare/workers-types/experimental").Request
- *  ) => Promise<Response>
- * >}
+ * @param {Context} ctx
  */
-export default {
-  content,
-  catalog,
-  config,
-  auth,
-};
+export default async function handler(ctx) {
+  const {
+    env,
+    log,
+    info: { filename },
+    config: { org, site },
+  } = ctx;
+
+  const key = `${org}/${site}/media/${filename}`;
+  log.debug('fetching media: ', key);
+  const resp = await env.CATALOG_BUCKET.get(key);
+  if (!resp) {
+    return errorResponse(404, 'File not found');
+  }
+
+  // @ts-ignore
+  return new Response(resp.body, {
+    headers: {
+      'Content-Type': resp.httpMetadata.contentType,
+    },
+  });
+}

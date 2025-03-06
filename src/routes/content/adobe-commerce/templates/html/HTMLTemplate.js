@@ -12,7 +12,7 @@
 
 /* eslint-disable class-methods-use-this */
 
-import { findProductImage } from '../../utils/product.js';
+import { findProductImage } from '../../util.js';
 import jsonTemplateFromContext from '../json/index.js';
 
 export class HTMLTemplate {

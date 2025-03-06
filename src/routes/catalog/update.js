@@ -10,39 +10,31 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertValidProduct, hasUppercase } from '../../utils/product.js';
+import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
-
+import { extractAndReplaceImages } from '../../utils/media.js';
 /**
  * Handles a PUT request to update a product.
  * @param {Context} ctx - The context object containing request information and utilities.
  * @returns {Promise<Response>} - A promise that resolves to the product response.
  */
 export default async function update(ctx) {
-  const { config, log, data: product } = ctx;
-
+  const { config, log, data } = ctx;
   if (config.sku === '*') {
     return errorResponse(501, 'not implemented');
   }
 
-  if (!product || typeof product !== 'object') {
-    return errorResponse(400, 'invalid product data');
-  }
+  assertValidProduct(data);
 
-  if (hasUppercase(config.sku)) {
-    return errorResponse(400, 'sku must be lowercase');
-  }
-
-  if (config.sku !== product.sku) {
+  if (config.sku !== data.sku) {
     return errorResponse(400, 'sku must match the product data');
   }
 
-  assertValidProduct(product);
-
   await assertAuthorization(ctx);
 
+  const product = await extractAndReplaceImages(ctx, data);
   const storage = StorageClient.fromContext(ctx);
   const saveResults = await storage.saveProducts([product]);
 
@@ -52,5 +44,5 @@ export default async function update(ctx) {
     timestamp: new Date().toISOString(),
   });
 
-  return new Response(JSON.stringify(saveResults), { status: 201 });
+  return new Response(JSON.stringify({ ...saveResults, product }), { status: 201 });
 }

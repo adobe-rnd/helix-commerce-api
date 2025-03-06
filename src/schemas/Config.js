@@ -71,6 +71,12 @@ const ConfigEntry = {
       type: 'array',
       items: { type: 'string' },
     },
+    media: {
+      type: 'object',
+      properties: {
+        prefix: { type: 'string' },
+      },
+    },
   },
 };
 

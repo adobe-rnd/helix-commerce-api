@@ -10,12 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse, errorWithResponse, ffetch } from '../../utils/http.js';
+import { errorResponse, errorWithResponse, ffetch } from '../../../utils/http.js';
 import getProductQuery, { adapter as productAdapter } from './queries/cs-product.js';
 import getVariantsQuery, { adapter as variantsAdapter } from './queries/cs-variants.js';
 import getProductSKUQueryCore from './queries/core-product-sku.js';
 import getProductSKUQueryCS from './queries/cs-product-sku.js';
-import htmlTemplateFromContext from '../../templates/html/index.js';
+import htmlTemplateFromContext from './templates/html/index.js';
 
 /**
  * @param {string} sku
