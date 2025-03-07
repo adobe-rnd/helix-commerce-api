@@ -12,6 +12,11 @@
 
 import { JSONTemplate } from '../JSONTemplate.js';
 
+/**
+ * @typedef {import('../../../types.d.ts').Product} Product
+ * @typedef {import('../../../types.d.ts').Variant} Variant
+ */
+
 export default class extends JSONTemplate {
   // eslint-disable-next-line class-methods-use-this
   renderBrand() {

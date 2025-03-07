@@ -14,6 +14,11 @@ import { JSONTemplate } from './JSONTemplate.js';
 import OVERRIDES from './overrides/index.js';
 
 /**
+ * @typedef {import('../../types.d.ts').Product} Product
+ * @typedef {import('../../types.d.ts').Variant} Variant
+ */
+
+/**
  * @param {Context} ctx
  * @param {Product} product
  * @param {Variant[]} variants

@@ -15,6 +15,16 @@
 import { findProductImage } from '../../util.js';
 import jsonTemplateFromContext from '../json/index.js';
 
+/**
+ * @typedef {import('../../types.d.ts').Product} Product
+ * @typedef {import('../../types.d.ts').Variant} Variant
+ * @typedef {import('../../types.d.ts').Image} Image
+ * @typedef {import('../../types.d.ts').Attribute} Attribute
+ * @typedef {import('../../types.d.ts').OptionValue} OptionValue
+ * @typedef {import('../../types.d.ts').Prices} Prices
+ * @typedef {import('../../types.d.ts').ProductOption} ProductOption
+ */
+
 export class HTMLTemplate {
   /**
    * Create a meta tag with a name attribute
