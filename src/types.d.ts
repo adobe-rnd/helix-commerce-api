@@ -414,6 +414,8 @@ declare global {
     status: number;
     message?: string;
   }
+
+  export type RouteHandler = (ctx: Context, request: import("@cloudflare/workers-types").Request) => Promise<Response>;
 }
 
 export { };

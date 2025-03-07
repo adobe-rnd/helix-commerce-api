@@ -33,7 +33,7 @@ export async function updateToken(ctx, token = generateToken()) {
 }
 
 /**
- * @param {Context} ctx
+ * @type {RouteHandler}
  */
 export default async function update(ctx) {
   const { data } = ctx;

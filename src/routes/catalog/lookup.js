@@ -13,9 +13,7 @@
 import StorageClient from './StorageClient.js';
 
 /**
- * Handles a product lookup request.
- * @param {Context} ctx - The context object.
- * @returns {Promise<Response>} - A promise that resolves to the product response.
+ * @type {RouteHandler}
  */
 export default async function lookup(ctx) {
   const {

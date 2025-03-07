@@ -15,9 +15,7 @@ import { errorResponse, errorWithResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
 
 /**
- * Handles a DELETE request for a product.
- * @param {Context} ctx - The context object containing request information and utilities.
- * @returns {Promise<Response>} - A promise that resolves to the product response.
+ * @type {RouteHandler}
  */
 export default async function remove(ctx) {
   const { log, config } = ctx;

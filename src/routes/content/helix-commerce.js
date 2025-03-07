@@ -145,8 +145,7 @@ ${indent(product.images?.map(pictureTemplate).join('\n'), 10)}
 </html>`;
 
 /**
- * @param {Context} ctx
- * @returns {Promise<Response>}
+ * @type {RouteHandler}
  */
 export default async function handler(ctx) {
   const { config: { params } } = ctx;
