@@ -14,7 +14,7 @@ import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 
 /**
- * @param {Context} ctx
+ * @type {RouteHandler}
  */
 export default async function fetch(ctx) {
   const { config } = ctx;

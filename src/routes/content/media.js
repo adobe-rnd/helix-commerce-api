@@ -13,7 +13,7 @@
 import { errorResponse } from '../../utils/http.js';
 
 /**
- * @param {Context} ctx
+ * @type {RouteHandler}
  */
 export default async function handler(ctx) {
   const {

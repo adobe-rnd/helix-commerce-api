@@ -10,8 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-/* eslint-disable no-await-in-loop */
-
 import { getPreviewPublishPaths } from './product.js';
 
 /**
@@ -125,7 +123,9 @@ export async function callPreviewPublish(config, method, sku, urlKey) {
 
     // Conditional sequencing or parallel execution based on the method
     const operations = method === 'POST'
+      // eslint-disable-next-line no-await-in-loop
       ? [await callAdminWithOp('preview'), await callAdminWithOp('live')]
+      // eslint-disable-next-line no-await-in-loop
       : await Promise.all(['preview', 'live'].map(callAdminWithOp));
 
     operations.forEach(({ op, status, message }) => {

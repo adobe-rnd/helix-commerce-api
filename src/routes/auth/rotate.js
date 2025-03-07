@@ -15,7 +15,7 @@ import { errorResponse } from '../../utils/http.js';
 import { updateToken } from './update.js';
 
 /**
- * @param {Context} ctx
+ * @type {RouteHandler}
  */
 export default async function rotate(ctx) {
   const { data } = ctx;

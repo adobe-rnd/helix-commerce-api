@@ -18,10 +18,9 @@ import media from './media.js';
 const ALLOWED_METHODS = ['GET'];
 
 /**
- * @param {Context} ctx
- * @returns {Promise<Response>}
+ * @type {RouteHandler}
  */
-export default async function contentHandler(ctx) {
+export default async function contentHandler(ctx, req) {
   const {
     log,
     config,
@@ -33,7 +32,7 @@ export default async function contentHandler(ctx) {
   }
 
   if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(info.extension)) {
-    return media(ctx);
+    return media(ctx, req);
   }
 
   if (!config.pageType) {
@@ -42,8 +41,8 @@ export default async function contentHandler(ctx) {
   log.debug('config: ', JSON.stringify(config, null, 2));
 
   if (config.catalogSource === 'adobe-commerce') {
-    return adobeCommerce(ctx);
+    return adobeCommerce(ctx, req);
   }
 
-  return helixCommerce(ctx);
+  return helixCommerce(ctx, req);
 }

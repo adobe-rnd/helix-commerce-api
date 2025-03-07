@@ -15,7 +15,7 @@ import { resolveConfig } from './utils/config.js';
 import handlers from './routes/index.js';
 
 /**
- * @param {import("@cloudflare/workers-types/experimental").Request} req
+ * @param {import("@cloudflare/workers-types").Request} req
  */
 async function parseData(req) {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -41,7 +41,7 @@ async function parseData(req) {
 
 /**
  * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} eCtx
- * @param {import("@cloudflare/workers-types/experimental").Request} req
+ * @param {import("@cloudflare/workers-types").Request} req
  * @param {Env} env
  * @returns {Promise<Context>}
  */
@@ -72,7 +72,7 @@ export async function makeContext(eCtx, req, env) {
 
 export default {
   /**
-   * @param {import("@cloudflare/workers-types/experimental").Request} request
+   * @param {import("@cloudflare/workers-types").Request} request
    * @param {Env} env
    * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} eCtx
    * @returns {Promise<Response>}

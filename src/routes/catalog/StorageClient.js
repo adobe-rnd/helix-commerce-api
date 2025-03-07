@@ -115,7 +115,7 @@ export default class StorageClient {
         }
 
         // Attempt to save the product
-        const putResponse = await env.CATALOG_BUCKET.put(key, body, {
+        await env.CATALOG_BUCKET.put(key, body, {
           httpMetadata: { contentType: 'application/json' },
           customMetadata,
         });
@@ -136,7 +136,6 @@ export default class StorageClient {
          */
         const result = {
           sku,
-          status: putResponse.status,
           message: 'Product saved successfully.',
           ...adminResponse.paths,
         };
@@ -203,7 +202,7 @@ export default class StorageClient {
           };
         }
         const { customMetadata } = productHead;
-        const deleteProductResponse = await env.CATALOG_BUCKET.delete(productKey);
+        await env.CATALOG_BUCKET.delete(productKey);
 
         const { urlKey } = customMetadata;
         if (urlKey) {
@@ -217,7 +216,6 @@ export default class StorageClient {
          */
         const result = {
           sku,
-          status: deleteProductResponse?.status,
           message: 'Product deleted successfully.',
           ...adminResponse.paths,
         };

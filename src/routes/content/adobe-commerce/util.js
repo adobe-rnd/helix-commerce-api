@@ -13,6 +13,12 @@
 import { pruneUndefined } from '../../../utils/product.js';
 
 /**
+ * @typedef {import('./types.d.ts').Product} Product
+ * @typedef {import('./types.d.ts').Variant} Variant
+ * @typedef {import('./types.d.ts').Rating} Rating
+ */
+
+/**
  * This function combines an array of strings with interpolated
  * parameters to create a GraphQL query string.
  * @param {TemplateStringsArray} strs - The string array representing parts of the GraphQL query.

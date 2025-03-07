@@ -19,6 +19,8 @@ import {
 } from '../util.js';
 
 /**
+ * @typedef {import('../types.d.ts').Variant} Variant
+/**
  * @param {Config} config
  * @param {any} variants
  * @returns {Variant[]}

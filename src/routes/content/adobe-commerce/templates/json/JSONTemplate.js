@@ -15,6 +15,11 @@
 import { pruneUndefined } from '../../../../../utils/product.js';
 import { findProductImage } from '../../util.js';
 
+/**
+ * @typedef {import('../../types.d.ts').Product} Product
+ * @typedef {import('../../types.d.ts').Variant} Variant
+ */
+
 export class JSONTemplate {
   /** @type {Context} */
   ctx = undefined;

@@ -17,8 +17,7 @@ import { updateToken } from '../auth/update.js';
 import ConfigSchema from '../../schemas/Config.js';
 
 /**
- * @param {Context} ctx
- * @returns {Promise<Response>}
+ * @type {RouteHandler}
  */
 export default async function configHandler(ctx) {
   const { method } = ctx.info;

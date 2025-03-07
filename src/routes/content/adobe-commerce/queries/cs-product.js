@@ -18,6 +18,10 @@ import {
   forceImagesHTTPS,
 } from '../util.js';
 
+/**
+ * @typedef {import('../types.d.ts').Product} Product
+ */
+
 function extractMinMaxPrice(data) {
   let minPrice = data.priceRange?.minimum ?? data.price;
   let maxPrice = data.priceRange?.maximum ?? data.price;

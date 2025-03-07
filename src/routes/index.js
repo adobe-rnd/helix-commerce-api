@@ -16,13 +16,7 @@ import config from './config/handler.js';
 import auth from './auth/handler.js';
 
 /**
- * @type {Record<
- *  string,
- *  (
- *    ctx: Context,
- *    request: import("@cloudflare/workers-types/experimental").Request
- *  ) => Promise<Response>
- * >}
+ * @type {Record<string, RouteHandler>}
  */
 export default {
   content,

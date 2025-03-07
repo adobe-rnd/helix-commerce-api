@@ -595,7 +595,6 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/product-1/sku1': {
               preview: {
@@ -608,7 +607,6 @@ describe('StorageClient Class Tests', () => {
           },
           {
             sku: 'sku2',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/product-2/sku2': {
               preview: {
@@ -688,7 +686,6 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/sku1': {
               preview: {
@@ -701,7 +698,6 @@ describe('StorageClient Class Tests', () => {
           },
           {
             sku: 'sku2',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/sku2': {
               preview: {
@@ -798,7 +794,6 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/product-1/sku1': {
               preview: {
@@ -976,7 +971,6 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/product-1/sku1': {
               preview: {
@@ -989,7 +983,6 @@ describe('StorageClient Class Tests', () => {
           },
           {
             sku: 'sku2',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/product-2/sku2': {
               preview: {
@@ -1158,7 +1151,6 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/product-1/sku1': {
               preview: {
@@ -1171,7 +1163,6 @@ describe('StorageClient Class Tests', () => {
           },
           {
             sku: 'sku2',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/sku2': {
               preview: {
@@ -1184,7 +1175,6 @@ describe('StorageClient Class Tests', () => {
           },
           {
             sku: 'sku3',
-            status: 200,
             message: 'Product saved successfully.',
             '/products/product-3/sku3': {
               preview: {
@@ -1560,7 +1550,6 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
-            status: 200,
             message: 'Product deleted successfully.',
             '/products/product-1/sku1': {
               preview: {
@@ -1573,7 +1562,6 @@ describe('StorageClient Class Tests', () => {
           },
           {
             sku: 'sku2',
-            status: 200,
             message: 'Product deleted successfully.',
             '/products/product-2/sku2': {
               preview: {
@@ -1650,7 +1638,6 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
-            status: 200,
             message: 'Product deleted successfully.',
             '/products/sku1': {
               preview: {
@@ -1663,7 +1650,6 @@ describe('StorageClient Class Tests', () => {
           },
           {
             sku: 'sku2',
-            status: 200,
             message: 'Product deleted successfully.',
             '/products/sku2': {
               preview: {

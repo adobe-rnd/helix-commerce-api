@@ -212,8 +212,7 @@ function lookupProductSKU(urlkey, config) {
 }
 
 /**
- * @param {Context} ctx
- * @returns {Promise<Response>}
+ * @type {RouteHandler}
  */
 export default async function handler(ctx) {
   const { config } = ctx;

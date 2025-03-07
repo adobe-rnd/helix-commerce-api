@@ -12,6 +12,11 @@
 
 import { HTMLTemplate } from '../HTMLTemplate.js';
 
+/**
+ * @typedef {import('../../../types.d.ts').Product} Product
+ * @typedef {import('../../../types.d.ts').Variant} Variant
+ */
+
 export default class extends HTMLTemplate {
   /**
    * @param {Context} ctx

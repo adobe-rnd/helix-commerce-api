@@ -15,10 +15,9 @@ import { errorResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
 import { extractAndReplaceImages } from '../../utils/media.js';
+
 /**
- * Handles a PUT request to update a product.
- * @param {Context} ctx - The context object containing request information and utilities.
- * @returns {Promise<Response>} - A promise that resolves to the product response.
+ * @type {RouteHandler}
  */
 export default async function update(ctx) {
   const { config, log, data } = ctx;
