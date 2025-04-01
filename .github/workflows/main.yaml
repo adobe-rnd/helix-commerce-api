@@ -5,6 +5,7 @@ env:
   CI_BUILD_NUM: ${{ github.run_id }}
   CI_BRANCH: ${{ github.ref_name }}
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  SUPERUSER_KEY: ${{ secrets.SUPERUSER_KEY }}
 
 permissions:
   id-token: write
