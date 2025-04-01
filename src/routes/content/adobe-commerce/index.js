@@ -143,6 +143,8 @@ async function lookupProductSKUCS(urlkey, config) {
 
   try {
     const json = await resp.json();
+    console.debug('live search response: ', JSON.stringify(json, null, 2));
+
     const [product] = json?.data?.productSearch.items ?? [];
     if (!product?.product?.sku) {
       throw errorWithResponse(404, 'could not find product sku (cs)', json.errors);
