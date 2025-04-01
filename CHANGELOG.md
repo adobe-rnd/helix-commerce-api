@@ -5,6 +5,21 @@
 
 * force deploy ([82d5dbc](https://github.com/adobe-rnd/helix-commerce-api/commit/82d5dbc2a42cefc5a1b2e08c5f3000fd06cff0f6))
 * log live search response ([#83](https://github.com/adobe-rnd/helix-commerce-api/issues/83)) ([c47be79](https://github.com/adobe-rnd/helix-commerce-api/commit/c47be79a3a4ed991cce41a8717b49d8b05b09665))
+* postdeploy test ([#84](https://github.com/adobe-rnd/helix-commerce-api/issues/84)) ([cadcbac](https://github.com/adobe-rnd/helix-commerce-api/commit/cadcbac5585afe080d1d18f552a285e672145ef0))
+
+
+### Features
+
+* auth route ([#80](https://github.com/adobe-rnd/helix-commerce-api/issues/80)) ([440a29f](https://github.com/adobe-rnd/helix-commerce-api/commit/440a29f39bae01454c727ddba031f8c4d7ae2299))
+* productbus ([#81](https://github.com/adobe-rnd/helix-commerce-api/issues/81)) ([ddc1541](https://github.com/adobe-rnd/helix-commerce-api/commit/ddc1541526bec2a7c887869f9f96d3604cb24207))
+
+# [1.13.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.9...v1.13.0) (2025-04-01)
+
+
+### Bug Fixes
+
+* force deploy ([82d5dbc](https://github.com/adobe-rnd/helix-commerce-api/commit/82d5dbc2a42cefc5a1b2e08c5f3000fd06cff0f6))
+* log live search response ([#83](https://github.com/adobe-rnd/helix-commerce-api/issues/83)) ([c47be79](https://github.com/adobe-rnd/helix-commerce-api/commit/c47be79a3a4ed991cce41a8717b49d8b05b09665))
 
 
 ### Features
