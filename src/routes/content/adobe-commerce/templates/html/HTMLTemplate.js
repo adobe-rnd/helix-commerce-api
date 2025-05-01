@@ -430,8 +430,10 @@ ${links.map((link) => {
       description,
       attributes,
       options,
-      images,
+      images: productImages,
     } = this.product;
+
+    const defaultImages = this.variants?.find((v) => v.attributeMap?.basecodedisplayimage === '1')?.images ?? productImages;
 
     return /* html */`\
 <!DOCTYPE html>
@@ -443,7 +445,7 @@ ${HTMLTemplate.indent(this.renderHead(), 2)}
       <div>
         <h1>${name}</h1>
         ${description ? `<p>${description}</p>` : ''}
-${HTMLTemplate.indent(this.renderProductImages(images), 8)}
+${HTMLTemplate.indent(this.renderProductImages(defaultImages), 8)}
 ${HTMLTemplate.indent(this.renderProductAttributes(attributes), 8)}
 ${HTMLTemplate.indent(this.renderProductOptions(options), 8)}
 ${HTMLTemplate.indent(this.renderProductVariants(), 8)}
