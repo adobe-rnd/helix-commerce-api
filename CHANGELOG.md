@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.0...v1.13.1) (2025-05-01)
+
+
+### Bug Fixes
+
+* use images from basecodedisplayimage as default ([#85](https://github.com/adobe-rnd/helix-commerce-api/issues/85)) ([e33993f](https://github.com/adobe-rnd/helix-commerce-api/commit/e33993f5eeeffb8d83a6458586456144b292c28a))
+
 # [1.13.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.12.9...v1.13.0) (2025-04-01)
 
 
