@@ -27,10 +27,6 @@ export default async function update(ctx) {
 
   assertValidProduct(data);
 
-  if (config.sku !== data.sku) {
-    return errorResponse(400, 'sku must match the product data');
-  }
-
   await assertAuthorization(ctx);
 
   const product = await extractAndReplaceImages(ctx, data);

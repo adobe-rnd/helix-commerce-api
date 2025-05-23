@@ -48,12 +48,12 @@ describe('handleProductLookupRequest Tests', () => {
       },
     });
 
-    storageStub.lookupSku.resolves('1234');
-    storageStub.fetchProduct.resolves({ sku: '1234', name: 'Test Product' });
+    storageStub.lookupSku.resolves('Some Sku');
+    storageStub.fetchProduct.resolves({ sku: 'Some Sku', name: 'Test Product' });
 
     const response = await handleProductLookupRequest(ctx);
 
-    assert.equal(response.headers.get('Location'), 'https://www.example.com/test-org/test-site/catalog/test-store-code/test-store-view-code/products/1234');
+    assert.equal(response.headers.get('Location'), 'https://www.example.com/test-org/test-site/catalog/test-store-code/test-store-view-code/products/some-sku.json');
     assert.equal(response.status, 301);
 
     assert(storageStub.lookupSku.calledOnceWith('some-url-key'));
@@ -80,7 +80,7 @@ describe('handleProductLookupRequest Tests', () => {
 
     const response = await handleProductLookupRequest(ctx);
 
-    assert.equal(response.headers.get('Location'), 'https://adobe-commerce-api-ci.adobeaem.workers.dev/test-org/test-site/catalog/test-store-code/test-store-view-code/products/1234');
+    assert.equal(response.headers.get('Location'), 'https://adobe-commerce-api-ci.adobeaem.workers.dev/test-org/test-site/catalog/test-store-code/test-store-view-code/products/1234.json');
     assert.equal(response.status, 301);
 
     assert(storageStub.lookupSku.calledOnceWith('some-url-key'));

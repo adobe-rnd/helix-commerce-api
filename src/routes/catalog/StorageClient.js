@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { callPreviewPublish } from '../../utils/admin.js';
+import { slugger } from '../../utils/product.js';
 import { BatchProcessor } from '../../utils/batch.js';
 import { errorWithResponse } from '../../utils/http.js';
 
@@ -105,7 +105,8 @@ export default class StorageClient {
 
     const storePromises = batch.map(async (product) => {
       const { sku, title, urlKey } = product;
-      const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
+      const sluggedSku = slugger(sku);
+      const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
       const body = JSON.stringify(product);
 
       try {
@@ -129,15 +130,12 @@ export default class StorageClient {
           });
         }
 
-        const adminResponse = await callPreviewPublish(this.config, 'POST', sku, urlKey);
-
         /**
          * @type {Partial<BatchResult>}
          */
         const result = {
           sku,
           message: 'Product saved successfully.',
-          ...adminResponse.paths,
         };
 
         return result;
@@ -191,7 +189,8 @@ export default class StorageClient {
 
     const deletionPromises = batch.map(async (sku) => {
       try {
-        const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
+        const sluggedSku = slugger(sku);
+        const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
         const productHead = await env.CATALOG_BUCKET.head(productKey);
         if (!productHead) {
           log.warn(`Product with SKU: ${sku} not found. Skipping deletion.`);
@@ -210,14 +209,12 @@ export default class StorageClient {
           await env.CATALOG_BUCKET.delete(urlKeyPath);
         }
 
-        const adminResponse = await callPreviewPublish(this.ctx.config, 'DELETE', sku, urlKey);
         /**
          * @type {Partial<BatchResult>}
          */
         const result = {
           sku,
           message: 'Product deleted successfully.',
-          ...adminResponse.paths,
         };
         return result;
       } catch (error) {
@@ -279,7 +276,8 @@ export default class StorageClient {
     } = this.ctx;
 
     // Construct the path to the product JSON file
-    const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
+    const sluggedSku = slugger(sku);
+    const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
 
     const headResponse = await env.CATALOG_BUCKET.head(productKey);
     if (!headResponse || !headResponse.customMetadata) {
@@ -340,10 +338,11 @@ export default class StorageClient {
           if (headResponse) {
             const { customMetadata } = headResponse;
             const { sku } = customMetadata;
+            const sluggedSku = slugger(sku);
             return {
               ...customMetadata,
               links: {
-                product: `${this.ctx.url.origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/product/${sku}`,
+                product: `${this.ctx.url.origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/product/${sluggedSku}`,
               },
             };
           } else {

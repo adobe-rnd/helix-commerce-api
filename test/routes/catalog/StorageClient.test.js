@@ -21,13 +21,11 @@ import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 
 describe('StorageClient Class Tests', () => {
   let StorageClient;
-  let callPreviewPublishStub;
   let errorWithResponseStub;
   let BatchProcessorMock;
   let config;
 
   beforeEach(async () => {
-    callPreviewPublishStub = sinon.stub();
     errorWithResponseStub = sinon.stub();
 
     BatchProcessorMock = class {
@@ -43,9 +41,6 @@ describe('StorageClient Class Tests', () => {
     };
 
     const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-      '../../../src/utils/admin.js': {
-        callPreviewPublish: (config, method, sku, urlKey) => callPreviewPublishStub(config, method, sku, urlKey),
-      },
       '../../../src/utils/http.js': {
         errorWithResponse: (status, message) => errorWithResponseStub(status, message),
       },
@@ -166,60 +161,20 @@ describe('StorageClient Class Tests', () => {
         { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
       ];
 
-      callPreviewPublishStub.resolves({
-        paths: {
-          '/products/product-1/sku1': {
-            preview: {
-              status: 200,
-            },
-            live: {
-              status: 200,
-            },
-          },
-          '/products/product-2/sku2': {
-            preview: {
-              status: 200,
-            },
-            live: {
-              status: 200,
-            },
-          },
-        },
-      });
-
       const storeProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
-          '/products/product-1/sku1': {
-            preview: {
-              status: 200,
-            },
-            live: {
-              status: 200,
-            },
-          },
         },
         {
           sku: 'sku2',
           status: 200,
           message: 'Product saved successfully.',
-          '/products/product-2/sku2': {
-            preview: {
-              status: 200,
-            },
-            live: {
-              status: 200,
-            },
-          },
         },
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/admin.js': {
-          callPreviewPublish: callPreviewPublishStub,
-        },
         '../../../src/utils/http.js': {
           errorWithResponse: errorWithResponseStub,
         },
@@ -244,27 +199,11 @@ describe('StorageClient Class Tests', () => {
           sku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
-          '/products/product-1/sku1': {
-            preview: {
-              status: 200,
-            },
-            live: {
-              status: 200,
-            },
-          },
         },
         {
           sku: 'sku2',
           status: 200,
           message: 'Product saved successfully.',
-          '/products/product-2/sku2': {
-            preview: {
-              status: 200,
-            },
-            live: {
-              status: 200,
-            },
-          },
         },
       ]);
       assert(ctx.log.error.notCalled);
@@ -284,19 +223,6 @@ describe('StorageClient Class Tests', () => {
         { sku: 'sku1', title: 'Product 1' }, // No urlKey
       ];
 
-      callPreviewPublishStub.resolves({
-        paths: {
-          '/products/sku1': {
-            preview: {
-              status: 200,
-            },
-            live: {
-              status: 200,
-            },
-          },
-        },
-      });
-
       const storeProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1',
@@ -314,9 +240,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/admin.js': {
-          callPreviewPublish: callPreviewPublishStub,
-        },
         '../../../src/utils/http.js': {
           errorWithResponse: errorWithResponseStub,
         },
@@ -369,18 +292,11 @@ describe('StorageClient Class Tests', () => {
         { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
       ];
 
-      callPreviewPublishStub.withArgs(config, 'POST', 'sku1', 'product-1').resolves({ paths: { path1: '/products/sku1' } });
-      callPreviewPublishStub.withArgs(config, 'POST', 'sku2', 'product-2').rejects(new Error('Publish error'));
-
       const storeProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
-          '/products/product-1/sku1': {
-            preview: { status: 200 },
-            live: { status: 200 },
-          },
         },
         {
           sku: 'sku2',
@@ -390,9 +306,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/admin.js': {
-          callPreviewPublish: callPreviewPublishStub,
-        },
         '../../../src/utils/http.js': {
           errorWithResponse: errorWithResponseStub,
         },
@@ -417,14 +330,6 @@ describe('StorageClient Class Tests', () => {
           sku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
-          '/products/product-1/sku1': {
-            live: {
-              status: 200,
-            },
-            preview: {
-              status: 200,
-            },
-          },
         },
         {
           sku: 'sku2',
@@ -451,9 +356,6 @@ describe('StorageClient Class Tests', () => {
       const storeProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/admin.js': {
-          callPreviewPublish: callPreviewPublishStub,
-        },
         '../../../src/utils/http.js': {
           errorWithResponse: errorWithResponseStub,
         },
@@ -526,32 +428,6 @@ describe('StorageClient Class Tests', () => {
           },
         ).resolves({ status: 200 });
 
-        callPreviewPublishStub.onFirstCall().resolves({
-          paths: {
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
-
-        callPreviewPublishStub.onSecondCall().resolves({
-          paths: {
-            '/products/product-2/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
-
         const results = await client.storeProductsBatch(batch);
 
         assert(ctx.env.CATALOG_BUCKET.put.callCount === 4);
@@ -589,33 +465,14 @@ describe('StorageClient Class Tests', () => {
           },
         ));
 
-        assert(callPreviewPublishStub.calledTwice);
-        assert(callPreviewPublishStub.firstCall.calledWithExactly(config, 'POST', 'sku1', 'product-1'));
-        assert(callPreviewPublishStub.secondCall.calledWithExactly(config, 'POST', 'sku2', 'product-2'));
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
             message: 'Product saved successfully.',
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
           {
             sku: 'sku2',
             message: 'Product saved successfully.',
-            '/products/product-2/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
         ]);
 
@@ -630,32 +487,6 @@ describe('StorageClient Class Tests', () => {
         ];
 
         ctx.env.CATALOG_BUCKET.put.resolves({ status: 200 });
-
-        callPreviewPublishStub.onFirstCall().resolves({
-          paths: {
-            '/products/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
-
-        callPreviewPublishStub.onSecondCall().resolves({
-          paths: {
-            '/products/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
 
         const results = await client.storeProductsBatch(batch);
 
@@ -679,34 +510,14 @@ describe('StorageClient Class Tests', () => {
 
         assert(ctx.env.CATALOG_BUCKET.put.callCount === 2);
 
-        assert(callPreviewPublishStub.calledTwice);
-        assert(callPreviewPublishStub.firstCall.calledWithExactly(config, 'POST', 'sku1', undefined));
-        assert(callPreviewPublishStub.secondCall.calledWithExactly(config, 'POST', 'sku2', undefined));
-
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
             message: 'Product saved successfully.',
-            '/products/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
           {
             sku: 'sku2',
             message: 'Product saved successfully.',
-            '/products/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
         ]);
 
@@ -747,19 +558,6 @@ describe('StorageClient Class Tests', () => {
           },
         ).resolves({ status: 200 });
 
-        callPreviewPublishStub.withArgs(config, 'POST', 'sku1', 'product-1').resolves({
-          paths: {
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
-
         const results = await client.storeProductsBatch(batch);
 
         assert(ctx.env.CATALOG_BUCKET.put.calledThrice);
@@ -788,21 +586,10 @@ describe('StorageClient Class Tests', () => {
           },
         ));
 
-        assert(callPreviewPublishStub.calledOnce);
-        assert(callPreviewPublishStub.calledWithExactly(config, 'POST', 'sku1', 'product-1'));
-
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
             message: 'Product saved successfully.',
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
           {
             sku: 'sku2',
@@ -859,8 +646,6 @@ describe('StorageClient Class Tests', () => {
           },
         ));
 
-        assert(callPreviewPublishStub.notCalled);
-
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
@@ -873,130 +658,6 @@ describe('StorageClient Class Tests', () => {
         assert(ctx.log.error.calledWithExactly('Error storing product SKU: sku1:', sinon.match.instanceOf(Error)));
       });
 
-      it('should handle errors from callPreviewPublish', async () => {
-        const client = new StorageClient(ctx);
-        const batch = [
-          { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-          { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
-        ];
-
-        ctx.env.CATALOG_BUCKET.put.resolves({ status: 200 });
-
-        ctx.env.CATALOG_BUCKET.put.withArgs(
-          `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/urlkeys/product-1`,
-          '',
-          {
-            httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-          },
-        ).resolves({ status: 200 });
-
-        ctx.env.CATALOG_BUCKET.put.withArgs(
-          `${config.org}/${config.site}/${config.storeCode}/${config.storeViewCode}/urlkeys/product-2`,
-          '',
-          {
-            httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
-          },
-        ).resolves({ status: 200 });
-
-        callPreviewPublishStub.withArgs(config, 'POST', 'sku1', 'product-1').resolves({
-          paths: {
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
-
-        callPreviewPublishStub.withArgs(config, 'POST', 'sku2', 'product-2').resolves({
-          paths: {
-            '/products/product-2/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 400,
-                message: 'Publish failed for sku2',
-              },
-            },
-          },
-        });
-
-        const results = await client.storeProductsBatch(batch);
-
-        assert(ctx.env.CATALOG_BUCKET.put.callCount === 4);
-        assert(ctx.env.CATALOG_BUCKET.put.firstCall.calledWithExactly(
-          'org/site/store/view/products/sku1.json',
-          JSON.stringify(batch[0]),
-          {
-            httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-          },
-        ));
-        assert(ctx.env.CATALOG_BUCKET.put.secondCall.calledWithExactly(
-          'org/site/store/view/products/sku2.json',
-          JSON.stringify(batch[1]),
-          {
-            httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
-          },
-        ));
-
-        assert(ctx.env.CATALOG_BUCKET.put.getCall(2).calledWithExactly(
-          'org/site/store/view/urlkeys/product-1',
-          '',
-          {
-            httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-          },
-        ));
-        assert(ctx.env.CATALOG_BUCKET.put.getCall(3).calledWithExactly(
-          'org/site/store/view/urlkeys/product-2',
-          '',
-          {
-            httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
-          },
-        ));
-
-        assert(callPreviewPublishStub.calledTwice);
-        assert(callPreviewPublishStub.firstCall.calledWithExactly(config, 'POST', 'sku1', 'product-1'));
-        assert(callPreviewPublishStub.secondCall.calledWithExactly(config, 'POST', 'sku2', 'product-2'));
-
-        assert.deepStrictEqual(results, [
-          {
-            sku: 'sku1',
-            message: 'Product saved successfully.',
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-          {
-            sku: 'sku2',
-            message: 'Product saved successfully.',
-            '/products/product-2/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 400,
-                message: 'Publish failed for sku2',
-              },
-            },
-          },
-        ]);
-      });
-
       it('should handle an empty batch', async () => {
         const client = new StorageClient(ctx);
         const batch = [];
@@ -1004,7 +665,6 @@ describe('StorageClient Class Tests', () => {
         const results = await client.storeProductsBatch(batch);
 
         assert(ctx.env.CATALOG_BUCKET.put.notCalled);
-        assert(callPreviewPublishStub.notCalled);
         assert.deepStrictEqual(results, []);
         assert(ctx.log.error.notCalled);
       });
@@ -1062,43 +722,6 @@ describe('StorageClient Class Tests', () => {
           },
         ).resolves({ status: 200 });
 
-        callPreviewPublishStub.withArgs(config, 'POST', 'sku1', 'product-1').resolves({
-          paths: {
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
-        callPreviewPublishStub.withArgs(config, 'POST', 'sku2', undefined).resolves({
-          paths: {
-            '/products/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
-        callPreviewPublishStub.withArgs(config, 'POST', 'sku3', 'product-3').resolves({
-          paths: {
-            '/products/product-3/sku3': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
-          },
-        });
-
         const results = await client.storeProductsBatch(batch);
 
         assert(ctx.env.CATALOG_BUCKET.put.callCount === 5);
@@ -1143,47 +766,18 @@ describe('StorageClient Class Tests', () => {
           },
         ));
 
-        assert(callPreviewPublishStub.calledThrice);
-        assert(callPreviewPublishStub.firstCall.calledWithExactly(config, 'POST', 'sku2', undefined));
-        assert(callPreviewPublishStub.secondCall.calledWithExactly(config, 'POST', 'sku1', 'product-1'));
-        assert(callPreviewPublishStub.thirdCall.calledWithExactly(config, 'POST', 'sku3', 'product-3'));
-
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
             message: 'Product saved successfully.',
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
           {
             sku: 'sku2',
             message: 'Product saved successfully.',
-            '/products/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
           {
             sku: 'sku3',
             message: 'Product saved successfully.',
-            '/products/product-3/sku3': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
         ]);
 
@@ -1213,60 +807,20 @@ describe('StorageClient Class Tests', () => {
         customMetadata: { urlKey: 'product-2' },
       });
 
-      callPreviewPublishStub.resolves({
-        paths: {
-          '/products/product-1/sku1': {
-            preview: {
-              status: 204,
-            },
-            live: {
-              status: 204,
-            },
-          },
-          '/products/product-2/sku2': {
-            preview: {
-              status: 204,
-            },
-            live: {
-              status: 204,
-            },
-          },
-        },
-      });
-
       const deleteProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1',
           status: 200,
           message: 'Product deleted successfully.',
-          '/products/product-1/sku1': {
-            preview: {
-              status: 204,
-            },
-            live: {
-              status: 204,
-            },
-          },
         },
         {
           sku: 'sku2',
           status: 200,
           message: 'Product deleted successfully.',
-          '/products/product-2/sku2': {
-            preview: {
-              status: 204,
-            },
-            live: {
-              status: 204,
-            },
-          },
         },
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/admin.js': {
-          callPreviewPublish: callPreviewPublishStub,
-        },
         '../../../src/utils/http.js': {
           errorWithResponse: errorWithResponseStub,
         },
@@ -1291,27 +845,11 @@ describe('StorageClient Class Tests', () => {
           sku: 'sku1',
           status: 200,
           message: 'Product deleted successfully.',
-          '/products/product-1/sku1': {
-            preview: {
-              status: 204,
-            },
-            live: {
-              status: 204,
-            },
-          },
         },
         {
           sku: 'sku2',
           status: 200,
           message: 'Product deleted successfully.',
-          '/products/product-2/sku2': {
-            preview: {
-              status: 204,
-            },
-            live: {
-              status: 204,
-            },
-          },
         },
       ]);
       assert(ctx.log.warn.notCalled);
@@ -1344,9 +882,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/admin.js': {
-          callPreviewPublish: callPreviewPublishStub,
-        },
         '../../../src/utils/http.js': {
           errorWithResponse: errorWithResponseStub,
         },
@@ -1395,9 +930,6 @@ describe('StorageClient Class Tests', () => {
         customMetadata: { urlKey: 'product-2' },
       });
 
-      callPreviewPublishStub.withArgs(config, 'DELETE', 'sku1', 'product-1').resolves({ paths: { path1: '/path1' } });
-      callPreviewPublishStub.withArgs(config, 'DELETE', 'sku2', 'product-2').rejects(new Error('Publish error'));
-
       const deleteProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1', status: 200, message: 'Product deleted successfully.', path1: '/products/sku1',
@@ -1406,9 +938,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/admin.js': {
-          callPreviewPublish: callPreviewPublishStub,
-        },
         '../../../src/utils/http.js': {
           errorWithResponse: errorWithResponseStub,
         },
@@ -1452,9 +981,6 @@ describe('StorageClient Class Tests', () => {
       const deleteProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/admin.js': {
-          callPreviewPublish: callPreviewPublishStub,
-        },
         '../../../src/utils/http.js': {
           errorWithResponse: errorWithResponseStub,
         },
@@ -1516,61 +1042,16 @@ describe('StorageClient Class Tests', () => {
 
         ctx.env.CATALOG_BUCKET.delete.resolves({ status: 200 });
 
-        callPreviewPublishStub
-          .withArgs(config, 'DELETE', 'sku1', 'product-1')
-          .resolves({
-            paths: {
-              '/products/product-1/sku1': {
-                preview: {
-                  status: 200,
-                },
-                live: {
-                  status: 200,
-                },
-              },
-            },
-          });
-        callPreviewPublishStub
-          .withArgs(config, 'DELETE', 'sku2', 'product-2')
-          .resolves({
-            paths: {
-              '/products/product-2/sku2': {
-                preview: {
-                  status: 200,
-                },
-                live: {
-                  status: 200,
-                },
-              },
-            },
-          });
-
         const results = await client.deleteProductsBatch(batch);
 
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
             message: 'Product deleted successfully.',
-            '/products/product-1/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
           {
             sku: 'sku2',
             message: 'Product deleted successfully.',
-            '/products/product-2/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
         ]);
 
@@ -1583,10 +1064,6 @@ describe('StorageClient Class Tests', () => {
         assert(ctx.env.CATALOG_BUCKET.delete.calledWithExactly('org/site/store/view/urlkeys/product-1'));
         assert(ctx.env.CATALOG_BUCKET.delete.calledWithExactly('org/site/store/view/products/sku2.json'));
         assert(ctx.env.CATALOG_BUCKET.delete.calledWithExactly('org/site/store/view/urlkeys/product-2'));
-
-        assert(callPreviewPublishStub.calledTwice);
-        assert(callPreviewPublishStub.calledWithExactly(config, 'DELETE', 'sku1', 'product-1'));
-        assert(callPreviewPublishStub.calledWithExactly(config, 'DELETE', 'sku2', 'product-2'));
 
         assert(ctx.log.warn.notCalled);
         assert(ctx.log.error.notCalled);
@@ -1604,61 +1081,16 @@ describe('StorageClient Class Tests', () => {
 
         ctx.env.CATALOG_BUCKET.delete.resolves({ status: 200 });
 
-        callPreviewPublishStub
-          .withArgs(config, 'DELETE', 'sku1', undefined)
-          .resolves({
-            paths: {
-              '/products/sku1': {
-                preview: {
-                  status: 200,
-                },
-                live: {
-                  status: 200,
-                },
-              },
-            },
-          });
-        callPreviewPublishStub
-          .withArgs(config, 'DELETE', 'sku2', undefined)
-          .resolves({
-            paths: {
-              '/products/sku2': {
-                preview: {
-                  status: 200,
-                },
-                live: {
-                  status: 200,
-                },
-              },
-            },
-          });
-
         const results = await client.deleteProductsBatch(batch);
 
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
             message: 'Product deleted successfully.',
-            '/products/sku1': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
           {
             sku: 'sku2',
             message: 'Product deleted successfully.',
-            '/products/sku2': {
-              preview: {
-                status: 200,
-              },
-              live: {
-                status: 200,
-              },
-            },
           },
         ]);
 
@@ -1667,10 +1099,6 @@ describe('StorageClient Class Tests', () => {
         assert(ctx.env.CATALOG_BUCKET.delete.calledTwice);
         assert(ctx.env.CATALOG_BUCKET.delete.calledWithExactly('org/site/store/view/products/sku1.json'));
         assert(ctx.env.CATALOG_BUCKET.delete.calledWithExactly('org/site/store/view/products/sku2.json'));
-
-        assert(callPreviewPublishStub.calledTwice);
-        assert(callPreviewPublishStub.calledWithExactly(config, 'DELETE', 'sku1', undefined));
-        assert(callPreviewPublishStub.calledWithExactly(config, 'DELETE', 'sku2', undefined));
       });
 
       it('should handle non-existent products', async () => {
@@ -1696,8 +1124,6 @@ describe('StorageClient Class Tests', () => {
         assert(ctx.env.CATALOG_BUCKET.head.calledTwice);
 
         assert(ctx.env.CATALOG_BUCKET.delete.notCalled);
-
-        assert(callPreviewPublishStub.notCalled);
 
         assert(ctx.log.warn.calledTwice);
         assert(ctx.log.warn.calledWithExactly('Product with SKU: nonexistent1 not found. Skipping deletion.'));
