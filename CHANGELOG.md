@@ -1,3 +1,10 @@
+## [1.13.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.1...v1.13.2) (2025-05-23)
+
+
+### Bug Fixes
+
+* sluggify sku, remove preview publish ([#86](https://github.com/adobe-rnd/helix-commerce-api/issues/86)) ([2715e93](https://github.com/adobe-rnd/helix-commerce-api/commit/2715e934ce224ef02e920642be9a6bdd628d6128))
+
 ## [1.13.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.0...v1.13.1) (2025-05-01)
 
 
