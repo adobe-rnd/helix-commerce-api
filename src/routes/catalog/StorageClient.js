@@ -342,7 +342,7 @@ export default class StorageClient {
             return {
               ...customMetadata,
               links: {
-                product: `${this.ctx.url.origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/product/${sluggedSku}`,
+                product: `${this.ctx.url.origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`,
               },
             };
           } else {

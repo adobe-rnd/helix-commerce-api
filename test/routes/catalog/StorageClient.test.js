@@ -1428,7 +1428,7 @@ describe('StorageClient Class Tests', () => {
           title: 'Product 1',
           urlKey: 'product-1',
           links: {
-            product: 'https://example.com/org/site/catalog/store/view/product/sku1',
+            product: 'https://example.com/org/site/catalog/store/view/products/sku1.json',
           },
         },
         {
@@ -1509,7 +1509,7 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(customMetadataArray[i - 1], {
           sku: `${i}`,
           links: {
-            product: `https://example.com/org/site/catalog/store/view/product/${i}`,
+            product: `https://example.com/org/site/catalog/store/view/products/${i}.json`,
           },
         });
       }
