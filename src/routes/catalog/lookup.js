@@ -11,6 +11,7 @@
  */
 
 import StorageClient from './StorageClient.js';
+import { slugger } from '../../utils/product.js';
 
 /**
  * @type {RouteHandler}
@@ -37,7 +38,7 @@ export default async function lookup(ctx) {
     return new Response(undefined, {
       status: 301,
       headers: {
-        Location: `${origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/products/${sku}`,
+        Location: `${origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/products/${slugger(sku)}.json`,
       },
     });
   }

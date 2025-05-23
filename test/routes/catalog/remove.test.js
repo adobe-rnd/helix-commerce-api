@@ -46,25 +46,6 @@ describe('Catalog Remove Tests', () => {
       assert.strictEqual(response.headers.get('x-error'), 'Wildcard SKU deletions is not currently supported');
     });
 
-    it('should throw 400 error if helixApiKey is missing', async () => {
-      const config = { sku: '12345' }; // helixApiKey is missing
-      const ctx = DEFAULT_CONTEXT({
-        config,
-        attributes: {
-          storageClient: storageStub,
-        },
-      });
-
-      let thrownError;
-      try {
-        await handleProductRemoveRequest(ctx);
-      } catch (e) {
-        thrownError = e;
-      }
-
-      assert.strictEqual(thrownError.response.headers.get('x-error'), 'Helix API key is required to delete or unpublish products.');
-    });
-
     it('should successfully delete a product and return 200 with results', async () => {
       const config = {
         sku: '12345',

@@ -11,7 +11,7 @@
  */
 
 import { assertAuthorization } from '../../utils/auth.js';
-import { errorResponse, errorWithResponse } from '../../utils/http.js';
+import { errorResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
 
 /**
@@ -23,10 +23,6 @@ export default async function remove(ctx) {
 
   if (sku === '*') {
     return errorResponse(400, 'Wildcard SKU deletions is not currently supported');
-  }
-
-  if (!config.helixApiKey) {
-    throw errorWithResponse(400, 'Helix API key is required to delete or unpublish products.');
   }
 
   await assertAuthorization(ctx);
