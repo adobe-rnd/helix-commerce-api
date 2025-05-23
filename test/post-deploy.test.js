@@ -89,7 +89,7 @@ describe('Post-Deploy Tests', () => {
 
     it('can PUT, GET, lookup, and DELETE a product', async () => {
       const putOpts = getFetchOptions(
-        `${apiPrefix}/products/${testProduct.sku}`,
+        `${apiPrefix}/products/${testProduct.sku}.json`,
         {
           method: 'PUT',
           headers: {
@@ -101,7 +101,7 @@ describe('Post-Deploy Tests', () => {
       const putRes = await fetch(putOpts.url, putOpts);
       assert.strictEqual(putRes.status, 201, 'PUT request should succeed');
 
-      const { url, ...getOpts } = getFetchOptions(`${apiPrefix}/products/${testProduct.sku}`);
+      const { url, ...getOpts } = getFetchOptions(`${apiPrefix}/products/${testProduct.sku}.json`);
       const getRes = await fetch(url, getOpts);
       assert.strictEqual(getRes.status, 200, 'GET request should succeed');
 
@@ -117,7 +117,7 @@ describe('Post-Deploy Tests', () => {
       assert.strictEqual(lookupRes.status, 301, 'Lookup request should succeed');
 
       const lookupLocation = lookupRes.headers.get('Location');
-      assert.strictEqual(lookupLocation, `https://adobe-commerce-api-ci.adobeaem.workers.dev${apiPrefix}/products/${testProduct.sku}`);
+      assert.strictEqual(lookupLocation, `https://adobe-commerce-api-ci.adobeaem.workers.dev${apiPrefix}/products/${testProduct.sku}.json`);
 
       const lookupRes2 = await fetch(lookupLocation, lookupOptions);
       assert.strictEqual(lookupRes2.status, 200, 'Lookup request should succeed');
@@ -126,7 +126,7 @@ describe('Post-Deploy Tests', () => {
       assert.strictEqual(lookupProduct.sku, testProduct.sku);
 
       const deleteOptions = {
-        ...getFetchOptions(`${apiPrefix}/products/${testProduct.sku}`),
+        ...getFetchOptions(`${apiPrefix}/products/${testProduct.sku}.json`),
         method: 'DELETE',
       };
       const deleteRes = await fetch(deleteOptions.url, deleteOptions);
@@ -139,7 +139,7 @@ describe('Post-Deploy Tests', () => {
       assert.strictEqual(lookupAfterDeleteRes.status, 404, 'Lookup request should return 404 after deletion');
 
       const getAfterDeleteOptions = {
-        ...getFetchOptions(`${apiPrefix}/products/${testProduct.sku}`),
+        ...getFetchOptions(`${apiPrefix}/products/${testProduct.sku}.json`),
       };
       const getAfterDeleteRes = await fetch(getAfterDeleteOptions.url, getAfterDeleteOptions);
       assert.strictEqual(getAfterDeleteRes.status, 404, 'GET request should return 404 after deletion');
