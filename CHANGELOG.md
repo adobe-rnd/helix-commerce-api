@@ -1,3 +1,10 @@
+## [1.13.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.2...v1.13.3) (2025-05-26)
+
+
+### Bug Fixes
+
+* remove `title` property from product bus ([#87](https://github.com/adobe-rnd/helix-commerce-api/issues/87)) ([aec00b4](https://github.com/adobe-rnd/helix-commerce-api/commit/aec00b490c1e93b5c52182053eae662be34f35e5))
+
 ## [1.13.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.1...v1.13.2) (2025-05-23)
 
 
