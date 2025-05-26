@@ -133,7 +133,7 @@ ${product.jsonld ? product.jsonld : jsonldTemplate(product)}
     <header></header>
     <main>
       <div>
-        <h1>${product.title}</h1>
+        <h1>${product.name}</h1>
         <p>${product.description}</p>
         <p>
 ${indent(product.images?.map(pictureTemplate).join('\n'), 10)}

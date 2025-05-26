@@ -88,7 +88,7 @@ const ProductBusVariant = {
     itemCondition: SchemaOrgItemCondition,
     custom: CustomObject,
   },
-  required: ['sku', 'title', 'url', 'images'],
+  required: ['sku', 'name', 'url', 'images'],
 };
 
 /** @type {import("../utils/validation.js").AnySchema} */
@@ -99,7 +99,6 @@ const ProductBusEntry = {
     urlKey: { type: 'string', 'not.pattern': /^[A-Z\s]+$/ },
     description: { type: 'string' },
     name: { type: 'string' },
-    title: { type: 'string' },
     metaTitle: { type: 'string' },
     metaDescription: { type: 'string' },
     url: { type: 'string' },

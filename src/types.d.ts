@@ -53,7 +53,6 @@ declare global {
     sku: string;
     urlKey: string;
     name: string; // used for product name in json-ld
-    title?: string; // used for title in markup body
     metaTitle?: string; // used for title in markup meta tag
     description?: string;
     metaDescription?: string;
