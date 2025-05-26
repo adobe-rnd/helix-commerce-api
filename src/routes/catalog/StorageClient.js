@@ -104,13 +104,13 @@ export default class StorageClient {
     } = this.ctx;
 
     const storePromises = batch.map(async (product) => {
-      const { sku, title, urlKey } = product;
+      const { sku, name, urlKey } = product;
       const sluggedSku = slugger(sku);
       const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
       const body = JSON.stringify(product);
 
       try {
-        const customMetadata = { sku, title };
+        const customMetadata = { sku, name };
         if (urlKey) {
           customMetadata.urlKey = urlKey;
         }

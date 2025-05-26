@@ -70,7 +70,7 @@ describe('StorageClient Class Tests', () => {
         env: {
           CATALOG_BUCKET: {
             get: sinon.stub().resolves({
-              json: sinon.stub().resolves({ sku: 'sku1', title: 'Test Product' }),
+              json: sinon.stub().resolves({ sku: 'sku1', name: 'Test Product' }),
             }),
           },
         },
@@ -84,7 +84,7 @@ describe('StorageClient Class Tests', () => {
       assert(ctx.log.debug.calledOnceWithExactly('Fetching product from R2:', 'org/site/store/view/products/sku1.json'));
       assert(ctx.env.CATALOG_BUCKET.get.calledOnceWithExactly('org/site/store/view/products/sku1.json'));
       assert.deepStrictEqual(product, {
-        sku: 'sku1', title: 'Test Product',
+        sku: 'sku1', name: 'Test Product',
       });
     });
 
@@ -157,8 +157,8 @@ describe('StorageClient Class Tests', () => {
         config,
       });
       const products = [
-        { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-        { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+        { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+        { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
       ];
 
       const storeProductsBatchStub = sinon.stub().resolves([
@@ -220,7 +220,7 @@ describe('StorageClient Class Tests', () => {
         config,
       });
       const products = [
-        { sku: 'sku1', title: 'Product 1' }, // No urlKey
+        { sku: 'sku1', name: 'Product 1' }, // No urlKey
       ];
 
       const storeProductsBatchStub = sinon.stub().resolves([
@@ -288,8 +288,8 @@ describe('StorageClient Class Tests', () => {
         config,
       });
       const products = [
-        { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-        { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+        { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+        { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
       ];
 
       const storeProductsBatchStub = sinon.stub().resolves([
@@ -350,7 +350,7 @@ describe('StorageClient Class Tests', () => {
         config,
       });
       const products = [
-        { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+        { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
       ];
 
       const storeProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
@@ -404,8 +404,8 @@ describe('StorageClient Class Tests', () => {
       it('should successfully save products with urlKeys', async () => {
         const client = new StorageClient(ctx);
         const batch = [
-          { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-          { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
         ];
 
         ctx.env.CATALOG_BUCKET.put.resolves({ status: 200 });
@@ -415,7 +415,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ).resolves({ status: 200 });
 
@@ -424,7 +424,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+            customMetadata: { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
           },
         ).resolves({ status: 200 });
 
@@ -436,7 +436,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[0]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.secondCall.calledWithExactly(
@@ -444,7 +444,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[1]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+            customMetadata: { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
           },
         ));
 
@@ -453,7 +453,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.getCall(3).calledWithExactly(
@@ -461,7 +461,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+            customMetadata: { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
           },
         ));
 
@@ -482,8 +482,8 @@ describe('StorageClient Class Tests', () => {
       it('should successfully save products without urlKeys', async () => {
         const client = new StorageClient(ctx);
         const batch = [
-          { sku: 'sku1', title: 'Product 1' },
-          { sku: 'sku2', title: 'Product 2' },
+          { sku: 'sku1', name: 'Product 1' },
+          { sku: 'sku2', name: 'Product 2' },
         ];
 
         ctx.env.CATALOG_BUCKET.put.resolves({ status: 200 });
@@ -496,7 +496,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[0]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.secondCall.calledWithExactly(
@@ -504,7 +504,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[1]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku2', title: 'Product 2' },
+            customMetadata: { sku: 'sku2', name: 'Product 2' },
           },
         ));
 
@@ -527,8 +527,8 @@ describe('StorageClient Class Tests', () => {
       it('should handle errors during product save (CATALOG_BUCKET.put failure)', async () => {
         const client = new StorageClient(ctx);
         const batch = [
-          { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-          { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
         ];
 
         ctx.env.CATALOG_BUCKET.put.withArgs(
@@ -536,7 +536,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[0]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ).resolves({ status: 200 });
 
@@ -545,7 +545,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[1]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+            customMetadata: { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
           },
         ).rejects(new Error('PUT failed for sku2'));
 
@@ -554,7 +554,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ).resolves({ status: 200 });
 
@@ -566,7 +566,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[0]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.secondCall.calledWithExactly(
@@ -574,7 +574,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[1]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku2', title: 'Product 2', urlKey: 'product-2' },
+            customMetadata: { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.thirdCall.calledWithExactly(
@@ -582,7 +582,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ));
 
@@ -605,7 +605,7 @@ describe('StorageClient Class Tests', () => {
       it('should handle errors during metadata save (CATALOG_BUCKET.put for urlKey failure)', async () => {
         const client = new StorageClient(ctx);
         const batch = [
-          { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
         ];
 
         ctx.env.CATALOG_BUCKET.put.withArgs(
@@ -613,7 +613,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[0]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ).resolves({ status: 200 });
 
@@ -622,7 +622,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ).rejects(new Error('Metadata PUT failed for product-1'));
 
@@ -634,7 +634,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[0]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.secondCall.calledWithExactly(
@@ -642,7 +642,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ));
 
@@ -672,9 +672,9 @@ describe('StorageClient Class Tests', () => {
       it('should handle mixed scenarios in a batch', async () => {
         const client = new StorageClient(ctx);
         const batch = [
-          { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
-          { sku: 'sku2', title: 'Product 2' }, // No urlKey
-          { sku: 'sku3', title: 'Product 3', urlKey: 'product-3' },
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          { sku: 'sku2', name: 'Product 2' }, // No urlKey
+          { sku: 'sku3', name: 'Product 3', urlKey: 'product-3' },
         ];
 
         ctx.env.CATALOG_BUCKET.put.withArgs(
@@ -682,7 +682,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[0]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ).resolves({ status: 200 });
 
@@ -691,7 +691,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[1]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku2', title: 'Product 2' },
+            customMetadata: { sku: 'sku2', name: 'Product 2' },
           },
         ).resolves({ status: 200 });
 
@@ -700,7 +700,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[2]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku3', title: 'Product 3', urlKey: 'product-3' },
+            customMetadata: { sku: 'sku3', name: 'Product 3', urlKey: 'product-3' },
           },
         ).resolves({ status: 200 });
 
@@ -709,7 +709,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ).resolves({ status: 200 });
 
@@ -718,7 +718,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku3', title: 'Product 3', urlKey: 'product-3' },
+            customMetadata: { sku: 'sku3', name: 'Product 3', urlKey: 'product-3' },
           },
         ).resolves({ status: 200 });
 
@@ -730,7 +730,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[0]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.secondCall.calledWithExactly(
@@ -738,7 +738,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[1]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku2', title: 'Product 2' },
+            customMetadata: { sku: 'sku2', name: 'Product 2' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.thirdCall.calledWithExactly(
@@ -746,7 +746,7 @@ describe('StorageClient Class Tests', () => {
           JSON.stringify(batch[2]),
           {
             httpMetadata: { contentType: 'application/json' },
-            customMetadata: { sku: 'sku3', title: 'Product 3', urlKey: 'product-3' },
+            customMetadata: { sku: 'sku3', name: 'Product 3', urlKey: 'product-3' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.getCall(3).calledWithExactly(
@@ -754,7 +754,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku1', title: 'Product 1', urlKey: 'product-1' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
           },
         ));
         assert(ctx.env.CATALOG_BUCKET.put.getCall(4).calledWithExactly(
@@ -762,7 +762,7 @@ describe('StorageClient Class Tests', () => {
           '',
           {
             httpMetadata: { contentType: 'text/plain' },
-            customMetadata: { sku: 'sku3', title: 'Product 3', urlKey: 'product-3' },
+            customMetadata: { sku: 'sku3', name: 'Product 3', urlKey: 'product-3' },
           },
         ));
 
@@ -1406,7 +1406,7 @@ describe('StorageClient Class Tests', () => {
             }),
             head: sinon.stub()
               .onFirstCall()
-              .resolves({ customMetadata: { sku: 'sku1', urlKey: 'product-1', title: 'Product 1' } })
+              .resolves({ customMetadata: { sku: 'sku1', urlKey: 'product-1', name: 'Product 1' } })
               .onSecondCall()
               .resolves(null),
           },
@@ -1425,7 +1425,7 @@ describe('StorageClient Class Tests', () => {
       assert.deepStrictEqual(customMetadataArray, [
         {
           sku: 'sku1',
-          title: 'Product 1',
+          name: 'Product 1',
           urlKey: 'product-1',
           links: {
             product: 'https://example.com/org/site/catalog/store/view/products/sku1.json',
