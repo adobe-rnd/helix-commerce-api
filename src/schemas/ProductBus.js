@@ -54,8 +54,8 @@ const ProductBusPrice = {
   type: 'object',
   properties: {
     currency: { type: 'string' },
-    regular: { type: 'number' },
-    final: { type: 'number' },
+    regular: { type: 'string' },
+    final: { type: 'string' },
   },
 };
 
@@ -108,10 +108,10 @@ const ProductBusEntry = {
     aggregateRating: {
       type: 'object',
       properties: {
-        ratingValue: { type: 'number' },
-        reviewCount: { type: 'number' },
-        bestRating: { type: 'number' },
-        worstRating: { type: 'number' },
+        ratingValue: { type: 'string' },
+        reviewCount: { type: 'string' }, // converts to integer in JSON-LD
+        bestRating: { type: 'string' },
+        worstRating: { type: 'string' },
       },
     },
     images: {
