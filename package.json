@@ -43,7 +43,7 @@
   "devDependencies": {
     "@adobe/eslint-config-helix": "2.0.6",
     "@adobe/fetch": "4.1.8",
-    "@cloudflare/workers-types": "4.20240806.0",
+    "@cloudflare/workers-types": "4.20240909.0",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/exec": "6.0.3",
     "@semantic-release/git": "10.0.1",
@@ -63,7 +63,7 @@
     "nock": "13.5.4",
     "semantic-release": "24.0.0",
     "sinon": "^19.0.2",
-    "wrangler": "3.71.0"
+    "wrangler": "3.78.6"
   },
   "lint-staged": {
     "*.(js|cjs|mjs)": "eslint"

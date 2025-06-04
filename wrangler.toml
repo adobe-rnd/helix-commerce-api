@@ -21,6 +21,10 @@ bucket_name = "adobe-commerce-catalog-dev"
 VERSION = "@@VERSION@@-dev"
 ENVIRONMENT = "dev"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 # ----------------------------------------------------------------------
 # ci environment
 
@@ -40,6 +44,10 @@ bucket_name = "adobe-commerce-catalog-dev"
 [env.ci.vars]
 VERSION = "@@VERSION@@-ci"
 ENVIRONMENT = "ci"
+
+[env.ci.observability]
+enabled = true
+head_sampling_rate = 1
 
 # ----------------------------------------------------------------------
 # next environment
@@ -61,6 +69,10 @@ bucket_name = "adobe-commerce-catalog"
 VERSION = "@@VERSION@@-next"
 ENVIRONMENT = "next"
 
+[env.next.observability]
+enabled = true
+head_sampling_rate = 1
+
 # ----------------------------------------------------------------------
 # production environment
 
@@ -80,6 +92,10 @@ bucket_name = "adobe-commerce-catalog"
 [env.production.vars]
 VERSION = "@@VERSION@@"
 ENVIRONMENT = "prod"
+
+[env.production.observability]
+enabled = true
+head_sampling_rate = 1
 
 # [secrets]
 # SUPERUSER_KEY
