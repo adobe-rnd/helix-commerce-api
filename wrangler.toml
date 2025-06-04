@@ -41,6 +41,9 @@ bucket_name = "adobe-commerce-catalog-dev"
 VERSION = "@@VERSION@@-ci"
 ENVIRONMENT = "ci"
 
+[env.ci.observability]
+enabled = true
+
 # ----------------------------------------------------------------------
 # next environment
 
@@ -61,6 +64,9 @@ bucket_name = "adobe-commerce-catalog"
 VERSION = "@@VERSION@@-next"
 ENVIRONMENT = "next"
 
+[env.next.observability]
+enabled = true
+
 # ----------------------------------------------------------------------
 # production environment
 
@@ -80,6 +86,9 @@ bucket_name = "adobe-commerce-catalog"
 [env.production.vars]
 VERSION = "@@VERSION@@"
 ENVIRONMENT = "prod"
+
+[env.production.observability]
+enabled = true
 
 # [secrets]
 # SUPERUSER_KEY
