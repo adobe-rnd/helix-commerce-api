@@ -21,6 +21,10 @@ bucket_name = "adobe-commerce-catalog-dev"
 VERSION = "@@VERSION@@-dev"
 ENVIRONMENT = "dev"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 # ----------------------------------------------------------------------
 # ci environment
 
@@ -43,6 +47,7 @@ ENVIRONMENT = "ci"
 
 [env.ci.observability]
 enabled = true
+head_sampling_rate = 1
 
 # ----------------------------------------------------------------------
 # next environment
@@ -66,6 +71,7 @@ ENVIRONMENT = "next"
 
 [env.next.observability]
 enabled = true
+head_sampling_rate = 1
 
 # ----------------------------------------------------------------------
 # production environment
@@ -89,6 +95,7 @@ ENVIRONMENT = "prod"
 
 [env.production.observability]
 enabled = true
+head_sampling_rate = 1
 
 # [secrets]
 # SUPERUSER_KEY
