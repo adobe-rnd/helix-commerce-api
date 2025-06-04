@@ -1,3 +1,10 @@
+## [1.13.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.4...v1.13.5) (2025-06-04)
+
+
+### Bug Fixes
+
+* enable worker logs ([#90](https://github.com/adobe-rnd/helix-commerce-api/issues/90)) ([e025e79](https://github.com/adobe-rnd/helix-commerce-api/commit/e025e790ad0a8dff536ac15ee24549f341265b09))
+
 ## [1.13.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.3...v1.13.4) (2025-06-04)
 
 
