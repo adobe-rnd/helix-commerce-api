@@ -1,3 +1,10 @@
+## [1.13.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.3...v1.13.4) (2025-06-04)
+
+
+### Bug Fixes
+
+* change to strings for all properties ([#88](https://github.com/adobe-rnd/helix-commerce-api/issues/88)) ([2cd7e54](https://github.com/adobe-rnd/helix-commerce-api/commit/2cd7e54854b7b2ba029d56f0b9a92b130468ff31))
+
 ## [1.13.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.2...v1.13.3) (2025-05-26)
 
 
