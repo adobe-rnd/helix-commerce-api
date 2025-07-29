@@ -69,7 +69,7 @@ describe('Product Save Tests', () => {
       });
       const request = { };
 
-      storageStub.saveProducts.resolves();
+      storageStub.saveProducts.resolves([]);
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       assert.equal(response.status, 201);

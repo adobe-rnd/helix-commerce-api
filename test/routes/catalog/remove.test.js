@@ -24,7 +24,7 @@ describe('Catalog Remove Tests', () => {
   beforeEach(async () => {
     storageStub = sinon.stub();
     storageStub.deleteProducts = sinon.stub();
-    storageStub.deleteProducts.resolves({ success: true, sku: '12345' });
+    storageStub.deleteProducts.resolves([{ success: true, sku: '12345' }]);
   });
 
   afterEach(() => {
@@ -61,7 +61,7 @@ describe('Catalog Remove Tests', () => {
           storageClient: storageStub,
         },
       });
-      const deleteResults = { success: true, sku: '12345' };
+      const deleteResults = [{ success: true, sku: '12345' }];
       const response = await handleProductRemoveRequest(ctx, storageStub);
 
       assert(storageStub.deleteProducts.calledOnceWithExactly(['12345']));
@@ -123,7 +123,7 @@ describe('Catalog Remove Tests', () => {
           storageClient: storageStub,
         },
       });
-      const deleteResults = { success: false, sku: '12345', reason: 'Not found' };
+      const deleteResults = [{ success: false, sku: '12345', reason: 'Not found' }];
 
       storageStub.deleteProducts.resolves(deleteResults);
 
