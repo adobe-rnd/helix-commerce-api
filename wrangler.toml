@@ -17,6 +17,10 @@ binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog-dev"
 bucket_name = "adobe-commerce-catalog-dev"
 
+[[env.production.queues.producers]]
+queue = "helix-product-indexer-queue-dev"
+binding = "INDEXER_QUEUE"
+
 [vars]
 VERSION = "@@VERSION@@-dev"
 ENVIRONMENT = "dev"
@@ -40,6 +44,10 @@ kv_namespaces = [
 binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog-dev"
 bucket_name = "adobe-commerce-catalog-dev"
+
+[[env.production.queues.producers]]
+queue = "helix-product-indexer-queue-ci"
+binding = "INDEXER_QUEUE"
 
 [env.ci.vars]
 VERSION = "@@VERSION@@-ci"
