@@ -30,6 +30,21 @@ export default async function remove(ctx) {
   const storage = StorageClient.fromContext(ctx);
   const deleteResults = await storage.deleteProducts([sku]);
 
+  const products = deleteResults.map((res) => ({
+    sku: res.sluggedSku,
+    action: 'delete',
+  }));
+
+  await ctx.env.INDEXER_QUEUE.send({
+    org: config.org,
+    site: config.site,
+    storeCode: config.storeCode,
+    storeViewCode: config.storeViewCode,
+    // @ts-ignore
+    products,
+    timestamp: Date.now(),
+  });
+
   log.info({
     action: 'delete_products',
     result: JSON.stringify(deleteResults),

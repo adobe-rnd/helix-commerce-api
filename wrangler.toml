@@ -65,6 +65,10 @@ binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog"
 bucket_name = "adobe-commerce-catalog"
 
+[[env.next.queues.producers]]
+queue = "helix-product-indexer-queue"
+binding = "INDEXER_QUEUE"
+
 [env.next.vars]
 VERSION = "@@VERSION@@-next"
 ENVIRONMENT = "next"
@@ -88,6 +92,10 @@ kv_namespaces = [
 binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog-dev"
 bucket_name = "adobe-commerce-catalog"
+
+[[env.production.queues.producers]]
+queue = "helix-product-indexer-queue"
+binding = "INDEXER_QUEUE"
 
 [env.production.vars]
 VERSION = "@@VERSION@@"

@@ -33,6 +33,21 @@ export default async function update(ctx) {
   const storage = StorageClient.fromContext(ctx);
   const saveResults = await storage.saveProducts([product]);
 
+  const products = saveResults.map((res) => ({
+    sku: res.sluggedSku,
+    action: 'update',
+  }));
+
+  await ctx.env.INDEXER_QUEUE.send({
+    org: config.org,
+    site: config.site,
+    storeCode: config.storeCode,
+    storeViewCode: config.storeViewCode,
+    // @ts-ignore
+    products,
+    timestamp: Date.now(),
+  });
+
   log.info({
     action: 'save_products',
     result: JSON.stringify(saveResults),
