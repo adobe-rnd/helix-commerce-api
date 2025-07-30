@@ -135,6 +135,7 @@ export default class StorageClient {
          */
         const result = {
           sku,
+          sluggedSku,
           message: 'Product saved successfully.',
         };
 
@@ -143,6 +144,7 @@ export default class StorageClient {
         log.error(`Error storing product SKU: ${sku}:`, error);
         return {
           sku,
+          sluggedSku,
           status: error.code || 500,
           message: `Error: ${error.message}`,
         };
@@ -196,6 +198,7 @@ export default class StorageClient {
           log.warn(`Product with SKU: ${sku} not found. Skipping deletion.`);
           return {
             sku,
+            sluggedSku,
             statusCode: 404,
             message: 'Product not found.',
           };
@@ -214,6 +217,7 @@ export default class StorageClient {
          */
         const result = {
           sku,
+          sluggedSku,
           message: 'Product deleted successfully.',
         };
         return result;

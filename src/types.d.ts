@@ -1,11 +1,28 @@
-import type { ExecutionContext, KVNamespace } from "@cloudflare/workers-types/experimental";
-import type { R2Bucket } from "@cloudflare/workers-types";
+import type {
+  Queue,
+  R2Bucket,
+  ExecutionContext,
+  KVNamespace
+} from "@cloudflare/workers-types";
 import type { HTMLTemplate } from "./templates/html/HTMLTemplate.js";
 import type { JSONTemplate } from "./templates/json/JSONTemplate.js";
 import type StorageClient from "./routes/products/StorageClient.js";
 
 
 declare global {
+  export interface IndexingJobProduct {
+    sku: string;
+    action: 'add' | 'update' | 'delete';
+  }
+
+  export interface IndexingJob {
+    org: string;
+    site: string;
+    storeCode: string;
+    storeViewCode: string;
+    products: IndexingJobProduct[];
+    timestamp: number;
+  }
 
   export type SchemaOrgAvailability = 'BackOrder' | 'Discontinued' | 'InStock' | 'InStoreOnly' | 'LimitedAvailability' | 'MadeToOrder' | 'OnlineOnly' | 'OutOfStock' | 'PreOrder' | 'PreSale' | 'Reserved' | 'SoldOut';
 
@@ -239,13 +256,14 @@ declare global {
     VERSION: string;
     ENVIRONMENT: string;
     SUPERUSER_KEY: string;
+    INDEXER_QUEUE: Queue<IndexingJob>;
 
     // KV namespaces
     CONFIGS: KVNamespace<string>;
     KEYS: KVNamespace<string>;
     CATALOG_BUCKET: R2Bucket
 
-    [key: string]: string | KVNamespace<string> | R2Bucket;
+    [key: string]: string | KVNamespace<string> | R2Bucket | Queue<IndexingJob>;
   }
 
   export interface Context {
@@ -273,6 +291,7 @@ declare global {
 
   interface BatchResult {
     sku: string;
+    sluggedSku: string;
     status: number;
     message?: string;
     paths: Record<string, AdminStatus>;

@@ -468,10 +468,12 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
+            sluggedSku: 'sku1',
             message: 'Product saved successfully.',
           },
           {
             sku: 'sku2',
+            sluggedSku: 'sku2',
             message: 'Product saved successfully.',
           },
         ]);
@@ -513,10 +515,12 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
+            sluggedSku: 'sku1',
             message: 'Product saved successfully.',
           },
           {
             sku: 'sku2',
+            sluggedSku: 'sku2',
             message: 'Product saved successfully.',
           },
         ]);
@@ -589,10 +593,12 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
+            sluggedSku: 'sku1',
             message: 'Product saved successfully.',
           },
           {
             sku: 'sku2',
+            sluggedSku: 'sku2',
             status: 500,
             message: 'Error: PUT failed for sku2',
           },
@@ -649,6 +655,7 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
+            sluggedSku: 'sku1',
             status: 500,
             message: 'Error: Metadata PUT failed for product-1',
           },
@@ -769,14 +776,17 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
+            sluggedSku: 'sku1',
             message: 'Product saved successfully.',
           },
           {
             sku: 'sku2',
+            sluggedSku: 'sku2',
             message: 'Product saved successfully.',
           },
           {
             sku: 'sku3',
+            sluggedSku: 'sku3',
             message: 'Product saved successfully.',
           },
         ]);
@@ -1047,10 +1057,12 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
+            sluggedSku: 'sku1',
             message: 'Product deleted successfully.',
           },
           {
             sku: 'sku2',
+            sluggedSku: 'sku2',
             message: 'Product deleted successfully.',
           },
         ]);
@@ -1086,10 +1098,12 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
+            sluggedSku: 'sku1',
             message: 'Product deleted successfully.',
           },
           {
             sku: 'sku2',
+            sluggedSku: 'sku2',
             message: 'Product deleted successfully.',
           },
         ]);
@@ -1111,11 +1125,13 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'nonexistent1',
+            sluggedSku: 'nonexistent1',
             statusCode: 404,
             message: 'Product not found.',
           },
           {
             sku: 'nonexistent2',
+            sluggedSku: 'nonexistent2',
             statusCode: 404,
             message: 'Product not found.',
           },

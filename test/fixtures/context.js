@@ -48,6 +48,10 @@ export const DEFAULT_CONTEXT = (
       // @ts-ignore
       get: async (id) => configMap[id],
     },
+    INDEXER_QUEUE: {
+      send: () => Promise.resolve(),
+      sendBatch: () => Promise.resolve(),
+    },
     ...(overrides.env ?? {}),
   },
   info: {
