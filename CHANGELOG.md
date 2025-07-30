@@ -1,3 +1,10 @@
+## [1.13.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.5...v1.13.6) (2025-07-30)
+
+
+### Bug Fixes
+
+* push events to indexer queue ([#92](https://github.com/adobe-rnd/helix-commerce-api/issues/92)) ([e987077](https://github.com/adobe-rnd/helix-commerce-api/commit/e987077186775047650e25c139b626801927a1ca))
+
 ## [1.13.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.4...v1.13.5) (2025-06-04)
 
 
