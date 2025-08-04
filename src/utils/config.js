@@ -68,7 +68,8 @@ export async function resolveConfig(ctx, overrides = {}) {
   const confMapStr = JSON.stringify(confMap);
   if (!confMap) {
     // allow setting config from scratch
-    if (route === 'config' && ctx.info.method === 'POST') {
+    // or setting auth before site is created
+    if ((route === 'config' && ctx.info.method === 'POST') || route === 'auth') {
       // @ts-ignore
       return {
         ...overrides,
