@@ -54,6 +54,7 @@ export const DEFAULT_CONTEXT = (
     },
     ...(overrides.env ?? {}),
   },
+  // @ts-ignore
   info: {
     method: 'GET',
     headers: {},
@@ -74,11 +75,10 @@ export const SUPERUSER_CONTEXT = (overrides = {}) => DEFAULT_CONTEXT({
 
 /**
  * @param {string} path
- * @param {Record<string, Config>} configMap
  * @param {string} baseUrl
  * @returns {Context}
  */
-export const TEST_CONTEXT = (path, configMap, baseUrl) => DEFAULT_CONTEXT(
+export const TEST_CONTEXT = (path, baseUrl) => DEFAULT_CONTEXT(
   {},
-  { path, configMap, baseUrl },
+  { path, baseUrl },
 );

@@ -10,17 +10,13 @@
  * governing permissions and limitations under the License.
  */
 
-import content from './content/handler.js';
 import catalog from './catalog/handler.js';
-import config from './config/handler.js';
 import auth from './auth/handler.js';
 
 /**
  * @type {Record<string, RouteHandler>}
  */
 export default {
-  content,
   catalog,
-  config,
   auth,
 };

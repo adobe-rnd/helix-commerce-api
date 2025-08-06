@@ -14,27 +14,16 @@
 
 import assert from 'node:assert';
 import sinon from 'sinon';
-import esmock from 'esmock';
 import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import handleProductSaveRequest from '../../../src/routes/catalog/update.js';
 
 describe('Product Save Tests', () => {
-  /** @type {import('../../src/catalog/update.js').handleProductSaveRequest} */
-  let handleProductSaveRequest;
-  /** @type {sinon.SinonStub} */
-  let callAdminStub;
   /** @type {sinon.SinonStub} */
   let storageStub;
 
   beforeEach(async () => {
-    callAdminStub = sinon.stub();
     storageStub = sinon.stub();
     storageStub.saveProducts = sinon.stub();
-
-    const mocks = {
-      '../../../src/utils/admin.js': { callAdmin: callAdminStub },
-    };
-
-    ({ default: handleProductSaveRequest } = await esmock('../../../src/routes/catalog/update.js', mocks));
   });
 
   afterEach(() => {
@@ -58,10 +47,6 @@ describe('Product Save Tests', () => {
         data: { sku: '1234', urlKey: 'product-url-key' },
         config: {
           sku: '1234',
-          confMap: {
-            '/path/to/{{sku}}': {},
-            '/path/to/{{urlkey}}/{{sku}}': {},
-          },
         },
         attributes: {
           storageClient: storageStub,
