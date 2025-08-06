@@ -40,7 +40,7 @@ async function parseData(req) {
 }
 
 /**
- * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} eCtx
+ * @param {import("@cloudflare/workers-types").ExecutionContext} eCtx
  * @param {import("@cloudflare/workers-types").Request} req
  * @param {Env} env
  * @returns {Promise<Context>}
@@ -74,20 +74,15 @@ export default {
   /**
    * @param {import("@cloudflare/workers-types").Request} request
    * @param {Env} env
-   * @param {import("@cloudflare/workers-types/experimental").ExecutionContext} eCtx
+   * @param {import("@cloudflare/workers-types").ExecutionContext} eCtx
    * @returns {Promise<Response>}
    */
   async fetch(request, env, eCtx) {
     const ctx = await makeContext(eCtx, request, env);
 
     try {
-      const overrides = Object.fromEntries(ctx.url.searchParams.entries());
-      ctx.config = await resolveConfig(ctx, overrides);
-
+      ctx.config = await resolveConfig(ctx);
       console.debug('resolved config: ', JSON.stringify(ctx.config, null, 2));
-      if (!ctx.config) {
-        return errorResponse(404, 'config not found');
-      }
 
       const fn = handlers[ctx.config.route];
       if (!fn) {
