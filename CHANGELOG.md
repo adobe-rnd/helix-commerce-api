@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.6...v1.14.0) (2025-08-06)
+
+
+### Features
+
+* refactor to remove content api, kv references ([#93](https://github.com/adobe-rnd/helix-commerce-api/issues/93)) ([d5bcb95](https://github.com/adobe-rnd/helix-commerce-api/commit/d5bcb952d81e3fb051bc2f1c5c7ab08633bb026d))
+
 ## [1.13.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.5...v1.13.6) (2025-07-30)
 
 
