@@ -111,7 +111,6 @@ declare global {
     INDEXER_QUEUE: Queue<IndexingJob>;
 
     // KV namespaces
-    CONFIGS: KVNamespace<string>;
     KEYS: KVNamespace<string>;
     CATALOG_BUCKET: R2Bucket
 
