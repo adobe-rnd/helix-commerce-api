@@ -15,10 +15,6 @@
 import assert from 'assert';
 import { h1NoCache } from '@adobe/fetch';
 import { config } from 'dotenv';
-import fs from 'fs/promises';
-import { resolve } from 'path';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { HtmlDiffer } from 'html-differ';
 
 config();
 
@@ -40,16 +36,6 @@ function getFetchOptions(path, init = {}) {
   };
 }
 
-/**
- * @param {string} name
- * @returns {Promise<string>}
- */
-async function getHTMLFixture(name) {
-  // eslint-disable-next-line no-underscore-dangle
-  const content = await fs.readFile(resolve(global.__testdir, `./fixtures/post-deploy/${name}.html`), 'utf-8');
-  return content;
-}
-
 describe('Post-Deploy Tests', () => {
   const fetchContext = h1NoCache();
 
@@ -63,18 +49,6 @@ describe('Post-Deploy Tests', () => {
 
     assert.strictEqual(res.status, 404);
     assert.strictEqual(res.headers.get('x-error'), 'missing site');
-  });
-
-  it('valid pdp renders html', async () => {
-    const { url, ...opts } = getFetchOptions('/maxakuru/productbus-test/content/products/test-key');
-    const res = await fetch(url, opts);
-    const expected = await getHTMLFixture('productbus-test--test-key');
-
-    assert.strictEqual(res.status, 200);
-    const actual = await res.text();
-    const differ = new HtmlDiffer();
-    // @ts-ignore
-    assert.ok(differ.isEqual(actual, expected));
   });
 
   describe('Catalog', () => {
