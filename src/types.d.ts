@@ -58,6 +58,17 @@ declare global {
     roles?: string[];
   }
 
+  export interface MerchantFeedShipping {
+    country: string;
+    region: string;
+    service: string;
+    price: string;
+    min_handling_time: string;
+    max_handling_time: string;
+    min_transit_time: string;
+    max_transit_time: string;
+  }
+
   /**
    * Helix product-bus entry
    */
@@ -89,6 +100,21 @@ declare global {
      * Additional data that can be retrieved via .json API
      */
     custom?: Record<string, unknown>;
+
+    // below are properties that are used to generate indices, not belonging to JSON-LD
+
+    /**
+     * Shipping options, as string, object, or array of objects.
+     * If an array, each object contains shipping information for one option.
+     * 
+     * @example "US:CA:Overnight:16.00 USD:1:1:2:3"
+     * @example { country: 'US', region: 'CA', service: 'Overnight', price: '16.00 USD', min_handling_time: '1', max_handling_time: '2', min_transit_time: '3', max_transit_time: '4' }
+     * @example [
+     *   { country: 'US', region: 'CA', service: 'Overnight', price: '16.00 USD', min_handling_time: '1', max_handling_time: '2', min_transit_time: '3', max_transit_time: '4' },
+     *   { country: 'US', region: 'CA', service: '2-Day', price: '10.00 USD', min_handling_time: '1', max_handling_time: '2', min_transit_time: '3', max_transit_time: '4' }
+     * ]
+     */
+    shipping?: string | MerchantFeedShipping | MerchantFeedShipping[];
   }
 
   /**
