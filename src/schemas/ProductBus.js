@@ -66,8 +66,35 @@ const ProductBusImage = {
     url: { type: 'string' },
     label: { type: 'string' },
     roles: { type: 'array', items: { type: 'string' } },
+    video: { type: 'string' },
   },
   required: ['url'],
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusOptionValue = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    value: { type: 'string' },
+    uid: { type: 'string' },
+  },
+  required: ['value'],
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusOption = {
+  type: 'object',
+  properties: {
+    id: { type: 'string' },
+    label: { type: 'string' },
+    position: { type: 'number' },
+    values: {
+      type: 'array',
+      items: ProductBusOptionValue,
+    },
+  },
+  required: ['label', 'values'],
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
@@ -85,6 +112,10 @@ const ProductBusVariant = {
     gtin: { type: 'string' },
     description: { type: 'string' },
     availability: SchemaOrgAvailability,
+    options: {
+      type: 'array',
+      items: ProductBusOptionValue,
+    },
     itemCondition: SchemaOrgItemCondition,
     custom: CustomObject,
   },
@@ -101,10 +132,20 @@ const ProductBusEntry = {
     name: { type: 'string' },
     metaTitle: { type: 'string' },
     metaDescription: { type: 'string' },
+    gtin: { type: 'string' },
     url: { type: 'string' },
     brand: { type: 'string' },
     availability: SchemaOrgAvailability,
     price: ProductBusPrice,
+    metadata: {
+      type: 'object',
+      properties: {},
+      additionalProperties: { type: 'string' },
+    },
+    options: {
+      type: 'array',
+      items: ProductBusOption,
+    },
     aggregateRating: {
       type: 'object',
       properties: {
@@ -114,6 +155,7 @@ const ProductBusEntry = {
         worstRating: { type: 'string' },
       },
     },
+    specifications: { type: 'string' },
     images: {
       type: 'array',
       items: ProductBusImage,
