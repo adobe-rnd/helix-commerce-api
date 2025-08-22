@@ -1448,7 +1448,58 @@ describe('StorageClient Class Tests', () => {
           },
         },
         {
-          fileName: 'org/site/store/view/products/sku2.json',
+          sku: 'sku2',
+          links: {
+            product: 'https://example.com/org/site/catalog/store/view/products/sku2.json',
+          },
+        },
+      ]);
+      assert(ctx.log.info.notCalled);
+      assert(ctx.log.error.notCalled);
+    });
+
+    it('should list only skus when skusOnly is true', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        log: { info: sinon.stub(), error: sinon.stub() },
+        data: { skusOnly: true },
+        env: {
+          CATALOG_BUCKET: {
+            list: sinon.stub().resolves({
+              objects: [
+                { key: 'org/site/store/view/products/sku1.json' },
+                { key: 'org/site/store/view/products/sku2.json' },
+              ],
+            }),
+            head: sinon.stub()
+              .onFirstCall()
+              .resolves({ customMetadata: { sku: 'sku1', urlKey: 'product-1', name: 'Product 1' } })
+              .onSecondCall()
+              .resolves(null),
+          },
+        },
+        url: { origin: 'https://example.com' },
+        config,
+      });
+
+      const client = new StorageClient(ctx);
+      const customMetadataArray = await client.listAllProducts();
+
+      assert(ctx.env.CATALOG_BUCKET.list.calledOnceWithExactly({
+        prefix: 'org/site/store/view/products/',
+      }));
+      assert(ctx.env.CATALOG_BUCKET.head.notCalled);
+      assert.deepStrictEqual(customMetadataArray, [
+        {
+          sku: 'sku1',
+          links: {
+            product: 'https://example.com/org/site/catalog/store/view/products/sku1.json',
+          },
+        },
+        {
+          sku: 'sku2',
+          links: {
+            product: 'https://example.com/org/site/catalog/store/view/products/sku2.json',
+          },
         },
       ]);
       assert(ctx.log.info.notCalled);
@@ -1504,7 +1555,7 @@ describe('StorageClient Class Tests', () => {
       // Mock head responses for first 50 products
       for (let i = 1; i <= 50; i++) {
         ctx.env.CATALOG_BUCKET.head.withArgs(`org/site/store/view/products/${i}.json`).resolves({
-          customMetadata: { sku: `${i}`, links: { product: `link${i}` } },
+          customMetadata: { sku: `${i}`, urlKey: `product-${i}`, name: `Product ${i}` },
         });
       }
 
@@ -1520,20 +1571,25 @@ describe('StorageClient Class Tests', () => {
       }));
       assert(ctx.env.CATALOG_BUCKET.head.callCount === 100);
 
-      // Check first 50 have sku and links
+      // Check first 50 have sku, urlkey, name, and links
       for (let i = 1; i <= 50; i++) {
         assert.deepStrictEqual(customMetadataArray[i - 1], {
           sku: `${i}`,
+          urlKey: `product-${i}`,
+          name: `Product ${i}`,
           links: {
             product: `https://example.com/org/site/catalog/store/view/products/${i}.json`,
           },
         });
       }
 
-      // Check next 50 have fileName
+      // Check next 50 have sku, links
       for (let i = 51; i <= 100; i++) {
         assert.deepStrictEqual(customMetadataArray[i - 1], {
-          fileName: `org/site/store/view/products/${i}.json`,
+          sku: `${i}`,
+          links: {
+            product: `https://example.com/org/site/catalog/store/view/products/${i}.json`,
+          },
         });
       }
 

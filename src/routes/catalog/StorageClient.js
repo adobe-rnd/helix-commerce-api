@@ -312,6 +312,8 @@ export default class StorageClient {
       },
     } = this.ctx;
 
+    const { skusOnly } = this.ctx.data;
+
     const listResponse = await env.CATALOG_BUCKET.list({
       prefix: `${org}/${site}/${storeCode}/${storeViewCode}/products/`,
     });
@@ -337,21 +339,29 @@ export default class StorageClient {
       const chunkResults = await Promise.all(
         chunk.map(async (file) => {
           const objectKey = file.key;
+          const sku = objectKey.split('/').pop().replace('.json', '');
+          const links = {
+            product: `${this.ctx.url.origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/products/${sku}.json`,
+          };
+
+          if (skusOnly) {
+            return {
+              sku,
+              links,
+            };
+          }
 
           const headResponse = await env.CATALOG_BUCKET.head(objectKey);
           if (headResponse) {
             const { customMetadata } = headResponse;
-            const { sku } = customMetadata;
-            const sluggedSku = slugger(sku);
             return {
               ...customMetadata,
-              links: {
-                product: `${this.ctx.url.origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`,
-              },
+              links,
             };
           } else {
             return {
-              fileName: objectKey,
+              sku,
+              links,
             };
           }
         }),
