@@ -60,7 +60,7 @@ const ProductBusPrice = {
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
-const ProductBusImage = {
+const ProductBusMedia = {
   type: 'object',
   properties: {
     url: { type: 'string' },
@@ -107,7 +107,7 @@ const ProductBusVariant = {
     url: { type: 'string' },
     images: {
       type: 'array',
-      items: ProductBusImage,
+      items: ProductBusMedia,
     },
     gtin: { type: 'string' },
     description: { type: 'string' },
@@ -158,7 +158,7 @@ const ProductBusEntry = {
     specifications: { type: 'string' },
     images: {
       type: 'array',
-      items: ProductBusImage,
+      items: ProductBusMedia,
     },
     variants: {
       type: 'array',
