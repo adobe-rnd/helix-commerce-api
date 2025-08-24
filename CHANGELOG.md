@@ -1,3 +1,10 @@
+## [1.14.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.1...v1.14.2) (2025-08-24)
+
+
+### Bug Fixes
+
+* add missing product bus schema properties ([#96](https://github.com/adobe-rnd/helix-commerce-api/issues/96)) ([8adf784](https://github.com/adobe-rnd/helix-commerce-api/commit/8adf7840eb1e8e33428e93be7c57f4c212523adb))
+
 ## [1.14.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.0...v1.14.1) (2025-08-22)
 
 
