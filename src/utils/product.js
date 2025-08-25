@@ -25,7 +25,8 @@ export function slugger(sku) {
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/\//g, '')
-    .replace(/^-+|-+$/g, '');
+    .replace(/^-+|-+$/g, '')
+    .replace(/-+/g, '-');
 }
 
 /**
