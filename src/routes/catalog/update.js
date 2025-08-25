@@ -16,18 +16,39 @@ import StorageClient from './StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
 import { extractAndReplaceImages } from '../../utils/media.js';
 
+const MAX_PRODUCT_BULK = 50;
+const MAX_TOTAL_IMAGES = 50;
+
 /**
  * @type {RouteHandler}
  */
 export default async function update(ctx) {
   const { config, log, data } = ctx;
-  if (config.sku === '*') {
-    return errorResponse(501, 'not implemented');
-  }
-
-  assertValidProduct(data);
-
   await assertAuthorization(ctx);
+
+  if (config.sku === '*') {
+    if (!Array.isArray(data)) {
+      return errorResponse(400, 'data must be an array');
+    }
+
+    if (data.length > MAX_PRODUCT_BULK) {
+      return errorResponse(400, `data must be an array of ${MAX_PRODUCT_BULK} or fewer products`);
+    }
+
+    data.forEach((product) => {
+      assertValidProduct(product);
+    });
+
+    // ensure the total number of images is less than 50
+    const totalImages = data.reduce((acc, product) => acc + product.images.length, 0);
+    if (totalImages > MAX_TOTAL_IMAGES) {
+      return errorResponse(400, 'total number of images must be less than 100');
+    }
+
+    return errorResponse(501, 'not implemented');
+  } else {
+    assertValidProduct(data);
+  }
 
   const product = await extractAndReplaceImages(ctx, data);
   const storage = StorageClient.fromContext(ctx);
