@@ -1,3 +1,10 @@
+## [1.14.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.3...v1.14.4) (2025-08-26)
+
+
+### Bug Fixes
+
+* minimal list products api ([3fb7392](https://github.com/adobe-rnd/helix-commerce-api/commit/3fb739230d482e8f34aa6b345fa9baa3b6255b14))
+
 ## [1.14.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.2...v1.14.3) (2025-08-25)
 
 
