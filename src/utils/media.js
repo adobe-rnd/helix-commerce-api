@@ -24,7 +24,7 @@ import { errorWithResponse } from './http.js';
  */
 
 // limit concurrency to max outgoing connections
-const CONCURRENCY = 6;
+const CONCURRENCY = 4;
 
 /**
  * @param {string} url

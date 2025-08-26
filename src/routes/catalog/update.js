@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import processQueue from '@adobe/helix-shared-process-queue';
 import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
@@ -25,6 +26,8 @@ const MAX_TOTAL_IMAGES = 50;
 export default async function update(ctx) {
   const { config, log, data } = ctx;
   await assertAuthorization(ctx);
+
+  let dataArr;
 
   if (config.sku === '*') {
     if (!Array.isArray(data)) {
@@ -44,17 +47,21 @@ export default async function update(ctx) {
     if (totalImages > MAX_TOTAL_IMAGES) {
       return errorResponse(400, 'total number of images must be less than 100');
     }
-
-    return errorResponse(501, 'not implemented');
+    dataArr = data;
   } else {
     assertValidProduct(data);
+    dataArr = [data];
   }
 
-  const product = await extractAndReplaceImages(ctx, data);
+  // TODO: make image upload async, replace with hash immediately
+  const products = await processQueue(
+    dataArr,
+    (oneProduct) => extractAndReplaceImages(ctx, oneProduct),
+  );
   const storage = StorageClient.fromContext(ctx);
-  const saveResults = await storage.saveProducts([product]);
+  const saveResults = await storage.saveProducts(products);
 
-  const products = saveResults.map((res) => ({
+  const productEvents = saveResults.map((res) => ({
     sku: res.sluggedSku,
     action: 'update',
   }));
@@ -65,7 +72,7 @@ export default async function update(ctx) {
     storeCode: config.storeCode,
     storeViewCode: config.storeViewCode,
     // @ts-ignore
-    products,
+    products: productEvents,
     timestamp: Date.now(),
   });
 
@@ -75,5 +82,17 @@ export default async function update(ctx) {
     timestamp: new Date().toISOString(),
   });
 
-  return new Response(JSON.stringify({ ...saveResults, product }), { status: 201 });
+  return new Response(
+    JSON.stringify({
+      ...saveResults,
+      product: products.length === 1 ? products[0] : undefined,
+      products: products.length > 1 ? products : undefined,
+    }),
+    {
+      status: 201,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
 }
