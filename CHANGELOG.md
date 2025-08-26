@@ -1,3 +1,24 @@
+## [1.14.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.2...v1.14.3) (2025-08-25)
+
+
+### Bug Fixes
+
+* tweak sku slugger ([#98](https://github.com/adobe-rnd/helix-commerce-api/issues/98)) ([7fd3e89](https://github.com/adobe-rnd/helix-commerce-api/commit/7fd3e89501085ee037d1d5d6e62b0ae71b74d3f2))
+
+## [1.14.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.1...v1.14.2) (2025-08-24)
+
+
+### Bug Fixes
+
+* add missing product bus schema properties ([#96](https://github.com/adobe-rnd/helix-commerce-api/issues/96)) ([8adf784](https://github.com/adobe-rnd/helix-commerce-api/commit/8adf7840eb1e8e33428e93be7c57f4c212523adb))
+
+## [1.14.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.0...v1.14.1) (2025-08-22)
+
+
+### Bug Fixes
+
+* minimal list products api ([#97](https://github.com/adobe-rnd/helix-commerce-api/issues/97)) ([ef181ed](https://github.com/adobe-rnd/helix-commerce-api/commit/ef181ed7b51fbb9258b3ed30be7f8b344856afa7))
+
 # [1.14.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.13.6...v1.14.0) (2025-08-06)
 
 
