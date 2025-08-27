@@ -13,6 +13,7 @@
 import { slugger } from '../../utils/product.js';
 import { BatchProcessor } from '../../utils/batch.js';
 import { errorWithResponse } from '../../utils/http.js';
+import { extractAndReplaceImages } from '../../utils/media.js';
 
 export default class StorageClient {
   /**
@@ -75,10 +76,25 @@ export default class StorageClient {
    * Save products in batches
    *
    * @param {ProductBusEntry[]} products - The products to save.
+   * @param {(results: Partial<BatchResult>[]) => Promise<void>|void} batchHook
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
    */
-  async saveProducts(products) {
-    const processor = new BatchProcessor(this.ctx, (batch) => this.storeProductsBatch(batch));
+  async saveProducts(products, batchHook = () => {}) {
+    const { progress } = this.ctx;
+
+    // initialize progress
+    progress.total = products.length;
+
+    const processor = new BatchProcessor(this.ctx, async (batch) => {
+      const results = await this.storeProductsBatch(batch);
+      // update progress
+      results.forEach((res) => {
+        // if result has status, it's a failure
+        progress[res.status ? 'failed' : 'processed'] += 1;
+      });
+      await batchHook(results);
+      return results;
+    });
     const saveResults = await processor.process(products);
 
     this.ctx.log.info(`Completed saving ${products.length} products.`);
@@ -104,12 +120,15 @@ export default class StorageClient {
     } = this.ctx;
 
     const storePromises = batch.map(async (product) => {
+      product = await extractAndReplaceImages(this.ctx, product);
+
       const { sku, name, urlKey } = product;
       const sluggedSku = slugger(sku);
       const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
       const body = JSON.stringify(product);
 
       try {
+        const t0 = Date.now();
         const customMetadata = { sku, name };
         if (urlKey) {
           customMetadata.urlKey = urlKey;
@@ -120,6 +139,8 @@ export default class StorageClient {
           httpMetadata: { contentType: 'application/json' },
           customMetadata,
         });
+        const dt = Date.now() - t0;
+        if (this.ctx.metrics) this.ctx.metrics.productUploadsMs.push(dt);
 
         // If urlKey exists, save the urlKey metadata
         if (urlKey) {

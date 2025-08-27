@@ -10,15 +10,22 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import job from './job/handler.js';
+import { assertAuthorization } from '../../utils/auth.js';
+import { errorResponse } from '../../utils/http.js';
+import Job from './Job.js';
 
 /**
- * @type {Record<string, RouteHandler>}
+ * @type {RouteHandler}
  */
-export default {
-  catalog,
-  auth,
-  job,
-};
+export default async function fetch(ctx) {
+  const { config } = ctx;
+
+  await assertAuthorization(ctx);
+
+  const job = await Job[ctx.config.details ? 'fromFile' : 'fromMetadata'](ctx, config.topic, config.name);
+  if (!job) {
+    return errorResponse(404, 'job not found');
+  }
+
+  return job.toResponse();
+}

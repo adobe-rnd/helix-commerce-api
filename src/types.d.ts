@@ -5,6 +5,7 @@ import type {
   KVNamespace
 } from "@cloudflare/workers-types";
 import type StorageClient from "./routes/products/StorageClient.js";
+import Job from "./routes/job/Job.js";
 
 
 declare global {
@@ -128,6 +129,11 @@ declare global {
     storeCode?: string;
     storeViewCode?: string;
     sku?: string;
+
+    // jobs
+    topic?: string;
+    name?: string;
+    details?: boolean;
   }
 
   export interface Env {
@@ -143,11 +149,42 @@ declare global {
     [key: string]: string | KVNamespace<string> | R2Bucket | Queue<IndexingJob>;
   }
 
+  export interface Progress {
+    total: number;
+    processed: number;
+    failed: number;
+  }
+
+  export interface AsyncJob<T = any> {
+    topic: string;
+    name: string;
+    error?: string;
+    state: "created" | "running" | "completed" | "failed";
+    startTime: string; // iso string
+    endTime?: string; // iso string
+    cancelled?: boolean;
+    data?: T;
+    progress: Progress;
+    links?: {
+      self: string;
+      details: string;
+    };
+  };
+
   export interface Context {
     url: URL;
     env: Env;
     log: Console;
     config: Config;
+    progress?: Progress;
+    job?: Job<any>;
+    metrics?: {
+      startedAt: number;
+      payloadValidationMs: number[];
+      imageDownloads: { ms: number; bytes: number }[];
+      imageUploads: { ms: number; alreadyExists: boolean }[];
+      productUploadsMs: number[];
+    };
     /** parsed from body or query params */
     data: any;
     info: {

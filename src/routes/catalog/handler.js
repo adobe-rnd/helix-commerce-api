@@ -30,7 +30,7 @@ const handlers = {
     // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
     PUT: update,
     // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/*
-    POST: async () => errorResponse(501, 'not implemented'),
+    POST: update,
     // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
     DELETE: remove,
   },

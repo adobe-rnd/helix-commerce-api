@@ -10,24 +10,150 @@
  * governing permissions and limitations under the License.
  */
 
-import processQueue from '@adobe/helix-shared-process-queue';
 import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from './StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
-import { extractAndReplaceImages } from '../../utils/media.js';
+import Job from '../job/Job.js';
 
 const MAX_PRODUCT_BULK = 50;
-const MAX_TOTAL_IMAGES = 50;
+const SYNC_TIMEOUT = 10000; // 10 seconds
+
+/**
+ * Perform update for a set of products
+ * @param {Context} ctx
+ * @param {ProductBusEntry[]} products
+ * @returns {Promise<Response>}
+ */
+async function doUpdate(ctx, products) {
+  let results;
+
+  try {
+    const { log, config } = ctx;
+    const storage = StorageClient.fromContext(ctx);
+    const curResults = [];
+    results = await storage.saveProducts(products, async (batchResults) => {
+      // send indexer events after each batch
+      const productEvents = batchResults.map((res) => ({
+        sku: res.sluggedSku,
+        action: 'update',
+      }));
+
+      await ctx.env.INDEXER_QUEUE.send({
+        org: config.org,
+        site: config.site,
+        storeCode: config.storeCode,
+        storeViewCode: config.storeViewCode,
+        // @ts-ignore
+        products: productEvents,
+        timestamp: Date.now(),
+      });
+
+      curResults.push(...batchResults);
+
+      // if job exists, it means we're in async mode
+      // update the corresponding job file
+      if (!ctx.job) return;
+
+      ctx.job.data.results = curResults;
+      await ctx.job.save();
+    });
+
+    log.info({
+      action: 'save_products',
+      result: JSON.stringify(results),
+      timestamp: new Date().toISOString(),
+    });
+
+    // complete the job if we're in async mode
+    if (ctx.job) {
+      await ctx.job.complete();
+    }
+  } catch (e) {
+    ctx.log.error({
+      action: 'save_products',
+      error: e,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (ctx.job) {
+      await ctx.job.fail(e.message);
+    }
+  }
+
+  return new Response(
+    JSON.stringify({
+      product: results.length === 1 ? results[0] : undefined,
+      products: results.length > 1 ? results : undefined,
+    }),
+    {
+      status: 201,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+}
+
+/**
+ * Do bulk update for a set of products.
+ * If the process takes longer than 10 seconds,
+ * return a job and complete asynchronously.
+ *
+ * @param {Context} ctx
+ * @param {ProductBusEntry[]} data
+ * @returns {Promise<Response>}
+ */
+async function bulkUpdate(ctx, data) {
+  const { log } = ctx;
+  const updatePromise = doUpdate(ctx, data);
+  /** @type {Promise<void>} */
+  const timeoutPromise = new Promise((resolve) => {
+    setTimeout(() => resolve(), SYNC_TIMEOUT);
+  });
+  const maybeResult = await Promise.race([
+    updatePromise,
+    timeoutPromise,
+  ]);
+
+  // defined, means it completed
+  if (maybeResult) {
+    return maybeResult;
+  }
+
+  const topic = 'bulk-update';
+  const name = crypto.randomUUID();
+  log.info({
+    action: 'create_job',
+    topic,
+    name,
+    timestamp: new Date().toISOString(),
+  });
+
+  ctx.job = Job.create(ctx, topic, name, { results: [] });
+  await ctx.job.save();
+
+  // continue in background
+  ctx.executionContext.waitUntil(updatePromise);
+
+  // return 202
+  return new Response(JSON.stringify({
+    job: ctx.job,
+    links: ctx.job.links,
+  }), {
+    status: 202,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
 
 /**
  * @type {RouteHandler}
  */
 export default async function update(ctx) {
-  const { config, log, data } = ctx;
+  const { config, data } = ctx;
   await assertAuthorization(ctx);
-
-  let dataArr;
 
   if (config.sku === '*') {
     if (!Array.isArray(data)) {
@@ -38,61 +164,19 @@ export default async function update(ctx) {
       return errorResponse(400, `data must be an array of ${MAX_PRODUCT_BULK} or fewer products`);
     }
 
-    data.forEach((product) => {
+    for (const product of data) {
+      const t0 = Date.now();
       assertValidProduct(product);
-    });
-
-    // ensure the total number of images is less than 50
-    const totalImages = data.reduce((acc, product) => acc + product.images.length, 0);
-    if (totalImages > MAX_TOTAL_IMAGES) {
-      return errorResponse(400, 'total number of images must be less than 100');
+      const dt = Date.now() - t0;
+      if (ctx.metrics) ctx.metrics.payloadValidationMs.push(dt);
     }
-    dataArr = data;
-  } else {
-    assertValidProduct(data);
-    dataArr = [data];
+
+    return bulkUpdate(ctx, data);
   }
 
-  // TODO: make image upload async, replace with hash immediately
-  const products = await processQueue(
-    dataArr,
-    (oneProduct) => extractAndReplaceImages(ctx, oneProduct),
-  );
-  const storage = StorageClient.fromContext(ctx);
-  const saveResults = await storage.saveProducts(products);
-
-  const productEvents = saveResults.map((res) => ({
-    sku: res.sluggedSku,
-    action: 'update',
-  }));
-
-  await ctx.env.INDEXER_QUEUE.send({
-    org: config.org,
-    site: config.site,
-    storeCode: config.storeCode,
-    storeViewCode: config.storeViewCode,
-    // @ts-ignore
-    products: productEvents,
-    timestamp: Date.now(),
-  });
-
-  log.info({
-    action: 'save_products',
-    result: JSON.stringify(saveResults),
-    timestamp: new Date().toISOString(),
-  });
-
-  return new Response(
-    JSON.stringify({
-      ...saveResults,
-      product: products.length === 1 ? products[0] : undefined,
-      products: products.length > 1 ? products : undefined,
-    }),
-    {
-      status: 201,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
+  const t0 = Date.now();
+  assertValidProduct(data);
+  const dt = Date.now() - t0;
+  if (ctx.metrics) ctx.metrics.payloadValidationMs.push(dt);
+  return doUpdate(ctx, [data]);
 }
