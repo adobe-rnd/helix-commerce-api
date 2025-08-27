@@ -15,23 +15,6 @@ import { errorWithResponse } from './http.js';
 import { validate } from './validation.js';
 
 /**
- * Slugify a SKU by converting it to lowercase, replacing spaces with hyphens,
- * @param {string} sku
- * @returns {string}
- */
-export function slugger(sku) {
-  if (typeof sku !== 'string') return '';
-  return sku
-    .toLowerCase()
-    .replace(/[_//]/g, '-') // Replace underscores and forward slashes with hyphens
-    .replace(/[^a-z0-9\s-]/g, '') // Remove all characters except a-z, 0-9, spaces, and hyphens
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Collapse multiple hyphens into single hyphen
-    .replace(/^-+/, '') // Remove leading hyphens
-    .replace(/-+$/, ''); // Remove trailing hyphens
-}
-
-/**
  * This function removes all undefined values from an object.
  * @template {Record<string, unknown>} T
  * @param {T} obj - The object to prune.

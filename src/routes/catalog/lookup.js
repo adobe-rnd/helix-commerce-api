@@ -10,8 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import { slugger } from '@dylandepass/helix-product-shared';
 import StorageClient from './StorageClient.js';
-import { slugger } from '../../utils/product.js';
 
 /**
  * @type {RouteHandler}

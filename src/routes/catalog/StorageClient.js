@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { slugger } from '../../utils/product.js';
+import { slugger } from '@dylandepass/helix-product-shared';
 import { BatchProcessor } from '../../utils/batch.js';
 import { errorWithResponse } from '../../utils/http.js';
 
