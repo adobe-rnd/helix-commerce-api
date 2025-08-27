@@ -1,3 +1,10 @@
+## [1.14.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.4...v1.14.5) (2025-08-27)
+
+
+### Bug Fixes
+
+* used shared lib for slugger ([#101](https://github.com/adobe-rnd/helix-commerce-api/issues/101)) ([716e7e7](https://github.com/adobe-rnd/helix-commerce-api/commit/716e7e7d768fde172cb7c0eba520b7f006afd35d))
+
 ## [1.14.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.3...v1.14.4) (2025-08-26)
 
 
