@@ -42,6 +42,11 @@ const extractExtension = (url) => {
  */
 async function fetchImage(ctx, imageUrl) {
   const { log } = ctx;
+  if (typeof imageUrl !== 'string' || !imageUrl.trim()) {
+    log.info(`invalid image url provided: "${imageUrl}"`);
+    return null;
+  }
+
   log.debug('fetching image: ', imageUrl);
   const t0 = Date.now();
   const resp = await fetch(imageUrl, {
@@ -145,7 +150,10 @@ export async function extractAndReplaceImages(ctx, product) {
     processed.set(url, promise);
 
     const img = await fetchImage(ctx, url);
-    const newUrl = await uploadImage(ctx, img);
+    let newUrl;
+    if (img) {
+      newUrl = await uploadImage(ctx, img);
+    }
     resolve(newUrl);
     return newUrl;
   };

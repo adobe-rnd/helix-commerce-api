@@ -156,6 +156,10 @@ export default async function update(ctx) {
   await assertAuthorization(ctx);
 
   if (config.sku === '*') {
+    if (ctx.info.method !== 'POST') {
+      return errorResponse(405, 'method not allowed');
+    }
+
     if (!Array.isArray(data)) {
       return errorResponse(400, 'data must be an array');
     }
