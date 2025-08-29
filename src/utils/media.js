@@ -62,7 +62,7 @@ async function fetchImage(ctx, imageUrl) {
 
   const data = await resp.arrayBuffer();
   const dt = Date.now() - t0;
-  if (ctx.metrics) ctx.metrics.imageDownloads.push({ ms: dt, bytes: data.byteLength });
+  ctx.metrics?.imageDownloads?.push({ ms: dt, bytes: data.byteLength });
   const arr = await crypto.subtle.digest('SHA-1', data);
   const hash = Array.from(new Uint8Array(arr))
     .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -105,7 +105,7 @@ async function uploadImage(ctx, image) {
   if (resp) {
     log.debug(`image already in storage: ${sourceUrl} (${hash})`);
     const dt = Date.now() - t0;
-    if (ctx.metrics) ctx.metrics.imageUploads.push({ ms: dt, alreadyExists: true });
+    ctx.metrics?.imageUploads?.push({ ms: dt, alreadyExists: true });
     return `./${filename}`;
   }
 
@@ -118,7 +118,7 @@ async function uploadImage(ctx, image) {
     },
   });
   const dt = Date.now() - t0;
-  if (ctx.metrics) ctx.metrics.imageUploads.push({ ms: dt, alreadyExists: false });
+  ctx.metrics?.imageUploads?.push({ ms: dt, alreadyExists: false });
   return `./${filename}`;
 }
 

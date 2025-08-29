@@ -140,7 +140,7 @@ export default class StorageClient {
           customMetadata,
         });
         const dt = Date.now() - t0;
-        if (this.ctx.metrics) this.ctx.metrics.productUploadsMs.push(dt);
+        this.ctx.metrics?.productUploadsMs?.push(dt);
 
         // If urlKey exists, save the urlKey metadata
         if (urlKey) {
