@@ -31,20 +31,20 @@ describe('Product Save Tests', () => {
   });
 
   describe('handleProductSaveRequest', () => {
-    it('should return 501 if config.sku is "*"', async () => {
-      const ctx = DEFAULT_CONTEXT({ log: { error: sinon.stub() }, config: { sku: '*' } });
-      const request = { json: sinon.stub().resolves({ sku: '1234' }) };
+    it('should return 405 if config.sku is "*" and method is not POST', async () => {
+      const ctx = DEFAULT_CONTEXT({ log: { error: sinon.stub() }, config: { sku: '*' }, info: { method: 'PUT' } });
+      const request = { json: sinon.stub().resolves({ sku: '1234', urlKey: 'foo', name: 'foo' }) };
 
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
-      assert.equal(response.status, 501);
-      assert.equal(response.headers.get('x-error'), 'not implemented');
+      assert.equal(response.status, 405);
+      assert.equal(response.headers.get('x-error'), 'method not allowed');
     });
 
     it('should return 201 when product is successfully saved and paths are purged', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub(), info: sinon.stub() },
-        data: { sku: '1234', urlKey: 'product-url-key' },
+        data: { sku: '1234', urlKey: 'product-url-key', name: 'product-name' },
         config: {
           sku: '1234',
         },
