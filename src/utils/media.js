@@ -149,6 +149,7 @@ export async function extractAndReplaceImages(ctx, product) {
     });
     processed.set(url, promise);
 
+    // TODO: fetch from hash lookup first, treat image urls as immutable
     const img = await fetchImage(ctx, url);
     let newUrl;
     if (img) {

@@ -76,25 +76,14 @@ export default class StorageClient {
    * Save products in batches
    *
    * @param {ProductBusEntry[]} products - The products to save.
-   * @param {(results: Partial<BatchResult>[]) => Promise<void>|void} batchHook
+   * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
    */
-  async saveProducts(products, batchHook = () => {}) {
-    const { progress } = this.ctx;
-
-    // initialize progress
-    progress.total = products.length;
-
-    const processor = new BatchProcessor(this.ctx, async (batch) => {
-      const results = await this.storeProductsBatch(batch);
-      // update progress
-      results.forEach((res) => {
-        // if result has status, it's a failure
-        progress[res.status ? 'failed' : 'processed'] += 1;
-      });
-      await batchHook(results);
-      return results;
-    });
+  async saveProducts(products, asyncImages = true) {
+    const processor = new BatchProcessor(
+      this.ctx,
+      async (batch) => this.storeProductsBatch(batch, asyncImages),
+    );
     const saveResults = await processor.process(products);
 
     this.ctx.log.info(`Completed saving ${products.length} products.`);
@@ -105,9 +94,10 @@ export default class StorageClient {
   /**
    * Handler function to process a batch of products.
    * @param {ProductBusEntry[]} batch - An array of products to save.
+   * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
    */
-  async storeProductsBatch(batch) {
+  async storeProductsBatch(batch, asyncImages = true) {
     const {
       env,
       log,
@@ -120,7 +110,9 @@ export default class StorageClient {
     } = this.ctx;
 
     const storePromises = batch.map(async (product) => {
-      product = await extractAndReplaceImages(this.ctx, product);
+      if (!asyncImages) {
+        product = await extractAndReplaceImages(this.ctx, product);
+      }
 
       const { sku, name, urlKey } = product;
       const sluggedSku = slugger(sku);

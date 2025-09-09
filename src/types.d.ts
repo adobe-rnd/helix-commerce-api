@@ -11,7 +11,7 @@ import Job from "./routes/job/Job.js";
 declare global {
   export interface IndexingJobProduct {
     sku: string;
-    action: 'add' | 'update' | 'delete';
+    action?: 'add' | 'update' | 'delete' | string; // defaults to update
   }
 
   export interface IndexingJob {
@@ -21,6 +21,9 @@ declare global {
     storeViewCode: string;
     products: IndexingJobProduct[];
     timestamp: number;
+  }
+
+  export interface ImageCollectorJob extends IndexingJob {
   }
 
   export type SchemaOrgAvailability = 'BackOrder' | 'Discontinued' | 'InStock' | 'InStoreOnly' | 'LimitedAvailability' | 'MadeToOrder' | 'OnlineOnly' | 'OutOfStock' | 'PreOrder' | 'PreSale' | 'Reserved' | 'SoldOut';
@@ -141,6 +144,7 @@ declare global {
     ENVIRONMENT: string;
     SUPERUSER_KEY: string;
     INDEXER_QUEUE: Queue<IndexingJob>;
+    IMAGE_COLLECTOR_QUEUE: Queue<ImageCollectorJob>;
 
     // KV namespaces
     KEYS: KVNamespace<string>;
@@ -149,35 +153,13 @@ declare global {
     [key: string]: string | KVNamespace<string> | R2Bucket | Queue<IndexingJob>;
   }
 
-  export interface Progress {
-    total: number;
-    processed: number;
-    failed: number;
-  }
 
-  export interface AsyncJob<T = any> {
-    topic: string;
-    name: string;
-    error?: string;
-    state: "created" | "running" | "completed" | "failed";
-    startTime: string; // iso string
-    endTime?: string; // iso string
-    cancelled?: boolean;
-    data?: T;
-    progress: Progress;
-    links?: {
-      self: string;
-      details: string;
-    };
-  };
 
   export interface Context {
     url: URL;
     env: Env;
     log: Console;
     config: Config;
-    progress?: Progress;
-    job?: Job<any>;
     metrics?: {
       startedAt: number;
       payloadValidationMs: number[];
