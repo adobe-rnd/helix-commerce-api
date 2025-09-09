@@ -20,6 +20,10 @@ bucket_name = "adobe-commerce-catalog-dev"
 queue = "helix-product-indexer-queue-dev"
 binding = "INDEXER_QUEUE"
 
+[[queues.producers]]
+queue = "helix-product-image-collector-queue-dev"
+binding = "IMAGE_COLLECTOR_QUEUE"
+
 [vars]
 VERSION = "@@VERSION@@-dev"
 ENVIRONMENT = "dev"
@@ -46,6 +50,10 @@ bucket_name = "adobe-commerce-catalog-dev"
 [[env.ci.queues.producers]]
 queue = "helix-product-indexer-queue-ci"
 binding = "INDEXER_QUEUE"
+
+[[env.ci.queues.producers]]
+queue = "helix-product-image-collector-queue-ci"
+binding = "IMAGE_COLLECTOR_QUEUE"
 
 [env.ci.vars]
 VERSION = "@@VERSION@@-ci"
@@ -74,6 +82,10 @@ bucket_name = "adobe-commerce-catalog"
 queue = "helix-product-indexer-queue"
 binding = "INDEXER_QUEUE"
 
+[[env.next.queues.producers]]
+queue = "helix-product-image-collector-queue"
+binding = "IMAGE_COLLECTOR_QUEUE"
+
 [env.next.vars]
 VERSION = "@@VERSION@@-next"
 ENVIRONMENT = "next"
@@ -100,6 +112,10 @@ bucket_name = "adobe-commerce-catalog"
 [[env.production.queues.producers]]
 queue = "helix-product-indexer-queue"
 binding = "INDEXER_QUEUE"
+
+[[env.production.queues.producers]]
+queue = "helix-product-image-collector-queue"
+binding = "IMAGE_COLLECTOR_QUEUE"
 
 [env.production.vars]
 VERSION = "@@VERSION@@"
