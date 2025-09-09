@@ -12,7 +12,6 @@
 
 import catalog from './catalog/handler.js';
 import auth from './auth/handler.js';
-import job from './job/handler.js';
 
 /**
  * @type {Record<string, RouteHandler>}
@@ -20,5 +19,4 @@ import job from './job/handler.js';
 export default {
   catalog,
   auth,
-  job,
 };
