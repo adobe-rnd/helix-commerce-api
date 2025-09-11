@@ -53,11 +53,19 @@ describe('Post-Deploy Tests', () => {
 
   describe('Catalog', () => {
     const sku = `sku${Math.floor(Math.random() * 1000)}`;
+    const testImage = {
+      url: `https://main--helix-website--adobe.aem.live/docs/media_178c546132aab5d14ad1801ccbb6a70a461b127a8.png?width=750&format=png&optimize=medium&sku=${sku}`,
+      label: 'Test Image',
+      roles: ['thumbnail'],
+    };
     const testProduct = {
       name: 'Test Product',
       sku,
       urlKey: `product-${sku}`,
       description: 'A test product for integration testing',
+      images: [
+        testImage,
+      ],
     };
     const apiPrefix = '/maxakuru/productbus-test/catalog/main/default';
 
@@ -83,6 +91,11 @@ describe('Post-Deploy Tests', () => {
       assert.strictEqual(retrievedProduct.name, testProduct.name);
       assert.strictEqual(retrievedProduct.sku, testProduct.sku);
       assert.strictEqual(retrievedProduct.description, testProduct.description);
+      // should process a single image synchronously
+      assert.deepStrictEqual(retrievedProduct.images[0], {
+        ...testImage,
+        url: './media_178c546132aab5d14ad1801ccbb6a70a461b127a8.png',
+      });
 
       const lookupOptions = {
         ...getFetchOptions(`${apiPrefix}/lookup?urlKey=${testProduct.urlKey}`),
