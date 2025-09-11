@@ -18,6 +18,22 @@ import { assertAuthorization } from '../../utils/auth.js';
 const MAX_PRODUCT_BULK = 50;
 
 /**
+ * Whether to process images asynchronously.
+ * @param {Context} ctx
+ * @param {ProductBusEntry[]} products
+ */
+function shouldProcessImagesAsync(ctx, products) {
+  if (ctx.env.ENVIRONMENT === 'ci') {
+    // allow selecting async behavior for post-deploy tests
+    if (ctx.url.searchParams.get('asyncImages') === 'true') {
+      return true;
+    }
+  }
+  return (products.length > 10
+    || products.reduce((acc, product) => acc + (product.images?.length ?? 0), 0) > 10);
+}
+
+/**
  * Do bulk update for a set of products.
  * If the process takes longer than 10 seconds,
  * return a job and complete asynchronously.
@@ -34,8 +50,7 @@ async function doUpdate(ctx, products) {
     const storage = StorageClient.fromContext(ctx);
     // images are fetched asynchronously if there are more than 10 products,
     // of it there are more than 10 images total across all products
-    const asyncImages = (products.length > 10
-      || products.reduce((acc, product) => acc + (product.images?.length ?? 0), 0) > 10);
+    const asyncImages = shouldProcessImagesAsync(ctx, products);
     results = await storage.saveProducts(products, asyncImages);
 
     const payload = {
