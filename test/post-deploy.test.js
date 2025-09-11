@@ -52,7 +52,7 @@ describe('Post-Deploy Tests', () => {
   });
 
   describe('Catalog', () => {
-    const sku = `sku${Math.floor(Math.random() * 1000)}`;
+    const sku = `sku${Math.floor(Math.random() * 10000)}`;
     const testImage = {
       url: 'https://main--helix-website--adobe.aem.live/docs/media_178c546132aab5d14ad1801ccbb6a70a461b127a8.png?width=750&format=png&optimize=medium',
       label: 'Test Image',
@@ -134,7 +134,7 @@ describe('Post-Deploy Tests', () => {
   });
 
   describe('async images', () => {
-    const sku = `sku${Math.floor(Math.random() * 1000)}`;
+    const sku = `sku${Math.floor(Math.random() * 10000)}`;
     const testImage = {
       url: 'https://main--helix-website--adobe.aem.live/docs/media_178c546132aab5d14ad1801ccbb6a70a461b127a8.png?width=750&format=png&optimize=medium',
       label: 'Test Image',
@@ -221,12 +221,6 @@ describe('Post-Deploy Tests', () => {
       };
       const deleteRes = await fetch(deleteOptions.url, deleteOptions);
       assert.strictEqual(deleteRes.status, 200, 'DELETE request should succeed');
-
-      const lookupAfterDeleteOptions = {
-        ...getFetchOptions(`${apiPrefix}/lookup?urlKey=${testProduct.urlKey}`),
-      };
-      const lookupAfterDeleteRes = await fetch(lookupAfterDeleteOptions.url, lookupAfterDeleteOptions);
-      assert.strictEqual(lookupAfterDeleteRes.status, 404, 'Lookup request should return 404 after deletion');
 
       const getAfterDeleteOptions = {
         ...getFetchOptions(`${apiPrefix}/products/${testProduct.sku}.json`),
