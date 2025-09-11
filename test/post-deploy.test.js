@@ -54,7 +54,7 @@ describe('Post-Deploy Tests', () => {
   describe('Catalog', () => {
     const sku = `sku${Math.floor(Math.random() * 1000)}`;
     const testImage = {
-      url: `https://main--helix-website--adobe.aem.live/docs/media_178c546132aab5d14ad1801ccbb6a70a461b127a8.png?width=750&format=png&optimize=medium&sku=${sku}`,
+      url: 'https://main--helix-website--adobe.aem.live/docs/media_178c546132aab5d14ad1801ccbb6a70a461b127a8.png?width=750&format=png&optimize=medium',
       label: 'Test Image',
       roles: ['thumbnail'],
     };
@@ -94,7 +94,7 @@ describe('Post-Deploy Tests', () => {
       // should process a single image synchronously
       assert.deepStrictEqual(retrievedProduct.images[0], {
         ...testImage,
-        url: './media_1b236d4445641e7aa141e11c62ea50a634d98022.png?width=750&format=png&optimize=medium&sku=sku460',
+        url: './media_1b236d4445641e7aa141e11c62ea50a634d98022.png?width=750&format=png&optimize=medium',
       });
 
       const lookupOptions = {
