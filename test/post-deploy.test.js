@@ -183,7 +183,8 @@ describe('Post-Deploy Tests', () => {
         /* eslint-disable no-await-in-loop */
         // eslint-disable-next-line no-promise-executor-return
         await new Promise((resolve) => setTimeout(resolve, 10_000));
-        const res = await fetch(url, getOpts);
+        const { url: getUrl, ...newGetOpts } = getFetchOptions(`${apiPrefix}/products/${testProduct.sku}.json`);
+        const res = await fetch(getUrl, newGetOpts);
         assert.strictEqual(getRes.status, 200, 'GET request should succeed');
         newRetrievedProduct = await res.json();
         /* eslint-enable no-await-in-loop */
