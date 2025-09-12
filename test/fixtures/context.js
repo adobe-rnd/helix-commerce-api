@@ -38,12 +38,6 @@ export const DEFAULT_CONTEXT = (
     key: 'test-key',
     ...(overrides.attributes ?? {}),
   },
-  progress: {
-    total: 0,
-    processed: 0,
-    failed: 0,
-    ...(overrides.progress ?? {}),
-  },
   env: {
     SUPERUSER_KEY: 'su-test-key',
     KEYS: {
