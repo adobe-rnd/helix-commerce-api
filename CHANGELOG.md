@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.0...v1.15.1) (2025-09-12)
+
+
+### Bug Fixes
+
+* disable validation ([#104](https://github.com/adobe-rnd/helix-commerce-api/issues/104)) ([5719521](https://github.com/adobe-rnd/helix-commerce-api/commit/571952173869807fd3644f7180ceb7833fca3876))
+
 # [1.15.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.5...v1.15.0) (2025-09-12)
 
 
