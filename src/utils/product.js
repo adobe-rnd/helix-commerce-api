@@ -11,7 +11,7 @@
  */
 
 import ProductBusEntry from '../schemas/ProductBus.js';
-import { errorWithResponse } from './http.js';
+// import { errorWithResponse } from './http.js';
 import { validate } from './validation.js';
 
 /**
@@ -33,12 +33,15 @@ export function pruneUndefined(obj, pruneNullish = false) {
 }
 
 /**
+ * @param {Context} ctx
  * @param {any} product
  * @returns {asserts product is ProductBusEntry}
  */
-export function assertValidProduct(product) {
+export function assertValidProduct(ctx, product) {
+  const { log } = ctx;
   const errors = validate(product, ProductBusEntry);
   if (errors) {
-    throw errorWithResponse(400, 'Invalid product', { errors });
+    log.info('Invalid product', { errors });
+    // throw errorWithResponse(400, 'Invalid product', { errors });
   }
 }

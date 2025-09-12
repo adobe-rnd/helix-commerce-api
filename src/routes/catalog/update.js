@@ -116,7 +116,7 @@ export default async function update(ctx) {
 
     for (const product of data) {
       const t0 = Date.now();
-      assertValidProduct(product);
+      assertValidProduct(ctx, product);
       const dt = Date.now() - t0;
       if (ctx.metrics) ctx.metrics.payloadValidationMs.push(dt);
     }
@@ -125,7 +125,7 @@ export default async function update(ctx) {
   }
 
   const t0 = Date.now();
-  assertValidProduct(data);
+  assertValidProduct(ctx, data);
   const dt = Date.now() - t0;
   if (ctx.metrics) ctx.metrics.payloadValidationMs.push(dt);
   return doUpdate(ctx, [data]);
