@@ -5,8 +5,6 @@ import type {
   KVNamespace
 } from "@cloudflare/workers-types";
 import type StorageClient from "./routes/products/StorageClient.js";
-import Job from "./routes/job/Job.js";
-
 
 declare global {
   export interface IndexingJobProduct {
@@ -132,11 +130,6 @@ declare global {
     storeCode?: string;
     storeViewCode?: string;
     sku?: string;
-
-    // jobs
-    topic?: string;
-    name?: string;
-    details?: boolean;
   }
 
   export interface Env {
