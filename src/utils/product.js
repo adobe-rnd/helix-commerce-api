@@ -37,9 +37,8 @@ export function pruneUndefined(obj, pruneNullish = false) {
  * @returns {asserts product is ProductBusEntry}
  */
 export function assertValidProduct(product) {
-  try {
-    validate(product, ProductBusEntry);
-  } catch (err) {
-    throw errorWithResponse(400, 'Invalid product', err);
+  const errors = validate(product, ProductBusEntry);
+  if (errors) {
+    throw errorWithResponse(400, 'Invalid product', { errors });
   }
 }

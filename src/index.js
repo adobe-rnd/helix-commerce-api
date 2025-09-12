@@ -13,6 +13,7 @@
 import { errorResponse } from './utils/http.js';
 import { resolveConfig } from './utils/config.js';
 import handlers from './routes/index.js';
+import logMetrics from './utils/metrics.js';
 
 /**
  * @param {import("@cloudflare/workers-types").Request} req
@@ -56,6 +57,18 @@ export async function makeContext(eCtx, req, env) {
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;
+  ctx.metrics = {
+    startedAt: Date.now(),
+    payloadValidationMs: [],
+    imageDownloads: [],
+    imageUploads: [],
+    productUploadsMs: [],
+  };
+  ctx.progress = {
+    total: 0,
+    processed: 0,
+    failed: 0,
+  };
   const filename = ctx.url.pathname.split('/').pop() ?? '';
   ctx.info = {
     filename,
@@ -88,13 +101,16 @@ export default {
       if (!fn) {
         return errorResponse(404, 'route not found');
       }
-      return await fn(ctx, request);
+      const resp = await fn(ctx, request);
+      return resp;
     } catch (e) {
       if (e.response) {
         return e.response;
       }
       ctx.log.error(e);
       return errorResponse(500, 'internal server error');
+    } finally {
+      logMetrics(ctx);
     }
   },
 };

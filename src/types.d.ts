@@ -6,11 +6,10 @@ import type {
 } from "@cloudflare/workers-types";
 import type StorageClient from "./routes/products/StorageClient.js";
 
-
 declare global {
   export interface IndexingJobProduct {
     sku: string;
-    action: 'add' | 'update' | 'delete';
+    action?: 'add' | 'update' | 'delete' | string; // defaults to update
   }
 
   export interface IndexingJob {
@@ -20,6 +19,9 @@ declare global {
     storeViewCode: string;
     products: IndexingJobProduct[];
     timestamp: number;
+  }
+
+  export interface ImageCollectorJob extends IndexingJob {
   }
 
   export type SchemaOrgAvailability = 'BackOrder' | 'Discontinued' | 'InStock' | 'InStoreOnly' | 'LimitedAvailability' | 'MadeToOrder' | 'OnlineOnly' | 'OutOfStock' | 'PreOrder' | 'PreSale' | 'Reserved' | 'SoldOut';
@@ -135,6 +137,7 @@ declare global {
     ENVIRONMENT: string;
     SUPERUSER_KEY: string;
     INDEXER_QUEUE: Queue<IndexingJob>;
+    IMAGE_COLLECTOR_QUEUE: Queue<ImageCollectorJob>;
 
     // KV namespaces
     KEYS: KVNamespace<string>;
@@ -143,11 +146,20 @@ declare global {
     [key: string]: string | KVNamespace<string> | R2Bucket | Queue<IndexingJob>;
   }
 
+
+
   export interface Context {
     url: URL;
     env: Env;
     log: Console;
     config: Config;
+    metrics?: {
+      startedAt: number;
+      payloadValidationMs: number[];
+      imageDownloads: { ms: number; bytes: number }[];
+      imageUploads: { ms: number; alreadyExists: boolean }[];
+      productUploadsMs: number[];
+    };
     /** parsed from body or query params */
     data: any;
     info: {

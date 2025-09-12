@@ -137,6 +137,7 @@ const ProductBusEntry = {
     brand: { type: 'string' },
     availability: SchemaOrgAvailability,
     price: ProductBusPrice,
+    itemCondition: SchemaOrgItemCondition,
     metadata: {
       type: 'object',
       properties: {},
@@ -170,7 +171,7 @@ const ProductBusEntry = {
     },
     custom: CustomObject,
   },
-  required: ['sku', 'urlKey', 'name'],
+  required: ['sku', 'name'],
 };
 
 export default ProductBusEntry;

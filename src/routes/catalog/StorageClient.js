@@ -13,6 +13,7 @@
 import { slugger } from '@dylandepass/helix-product-shared';
 import { BatchProcessor } from '../../utils/batch.js';
 import { errorWithResponse } from '../../utils/http.js';
+import { extractAndReplaceImages } from '../../utils/media.js';
 
 export default class StorageClient {
   /**
@@ -75,10 +76,14 @@ export default class StorageClient {
    * Save products in batches
    *
    * @param {ProductBusEntry[]} products - The products to save.
+   * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
    */
-  async saveProducts(products) {
-    const processor = new BatchProcessor(this.ctx, (batch) => this.storeProductsBatch(batch));
+  async saveProducts(products, asyncImages = true) {
+    const processor = new BatchProcessor(
+      this.ctx,
+      async (batch) => this.storeProductsBatch(batch, asyncImages),
+    );
     const saveResults = await processor.process(products);
 
     this.ctx.log.info(`Completed saving ${products.length} products.`);
@@ -89,9 +94,10 @@ export default class StorageClient {
   /**
    * Handler function to process a batch of products.
    * @param {ProductBusEntry[]} batch - An array of products to save.
+   * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
    */
-  async storeProductsBatch(batch) {
+  async storeProductsBatch(batch, asyncImages = true) {
     const {
       env,
       log,
@@ -104,12 +110,17 @@ export default class StorageClient {
     } = this.ctx;
 
     const storePromises = batch.map(async (product) => {
+      if (!asyncImages) {
+        product = await extractAndReplaceImages(this.ctx, product);
+      }
+
       const { sku, name, urlKey } = product;
       const sluggedSku = slugger(sku);
       const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
       const body = JSON.stringify(product);
 
       try {
+        const t0 = Date.now();
         const customMetadata = { sku, name };
         if (urlKey) {
           customMetadata.urlKey = urlKey;
@@ -120,6 +131,8 @@ export default class StorageClient {
           httpMetadata: { contentType: 'application/json' },
           customMetadata,
         });
+        const dt = Date.now() - t0;
+        this.ctx.metrics?.productUploadsMs?.push(dt);
 
         // If urlKey exists, save the urlKey metadata
         if (urlKey) {

@@ -24,7 +24,7 @@ import { errorWithResponse } from './http.js';
  */
 
 // limit concurrency to max outgoing connections
-const CONCURRENCY = 6;
+const CONCURRENCY = 4;
 
 /**
  * @param {string} url
@@ -42,7 +42,13 @@ const extractExtension = (url) => {
  */
 async function fetchImage(ctx, imageUrl) {
   const { log } = ctx;
+  if (typeof imageUrl !== 'string' || !imageUrl.trim()) {
+    log.info(`invalid image url provided: "${imageUrl}"`);
+    return null;
+  }
+
   log.debug('fetching image: ', imageUrl);
+  const t0 = Date.now();
   const resp = await fetch(imageUrl, {
     method: 'GET',
     headers: {
@@ -55,6 +61,8 @@ async function fetchImage(ctx, imageUrl) {
   }
 
   const data = await resp.arrayBuffer();
+  const dt = Date.now() - t0;
+  ctx.metrics?.imageDownloads?.push({ ms: dt, bytes: data.byteLength });
   const arr = await crypto.subtle.digest('SHA-1', data);
   const hash = Array.from(new Uint8Array(arr))
     .map((byte) => byte.toString(16).padStart(2, '0'))
@@ -92,9 +100,12 @@ async function uploadImage(ctx, image) {
 
   const filename = `media_${hash}${extension ? `.${extension}` : ''}`;
   const key = `${org}/${site}/media/${filename}`;
+  const t0 = Date.now();
   const resp = await env.CATALOG_BUCKET.head(key);
   if (resp) {
     log.debug(`image already in storage: ${sourceUrl} (${hash})`);
+    const dt = Date.now() - t0;
+    ctx.metrics?.imageUploads?.push({ ms: dt, alreadyExists: true });
     return `./${filename}`;
   }
 
@@ -106,6 +117,8 @@ async function uploadImage(ctx, image) {
       sourceLocation: sourceUrl,
     },
   });
+  const dt = Date.now() - t0;
+  ctx.metrics?.imageUploads?.push({ ms: dt, alreadyExists: false });
   return `./${filename}`;
 }
 
@@ -136,8 +149,12 @@ export async function extractAndReplaceImages(ctx, product) {
     });
     processed.set(url, promise);
 
+    // TODO: fetch from hash lookup first, treat image urls as immutable
     const img = await fetchImage(ctx, url);
-    const newUrl = await uploadImage(ctx, img);
+    let newUrl;
+    if (img) {
+      newUrl = await uploadImage(ctx, img);
+    }
     resolve(newUrl);
     return newUrl;
   };
