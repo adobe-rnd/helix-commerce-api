@@ -1,3 +1,25 @@
+# [1.15.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.5...v1.15.0) (2025-09-12)
+
+
+### Bug Fixes
+
+* allow undefined urlKey ([61b6f06](https://github.com/adobe-rnd/helix-commerce-api/commit/61b6f06590e825e64cb7a0f5a5cf4879075ae81e))
+* assert limits in bulk ([c0f6faa](https://github.com/adobe-rnd/helix-commerce-api/commit/c0f6faa459cf668f14316a3e3c6cabd02e94a9bf))
+* bulk update images, products ([a4d245f](https://github.com/adobe-rnd/helix-commerce-api/commit/a4d245fa9b30f30caf94a554d79ff53534cf405c))
+* disallow PUT on bulk, ignore invalid images ([138f94f](https://github.com/adobe-rnd/helix-commerce-api/commit/138f94fc8b8c3629f7244c82939c5c3e8fb7c44c))
+* dont make images unique ([1ae9cc0](https://github.com/adobe-rnd/helix-commerce-api/commit/1ae9cc07a0c0143bd7269e62dfc3d13c3da872b4))
+* force async in ci ([8a4e454](https://github.com/adobe-rnd/helix-commerce-api/commit/8a4e454a0ae38b83ad79d3e69ade4792877cfc12))
+* post-deploy test ([ac3d02e](https://github.com/adobe-rnd/helix-commerce-api/commit/ac3d02efb5baf41be63399dc781c14180c4a7de1))
+* separate metrics logging ([c9a889a](https://github.com/adobe-rnd/helix-commerce-api/commit/c9a889ae32b19aa63559a09756784544333e1d90))
+* sync bulk implementation ([bd853a7](https://github.com/adobe-rnd/helix-commerce-api/commit/bd853a722f5989db6ad98d6229cde8c45c390a81))
+* undefined import ([ad76fd4](https://github.com/adobe-rnd/helix-commerce-api/commit/ad76fd475f164613cdaf827a3e04e255f312fabc))
+* validation tests ([7f87aec](https://github.com/adobe-rnd/helix-commerce-api/commit/7f87aec76d7ddb0f1c2a105aa1267fc56b77d38e))
+
+
+### Features
+
+* async bulk update ([a4ba465](https://github.com/adobe-rnd/helix-commerce-api/commit/a4ba465d97ea5fb13ec04a360050a01bb8baf8c5))
+
 ## [1.14.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.14.4...v1.14.5) (2025-08-27)
 
 
