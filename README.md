@@ -2,6 +2,123 @@
 
 Product API for Edge Delivery Services.
 
+- [Schemas](#schemas)
+- [API](#api)
+  - [GET a product](#get-a-product)
+  - [PUT a product (small example)](#put-a-product-small-example)
+  - [PUT a product (complete example with all properties)](#put-a-product-complete-example-with-all-properties)
+  - [Bulk POST products](#bulk-post-products)
+  - [Lookup by URL key](#lookup-by-url-key)
+  - [Lookup (list all products)](#lookup-list-all-products)
+- [Auth token management](#auth-token-management)
+  - [Fetch auth token (GET)](#fetch-auth-token-get)
+  - [Rotate auth token (POST)](#rotate-auth-token-post)
+  - [Set auth token (PUT)](#set-auth-token-put)
+
+### Schemas
+
+#### ProductBusEntry
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `sku` | `string` | Unique stock keeping unit. Required. |
+| `urlKey` | `string` | Slug-like key for building product URLs. Must not contain uppercase letters or spaces. |
+| `description` | `string` | Long description, free text or HTML. |
+| `name` | `string` | Human-readable product name. Required. |
+| `metaTitle` | `string` | SEO title. |
+| `metaDescription` | `string` | SEO description. |
+| `gtin` | `string` | Global Trade Item Number. |
+| `url` | `string` | Canonical product URL on the origin site. |
+| `brand` | `string` | Brand name. |
+| `availability` | [`SchemaOrgAvailability`](#schemaorgavailability) | Product availability status. |
+| `price` | [`ProductBusPrice`](#productbusprice) | Pricing information for the product. |
+| `itemCondition` | [`SchemaOrgItemCondition`](#schemaorgitemcondition) | Condition of the item. |
+| `metadata` | `Record<string,string>` | Arbitrary string metadata map. |
+| `options` | [`ProductBusOption`](#productbusoption)[] | Configurable options presented on PDP. |
+| `aggregateRating` | [`AggregateRating`](#aggregaterating) | Structured rating information. |
+| `specifications` | `string` | Structured specs (e.g., HTML snippet). |
+| `images` | [`ProductBusMedia`](#productbusmedia)[] | Media gallery. |
+| `variants` | [`ProductBusVariant`](#productbusvariant)[] | Variant entries for configurable products. |
+| `jsonld` | `string` | Product JSON-LD blob (max 128,000 chars). Intended for Schema.org markup. |
+| `custom` | [`CustomObject`](#customobject) | Arbitrary custom data bag (not indexed by default). |
+
+#### ProductBusPrice
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `currency` | `string` | ISO currency code for the price values. |
+| `regular` | `string` | Regular price amount as a string. |
+| `final` | `string` | Final/sale price amount as a string. |
+
+#### ProductBusMedia
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `url` | `string` | Absolute or relative media URL. Required. |
+| `label` | `string` | Optional label or alt text. |
+| `roles` | `string[]` | Optional role hints (e.g., `thumbnail`, `small`). |
+| `video` | `string` | Optional related video URL. |
+
+#### ProductBusOptionValue
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | Optional value identifier. |
+| `value` | `string` | Display value. Required. |
+| `uid` | `string` | Optional stable unique identifier. |
+
+#### ProductBusOption
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | Optional option identifier. |
+| `label` | `string` | Display label for the option. Required. |
+| `position` | `number` | Display ordering hint. |
+| `values` | [`ProductBusOptionValue`](#productbusoptionvalue)[] | List of selectable values. Required. |
+
+#### ProductBusVariant
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `sku` | `string` | Variant SKU. Required. |
+| `name` | `string` | Variant display name. Required. |
+| `price` | [`ProductBusPrice`](#productbusprice) | Variant pricing. |
+| `url` | `string` | Variant URL. Required. |
+| `images` | [`ProductBusMedia`](#productbusmedia)[] | Variant media gallery. Required. |
+| `gtin` | `string` | Variant GTIN. |
+| `description` | `string` | Variant description. |
+| `availability` | [`SchemaOrgAvailability`](#schemaorgavailability) | Variant availability. |
+| `options` | [`ProductBusOptionValue`](#productbusoptionvalue)[] | Selected option values for this variant. |
+| `itemCondition` | [`SchemaOrgItemCondition`](#schemaorgitemcondition) | Variant condition. |
+| `custom` | [`CustomObject`](#customobject) | Arbitrary custom data for the variant. |
+
+#### AggregateRating
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `ratingValue` | `string` | Average rating value. |
+| `reviewCount` | `string` | Number of reviews (string-encoded integer). |
+| `bestRating` | `string` | Maximum possible rating. |
+| `worstRating` | `string` | Minimum possible rating. |
+
+#### SchemaOrgAvailability
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `availability` | `enum` | One of: `BackOrder`, `Discontinued`, `InStock`, `InStoreOnly`, `LimitedAvailability`, `MadeToOrder`, `OnlineOnly`, `OutOfStock`, `PreOrder`, `PreSale`, `Reserved`, `SoldOut`. |
+
+#### SchemaOrgItemCondition
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `itemCondition` | `enum` | One of: `DamagedCondition`, `NewCondition`, `RefurbishedCondition`, `UsedCondition`. |
+
+#### CustomObject
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `*` | `any` | Arbitrary key-value pairs. Additional properties allowed. |
+
 ### API
 
 Base URL structure: `https://<host>/{org}/{site}/catalog/{storeCode}/{storeViewCode}`
@@ -153,7 +270,7 @@ Send up to 50 products at once by POSTing to the wildcard SKU path.
 curl -sS -X POST \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/*.json" \
+  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/*" \
   --data-binary @- <<'JSON'
 [
   {
