@@ -9,7 +9,6 @@ Base URL structure: `https://<host>/{org}/{site}/catalog/{storeCode}/{storeViewC
 Set some environment variables to make the curl examples easier to read:
 
 ```bash
-export BASE="https://your-worker.example.workers.dev"
 export ORG="acme"
 export SITE="main"
 export STORE="us"
@@ -25,7 +24,7 @@ export KEY="<SITE_API_KEY>"
 ```bash
 curl -sS \
   -H "Authorization: Bearer $KEY" \
-  "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/<sku>.json"
+  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/<sku>.json"
 ```
 
 Example response body:
@@ -50,7 +49,7 @@ Minimal payload with the most important properties.
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/test-sku.json" \
+  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/test-sku.json" \
   --data-binary @- <<'JSON'
 {
   "sku": "test-sku",
@@ -67,7 +66,7 @@ JSON
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json" \
+  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json" \
   --data-binary @- <<'JSON'
 {
   "sku": "sku-123",
@@ -154,7 +153,7 @@ Send up to 50 products at once by POSTing to the wildcard SKU path.
 curl -sS -X POST \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/*.json" \
+  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/*.json" \
   --data-binary @- <<'JSON'
 [
   {
@@ -184,21 +183,21 @@ Redirect to the product JSON using a `urlKey` (or `urlkey`) query parameter.
 
 ```bash
 curl -sS -i \
-  "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/lookup?urlkey=product-url-key"
+  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/lookup?urlkey=product-url-key"
 ```
 
 Example (headers):
 
 ```http
 HTTP/1.1 301 Moved Permanently
-Location: $BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json
+Location: https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json
 ```
 
 #### Lookup (list all products)
 
 ```bash
 curl -sS \
-  "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/lookup"
+  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/lookup"
 ```
 
 Example response body:
@@ -212,14 +211,14 @@ Example response body:
       "name": "Product Name",
       "urlKey": "product-url-key",
       "links": {
-        "product": "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json"
+        "product": "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json"
       }
     },
     {
       "sku": "sku-456",
       "name": "Another Product",
       "links": {
-        "product": "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-456.json"
+        "product": "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-456.json"
       }
     }
   ]
@@ -230,7 +229,7 @@ With `skusOnly=true` (returns only SKUs and product links):
 
 ```bash
 curl -sS \
-  "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/lookup?skusOnly=true"
+  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/lookup?skusOnly=true"
 ```
 
 Example response body:
@@ -242,13 +241,13 @@ Example response body:
     {
       "sku": "sku-123",
       "links": {
-        "product": "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json"
+        "product": "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json"
       }
     },
     {
       "sku": "sku-456",
       "links": {
-        "product": "$BASE/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-456.json"
+        "product": "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-456.json"
       }
     }
   ]
@@ -266,7 +265,7 @@ All auth routes require `Authorization: Bearer <SITE_API_KEY>` (or a superuser k
 ```bash
 curl -sS \
   -H "Authorization: Bearer $KEY" \
-  "$BASE/$ORG/$SITE/auth/token"
+  "https://api.adobecommerce.live/$ORG/$SITE/auth/token"
 ```
 
 Example response body:
@@ -282,7 +281,7 @@ Generates a new token. Do not include a `token` in the request body.
 ```bash
 curl -sS -X POST \
   -H "Authorization: Bearer $KEY" \
-  "$BASE/$ORG/$SITE/auth/token"
+  "https://api.adobecommerce.live/$ORG/$SITE/auth/token"
 ```
 
 Example response body:
@@ -299,7 +298,7 @@ Explicitly sets the token value.
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "$BASE/$ORG/$SITE/auth/token" \
+  "https://api.adobecommerce.live/$ORG/$SITE/auth/token" \
   --data-binary '{"token":"SPECIFIC_TOKEN_VALUE"}'
 ```
 
