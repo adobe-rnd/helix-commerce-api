@@ -39,12 +39,14 @@ function shouldProcessImagesAsync(ctx, products) {
  * Split into chunks of at most `MAX_IMAGES_PER_JOB` images per job
  *
  * @param {Context} ctx
- * @param {Partial<BatchResult<{ imageCount: number; }>>[]} results
+ * @param {ProductBusEntry[]} products
  * @param {ImageCollectorJob} payload
  */
-export async function publishImageCollectorJobs(ctx, results, payload) {
-  const resultBySku = results.reduce((acc, r) => {
-    acc[r.sku] = r;
+export async function publishImageCollectorJobs(ctx, products, payload) {
+  // count images per sku
+  const imageCountBySku = products.reduce((acc, product) => {
+    acc[product.sku] = (product.images?.length ?? 0)
+      + (product.variants?.reduce((tally, variant) => tally + variant.images.length, 0) ?? 0);
     return acc;
   }, {});
 
@@ -55,7 +57,7 @@ export async function publishImageCollectorJobs(ctx, results, payload) {
     while (imageCount < MAX_IMAGES_PER_JOB) {
       const aProduct = allProducts.shift();
       productEvents.push(aProduct);
-      imageCount += resultBySku[aProduct.sku].data.imageCount ?? 0;
+      imageCount += imageCountBySku[aProduct.sku] ?? 0;
     }
 
     // eslint-disable-next-line no-await-in-loop
@@ -72,7 +74,7 @@ export async function publishImageCollectorJobs(ctx, results, payload) {
  * @returns {Promise<Response>}
  */
 async function doUpdate(ctx, products) {
-  /** @type {Partial<BatchResult<{ imageCount: number; }>>[]} */
+  /** @type {Partial<BatchResult>[]} */
   let results;
 
   try {
@@ -96,7 +98,7 @@ async function doUpdate(ctx, products) {
     await ctx.env.INDEXER_QUEUE.send(payload);
 
     if (asyncImages) {
-      await publishImageCollectorJobs(ctx, results, payload);
+      await publishImageCollectorJobs(ctx, products, payload);
     }
 
     log.info({
