@@ -204,8 +204,9 @@ export default class StorageClient {
     } = this.ctx;
 
     const deletionPromises = batch.map(async (sku) => {
+      const sluggedSku = slugger(sku);
+
       try {
-        const sluggedSku = slugger(sku);
         const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
         const productHead = await env.CATALOG_BUCKET.head(productKey);
         if (!productHead) {
@@ -232,6 +233,7 @@ export default class StorageClient {
         const result = {
           sku,
           sluggedSku,
+          status: 200,
           message: 'Product deleted successfully.',
         };
         return result;
@@ -239,6 +241,7 @@ export default class StorageClient {
         log.error(`Failed to delete product with SKU: ${sku}. Error: ${error.message}`);
         return {
           sku,
+          sluggedSku,
           status: error.code || 500,
           message: `Error: ${error.message}`,
         };
