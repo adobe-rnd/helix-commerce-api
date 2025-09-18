@@ -63,6 +63,7 @@ export async function publishImageCollectorJobs(ctx, products, payload) {
     // eslint-disable-next-line no-await-in-loop
     await ctx.env.IMAGE_COLLECTOR_QUEUE.send({ ...payload, products: productEvents });
     productEvents = [];
+    imageCount = 0;
   }
 }
 
