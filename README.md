@@ -119,6 +119,7 @@ Product API for Edge Delivery Services.
 | --- | --- | --- |
 | `*` | `any` | Arbitrary key-value pairs. Additional properties allowed. |
 
+
 ### API
 
 Base URL structure: `https://<host>/{org}/{site}/catalog/{storeCode}/{storeViewCode}`
