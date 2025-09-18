@@ -175,12 +175,15 @@ declare global {
     executionContext: ExecutionContext;
   }
 
-  interface BatchResult {
+  export interface BatchData { }
+
+  export interface BatchResult<T extends BatchData> {
     sku: string;
     sluggedSku: string;
     status: number;
     message?: string;
     paths: Record<string, AdminStatus>;
+    data: T;
   };
 
   export type RouteHandler = (ctx: Context, request: import("@cloudflare/workers-types").Request) => Promise<Response>;

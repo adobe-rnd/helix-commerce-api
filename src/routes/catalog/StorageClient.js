@@ -77,7 +77,7 @@ export default class StorageClient {
    *
    * @param {ProductBusEntry[]} products - The products to save.
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
-   * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
+   * @returns {Promise<Partial<BatchResult<{ imageCount: number }>>[]>}
    */
   async saveProducts(products, asyncImages = true) {
     const processor = new BatchProcessor(
@@ -95,7 +95,7 @@ export default class StorageClient {
    * Handler function to process a batch of products.
    * @param {ProductBusEntry[]} batch - An array of products to save.
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
-   * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
+   * @returns {Promise<Partial<BatchResult<{ imageCount: number }>>[]>}
    */
   async storeProductsBatch(batch, asyncImages = true) {
     const {
@@ -115,6 +115,8 @@ export default class StorageClient {
       }
 
       const { sku, name, urlKey } = product;
+      const imageCount = (product.images?.length ?? 0)
+        + (product.variants?.reduce((acc, variant) => acc + variant.images.length, 0) ?? 0);
       const sluggedSku = slugger(sku);
       const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
       const body = JSON.stringify(product);
@@ -150,6 +152,7 @@ export default class StorageClient {
           sku,
           sluggedSku,
           message: 'Product saved successfully.',
+          data: { imageCount },
         };
 
         return result;

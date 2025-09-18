@@ -16,6 +16,7 @@ import StorageClient from './StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
 
 const MAX_PRODUCT_BULK = 50;
+const MAX_IMAGES_PER_JOB = 500;
 
 /**
  * Whether to process images asynchronously.
@@ -34,15 +35,44 @@ function shouldProcessImagesAsync(ctx, products) {
 }
 
 /**
- * Do bulk update for a set of products.
- * If the process takes longer than 10 seconds,
- * return a job and complete asynchronously.
+ * Publish image collector job(s)
+ * Split into chunks of at most `MAX_IMAGES_PER_JOB` images per job
+ *
+ * @param {Context} ctx
+ * @param {Partial<BatchResult<{ imageCount: number; }>>[]} results
+ * @param {ImageCollectorJob} payload
+ */
+export async function publishImageCollectorJobs(ctx, results, payload) {
+  const resultBySku = results.reduce((acc, r) => {
+    acc[r.sku] = r;
+    return acc;
+  }, {});
+
+  const allProducts = payload.products;
+  let productEvents = [];
+  let imageCount = 0;
+  while (allProducts.length > 0) {
+    while (imageCount < MAX_IMAGES_PER_JOB) {
+      const aProduct = allProducts.shift();
+      productEvents.push(aProduct);
+      imageCount += resultBySku[aProduct.sku].data.imageCount ?? 0;
+    }
+
+    // eslint-disable-next-line no-await-in-loop
+    await ctx.env.IMAGE_COLLECTOR_QUEUE.send({ ...payload, products: productEvents });
+    productEvents = [];
+  }
+}
+
+/**
+ * Do update for a set of products.
  *
  * @param {Context} ctx
  * @param {ProductBusEntry[]} products
  * @returns {Promise<Response>}
  */
 async function doUpdate(ctx, products) {
+  /** @type {Partial<BatchResult<{ imageCount: number; }>>[]} */
   let results;
 
   try {
@@ -62,9 +92,11 @@ async function doUpdate(ctx, products) {
       products: results.map((r) => ({ sku: r.sluggedSku, action: 'update' })),
       timestamp: Date.now(),
     };
+
     await ctx.env.INDEXER_QUEUE.send(payload);
+
     if (asyncImages) {
-      await ctx.env.IMAGE_COLLECTOR_QUEUE.send(payload);
+      await publishImageCollectorJobs(ctx, results, payload);
     }
 
     log.info({
