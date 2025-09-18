@@ -51,18 +51,18 @@ export async function publishImageCollectorJobs(ctx, products, payload) {
   }, {});
 
   const allProducts = payload.products;
-  let productEvents = [];
+  let chunk = [];
   let imageCount = 0;
   while (allProducts.length > 0) {
-    while (imageCount < MAX_IMAGES_PER_JOB) {
+    while (imageCount < MAX_IMAGES_PER_JOB && allProducts.length > 0) {
       const aProduct = allProducts.shift();
-      productEvents.push(aProduct);
+      chunk.push(aProduct);
       imageCount += imageCountBySku[aProduct.sku] ?? 0;
     }
 
     // eslint-disable-next-line no-await-in-loop
-    await ctx.env.IMAGE_COLLECTOR_QUEUE.send({ ...payload, products: productEvents });
-    productEvents = [];
+    await ctx.env.IMAGE_COLLECTOR_QUEUE.send({ ...payload, products: chunk });
+    chunk = [];
     imageCount = 0;
   }
 }
