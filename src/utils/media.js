@@ -124,8 +124,8 @@ async function uploadImage(ctx, image) {
 
 /**
  * @param {Context} ctx
- * @param {ProductBusEntry} product
- * @returns {Promise<ProductBusEntry>}
+ * @param {SharedTypes.ProductBusEntry} product
+ * @returns {Promise<SharedTypes.ProductBusEntry>}
  */
 export async function extractAndReplaceImages(ctx, product) {
   const { log } = ctx;

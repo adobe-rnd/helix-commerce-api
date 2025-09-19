@@ -45,7 +45,7 @@ export default class StorageClient {
   /**
    * Load product by SKU.
    * @param {string} sku - The SKU of the product.
-   * @returns {Promise<ProductBusEntry>} - A promise that resolves to the product.
+   * @returns {Promise<SharedTypes.ProductBusEntry>} - A promise that resolves to the product.
    */
   async fetchProduct(sku) {
     const {
@@ -75,7 +75,7 @@ export default class StorageClient {
   /**
    * Save products in batches
    *
-   * @param {ProductBusEntry[]} products - The products to save.
+   * @param {SharedTypes.ProductBusEntry[]} products - The products to save.
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>}
    */
@@ -93,7 +93,7 @@ export default class StorageClient {
 
   /**
    * Handler function to process a batch of products.
-   * @param {ProductBusEntry[]} batch - An array of products to save.
+   * @param {SharedTypes.ProductBusEntry[]} batch - An array of products to save.
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>}
    */
@@ -316,7 +316,7 @@ export default class StorageClient {
   /**
    * List all products from R2.
    * TODO: Setup pagination
-   * @returns {Promise<ProductBusEntry[]>} - A promise that resolves to the products.
+   * @returns {Promise<SharedTypes.ProductBusEntry[]>} - A promise that resolves to the products.
    */
   async listAllProducts() {
     const {

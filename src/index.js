@@ -64,11 +64,7 @@ export async function makeContext(eCtx, req, env) {
     imageUploads: [],
     productUploadsMs: [],
   };
-  ctx.progress = {
-    total: 0,
-    processed: 0,
-    failed: 0,
-  };
+
   const filename = ctx.url.pathname.split('/').pop() ?? '';
   ctx.info = {
     filename,

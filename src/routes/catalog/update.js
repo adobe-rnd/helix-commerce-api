@@ -21,7 +21,7 @@ const MAX_IMAGES_PER_JOB = 500;
 /**
  * Whether to process images asynchronously.
  * @param {Context} ctx
- * @param {ProductBusEntry[]} products
+ * @param {SharedTypes.ProductBusEntry[]} products
  */
 function shouldProcessImagesAsync(ctx, products) {
   if (ctx.env.ENVIRONMENT === 'ci') {
@@ -39,8 +39,8 @@ function shouldProcessImagesAsync(ctx, products) {
  * Split into chunks of at most `MAX_IMAGES_PER_JOB` images per job
  *
  * @param {Context} ctx
- * @param {ProductBusEntry[]} products
- * @param {ImageCollectorJob} payload
+ * @param {SharedTypes.ProductBusEntry[]} products
+ * @param {SharedTypes.ImageCollectorJob} payload
  */
 export async function publishImageCollectorJobs(ctx, products, payload) {
   // count images per sku
@@ -71,7 +71,7 @@ export async function publishImageCollectorJobs(ctx, products, payload) {
  * Do update for a set of products.
  *
  * @param {Context} ctx
- * @param {ProductBusEntry[]} products
+ * @param {SharedTypes.ProductBusEntry[]} products
  * @returns {Promise<Response>}
  */
 async function doUpdate(ctx, products) {
