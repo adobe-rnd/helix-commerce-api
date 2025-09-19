@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.1...v1.15.2) (2025-09-19)
+
+
+### Bug Fixes
+
+* split image collector jobs up ([#107](https://github.com/adobe-rnd/helix-commerce-api/issues/107)) ([d57adc8](https://github.com/adobe-rnd/helix-commerce-api/commit/d57adc88d17891b2ba99a0bce674e96a4c2577e5))
+
 ## [1.15.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.0...v1.15.1) (2025-09-12)
 
 
