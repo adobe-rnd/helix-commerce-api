@@ -35,7 +35,7 @@ export function pruneUndefined(obj, pruneNullish = false) {
 /**
  * @param {Context} ctx
  * @param {any} product
- * @returns {asserts product is ProductBusEntry}
+ * @returns {asserts product is SharedTypes.ProductBusEntry}
  */
 export function assertValidProduct(ctx, product) {
   const { log } = ctx;
