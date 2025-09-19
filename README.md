@@ -15,9 +15,11 @@ Product API for Edge Delivery Services.
   - [Set auth token (PUT)](#set-auth-token-put)
 - [Schemas](#schemas)
 
-### API
+### Environments
+* Main: `https://api.adobecommerce.live`
+* Next: `https://api-next.adobecommerce.live`
 
-Base URL structure: `https://<host>/{org}/{site}/catalog/{storeCode}/{storeViewCode}`
+### API
 
 Set some environment variables to make the curl examples easier to read:
 
