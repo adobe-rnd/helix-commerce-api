@@ -164,11 +164,13 @@ describe('StorageClient Class Tests', () => {
       const storeProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1',
+          sluggedSku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
         },
         {
           sku: 'sku2',
+          sluggedSku: 'sku2',
           status: 200,
           message: 'Product saved successfully.',
         },
@@ -197,11 +199,13 @@ describe('StorageClient Class Tests', () => {
       assert.deepStrictEqual(saveResults, [
         {
           sku: 'sku1',
+          sluggedSku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
         },
         {
           sku: 'sku2',
+          sluggedSku: 'sku2',
           status: 200,
           message: 'Product saved successfully.',
         },
@@ -226,6 +230,7 @@ describe('StorageClient Class Tests', () => {
       const storeProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1',
+          sluggedSku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
           '/products/sku1': {
@@ -262,6 +267,7 @@ describe('StorageClient Class Tests', () => {
       assert.deepStrictEqual(saveResults, [
         {
           sku: 'sku1',
+          sluggedSku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
           '/products/sku1': {
@@ -295,11 +301,13 @@ describe('StorageClient Class Tests', () => {
       const storeProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1',
+          sluggedSku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
         },
         {
           sku: 'sku2',
+          sluggedSku: 'sku2',
           status: 500,
           message: 'Error: Publish error',
         },
@@ -328,11 +336,13 @@ describe('StorageClient Class Tests', () => {
       assert.deepStrictEqual(saveResults, [
         {
           sku: 'sku1',
+          sluggedSku: 'sku1',
           status: 200,
           message: 'Product saved successfully.',
         },
         {
           sku: 'sku2',
+          sluggedSku: 'sku2',
           status: 500,
           message: 'Error: Publish error',
         },
@@ -470,11 +480,13 @@ describe('StorageClient Class Tests', () => {
             sku: 'sku1',
             sluggedSku: 'sku1',
             message: 'Product saved successfully.',
+            status: 200,
           },
           {
             sku: 'sku2',
             sluggedSku: 'sku2',
             message: 'Product saved successfully.',
+            status: 200,
           },
         ]);
 
@@ -517,11 +529,13 @@ describe('StorageClient Class Tests', () => {
             sku: 'sku1',
             sluggedSku: 'sku1',
             message: 'Product saved successfully.',
+            status: 200,
           },
           {
             sku: 'sku2',
             sluggedSku: 'sku2',
             message: 'Product saved successfully.',
+            status: 200,
           },
         ]);
 
@@ -595,6 +609,7 @@ describe('StorageClient Class Tests', () => {
             sku: 'sku1',
             sluggedSku: 'sku1',
             message: 'Product saved successfully.',
+            status: 200,
           },
           {
             sku: 'sku2',
@@ -778,16 +793,19 @@ describe('StorageClient Class Tests', () => {
             sku: 'sku1',
             sluggedSku: 'sku1',
             message: 'Product saved successfully.',
+            status: 200,
           },
           {
             sku: 'sku2',
             sluggedSku: 'sku2',
             message: 'Product saved successfully.',
+            status: 200,
           },
           {
             sku: 'sku3',
             sluggedSku: 'sku3',
             message: 'Product saved successfully.',
+            status: 200,
           },
         ]);
 
@@ -820,11 +838,13 @@ describe('StorageClient Class Tests', () => {
       const deleteProductsBatchStub = sinon.stub().resolves([
         {
           sku: 'sku1',
+          sluggedSku: 'sku1',
           status: 200,
           message: 'Product deleted successfully.',
         },
         {
           sku: 'sku2',
+          sluggedSku: 'sku2',
           status: 200,
           message: 'Product deleted successfully.',
         },
@@ -853,11 +873,13 @@ describe('StorageClient Class Tests', () => {
       assert.deepStrictEqual(deleteResults, [
         {
           sku: 'sku1',
+          sluggedSku: 'sku1',
           status: 200,
           message: 'Product deleted successfully.',
         },
         {
           sku: 'sku2',
+          sluggedSku: 'sku2',
           status: 200,
           message: 'Product deleted successfully.',
         },
@@ -886,9 +908,18 @@ describe('StorageClient Class Tests', () => {
 
       const deleteProductsBatchStub = sinon.stub().resolves([
         {
-          sku: 'sku1', status: 200, message: 'Product deleted successfully.', path1: '/products/sku1',
+          sku: 'sku1',
+          sluggedSku: 'sku1',
+          status: 200,
+          message: 'Product deleted successfully.',
+          path1: '/products/sku1',
         },
-        { sku: 'nonexistent', statusCode: 404, message: 'Product not found.' },
+        {
+          sku: 'nonexistent',
+          sluggedSku: 'nonexistent',
+          statusCode: 404,
+          message: 'Product not found.',
+        },
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
@@ -913,9 +944,18 @@ describe('StorageClient Class Tests', () => {
       assert(ctx.log.info.calledOnceWithExactly('Completed deletion of 2 products.'));
       assert.deepStrictEqual(deleteResults, [
         {
-          sku: 'sku1', status: 200, message: 'Product deleted successfully.', path1: '/products/sku1',
+          sku: 'sku1',
+          sluggedSku: 'sku1',
+          status: 200,
+          message: 'Product deleted successfully.',
+          path1: '/products/sku1',
         },
-        { sku: 'nonexistent', statusCode: 404, message: 'Product not found.' },
+        {
+          sku: 'nonexistent',
+          sluggedSku: 'nonexistent',
+          statusCode: 404,
+          message: 'Product not found.',
+        },
       ]);
       assert(ctx.log.error.notCalled);
     });
@@ -942,9 +982,18 @@ describe('StorageClient Class Tests', () => {
 
       const deleteProductsBatchStub = sinon.stub().resolves([
         {
-          sku: 'sku1', status: 200, message: 'Product deleted successfully.', path1: '/products/sku1',
+          sku: 'sku1',
+          sluggedSku: 'sku1',
+          status: 200,
+          message: 'Product deleted successfully.',
+          path1: '/products/sku1',
         },
-        { sku: 'sku2', status: 500, message: 'Error: Publish error' },
+        {
+          sku: 'sku2',
+          sluggedSku: 'sku2',
+          status: 500,
+          message: 'Error: Publish error',
+        },
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
@@ -969,9 +1018,18 @@ describe('StorageClient Class Tests', () => {
       assert(ctx.log.info.calledOnceWithExactly('Completed deletion of 2 products.'));
       assert.deepStrictEqual(deleteResults, [
         {
-          sku: 'sku1', status: 200, message: 'Product deleted successfully.', path1: '/products/sku1',
+          sku: 'sku1',
+          sluggedSku: 'sku1',
+          status: 200,
+          message: 'Product deleted successfully.',
+          path1: '/products/sku1',
         },
-        { sku: 'sku2', status: 500, message: 'Error: Publish error' },
+        {
+          sku: 'sku2',
+          sluggedSku: 'sku2',
+          status: 500,
+          message: 'Error: Publish error',
+        },
       ]);
     });
 
@@ -1059,11 +1117,13 @@ describe('StorageClient Class Tests', () => {
             sku: 'sku1',
             sluggedSku: 'sku1',
             message: 'Product deleted successfully.',
+            status: 200,
           },
           {
             sku: 'sku2',
             sluggedSku: 'sku2',
             message: 'Product deleted successfully.',
+            status: 200,
           },
         ]);
 
@@ -1100,11 +1160,13 @@ describe('StorageClient Class Tests', () => {
             sku: 'sku1',
             sluggedSku: 'sku1',
             message: 'Product deleted successfully.',
+            status: 200,
           },
           {
             sku: 'sku2',
             sluggedSku: 'sku2',
             message: 'Product deleted successfully.',
+            status: 200,
           },
         ]);
 
@@ -1168,11 +1230,13 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'error1',
+            sluggedSku: 'error1',
             status: 500,
             message: 'Error: Delete failed for error1',
           },
           {
             sku: 'error2',
+            sluggedSku: 'error2',
             status: 500,
             message: 'Error: Delete failed for error2',
           },
@@ -1203,6 +1267,7 @@ describe('StorageClient Class Tests', () => {
         assert.deepStrictEqual(results, [
           {
             sku: 'sku1',
+            sluggedSku: 'sku1',
             status: 503,
             message: 'Error: Delete failed with code',
           },

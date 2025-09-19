@@ -77,7 +77,7 @@ export default class StorageClient {
    *
    * @param {ProductBusEntry[]} products - The products to save.
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
-   * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
+   * @returns {Promise<Partial<BatchResult>[]>}
    */
   async saveProducts(products, asyncImages = true) {
     const processor = new BatchProcessor(
@@ -95,7 +95,7 @@ export default class StorageClient {
    * Handler function to process a batch of products.
    * @param {ProductBusEntry[]} batch - An array of products to save.
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
-   * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of save results.
+   * @returns {Promise<Partial<BatchResult>[]>}
    */
   async storeProductsBatch(batch, asyncImages = true) {
     const {
@@ -150,6 +150,7 @@ export default class StorageClient {
           sku,
           sluggedSku,
           message: 'Product saved successfully.',
+          status: 200,
         };
 
         return result;
@@ -203,8 +204,9 @@ export default class StorageClient {
     } = this.ctx;
 
     const deletionPromises = batch.map(async (sku) => {
+      const sluggedSku = slugger(sku);
+
       try {
-        const sluggedSku = slugger(sku);
         const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
         const productHead = await env.CATALOG_BUCKET.head(productKey);
         if (!productHead) {
@@ -231,6 +233,7 @@ export default class StorageClient {
         const result = {
           sku,
           sluggedSku,
+          status: 200,
           message: 'Product deleted successfully.',
         };
         return result;
@@ -238,6 +241,7 @@ export default class StorageClient {
         log.error(`Failed to delete product with SKU: ${sku}. Error: ${error.message}`);
         return {
           sku,
+          sluggedSku,
           status: error.code || 500,
           message: `Error: ${error.message}`,
         };

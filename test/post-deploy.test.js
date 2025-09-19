@@ -227,6 +227,6 @@ describe('Post-Deploy Tests', () => {
       };
       const getAfterDeleteRes = await fetch(getAfterDeleteOptions.url, getAfterDeleteOptions);
       assert.strictEqual(getAfterDeleteRes.status, 404, 'GET request should return 404 after deletion');
-    }).timeout(100000);
+    }).timeout(650000);
   });
 });

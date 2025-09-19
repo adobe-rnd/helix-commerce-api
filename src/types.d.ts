@@ -175,7 +175,7 @@ declare global {
     executionContext: ExecutionContext;
   }
 
-  interface BatchResult {
+  export interface BatchResult {
     sku: string;
     sluggedSku: string;
     status: number;

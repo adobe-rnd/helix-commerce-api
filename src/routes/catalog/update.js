@@ -16,6 +16,7 @@ import StorageClient from './StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
 
 const MAX_PRODUCT_BULK = 50;
+const MAX_IMAGES_PER_JOB = 500;
 
 /**
  * Whether to process images asynchronously.
@@ -34,15 +35,47 @@ function shouldProcessImagesAsync(ctx, products) {
 }
 
 /**
- * Do bulk update for a set of products.
- * If the process takes longer than 10 seconds,
- * return a job and complete asynchronously.
+ * Publish image collector job(s)
+ * Split into chunks of at most `MAX_IMAGES_PER_JOB` images per job
+ *
+ * @param {Context} ctx
+ * @param {ProductBusEntry[]} products
+ * @param {ImageCollectorJob} payload
+ */
+export async function publishImageCollectorJobs(ctx, products, payload) {
+  // count images per sku
+  const imageCountBySku = products.reduce((acc, product) => {
+    acc[product.sku] = (product.images?.length ?? 0)
+      + (product.variants?.reduce((tally, variant) => tally + variant.images.length, 0) ?? 0);
+    return acc;
+  }, {});
+
+  const allProducts = payload.products;
+  let chunk = [];
+  let imageCount = 0;
+  while (allProducts.length > 0) {
+    while (imageCount < MAX_IMAGES_PER_JOB && allProducts.length > 0) {
+      const aProduct = allProducts.shift();
+      chunk.push(aProduct);
+      imageCount += imageCountBySku[aProduct.sku] ?? 0;
+    }
+
+    // eslint-disable-next-line no-await-in-loop
+    await ctx.env.IMAGE_COLLECTOR_QUEUE.send({ ...payload, products: chunk });
+    chunk = [];
+    imageCount = 0;
+  }
+}
+
+/**
+ * Do update for a set of products.
  *
  * @param {Context} ctx
  * @param {ProductBusEntry[]} products
  * @returns {Promise<Response>}
  */
 async function doUpdate(ctx, products) {
+  /** @type {Partial<BatchResult>[]} */
   let results;
 
   try {
@@ -62,9 +95,11 @@ async function doUpdate(ctx, products) {
       products: results.map((r) => ({ sku: r.sluggedSku, action: 'update' })),
       timestamp: Date.now(),
     };
+
     await ctx.env.INDEXER_QUEUE.send(payload);
+
     if (asyncImages) {
-      await ctx.env.IMAGE_COLLECTOR_QUEUE.send(payload);
+      await publishImageCollectorJobs(ctx, products, payload);
     }
 
     log.info({
