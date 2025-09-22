@@ -1,3 +1,10 @@
+## [1.15.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.2...v1.15.3) (2025-09-22)
+
+
+### Bug Fixes
+
+* schema changes ([#110](https://github.com/adobe-rnd/helix-commerce-api/issues/110)) ([e639d0b](https://github.com/adobe-rnd/helix-commerce-api/commit/e639d0b2c0126ca84013deebcb658277b2679e76))
+
 ## [1.15.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.1...v1.15.2) (2025-09-19)
 
 
