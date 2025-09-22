@@ -150,6 +150,7 @@ const ProductBusEntry = {
     gtin: { type: 'string' },
     url: { type: 'string' },
     brand: { type: 'string' },
+    type: { type: 'string' },
     availability: SchemaOrgAvailability,
     price: ProductBusPrice,
     itemCondition: SchemaOrgItemCondition,
