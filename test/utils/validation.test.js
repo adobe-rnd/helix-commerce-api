@@ -657,6 +657,73 @@ describe('util', () => {
       ];
       checkCases(cases, 'object');
 
+      describe('any-of property schemas', () => {
+        it('valid when matches first schema', () => {
+          const schema = {
+            type: 'object',
+            properties: {
+              a: [
+                { type: 'string' },
+                { type: 'number' },
+              ],
+            },
+          };
+          check({ a: 'x' }, schema);
+        });
+
+        it('valid when matches second schema', () => {
+          const schema = {
+            type: 'object',
+            properties: {
+              a: [
+                { type: 'string' },
+                { type: 'number' },
+              ],
+            },
+          };
+          check({ a: 42 }, schema);
+        });
+
+        it('invalid when matches none', () => {
+          const schema = {
+            type: 'object',
+            properties: {
+              a: [
+                { type: 'string' },
+                { type: 'number' },
+              ],
+            },
+          };
+          check({ a: true }, schema, [{ message: 'invalid type', path: '$.a' }]);
+        });
+
+        it('works with complex object candidate', () => {
+          const schema = {
+            type: 'object',
+            properties: {
+              a: [
+                { type: 'string' },
+                { type: 'object', properties: { z: { type: 'number' } }, required: ['z'] },
+              ],
+            },
+          };
+          check({ a: { z: 7 } }, schema);
+        });
+
+        it('reports error when complex candidate also fails', () => {
+          const schema = {
+            type: 'object',
+            properties: {
+              a: [
+                { type: 'string' },
+                { type: 'object', properties: { z: { type: 'number' } }, required: ['z'] },
+              ],
+            },
+          };
+          check({ a: {} }, schema, [{ message: 'invalid type', path: '$.a' }]);
+        });
+      });
+
       // special cases
       describe('special cases', () => {
         it('simple path keys, uses dot notation', () => {

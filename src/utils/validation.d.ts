@@ -85,7 +85,11 @@ type PropertySchema = InvertConditions<AnySchema & { matches?: string }>;
 
 export interface ObjectSchema extends BaseSchema {
   type: "object";
-  properties: Record<string, PropertySchema>;
+  /**
+   * Property definitions. A property may specify a single schema or an array of schemas,
+   * which will be interpreted as "any of these schemas is valid".
+   */
+  properties: Record<string, PropertySchema | PropertySchema[]>;
   required?: string[];
   /** defaults to false */
   additionalProperties?: boolean | PropertySchema;
