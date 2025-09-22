@@ -122,6 +122,21 @@ const ProductBusVariant = {
   required: ['sku', 'name', 'url', 'images'],
 };
 
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const MerchantFeedShipping = {
+  type: 'object',
+  properties: {
+    country: { type: 'string' },
+    region: { type: 'string' },
+    service: { type: 'string' },
+    price: { type: 'string' },
+    min_handling_time: { type: 'string' },
+    max_handling_time: { type: 'string' },
+    min_transit_time: { type: 'string' },
+    max_transit_time: { type: 'string' },
+  },
+};
+
 /** @type {import("../utils/validation.js").AnySchema} */
 const ProductBusEntry = {
   type: 'object',
@@ -135,6 +150,7 @@ const ProductBusEntry = {
     gtin: { type: 'string' },
     url: { type: 'string' },
     brand: { type: 'string' },
+    type: { type: 'string' },
     availability: SchemaOrgAvailability,
     price: ProductBusPrice,
     itemCondition: SchemaOrgItemCondition,
@@ -170,6 +186,11 @@ const ProductBusEntry = {
       maxLength: MAX_JSON_LD_LENGTH,
     },
     custom: CustomObject,
+    shipping: [
+      { type: 'string' },
+      MerchantFeedShipping,
+      { type: 'array', items: MerchantFeedShipping },
+    ],
   },
   required: ['sku', 'name'],
 };

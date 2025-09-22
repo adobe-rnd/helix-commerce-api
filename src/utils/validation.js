@@ -327,6 +327,29 @@ const _validate = (
           propSchema = additionalProperties;
         }
 
+        // Support an array of schemas (any-of semantics)
+        if (Array.isArray(propSchema)) {
+          /** @type {ValidationError[]|undefined} */
+          let best;
+          let passed = false;
+          for (const candidate of propSchema) {
+            const altErrors = [];
+            _validate(v, candidate, path, altErrors, propRequired);
+            if (altErrors.length === 0) {
+              passed = true;
+              break;
+            }
+            if (!best || altErrors.length < best.length) {
+              best = altErrors;
+            }
+          }
+          if (!passed && best && best.length) {
+            errors.push(...best);
+            return true;
+          }
+          return false;
+        }
+
         const prevErrs = errors.length;
         _validate(v, propSchema, path, errors, propRequired);
         // if an error was added, break early
