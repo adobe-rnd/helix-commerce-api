@@ -1,3 +1,10 @@
+## [1.15.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.3...v1.15.4) (2025-09-24)
+
+
+### Bug Fixes
+
+* shared storageclient ([#111](https://github.com/adobe-rnd/helix-commerce-api/issues/111)) ([52c481b](https://github.com/adobe-rnd/helix-commerce-api/commit/52c481bb4beea369d316ab4ec1e40d59b0fbf7b0))
+
 ## [1.15.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.2...v1.15.3) (2025-09-22)
 
 
