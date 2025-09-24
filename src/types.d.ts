@@ -27,17 +27,15 @@ declare global {
     VERSION: string;
     ENVIRONMENT: string;
     SUPERUSER_KEY: string;
-    INDEXER_QUEUE: Queue<IndexingJob>;
-    IMAGE_COLLECTOR_QUEUE: Queue<ImageCollectorJob>;
+    INDEXER_QUEUE: Queue<SharedTypes.IndexingJob>;
+    IMAGE_COLLECTOR_QUEUE: Queue<SharedTypes.ImageCollectorJob>;
 
     // KV namespaces
     KEYS: KVNamespace<string>;
     CATALOG_BUCKET: R2Bucket
 
-    [key: string]: string | KVNamespace<string> | R2Bucket | Queue<IndexingJob>;
+    [key: string]: string | KVNamespace<string> | R2Bucket | Queue<SharedTypes.IndexingJob>;
   }
-
-
 
   export interface Context {
     url: URL;

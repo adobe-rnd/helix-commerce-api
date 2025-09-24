@@ -10,12 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
-import { slugger } from '@dylandepass/helix-product-shared';
+import { slugger, StorageClient as SharedStorageClient } from '@dylandepass/helix-product-shared';
 import { BatchProcessor } from '../../utils/batch.js';
 import { errorWithResponse } from '../../utils/http.js';
 import { extractAndReplaceImages } from '../../utils/media.js';
 
-export default class StorageClient {
+export default class StorageClient extends SharedStorageClient {
   /**
    * @param {Context} ctx
    * @returns {StorageClient}
@@ -27,13 +27,11 @@ export default class StorageClient {
     return ctx.attributes.storageClient;
   }
 
-  /** @type {Context} */
-  ctx = undefined;
-
   /**
    * @param {Context} ctx
    */
   constructor(ctx) {
+    super(ctx);
     this.ctx = ctx;
   }
 
@@ -42,15 +40,8 @@ export default class StorageClient {
     return this.ctx.config;
   }
 
-  /**
-   * Load product by SKU.
-   * @param {string} sku - The SKU of the product.
-   * @returns {Promise<SharedTypes.ProductBusEntry>} - A promise that resolves to the product.
-   */
-  async fetchProduct(sku) {
+  get catalogKey() {
     const {
-      log,
-      env,
       config: {
         org,
         site,
@@ -58,18 +49,20 @@ export default class StorageClient {
         storeViewCode,
       },
     } = this.ctx;
+    return `${org}/${site}/${storeCode}/${storeViewCode}`;
+  }
 
-    const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sku}.json`;
-    log.debug('Fetching product from R2:', key);
-
-    const object = await env.CATALOG_BUCKET.get(key);
-    if (!object) {
-      // Product not found in R2
+  /**
+   * Load product by SKU.
+   * @param {string} sku - The SKU of the product.
+   * @returns {Promise<SharedTypes.ProductBusEntry>} - A promise that resolves to the product.
+   */
+  async getProduct(sku) {
+    const data = await this.fetchProduct(this.catalogKey, sku);
+    if (!data) {
       throw errorWithResponse(404, 'Product not found');
     }
-
-    const productData = await object.json();
-    return productData;
+    return data;
   }
 
   /**

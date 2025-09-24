@@ -19,7 +19,7 @@ export default async function fetch(ctx) {
   const { sku } = ctx.config;
 
   const storage = StorageClient.fromContext(ctx);
-  const product = await storage.fetchProduct(sku);
+  const product = await storage.getProduct(sku);
 
   return new Response(JSON.stringify(product), {
     headers: { 'Content-Type': 'application/json' },

@@ -21,13 +21,10 @@ import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 
 describe('StorageClient Class Tests', () => {
   let StorageClient;
-  let errorWithResponseStub;
   let BatchProcessorMock;
   let config;
 
   beforeEach(async () => {
-    errorWithResponseStub = sinon.stub();
-
     BatchProcessorMock = class {
       constructor(ctx, batchHandler, batchSize = 50) {
         this.ctx = ctx;
@@ -41,9 +38,6 @@ describe('StorageClient Class Tests', () => {
     };
 
     const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-      '../../../src/utils/http.js': {
-        errorWithResponse: (status, message) => errorWithResponseStub(status, message),
-      },
       '../../../src/utils/batch.js': {
         BatchProcessor: BatchProcessorMock,
       },
@@ -63,7 +57,7 @@ describe('StorageClient Class Tests', () => {
     sinon.restore();
   });
 
-  describe('fetchProduct', () => {
+  describe('getProduct', () => {
     it('should successfully fetch a product', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: { debug: sinon.stub() },
@@ -79,7 +73,7 @@ describe('StorageClient Class Tests', () => {
       const sku = 'sku1';
 
       const client = new StorageClient(ctx);
-      const product = await client.fetchProduct(sku);
+      const product = await client.getProduct(sku);
 
       assert(ctx.log.debug.calledOnceWithExactly('Fetching product from R2:', 'org/site/store/view/products/sku1.json'));
       assert(ctx.env.CATALOG_BUCKET.get.calledOnceWithExactly('org/site/store/view/products/sku1.json'));
@@ -100,21 +94,18 @@ describe('StorageClient Class Tests', () => {
       });
       const sku = 'nonexistent';
 
-      const error = new Error('Product not found');
-      errorWithResponseStub.withArgs(404, 'Product not found').returns(error);
-
       const client = new StorageClient(ctx);
 
       let thrownError;
       try {
-        await client.fetchProduct(sku);
+        await client.getProduct(sku);
       } catch (e) {
         thrownError = e;
       }
 
       assert(ctx.log.debug.calledOnceWithExactly('Fetching product from R2:', 'org/site/store/view/products/nonexistent.json'));
       assert(ctx.env.CATALOG_BUCKET.get.calledOnceWithExactly('org/site/store/view/products/nonexistent.json'));
-      assert.strictEqual(thrownError, error);
+      assert.strictEqual(thrownError.message, 'Product not found');
     });
 
     it('should propagate errors from CATALOG_BUCKET.get', async () => {
@@ -133,7 +124,7 @@ describe('StorageClient Class Tests', () => {
 
       let thrownError;
       try {
-        await client.fetchProduct(sku);
+        await client.getProduct(sku);
       } catch (e) {
         thrownError = e;
       }
@@ -177,9 +168,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/http.js': {
-          errorWithResponse: errorWithResponseStub,
-        },
         '../../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
@@ -245,9 +233,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/http.js': {
-          errorWithResponse: errorWithResponseStub,
-        },
         '../../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
@@ -314,9 +299,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/http.js': {
-          errorWithResponse: errorWithResponseStub,
-        },
         '../../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
@@ -366,9 +348,6 @@ describe('StorageClient Class Tests', () => {
       const storeProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/http.js': {
-          errorWithResponse: errorWithResponseStub,
-        },
         '../../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
@@ -851,9 +830,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/http.js': {
-          errorWithResponse: errorWithResponseStub,
-        },
         '../../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
@@ -923,9 +899,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/http.js': {
-          errorWithResponse: errorWithResponseStub,
-        },
         '../../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
@@ -997,9 +970,6 @@ describe('StorageClient Class Tests', () => {
       ]);
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/http.js': {
-          errorWithResponse: errorWithResponseStub,
-        },
         '../../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
@@ -1049,9 +1019,6 @@ describe('StorageClient Class Tests', () => {
       const deleteProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
       const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/http.js': {
-          errorWithResponse: errorWithResponseStub,
-        },
         '../../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
@@ -1313,9 +1280,6 @@ describe('StorageClient Class Tests', () => {
       });
       const urlKey = 'nonexistent-key';
 
-      const error = new Error('Product not found');
-      errorWithResponseStub.withArgs(404, 'Product not found').returns(error);
-
       const client = new StorageClient(ctx);
 
       let thrownError;
@@ -1326,7 +1290,7 @@ describe('StorageClient Class Tests', () => {
       }
 
       assert(ctx.env.CATALOG_BUCKET.head.calledOnceWithExactly('org/site/store/view/urlkeys/nonexistent-key'));
-      assert.strictEqual(thrownError, error);
+      assert.strictEqual(thrownError.message, 'Product not found');
     });
 
     it('should throw 404 error if sku is missing in customMetadata', async () => {
@@ -1342,9 +1306,6 @@ describe('StorageClient Class Tests', () => {
       });
       const urlKey = 'product-2';
 
-      const error = new Error('Product not found');
-      errorWithResponseStub.withArgs(404, 'Product not found').returns(error);
-
       const client = new StorageClient(ctx);
 
       let thrownError;
@@ -1355,7 +1316,7 @@ describe('StorageClient Class Tests', () => {
       }
 
       assert(ctx.env.CATALOG_BUCKET.head.calledOnceWithExactly('org/site/store/view/urlkeys/product-2'));
-      assert.strictEqual(thrownError, error);
+      assert.strictEqual(thrownError.message, 'Product not found');
     });
 
     it('should propagate errors from CATALOG_BUCKET.head', async () => {
