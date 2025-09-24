@@ -58,7 +58,11 @@ export default class StorageClient extends SharedStorageClient {
    * @returns {Promise<SharedTypes.ProductBusEntry>} - A promise that resolves to the product.
    */
   async getProduct(sku) {
-    return this.fetchProduct(this.catalogKey, sku);
+    const data = await this.fetchProduct(this.catalogKey, sku);
+    if (!data) {
+      throw errorWithResponse(404, 'Product not found');
+    }
+    return data;
   }
 
   /**

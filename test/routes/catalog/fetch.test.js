@@ -24,7 +24,7 @@ describe('handleProductFetchRequest', () => {
 
   beforeEach(async () => {
     storageStub = sinon.stub();
-    storageStub.fetchProduct = sinon.stub();
+    storageStub.getProduct = sinon.stub();
 
     ctx = DEFAULT_CONTEXT({
       url: new URL('https://example.com/products/sku1'),
@@ -39,23 +39,23 @@ describe('handleProductFetchRequest', () => {
     sinon.restore();
   });
 
-  it('should return the product response when fetchProduct succeeds', async () => {
+  it('should return the product response when getProduct succeeds', async () => {
     const product = { sku: 'sku1', name: 'Product 1' };
     ctx.config.sku = 'sku1';
 
-    storageStub.fetchProduct.resolves(product);
+    storageStub.getProduct.resolves(product);
     const response = await handleProductFetchRequest(ctx);
 
     assert.equal(response.headers.get('Content-Type'), 'application/json');
     const responseBody = await response.text();
     assert.equal(responseBody, JSON.stringify(product));
-    assert(storageStub.fetchProduct.calledOnceWith('sku1'));
+    assert(storageStub.getProduct.calledOnceWith('sku1'));
   });
 
-  it('should return e.response when fetchProduct throws an error with a response property', async () => {
+  it('should return e.response when getProduct throws an error with a response property', async () => {
     const errorResponse = new Response('Not Found', { status: 404 });
     const error = new ResponseError('Product not found', errorResponse);
-    storageStub.fetchProduct.rejects(error);
+    storageStub.getProduct.rejects(error);
 
     let thrownError;
     try {
