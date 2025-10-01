@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.4...v1.16.0) (2025-10-01)
+
+
+### Features
+
+* operations log ([#112](https://github.com/adobe-rnd/helix-commerce-api/issues/112)) ([ae2807a](https://github.com/adobe-rnd/helix-commerce-api/commit/ae2807a4d1a1eebdfeda14b4b4b04079e112d79f))
+
 ## [1.15.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.3...v1.15.4) (2025-09-24)
 
 
