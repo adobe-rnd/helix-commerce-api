@@ -12,6 +12,7 @@
 
 import catalog from './catalog/handler.js';
 import auth from './auth/handler.js';
+import operationsLog from './operations-log/handler.js';
 
 /**
  * @type {Record<string, RouteHandler>}
@@ -19,4 +20,5 @@ import auth from './auth/handler.js';
 export default {
   catalog,
   auth,
+  'operations-log': operationsLog,
 };
