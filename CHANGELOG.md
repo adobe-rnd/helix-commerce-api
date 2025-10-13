@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.16.0...v1.16.1) (2025-10-13)
+
+
+### Bug Fixes
+
+* respond 200 without x-error ([#113](https://github.com/adobe-rnd/helix-commerce-api/issues/113)) ([7141138](https://github.com/adobe-rnd/helix-commerce-api/commit/71411387dca1cab51a02bfd4182de2bbeeb2673f))
+
 # [1.16.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.15.4...v1.16.0) (2025-10-01)
 
 
