@@ -41,5 +41,5 @@ export default async function handler(ctx) {
     action,
     payload: ctx.data,
   });
-  return errorResponse(200, 'OK');
+  return new Response('', { status: 200 });
 }
