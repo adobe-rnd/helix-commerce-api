@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import processQueue from '@adobe/helix-shared-process-queue';
+import { StorageClient } from '@dylandepass/helix-product-shared';
 import { errorWithResponse } from './http.js';
 
 /**
@@ -23,8 +23,7 @@ import { errorWithResponse } from './http.js';
  * @property {string} [extension]
  */
 
-// limit concurrency to max outgoing connections
-const CONCURRENCY = 4;
+const RETRY_CODES = [429, 403];
 
 /**
  * @param {string} url
@@ -36,99 +35,72 @@ const extractExtension = (url) => {
 };
 
 /**
- * @param {Context} ctx
- * @param {string} imageUrl
- * @returns {Promise<ImageData | null>}
+ * @param {Context} pctx
+ * @param {string} pimageUrl
+ * @returns {Promise<SharedTypes.MediaData | null>}
  */
-async function fetchImage(ctx, imageUrl) {
-  const { log } = ctx;
-  if (typeof imageUrl !== 'string' || !imageUrl.trim()) {
-    log.info(`invalid image url provided: "${imageUrl}"`);
-    return null;
+async function fetchImage(pctx, pimageUrl) {
+  /**
+   * @param {Context} ctx
+   * @param {string} imageUrl
+   * @param {number} attempts
+   * @returns {Promise<SharedTypes.MediaData | null>}
+   */
+  async function doFetch(ctx, imageUrl, attempts = 0) {
+    const { log } = ctx;
+    if (typeof imageUrl !== 'string' || !imageUrl.trim()) {
+      log.info(`invalid image url provided: "${imageUrl}"`);
+      return null;
+    }
+
+    log.debug('fetching image: ', imageUrl);
+    const resp = await fetch(imageUrl, {
+      method: 'GET',
+      headers: {
+        'accept-encoding': 'identity',
+        accept: 'image/jpeg,image/jpg,image/png,image/gif,video/mp4,application/xml,image/x-icon,image/avif,image/webp,*/*;q=0.8',
+      },
+    });
+    if (!resp.ok) {
+      if (RETRY_CODES.includes(resp.status)) {
+        if (attempts < 3) {
+          // eslint-disable-next-line no-promise-executor-return
+          await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempts));
+          return doFetch(ctx, imageUrl, attempts + 1);
+        }
+      }
+      throw errorWithResponse(502, `Failed to fetch image: ${imageUrl} (${resp.status})`);
+    }
+
+    const data = await resp.arrayBuffer();
+    const arr = await crypto.subtle.digest('SHA-1', data);
+    const hash = Array.from(new Uint8Array(arr))
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+
+    return {
+      data,
+      sourceUrl: imageUrl,
+      hash,
+      mimeType: resp.headers.get('content-type'),
+      length: data.byteLength,
+      extension: extractExtension(imageUrl),
+    };
   }
 
-  log.debug('fetching image: ', imageUrl);
-  const t0 = Date.now();
-  const resp = await fetch(imageUrl, {
-    method: 'GET',
-    headers: {
-      'accept-encoding': 'identity',
-      accept: 'image/jpeg,image/jpg,image/png,image/gif,video/mp4,application/xml,image/x-icon,image/avif,image/webp,*/*;q=0.8',
-    },
-  });
-  if (!resp.ok) {
-    throw errorWithResponse(502, `Failed to fetch image: ${imageUrl} (${resp.status})`);
-  }
-
-  const data = await resp.arrayBuffer();
-  const dt = Date.now() - t0;
-  ctx.metrics?.imageDownloads?.push({ ms: dt, bytes: data.byteLength });
-  const arr = await crypto.subtle.digest('SHA-1', data);
-  const hash = Array.from(new Uint8Array(arr))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
-
-  return {
-    data,
-    sourceUrl: imageUrl,
-    hash,
-    mimeType: resp.headers.get('content-type'),
-    length: data.byteLength,
-    extension: extractExtension(imageUrl),
-  };
-}
-
-/**
- *
- * @param {Context} ctx
- * @param {ImageData} image
- * @returns {Promise<string>} new url
- */
-async function uploadImage(ctx, image) {
-  const {
-    env,
-    log,
-    config: { org, site },
-  } = ctx;
-  const {
-    data,
-    hash,
-    mimeType,
-    extension,
-    sourceUrl,
-  } = image;
-
-  const filename = `media_${hash}${extension ? `.${extension}` : ''}`;
-  const key = `${org}/${site}/media/${filename}`;
-  const t0 = Date.now();
-  const resp = await env.CATALOG_BUCKET.head(key);
-  if (resp) {
-    log.debug(`image already in storage: ${sourceUrl} (${hash})`);
-    const dt = Date.now() - t0;
-    ctx.metrics?.imageUploads?.push({ ms: dt, alreadyExists: true });
-    return `./${filename}`;
-  }
-
-  await env.CATALOG_BUCKET.put(key, data, {
-    httpMetadata: {
-      contentType: mimeType,
-    },
-    customMetadata: {
-      sourceLocation: sourceUrl,
-    },
-  });
-  const dt = Date.now() - t0;
-  ctx.metrics?.imageUploads?.push({ ms: dt, alreadyExists: false });
-  return `./${filename}`;
+  return doFetch(pctx, pimageUrl);
 }
 
 /**
  * @param {Context} ctx
+ * @param {string} org
+ * @param {string} site
  * @param {SharedTypes.ProductBusEntry} product
  * @returns {Promise<SharedTypes.ProductBusEntry>}
  */
-export async function extractAndReplaceImages(ctx, product) {
+export async function extractAndReplaceImages(ctx, org, site, product) {
   const { log } = ctx;
+  const storageClient = StorageClient.fromContext(ctx);
   /** @type {Map<string, Promise<string>>} */
   const processed = new Map();
 
@@ -149,11 +121,10 @@ export async function extractAndReplaceImages(ctx, product) {
     });
     processed.set(url, promise);
 
-    // TODO: fetch from hash lookup first, treat image urls as immutable
     const img = await fetchImage(ctx, url);
     let newUrl;
     if (img) {
-      newUrl = await uploadImage(ctx, img);
+      newUrl = await storageClient.saveImage(ctx, org, site, img);
     }
     resolve(newUrl);
     return newUrl;
@@ -163,11 +134,18 @@ export async function extractAndReplaceImages(ctx, product) {
     ...(product.images ?? []),
     ...(product.variants ?? []).flatMap((v) => v.images ?? []),
   ];
-  await processQueue(images, async (image) => {
-    const newUrl = await processImage(image.url);
-    if (newUrl) {
-      image.url = newUrl;
+
+  // process images sequentially, backoff when encountering errors
+  for (const image of images) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const newUrl = await processImage(image.url);
+      if (newUrl) {
+        image.url = newUrl;
+      }
+    } catch (e) {
+      log.error('error processing image: ', e);
     }
-  }, CONCURRENCY);
+  }
   return product;
 }
