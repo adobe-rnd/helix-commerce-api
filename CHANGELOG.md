@@ -1,3 +1,10 @@
+## [1.16.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.16.1...v1.16.2) (2025-10-17)
+
+
+### Bug Fixes
+
+* backoff on media errors ([#114](https://github.com/adobe-rnd/helix-commerce-api/issues/114)) ([2e7266d](https://github.com/adobe-rnd/helix-commerce-api/commit/2e7266d3444ff83faa118f651341bdf580fb86bb))
+
 ## [1.16.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.16.0...v1.16.1) (2025-10-13)
 
 
