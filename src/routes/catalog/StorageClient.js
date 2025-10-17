@@ -104,7 +104,7 @@ export default class StorageClient extends SharedStorageClient {
 
     const storePromises = batch.map(async (product) => {
       if (!asyncImages) {
-        product = await extractAndReplaceImages(this.ctx, product);
+        product = await extractAndReplaceImages(this.ctx, org, site, product);
       }
 
       const { sku, name, urlKey } = product;

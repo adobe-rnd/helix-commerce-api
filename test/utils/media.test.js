@@ -37,7 +37,7 @@ describe('utils/media extractAndReplaceImages', () => {
     }
   });
 
-  it('replaces product and variant image URLs and records metrics', async () => {
+  it('replaces product and variant image URLs', async () => {
     const img1 = u8('image-one');
     const img2 = u8('image-two');
     const hash1 = await sha1Hex(img1.buffer);
@@ -74,19 +74,13 @@ describe('utils/media extractAndReplaceImages', () => {
       ],
     };
 
-    const result = await extractAndReplaceImages(ctx, product);
+    const result = await extractAndReplaceImages(ctx, 'org', 'site', product);
 
     assert.equal(result.images[0].url, `./media_${hash1}.png`);
     assert.equal(result.variants[0].images[0].url, `./media_${hash2}.jpg`);
 
     // first image uploaded, second existed
     assert(ctx.env.CATALOG_BUCKET.put.calledOnce);
-
-    // metrics captured
-    assert.equal(ctx.metrics.imageDownloads.length, 2);
-    assert.equal(ctx.metrics.imageUploads.length, 2);
-    assert.equal(ctx.metrics.imageUploads[0].alreadyExists, false);
-    assert.equal(ctx.metrics.imageUploads[1].alreadyExists, true);
   });
 
   it('skips invalid URLs and does not upload', async () => {
@@ -104,7 +98,7 @@ describe('utils/media extractAndReplaceImages', () => {
     });
 
     const product = { images: [{ url: '' }], variants: [] };
-    const result = await extractAndReplaceImages(ctx, product);
+    const result = await extractAndReplaceImages(ctx, 'org', 'site', product);
 
     assert.equal(result.images[0].url, '');
     assert(ctx.env.CATALOG_BUCKET.head.notCalled);
@@ -138,7 +132,7 @@ describe('utils/media extractAndReplaceImages', () => {
       images: [{ url: 'https://cdn.example.com/dup.webp' }, { url: 'https://cdn.example.com/dup.webp' }],
     };
 
-    const result = await extractAndReplaceImages(ctx, product);
+    const result = await extractAndReplaceImages(ctx, 'org', 'site', product);
 
     assert.equal(result.images[0].url, `./media_${hash}.webp`);
     assert.equal(result.images[1].url, `./media_${hash}.webp`);
@@ -168,17 +162,18 @@ describe('utils/media extractAndReplaceImages', () => {
     ctx.env.CATALOG_BUCKET.head.resolves(null);
 
     const product = { images: [{ url: 'https://cdn.example.com/image?id=123' }] };
-    const result = await extractAndReplaceImages(ctx, product);
+    const result = await extractAndReplaceImages(ctx, 'org', 'site', product);
 
     // current implementation appends everything after the last dot
     assert.equal(result.images[0].url, `./media_${hash}.com/image?id=123`);
     assert(ctx.env.CATALOG_BUCKET.put.calledOnce);
   });
 
-  it('throws when image fetch fails', async () => {
+  it('logs and continues when image fetch fails', async () => {
     fetchStub = sinon.stub(globalThis, 'fetch').resolves({ ok: false, status: 404 });
+    const errorStub = sinon.stub();
     const ctx = DEFAULT_CONTEXT({
-      log: { debug: sinon.stub(), info: sinon.stub() },
+      log: { debug: sinon.stub(), info: sinon.stub(), error: errorStub },
       config: { org: 'org', site: 'site' },
       env: {
         CATALOG_BUCKET: {
@@ -190,9 +185,136 @@ describe('utils/media extractAndReplaceImages', () => {
     });
     const product = { images: [{ url: 'https://cdn.example.com/missing.png' }] };
 
-    await assert.rejects(
-      () => extractAndReplaceImages(ctx, product),
-      (err) => err && err.response && err.response.status === 502,
-    );
+    await extractAndReplaceImages(ctx, 'org', 'site', product);
+
+    const errorLogCalls = errorStub.getCalls();
+    assert(errorLogCalls.length === 1);
+    assert(errorLogCalls[0].args[0].includes('error processing image: '));
+    assert(errorLogCalls[0].args[1].toString().includes('Failed to fetch image: https://cdn.example.com/missing.png (404)'));
+
+    assert(ctx.env.CATALOG_BUCKET.put.notCalled);
+  });
+
+  it('retries on 429 up to limit, then continues with other images', async () => {
+    const okImg = u8('eventual-success');
+    const okHash = await sha1Hex(okImg.buffer);
+
+    // make backoff instantly resolve
+    const setTimeoutStub = sinon.stub(globalThis, 'setTimeout')
+      .callsFake((fn) => {
+        fn();
+        return 0;
+      });
+
+    fetchStub = sinon.stub(globalThis, 'fetch');
+    // first image: 4 attempts => still fails (0,1,2 retries, then throw on attempt 3)
+    fetchStub
+      .onCall(0)
+      .resolves({ ok: false, status: 429 })
+      .onCall(1)
+      .resolves({ ok: false, status: 429 })
+      .onCall(2)
+      .resolves({ ok: false, status: 429 })
+      .onCall(3)
+      .resolves({ ok: false, status: 429 })
+      // second image: succeeds immediately
+      .onCall(4)
+      .resolves({
+        ok: true,
+        headers: new Headers({ 'content-type': 'image/png' }),
+        arrayBuffer: async () => okImg.buffer,
+        status: 200,
+      });
+
+    const errorStub = sinon.stub();
+    const ctx = DEFAULT_CONTEXT({
+      log: { debug: sinon.stub(), info: sinon.stub(), error: errorStub },
+      config: { org: 'org', site: 'site' },
+      env: {
+        CATALOG_BUCKET: {
+          head: sinon.stub(),
+          put: sinon.stub().resolves(),
+        },
+      },
+      metrics: { imageDownloads: [], imageUploads: [] },
+    });
+    ctx.env.CATALOG_BUCKET.head.onCall(0).resolves(null);
+
+    const product = {
+      images: [{ url: 'https://cdn.example.com/will-throttle.png' }],
+      variants: [
+        { images: [{ url: 'https://cdn.example.com/ok.png' }] },
+      ],
+    };
+
+    const result = await extractAndReplaceImages(ctx, 'org', 'site', product);
+
+    // first image failed after retries, original URL remains
+    assert.equal(result.images[0].url, 'https://cdn.example.com/will-throttle.png');
+    // second image processed and replaced
+    assert.equal(result.variants[0].images[0].url, `./media_${okHash}.png`);
+
+    // only the successful second image is uploaded
+    assert(ctx.env.CATALOG_BUCKET.put.calledOnce);
+    assert.equal(fetchStub.callCount, 5);
+
+    // error logged once for the failed image, with original status included
+    const calls = errorStub.getCalls();
+    assert.equal(calls.length, 1);
+    assert(calls[0].args[0].includes('error processing image: '));
+    assert(calls[0].args[1].toString().includes('Failed to fetch image: https://cdn.example.com/will-throttle.png (429)'));
+
+    setTimeoutStub.restore();
+  });
+
+  it('retries on 403 then succeeds and uploads image', async () => {
+    const img = u8('retry-then-success');
+    const hash = await sha1Hex(img.buffer);
+
+    // make backoff instantly resolve
+    const setTimeoutStub = sinon.stub(globalThis, 'setTimeout')
+      .callsFake((fn) => {
+        fn();
+        return 0;
+      });
+
+    fetchStub = sinon.stub(globalThis, 'fetch');
+    // two retryable failures, then success
+    fetchStub
+      .onCall(0)
+      .resolves({ ok: false, status: 403 })
+      .onCall(1)
+      .resolves({ ok: false, status: 403 })
+      .onCall(2)
+      .resolves({
+        ok: true,
+        headers: new Headers({ 'content-type': 'image/jpeg' }),
+        arrayBuffer: async () => img.buffer,
+        status: 200,
+      });
+
+    const errorStub = sinon.stub();
+    const ctx = DEFAULT_CONTEXT({
+      log: { debug: sinon.stub(), info: sinon.stub(), error: errorStub },
+      config: { org: 'org', site: 'site' },
+      env: {
+        CATALOG_BUCKET: {
+          head: sinon.stub(),
+          put: sinon.stub().resolves(),
+        },
+      },
+      metrics: { imageDownloads: [], imageUploads: [] },
+    });
+    ctx.env.CATALOG_BUCKET.head.resolves(null);
+
+    const product = { images: [{ url: 'https://cdn.example.com/photo.jpg' }] };
+    const result = await extractAndReplaceImages(ctx, 'org', 'site', product);
+
+    assert.equal(result.images[0].url, `./media_${hash}.jpg`);
+    assert(ctx.env.CATALOG_BUCKET.put.calledOnce);
+    assert.equal(fetchStub.callCount, 3);
+    assert.equal(errorStub.callCount, 0);
+
+    setTimeoutStub.restore();
   });
 });
