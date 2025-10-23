@@ -8,7 +8,7 @@ import type StorageClient from "./routes/products/StorageClient.js";
 import * as SharedTypes from '@dylandepass/helix-product-shared/types';
 
 declare global {
-  export { SharedTypes };
+  export * as SharedTypes from '@dylandepass/helix-product-shared/types';
 
   /**
    * Resolved config object

@@ -69,6 +69,6 @@
   },
   "dependencies": {
     "@adobe/helix-shared-process-queue": "^3.1.1",
-    "@dylandepass/helix-product-shared": "1.1.2"
+    "@dylandepass/helix-product-shared": "1.2.2"
   }
 }
