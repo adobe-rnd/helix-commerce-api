@@ -11,9 +11,9 @@
  */
 
 import { slugger, StorageClient as SharedStorageClient } from '@dylandepass/helix-product-shared';
-import { BatchProcessor } from '../../utils/batch.js';
-import { errorWithResponse } from '../../utils/http.js';
-import { extractAndReplaceImages } from '../../utils/media.js';
+import { BatchProcessor } from './batch.js';
+import { errorWithResponse } from './http.js';
+import { extractAndReplaceImages } from './media.js';
 
 export default class StorageClient extends SharedStorageClient {
   /**
@@ -382,5 +382,40 @@ export default class StorageClient extends SharedStorageClient {
     }
 
     return customMetadataArray;
+  }
+
+  /**
+   * @param {Order} data
+   * @param {string} platformType
+   * @returns {Promise<Order>}
+   */
+  async createOrder(data, platformType) {
+    const {
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+
+    const now = new Date().toISOString();
+    const id = `${now}-${crypto.randomUUID().split('-')[0]}`;
+    const order = {
+      ...data,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      /** @type {'pending'} */
+      state: 'pending',
+    };
+
+    const key = `${org}/${site}/${data.storeCode}/${data.storeViewCode}/orders/${id}.json`;
+    await this.put(key, JSON.stringify(order), {
+      httpMetadata: { contentType: 'application/json' },
+      customMetadata: {
+        id,
+        platformType,
+      },
+    });
+    return order;
   }
 }

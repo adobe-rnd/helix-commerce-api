@@ -12,7 +12,7 @@
 
 import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
-import StorageClient from './StorageClient.js';
+import StorageClient from '../../utils/StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
 
 const MAX_PRODUCT_BULK = 50;

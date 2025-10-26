@@ -5,10 +5,13 @@ import type {
   KVNamespace
 } from "@cloudflare/workers-types";
 import type StorageClient from "./routes/products/StorageClient.js";
+import type Platform from "./routes/orders/payments/Platform.js";
 import * as SharedTypes from '@dylandepass/helix-product-shared/types';
 
 declare global {
   export * as SharedTypes from '@dylandepass/helix-product-shared/types';
+
+  export type RouteHandler = (ctx: Context, request: import("@cloudflare/workers-types").Request) => Promise<Response>;
 
   /**
    * Resolved config object
@@ -60,6 +63,7 @@ declare global {
     }
     attributes: {
       storageClient?: StorageClient;
+      paymentPlatform?: Platform;
       [key: string]: any;
     }
     executionContext: ExecutionContext;
@@ -73,7 +77,33 @@ declare global {
     paths: Record<string, AdminStatus>;
   };
 
-  export type RouteHandler = (ctx: Context, request: import("@cloudflare/workers-types").Request) => Promise<Response>;
+  export interface OrderItem {
+    name?: string;
+    note?: string;
+    sku: string;
+    quantity: number;
+    price: SharedTypes.ProductBusPrice;
+  }
+
+  export type OrderState = 'pending' | 'processing' | 'completed' | 'cancelled';
+
+  export interface Order {
+    id: string;
+    state: OrderState;
+    createdAt: string;
+    updatedAt: string;
+    storeCode: string;
+    storeViewCode: string;
+    items: OrderItem[];
+  }
+
+  export interface PaymentLink {
+    id: string;
+    url: string;
+    createdAt: string;
+    expiresAt?: string;
+    orderId: string;
+  }
 }
 
 export { };

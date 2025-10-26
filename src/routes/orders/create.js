@@ -10,12 +10,55 @@
  * governing permissions and limitations under the License.
  */
 
+import StorageClient from '../../utils/StorageClient.js';
+import { errorWithResponse } from '../../utils/http.js';
+import { validate } from '../../utils/validation.js';
+import OrderSchema from '../../schemas/Order.js';
+import Platform from './payments/Platform.js';
+
+/**
+ * @param {any} order
+ * @returns {asserts order is Order}
+ */
+export function assertValidOrder(order) {
+  const errors = validate(order, OrderSchema);
+  if (errors) {
+    throw errorWithResponse(400, 'Invalid order', { errors });
+  }
+}
+
 /**
  * @type {RouteHandler}
  */
-// eslint-disable-next-line no-unused-vars
-export default async function create(ctx) {
-  return new Response('Not Implemented', {
-    status: 501,
+export default async function create(ctx, req) {
+  // validate payload
+  const payload = await req.json();
+  assertValidOrder(payload);
+
+  // find assigned backend for site(/store/view), if any
+  const platform = await Platform.fromContext(ctx);
+
+  // platform-specific validation
+  platform.assertValidOrder(payload);
+  await platform.validateLineItems(payload.items);
+
+  // create internal order
+  const storage = StorageClient.fromContext(ctx);
+  const order = await storage.createOrder(payload, platform.type);
+
+  /** @type {PaymentLink|null} */
+  let paymentLink = null;
+  if (platform.type !== 'none') {
+    paymentLink = await platform.createPaymentLink(order);
+  }
+
+  return new Response(JSON.stringify({
+    order,
+    payment: paymentLink,
+  }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }
