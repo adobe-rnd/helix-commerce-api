@@ -10,17 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import operationsLog from './operations-log/handler.js';
-import orders from './orders/handler.js';
-
 /**
- * @type {Record<string, RouteHandler>}
+ * @type {RouteHandler}
  */
-export default {
-  catalog,
-  auth,
-  orders,
-  'operations-log': operationsLog,
-};
+// eslint-disable-next-line no-unused-vars
+export default async function list(ctx) {
+  return new Response('Not Implemented', {
+    status: 501,
+  });
+}
