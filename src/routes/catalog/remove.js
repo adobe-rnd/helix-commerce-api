@@ -12,7 +12,7 @@
 
 import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
-import StorageClient from './StorageClient.js';
+import StorageClient from '../../utils/StorageClient.js';
 
 /**
  * @type {RouteHandler}

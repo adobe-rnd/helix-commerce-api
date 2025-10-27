@@ -50,7 +50,7 @@ const SchemaOrgItemCondition = {
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
-const ProductBusPrice = {
+export const ProductBusPrice = {
   type: 'object',
   properties: {
     currency: { type: 'string' },

@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import StorageClient from './StorageClient.js';
+import StorageClient from '../../utils/StorageClient.js';
 
 /**
  * @type {RouteHandler}
