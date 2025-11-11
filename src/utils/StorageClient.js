@@ -418,4 +418,90 @@ export default class StorageClient extends SharedStorageClient {
     });
     return order;
   }
+
+  /**
+   * @param {string} email
+   * @returns {Promise<Customer | undefined>}
+   */
+  async getCustomer(email) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+
+    const key = `${org}/${site}/${email}/.info.json`;
+    const resp = await env.CATALOG_BUCKET.get(key);
+    if (!resp) {
+      return undefined;
+    }
+    return resp.json();
+  }
+
+  /**
+   * @param {string} email
+   * @returns {Promise<boolean>}
+   */
+  async customerExists(email) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const customer = await env.CATALOG_BUCKET.head(`${org}/${site}/${email}/.info.json`);
+    return customer !== null;
+  }
+
+  /**
+   * @param {Customer} customer
+   * @returns {Promise<Customer>}
+   */
+  async saveCustomer(customer) {
+    const {
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const { email } = customer;
+    await this.put(`${org}/${site}/${email}/.info.json`, JSON.stringify(customer), {
+      httpMetadata: { contentType: 'application/json' },
+      customMetadata: {
+        email: customer.email,
+
+      },
+    });
+    return customer;
+  }
+
+  /**
+   * @param {string} id
+   * @param {string} email
+   * @param {Address} address
+   * @returns {Promise<Address>}
+   */
+  async saveAddress(id, email, address) {
+    const {
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/${email}/addresses/${id}.json`;
+    await this.put(key, JSON.stringify(address), {
+      httpMetadata: { contentType: 'application/json' },
+      customMetadata: {
+        email,
+        id,
+      },
+    });
+    return {
+      ...address,
+      id,
+    };
+  }
 }

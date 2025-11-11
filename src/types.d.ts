@@ -94,6 +94,8 @@ declare global {
     updatedAt: string;
     storeCode: string;
     storeViewCode: string;
+    customer: Customer;
+    shipping: ShippingAddress;
     items: OrderItem[];
   }
 
@@ -103,6 +105,29 @@ declare global {
     createdAt: string;
     expiresAt?: string;
     orderId: string;
+  }
+
+  export interface Customer {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  export interface Address {
+    id: string;
+    name: string;
+    company: string;
+    address1: string;
+    address2: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+    phone: string;
+    email: string;
   }
 }
 
