@@ -41,7 +41,7 @@ async function getAddressId(address) {
  * @param {Address} address
  * @returns {Promise<Address>}
  */
-async function createAddress(ctx, email, address) {
+export async function createAddress(ctx, email, address) {
   const storage = StorageClient.fromContext(ctx);
   const id = await getAddressId(address);
   return storage.saveAddress(id, email, address);
@@ -51,11 +51,20 @@ async function createAddress(ctx, email, address) {
  * @type {RouteHandler}
  */
 export default async function handler(ctx, req) {
+  const { email } = ctx.config;
+  const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route', 'email', 'subroute'].length);
+  const [addressId] = segments;
   switch (ctx.info.method) {
     case 'POST': {
+      // if addressId is defined, update address
+      if (addressId) {
+        return errorResponse(501, 'Not found');
+      }
+
+      // else create
       const payload = await req.json();
       assertValidAddress(payload);
-      const address = await createAddress(ctx, payload.email, payload);
+      const address = await createAddress(ctx, email, payload);
       return new Response(JSON.stringify({ address }), {
         status: 200,
         headers: {

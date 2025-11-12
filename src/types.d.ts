@@ -25,6 +25,7 @@ declare global {
     storeViewCode?: string;
     sku?: string;
     orderId?: string;
+    email?: string;
   }
 
   export interface Env {

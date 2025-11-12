@@ -504,4 +504,32 @@ export default class StorageClient extends SharedStorageClient {
       id,
     };
   }
+
+  /**
+   * @param {string} email
+   * @param {string} orderId
+   * @returns {Promise<boolean>}
+   */
+  async linkOrderToCustomer(email, orderId) {
+    const {
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/${email}/orders/${orderId}`;
+    const existed = await this.put(key, '', {
+      customMetadata: {
+        createdAt: new Date().toISOString(),
+      },
+      onlyIf: {
+        etagDoesNotMatch: '*',
+      },
+    });
+    if (existed) {
+      // order link already exists
+      throw errorWithResponse(400, 'Order link already exists');
+    }
+    return true;
+  }
 }

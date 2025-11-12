@@ -38,6 +38,29 @@ const Order = {
     // provided by client
     storeCode: { type: 'string' },
     storeViewCode: { type: 'string' },
+    customer: {
+      type: 'object',
+      properties: {
+        email: { type: 'string' },
+      },
+      required: ['email'],
+    },
+    shipping: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        company: { type: 'string' },
+        address1: { type: 'string' },
+        address2: { type: 'string' },
+        city: { type: 'string' },
+        state: { type: 'string' },
+        zip: { type: 'string' },
+        country: { type: 'string' },
+        phone: { type: 'string' },
+        email: { type: 'string' },
+      },
+      required: ['name', 'address1', 'city', 'state', 'zip', 'country', 'email'],
+    },
     items: { type: 'array', items: OrderItem },
   },
   required: ['storeCode', 'storeViewCode', 'items'],

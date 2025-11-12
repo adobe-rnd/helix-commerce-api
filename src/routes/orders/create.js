@@ -15,6 +15,7 @@ import { errorWithResponse } from '../../utils/http.js';
 import { validate } from '../../utils/validation.js';
 import OrderSchema from '../../schemas/Order.js';
 import Platform from './payments/Platform.js';
+import { createAddress } from '../customers/addresses.js';
 
 /**
  * @param {any} order
@@ -45,6 +46,12 @@ export default async function create(ctx, req) {
   // create internal order
   const storage = StorageClient.fromContext(ctx);
   const order = await storage.createOrder(payload, platform.type);
+
+  // create link to customer
+  await storage.linkOrderToCustomer(payload.customer.email, order.id);
+
+  // add address to customer, tbd
+  await createAddress(ctx, payload.customer.email, payload.shipping);
 
   /** @type {PaymentLink|null} */
   let paymentLink = null;
