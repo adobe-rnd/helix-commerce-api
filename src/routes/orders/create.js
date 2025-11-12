@@ -31,27 +31,26 @@ export function assertValidOrder(order) {
 /**
  * @type {RouteHandler}
  */
-export default async function create(ctx, req) {
+export default async function create(ctx) {
   // validate payload
-  const payload = await req.json();
-  assertValidOrder(payload);
+  assertValidOrder(ctx.data);
 
   // find assigned backend for site(/store/view), if any
   const platform = await Platform.fromContext(ctx);
 
   // platform-specific validation
-  platform.assertValidOrder(payload);
-  await platform.validateLineItems(payload.items);
+  platform.assertValidOrder(ctx.data);
+  await platform.validateLineItems(ctx.data.items);
 
   // create internal order
   const storage = StorageClient.fromContext(ctx);
-  const order = await storage.createOrder(payload, platform.type);
+  const order = await storage.createOrder(ctx.data, platform.type);
 
   // create link to customer
-  await storage.linkOrderToCustomer(payload.customer.email, order.id);
+  await storage.linkOrderToCustomer(order.customer.email, order.id, order);
 
   // add address to customer, tbd
-  await createAddress(ctx, payload.customer.email, payload.shipping);
+  await createAddress(ctx, order.customer.email, order.shipping);
 
   /** @type {PaymentLink|null} */
   let paymentLink = null;

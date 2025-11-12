@@ -50,7 +50,7 @@ export async function createAddress(ctx, email, address) {
 /**
  * @type {RouteHandler}
  */
-export default async function handler(ctx, req) {
+export default async function handler(ctx) {
   const { email } = ctx.config;
   const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route', 'email', 'subroute'].length);
   const [addressId] = segments;
@@ -62,9 +62,8 @@ export default async function handler(ctx, req) {
       }
 
       // else create
-      const payload = await req.json();
-      assertValidAddress(payload);
-      const address = await createAddress(ctx, email, payload);
+      assertValidAddress(ctx.data);
+      const address = await createAddress(ctx, email, ctx.data);
       return new Response(JSON.stringify({ address }), {
         status: 200,
         headers: {

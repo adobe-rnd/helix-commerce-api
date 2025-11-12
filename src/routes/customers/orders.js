@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import StorageClient from '../../utils/StorageClient.js';
+import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 
 /**
@@ -23,15 +25,28 @@ export default async function handler(ctx, req) {
   const [orderId] = segments;
   switch (ctx.info.method) {
     case 'GET': {
-      // list order for customer
+      const storage = StorageClient.fromContext(ctx);
       if (orderId) {
         // get order for customer
-        return errorResponse(501, 'Not implemented');
+        const order = await storage.getOrder(email, orderId);
+        return new Response(JSON.stringify({ order }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
       }
 
       // list orders for customer
       // assert authorized
-      return errorResponse(501, 'Not implemented');
+      await assertAuthorization(ctx);
+      const orders = await storage.listOrders(email);
+      return new Response(JSON.stringify({ orders }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
     default:
       return errorResponse(405, 'Method not allowed');

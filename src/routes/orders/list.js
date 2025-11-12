@@ -10,12 +10,18 @@
  * governing permissions and limitations under the License.
  */
 
+import StorageClient from '../../utils/StorageClient.js';
+
 /**
  * @type {RouteHandler}
  */
-// eslint-disable-next-line no-unused-vars
 export default async function list(ctx) {
-  return new Response('Not Implemented', {
-    status: 501,
+  const storage = StorageClient.fromContext(ctx);
+  const orders = await storage.listOrders();
+  return new Response(JSON.stringify({ orders }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }

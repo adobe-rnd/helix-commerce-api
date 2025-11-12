@@ -391,6 +391,7 @@ export default class StorageClient extends SharedStorageClient {
    */
   async createOrder(data, platformType) {
     const {
+      env,
       config: {
         org,
         site,
@@ -408,11 +409,15 @@ export default class StorageClient extends SharedStorageClient {
       state: 'pending',
     };
 
-    const key = `${org}/${site}/${data.storeCode}/${data.storeViewCode}/orders/${id}.json`;
-    await this.put(key, JSON.stringify(order), {
+    const key = `${org}/${site}/orders/${id}.json`;
+    await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(order), {
       httpMetadata: { contentType: 'application/json' },
       customMetadata: {
         id,
+        storeCode: data.storeCode,
+        storeViewCode: data.storeViewCode,
+        createdAt: now,
+        updatedAt: now,
         platformType,
       },
     });
@@ -432,8 +437,8 @@ export default class StorageClient extends SharedStorageClient {
       },
     } = this.ctx;
 
-    const key = `${org}/${site}/${email}/.info.json`;
-    const resp = await env.CATALOG_BUCKET.get(key);
+    const key = `${org}/${site}/customers/${email}/.info.json`;
+    const resp = await env.ORDERS_BUCKET.get(key);
     if (!resp) {
       return undefined;
     }
@@ -452,7 +457,7 @@ export default class StorageClient extends SharedStorageClient {
         site,
       },
     } = this.ctx;
-    const customer = await env.CATALOG_BUCKET.head(`${org}/${site}/${email}/.info.json`);
+    const customer = await env.ORDERS_BUCKET.head(`${org}/${site}/customers/${email}/.info.json`);
     return customer !== null;
   }
 
@@ -462,13 +467,14 @@ export default class StorageClient extends SharedStorageClient {
    */
   async saveCustomer(customer) {
     const {
+      env,
       config: {
         org,
         site,
       },
     } = this.ctx;
     const { email } = customer;
-    await this.put(`${org}/${site}/${email}/.info.json`, JSON.stringify(customer), {
+    await this.putTo(env.ORDERS_BUCKET, `${org}/${site}/customers/${email}/.info.json`, JSON.stringify(customer), {
       httpMetadata: { contentType: 'application/json' },
       customMetadata: {
         email: customer.email,
@@ -486,13 +492,14 @@ export default class StorageClient extends SharedStorageClient {
    */
   async saveAddress(id, email, address) {
     const {
+      env,
       config: {
         org,
         site,
       },
     } = this.ctx;
-    const key = `${org}/${site}/${email}/addresses/${id}.json`;
-    await this.put(key, JSON.stringify(address), {
+    const key = `${org}/${site}/customers/${email}/addresses/${id}.json`;
+    await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(address), {
       httpMetadata: { contentType: 'application/json' },
       customMetadata: {
         email,
@@ -508,19 +515,26 @@ export default class StorageClient extends SharedStorageClient {
   /**
    * @param {string} email
    * @param {string} orderId
+   * @param {Order} order
    * @returns {Promise<boolean>}
    */
-  async linkOrderToCustomer(email, orderId) {
+  async linkOrderToCustomer(email, orderId, order) {
     const {
+      env,
       config: {
         org,
         site,
       },
     } = this.ctx;
-    const key = `${org}/${site}/${email}/orders/${orderId}`;
-    const existed = await this.put(key, '', {
+    const key = `${org}/${site}/customers/${email}/orders/${orderId}`;
+    const existed = await this.putTo(env.ORDERS_BUCKET, key, '', {
       customMetadata: {
-        createdAt: new Date().toISOString(),
+        id: order.id,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+        storeCode: order.storeCode,
+        storeViewCode: order.storeViewCode,
+        state: order.state,
       },
       onlyIf: {
         etagDoesNotMatch: '*',
@@ -531,5 +545,104 @@ export default class StorageClient extends SharedStorageClient {
       throw errorWithResponse(400, 'Order link already exists');
     }
     return true;
+  }
+
+  /**
+   * @param {string} email
+   * @param {string} orderId
+   * @param {Partial<OrderMetadata>} metadata
+   * @returns {Promise<boolean>}
+   */
+  async updateOrderLink(email, orderId, metadata) {
+    const {
+      env,
+      log,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/orders/${orderId}`;
+    const existing = await env.ORDERS_BUCKET.head(key);
+    if (!existing) {
+      log.warn(`Order link not found: ${email}/${orderId}`);
+      return false;
+    }
+
+    const merged = {
+      ...existing.customMetadata,
+      ...metadata,
+      createdAt: existing.customMetadata.createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    await this.putTo(env.ORDERS_BUCKET, key, '', {
+      customMetadata: merged,
+    });
+    return true;
+  }
+
+  /**
+   * @param {string} email
+   * @param {string} orderId
+   * @returns {Promise<Order | null>}
+   */
+  async getOrder(email, orderId) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+
+    // get the actual order data
+    const key = `${org}/${site}/orders/${orderId}.json`;
+    const resp = await env.ORDERS_BUCKET.get(key);
+    if (!resp) {
+      return null;
+    }
+
+    /** @type {Order} */
+    const order = await resp.json();
+    // if email doesnt match customer, return null
+    if (order.customer.email !== email) {
+      return null;
+    }
+    return order;
+  }
+
+  /**
+   * List orders, optionally filtered by email
+   * @param {string} [email]
+   * @returns {Promise<OrderMetadata[]>}
+   */
+  async listOrders(email) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const prefix = email
+      ? `${org}/${site}/customers/${email}/orders/`
+      : `${org}/${site}/orders/`;
+    const res = await env.ORDERS_BUCKET.list({
+      prefix,
+      limit: 100,
+      cursor: this.ctx.data.cursor,
+      // @ts-ignore not defined in types for some reason
+      include: ['customMetadata'],
+    });
+    return res.objects.map((obj) => {
+      const id = obj.key.substring(prefix.length).replace(/\.json$/, '');
+      /** @type {OrderMetadata} */
+      // @ts-ignore
+      const order = {
+        id,
+        ...obj.customMetadata,
+      };
+      return order;
+    });
   }
 }

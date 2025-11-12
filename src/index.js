@@ -87,7 +87,6 @@ export default {
    * @returns {Promise<Response>}
    */
   async fetch(request, env, eCtx) {
-    console.log('handling fetch: ', request.url);
     const ctx = await makeContext(eCtx, request, env);
 
     try {
@@ -95,7 +94,6 @@ export default {
       console.debug('resolved config: ', JSON.stringify(ctx.config, null, 2));
 
       const fn = handlers[ctx.config.route];
-      console.log('fn', fn);
       if (!fn) {
         return errorResponse(404, 'route not found');
       }

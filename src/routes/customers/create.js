@@ -50,12 +50,11 @@ export async function createCustomer(ctx, data) {
 /**
  * @type {RouteHandler}
  */
-export default async function create(ctx, req) {
+export default async function create(ctx) {
   // validate payload
-  const payload = await req.json();
-  assertValidCustomer(payload);
+  assertValidCustomer(ctx.data);
 
-  const customer = await createCustomer(ctx, payload);
+  const customer = await createCustomer(ctx, ctx.data);
 
   return new Response(JSON.stringify({
     customer,

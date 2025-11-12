@@ -37,7 +37,8 @@ declare global {
 
     // KV namespaces
     KEYS: KVNamespace<string>;
-    CATALOG_BUCKET: R2Bucket
+    CATALOG_BUCKET: R2Bucket;
+    ORDERS_BUCKET: R2Bucket;
 
     [key: string]: string | KVNamespace<string> | R2Bucket | Queue<SharedTypes.IndexingJob>;
   }
@@ -87,6 +88,15 @@ declare global {
   }
 
   export type OrderState = 'pending' | 'processing' | 'completed' | 'cancelled';
+
+  export interface OrderMetadata {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    storeCode: string;
+    storeViewCode: string;
+    state: OrderState;
+  }
 
   export interface Order {
     id: string;
