@@ -10,12 +10,20 @@
  * governing permissions and limitations under the License.
  */
 
+import { assertAuthorization } from '../../utils/auth.js';
+import StorageClient from '../../utils/StorageClient.js';
+
 /**
  * @type {RouteHandler}
  */
-// eslint-disable-next-line no-unused-vars
 export default async function retrieve(ctx) {
-  return new Response('Not Implemented', {
-    status: 501,
+  await assertAuthorization(ctx);
+  const storage = StorageClient.fromContext(ctx);
+  const order = await storage.getOrder(ctx.config.orderId);
+  return new Response(JSON.stringify({ order }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }

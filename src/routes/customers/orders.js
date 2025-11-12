@@ -28,7 +28,11 @@ export default async function handler(ctx, req) {
       const storage = StorageClient.fromContext(ctx);
       if (orderId) {
         // get order for customer
-        const order = await storage.getOrder(email, orderId);
+        const order = await storage.getOrder(orderId);
+        // if order doesnt exist or email doesnt match customer, return 404
+        if (!order || order.customer.email !== email) {
+          return errorResponse(404, 'Not found');
+        }
         return new Response(JSON.stringify({ order }), {
           status: 200,
           headers: {

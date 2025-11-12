@@ -653,11 +653,10 @@ export default class StorageClient extends SharedStorageClient {
   }
 
   /**
-   * @param {string} email
    * @param {string} orderId
    * @returns {Promise<Order | null>}
    */
-  async getOrder(email, orderId) {
+  async getOrder(orderId) {
     const {
       env,
       config: {
@@ -675,10 +674,6 @@ export default class StorageClient extends SharedStorageClient {
 
     /** @type {Order} */
     const order = await resp.json();
-    // if email doesnt match customer, return null
-    if (order.customer.email !== email) {
-      return null;
-    }
     return order;
   }
 
