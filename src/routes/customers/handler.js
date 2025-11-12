@@ -10,10 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
+import { assertAuthorization } from '../../utils/auth.js';
 import handleAddresses from './addresses.js';
 import handleOrders from './orders.js';
 import { errorResponse } from '../../utils/http.js';
 import create from './create.js';
+import StorageClient from '../../utils/StorageClient.js';
 
 /**
  * @type {RouteHandler}
@@ -25,11 +27,15 @@ export default async function handler(ctx, req) {
   Object.assign(ctx.config, {
     email,
   });
-  if (subroute === 'addresses') {
-    return handleAddresses(ctx, req);
-  }
-  if (subroute === 'orders') {
-    return handleOrders(ctx, req);
+
+  if (subroute) {
+    if (subroute === 'addresses') {
+      return handleAddresses(ctx, req);
+    }
+    if (subroute === 'orders') {
+      return handleOrders(ctx, req);
+    }
+    return errorResponse(404, 'Not found');
   }
 
   switch (ctx.info.method) {
@@ -42,17 +48,32 @@ export default async function handler(ctx, req) {
     }
     case 'GET': {
       if (!segments.length) {
-        // list customers?
-        // assert superuser authorized
-        return errorResponse(501, 'Not implemented');
+        // list customers
+        await assertAuthorization(ctx);
+        const storage = StorageClient.fromContext(ctx);
+        const customers = await storage.listCustomers();
+        return new Response(JSON.stringify({ customers }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
       }
       return errorResponse(404, 'Not found');
     }
     case 'DELETE': {
       if (!segments.length) {
         // delete customer
-        // assert superuser authorized
-        return errorResponse(501, 'Not implemented');
+        // assert authorized
+        await assertAuthorization(ctx);
+        const storage = StorageClient.fromContext(ctx);
+        await storage.deleteCustomer(email);
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
       }
       return errorResponse(404, 'Not found');
     }

@@ -474,14 +474,85 @@ export default class StorageClient extends SharedStorageClient {
       },
     } = this.ctx;
     const { email } = customer;
-    await this.putTo(env.ORDERS_BUCKET, `${org}/${site}/customers/${email}/.info.json`, JSON.stringify(customer), {
+    const key = `${org}/${site}/customers/${email}/.info.json`;
+    await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(customer), {
       httpMetadata: { contentType: 'application/json' },
       customMetadata: {
         email: customer.email,
-
+        createdAt: customer.createdAt,
+        updatedAt: customer.updatedAt,
       },
     });
     return customer;
+  }
+
+  async listCustomers() {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const prefix = `${org}/${site}/customers/`;
+    const res = await env.ORDERS_BUCKET.list({
+      prefix,
+      limit: 100,
+      cursor: this.ctx.data.cursor,
+      // @ts-ignore not defined in types for some reason
+      include: ['customMetadata'],
+    });
+    return res.objects.map((obj) => {
+      const email = obj.key.substring(prefix.length);
+      return {
+        email,
+        ...obj.customMetadata,
+      };
+    });
+  }
+
+  /**
+   * @param {string} email
+   * @param {boolean} rmAddresses - whether to remove associated addresses
+   * @param {boolean} rmOrders - Whether to delete the customer's orders.
+   */
+  async deleteCustomer(email, rmAddresses = true, rmOrders = true) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/.info.json`;
+    await env.ORDERS_BUCKET.delete(key);
+
+    const rmPrefixes = [];
+    if (rmOrders) {
+      rmPrefixes.push(`${org}/${site}/customers/${email}/orders/`);
+    }
+    if (rmAddresses) {
+      rmPrefixes.push(`${org}/${site}/customers/${email}/addresses/`);
+    }
+    await Promise.all(rmPrefixes.map(async (prefix) => {
+      let truncated;
+      let cursor = '';
+      while (truncated !== false) {
+        // eslint-disable-next-line no-await-in-loop
+        const resp = await env.ORDERS_BUCKET.list({
+          prefix,
+          limit: 1000,
+          cursor,
+        });
+        // eslint-disable-next-line no-await-in-loop
+        await env.ORDERS_BUCKET.delete(resp.objects.map((obj) => obj.key));
+
+        truncated = resp.truncated;
+        if (resp.truncated) {
+          cursor = resp.cursor;
+        }
+      }
+    }));
   }
 
   /**

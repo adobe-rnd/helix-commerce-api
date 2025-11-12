@@ -58,7 +58,7 @@ export default async function handler(ctx) {
     case 'POST': {
       // if addressId is defined, update address
       if (addressId) {
-        return errorResponse(501, 'Not found');
+        return errorResponse(501, 'Not implemented');
       }
 
       // else create
