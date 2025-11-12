@@ -11,6 +11,8 @@
  */
 
 import { ProductBusPrice } from './ProductBus.js';
+import AddressSchema from './Address.js';
+import { EmailSchema } from './common.js';
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
 export const OrderItem = {
@@ -19,10 +21,16 @@ export const OrderItem = {
     name: { type: 'string' },
     note: { type: 'string' },
     sku: { type: 'string' },
+    urlKey: { type: 'string' },
     quantity: { type: 'number' },
     price: ProductBusPrice,
+    custom: {
+      type: 'object',
+      properties: {},
+      additionalProperties: true,
+    },
   },
-  required: ['sku', 'quantity', 'price'],
+  required: ['sku', 'urlKey', 'quantity', 'price'],
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
@@ -41,29 +49,14 @@ const Order = {
     customer: {
       type: 'object',
       properties: {
-        email: { type: 'string' },
+        email: EmailSchema,
       },
       required: ['email'],
     },
-    shipping: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        company: { type: 'string' },
-        address1: { type: 'string' },
-        address2: { type: 'string' },
-        city: { type: 'string' },
-        state: { type: 'string' },
-        zip: { type: 'string' },
-        country: { type: 'string' },
-        phone: { type: 'string' },
-        email: { type: 'string' },
-      },
-      required: ['name', 'address1', 'city', 'state', 'zip', 'country', 'email'],
-    },
+    shipping: AddressSchema,
     items: { type: 'array', items: OrderItem },
   },
-  required: ['storeCode', 'storeViewCode', 'items'],
+  required: ['storeCode', 'storeViewCode', 'items', 'customer', 'shipping'],
 };
 
 export default Order;

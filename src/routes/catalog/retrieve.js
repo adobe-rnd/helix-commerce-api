@@ -15,7 +15,7 @@ import StorageClient from '../../utils/StorageClient.js';
 /**
  * @type {RouteHandler}
  */
-export default async function fetch(ctx) {
+export default async function retrieve(ctx) {
   const { sku } = ctx.config;
 
   const storage = StorageClient.fromContext(ctx);

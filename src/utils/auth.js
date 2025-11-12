@@ -21,6 +21,8 @@ export async function assertAuthorization(ctx) {
     ctx.attributes.key = ctx.info.headers.authorization?.slice('Bearer '.length);
     actual = ctx.attributes.key;
   }
+  console.log('actual', actual);
+  console.log('ctx.env.SUPERUSER_KEY', ctx.env.SUPERUSER_KEY);
   if (actual === ctx.env.SUPERUSER_KEY) {
     ctx.log.debug('acting as superuser');
     return;

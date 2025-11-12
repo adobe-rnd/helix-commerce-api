@@ -12,7 +12,7 @@
 
 import { errorResponse } from '../../utils/http.js';
 import lookup from './lookup.js';
-import fetch from './fetch.js';
+import retrieve from './retrieve.js';
 import update from './update.js';
 import remove from './remove.js';
 
@@ -26,7 +26,7 @@ const handlers = {
   },
   products: {
     // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    GET: fetch,
+    GET: retrieve,
     // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
     PUT: update,
     // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/*

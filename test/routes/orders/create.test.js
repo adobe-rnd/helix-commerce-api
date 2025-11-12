@@ -18,17 +18,34 @@ import handler from '../../../src/routes/orders/create.js';
 
 describe('routes/orders create tests', () => {
   it('should create an order without payment by default', async () => {
-    let createOrderCalled = false;
+    const called = {
+      createOrder: false,
+      linkOrderToCustomer: false,
+      saveAddress: false,
+    };
     const ctx = DEFAULT_CONTEXT({
       info: { method: 'POST' },
       url: { pathname: '/org/site/orders' },
       data: {
         storeCode: 'store1',
         storeViewCode: 'view1',
+        customer: {
+          email: 'test@example.com',
+        },
+        shipping: {
+          name: 'Test User',
+          email: 'test@example.com',
+          address1: '123 Main St',
+          city: 'Anytown',
+          state: 'CA',
+          zip: '12345',
+          country: 'US',
+        },
         items: [
           {
             name: 'Product 1',
             sku: 'sku1',
+            urlKey: 'product-1',
             quantity: 1,
             price: { final: '100', currency: 'USD' },
           },
@@ -37,7 +54,7 @@ describe('routes/orders create tests', () => {
       attributes: {
         storageClient: {
           createOrder: async (data, platformType) => {
-            createOrderCalled = true;
+            called.createOrder = true;
             assert.equal(data.storeCode, 'store1');
             assert.equal(data.storeViewCode, 'view1');
             assert.equal(platformType, 'none');
@@ -49,6 +66,25 @@ describe('routes/orders create tests', () => {
               ...data,
             };
           },
+          linkOrderToCustomer: async (email, orderId) => {
+            called.linkOrderToCustomer = true;
+            assert.equal(email, 'test@example.com');
+            assert.equal(orderId, 'order1');
+          },
+          saveAddress: async (id, email, address) => {
+            called.saveAddress = true;
+            assert.equal(id, '3110f7fa1cdfe550bf75171e191b9acfa4e49714f27453986b0b3b490be98183'); // sha256 hash of the address
+            assert.equal(email, 'test@example.com');
+            assert.deepStrictEqual(address, {
+              name: 'Test User',
+              email: 'test@example.com',
+              address1: '123 Main St',
+              city: 'Anytown',
+              state: 'CA',
+              zip: '12345',
+              country: 'US',
+            });
+          },
         },
       },
     });
@@ -59,7 +95,9 @@ describe('routes/orders create tests', () => {
     try {
       const resp = await handler(ctx, req);
       assert.equal(resp.status, 200);
-      assert.equal(createOrderCalled, true);
+      assert.equal(called.createOrder, true);
+      assert.equal(called.linkOrderToCustomer, true);
+      assert.equal(called.saveAddress, true);
 
       const body = await resp.json();
       assert.equal(body.order.id, 'order1');

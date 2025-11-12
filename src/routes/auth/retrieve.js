@@ -10,35 +10,27 @@
  * governing permissions and limitations under the License.
  */
 
+import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
-import retrieve from './retrieve.js';
-import update from './update.js';
-import rotate from './rotate.js';
-
-/**
- * @type {Record<string, Record<string, RouteHandler>>}
- */
-const handlers = {
-  token: {
-    GET: retrieve,
-    PUT: update,
-    POST: rotate,
-  },
-};
 
 /**
  * @type {RouteHandler}
  */
-export default async function handler(ctx, req) {
-  const {
-    info: { method },
-    url: { pathname },
-  } = ctx;
-  const [subRoute] = pathname.split('/').filter(Boolean).slice(['org', 'site', 'route'].length);
+export default async function retrieve(ctx) {
+  const { config } = ctx;
 
-  const fn = handlers[subRoute]?.[method];
-  if (!fn) {
+  await assertAuthorization(ctx);
+
+  console.log('config', config);
+
+  const token = await ctx.env.KEYS.get(config.siteKey);
+  if (!token) {
     return errorResponse(404);
   }
-  return fn(ctx, req);
+
+  return new Response(JSON.stringify({ token }), {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 }

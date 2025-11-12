@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import { EmailSchema } from './common.js';
+
 /** @type {import("../utils/validation.js").ObjectSchema} */
 const Order = {
   type: 'object',
@@ -19,10 +21,10 @@ const Order = {
     // updatedAt: { type: 'string' },
 
     // provided by client
-    firstName: { type: 'string', minLength: 1, maxLength: 255 },
-    lastName: { type: 'string', minLength: 1, maxLength: 255 },
-    email: { type: 'string', pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/ },
-    phone: { type: 'string', pattern: /^\+?[1-9]\d{1,14}$/ },
+    firstName: { type: 'string', maxLength: 255 },
+    lastName: { type: 'string', maxLength: 255 },
+    email: EmailSchema,
+    phone: { type: 'string' },
   },
   required: ['firstName', 'lastName', 'email'],
 };
