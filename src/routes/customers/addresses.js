@@ -48,6 +48,17 @@ export async function createAddress(ctx, email, address) {
 }
 
 /**
+ * @param {Context} ctx
+ * @param {string} email associated customer email, may be different from the address' email
+ * @param {string} addressId
+ * @returns {Promise<Address>}
+ */
+async function retrieveAddress(ctx, email, addressId) {
+  const storage = StorageClient.fromContext(ctx);
+  return storage.getAddress(email, addressId);
+}
+
+/**
  * @type {RouteHandler}
  */
 export default async function handler(ctx) {
@@ -55,6 +66,18 @@ export default async function handler(ctx) {
   const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route', 'email', 'subroute'].length);
   const [addressId] = segments;
   switch (ctx.info.method) {
+    case 'GET': {
+      const address = await retrieveAddress(ctx, email, addressId);
+      if (!address) {
+        return errorResponse(404, 'Not found');
+      }
+      return new Response(JSON.stringify({ address }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
     case 'POST': {
       // if addressId is defined, update address
       if (addressId) {

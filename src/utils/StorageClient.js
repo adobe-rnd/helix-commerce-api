@@ -585,6 +585,27 @@ export default class StorageClient extends SharedStorageClient {
 
   /**
    * @param {string} email
+   * @param {string} addressId
+   * @returns {Promise<Address | null>}
+   */
+  async getAddress(email, addressId) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/addresses/${addressId}.json`;
+    const resp = await env.ORDERS_BUCKET.get(key);
+    if (!resp) {
+      return null;
+    }
+    return resp.json();
+  }
+
+  /**
+   * @param {string} email
    * @param {string} orderId
    * @param {Order} order
    * @returns {Promise<boolean>}
