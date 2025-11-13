@@ -40,17 +40,18 @@ export default async function handler(ctx, req) {
 
   switch (ctx.info.method) {
     case 'POST': {
-      if (!segments.length) {
+      await assertAuthorization(ctx);
+      if (!email) {
         // create customer
         return create(ctx, req);
       }
       return errorResponse(404, 'Not found');
     }
     case 'GET': {
-      if (!segments.length) {
+      await assertAuthorization(ctx);
+      const storage = StorageClient.fromContext(ctx);
+      if (!email) {
         // list customers
-        await assertAuthorization(ctx);
-        const storage = StorageClient.fromContext(ctx);
         const customers = await storage.listCustomers();
         return new Response(JSON.stringify({ customers }), {
           status: 200,
@@ -59,23 +60,35 @@ export default async function handler(ctx, req) {
           },
         });
       }
-      return errorResponse(404, 'Not found');
+
+      // get a customer
+      const customer = await storage.getCustomer(email);
+      if (!customer) {
+        return errorResponse(404, 'Not found');
+      }
+      return new Response(JSON.stringify({ customer }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
     case 'DELETE': {
-      if (!segments.length) {
-        // delete customer
-        // assert authorized
-        await assertAuthorization(ctx);
-        const storage = StorageClient.fromContext(ctx);
-        await storage.deleteCustomer(email);
-        return new Response(JSON.stringify({ success: true }), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+      if (!email) {
+        return errorResponse(404, 'Not found');
       }
-      return errorResponse(404, 'Not found');
+
+      // delete customer
+      // assert authorized
+      await assertAuthorization(ctx);
+      const storage = StorageClient.fromContext(ctx);
+      await storage.deleteCustomer(email);
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
     default:
       return errorResponse(405, 'Method not allowed');
