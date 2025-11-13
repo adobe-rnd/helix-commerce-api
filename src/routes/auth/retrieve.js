@@ -10,19 +10,27 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import operationsLog from './operations-log/handler.js';
-import orders from './orders/handler.js';
-import customers from './customers/handler.js';
+import { assertAuthorization } from '../../utils/auth.js';
+import { errorResponse } from '../../utils/http.js';
 
 /**
- * @type {Record<string, RouteHandler>}
+ * @type {RouteHandler}
  */
-export default {
-  catalog,
-  auth,
-  orders,
-  customers,
-  'operations-log': operationsLog,
-};
+export default async function retrieve(ctx) {
+  const { config } = ctx;
+
+  await assertAuthorization(ctx);
+
+  console.log('config', config);
+
+  const token = await ctx.env.KEYS.get(config.siteKey);
+  if (!token) {
+    return errorResponse(404);
+  }
+
+  return new Response(JSON.stringify({ token }), {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}

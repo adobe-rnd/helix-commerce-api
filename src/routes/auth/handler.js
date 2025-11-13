@@ -11,7 +11,7 @@
  */
 
 import { errorResponse } from '../../utils/http.js';
-import fetch from './fetch.js';
+import retrieve from './retrieve.js';
 import update from './update.js';
 import rotate from './rotate.js';
 
@@ -20,7 +20,7 @@ import rotate from './rotate.js';
  */
 const handlers = {
   token: {
-    GET: fetch,
+    GET: retrieve,
     PUT: update,
     POST: rotate,
   },

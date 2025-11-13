@@ -16,9 +16,9 @@ import assert from 'node:assert';
 import sinon from 'sinon';
 import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 import { ResponseError } from '../../../src/utils/http.js';
-import handleProductFetchRequest from '../../../src/routes/catalog/fetch.js';
+import handleProductRetrieveRequest from '../../../src/routes/catalog/retrieve.js';
 
-describe('handleProductFetchRequest', () => {
+describe('handleProductRetrieveRequest', () => {
   let storageStub;
   let ctx;
 
@@ -44,7 +44,7 @@ describe('handleProductFetchRequest', () => {
     ctx.config.sku = 'sku1';
 
     storageStub.getProduct.resolves(product);
-    const response = await handleProductFetchRequest(ctx);
+    const response = await handleProductRetrieveRequest(ctx);
 
     assert.equal(response.headers.get('Content-Type'), 'application/json');
     const responseBody = await response.text();
@@ -59,7 +59,7 @@ describe('handleProductFetchRequest', () => {
 
     let thrownError;
     try {
-      await handleProductFetchRequest(ctx);
+      await handleProductRetrieveRequest(ctx);
     } catch (e) {
       thrownError = e;
     }

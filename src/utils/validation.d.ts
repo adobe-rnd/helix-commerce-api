@@ -115,7 +115,7 @@ export type UninvertedConditions<TSchema extends AnySchema = AnySchema> = Filter
 export interface ValidationError {
   path: string;
   message: string;
-  details?: string;
+  details?: string | Record<string, unknown>;
 }
 
 export declare function validate(obj: unknown, schema: AnySchema): ValidationError[] | undefined;

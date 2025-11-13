@@ -8,13 +8,20 @@ send_metrics = false
 build = { command = "npm install && node build.js" }
 
 kv_namespaces = [
-  { binding = "KEYS", id = "0ca5d0ba0150453bb8aafcdf4304dc7a", preview_id = "0ca5d0ba0150453bb8aafcdf4304dc7a" }
+  { binding = "KEYS", id = "0ca5d0ba0150453bb8aafcdf4304dc7a", preview_id = "0ca5d0ba0150453bb8aafcdf4304dc7a", remote = true }
 ]
 
 [[r2_buckets]]
 binding = "CATALOG_BUCKET"
-preview_bucket_name = "adobe-commerce-catalog-dev"
+preview_bucket_name = "adobe-commerce-catalog"
 bucket_name = "adobe-commerce-catalog-dev"
+remote = true
+
+[[r2_buckets]]
+binding = "ORDERS_BUCKET"
+preview_bucket_name = "helix-commerce-orders-dev"
+bucket_name = "helix-commerce-orders-dev"
+remote = true
 
 [[queues.producers]]
 queue = "helix-product-indexer-queue-dev"
@@ -47,6 +54,11 @@ binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog-dev"
 bucket_name = "adobe-commerce-catalog-dev"
 
+[[env.ci.r2_buckets]]
+binding = "ORDERS_BUCKET"
+preview_bucket_name = "helix-commerce-orders-dev"
+bucket_name = "helix-commerce-orders-dev"
+
 [[env.ci.queues.producers]]
 queue = "helix-product-indexer-queue-ci"
 binding = "INDEXER_QUEUE"
@@ -78,6 +90,11 @@ binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog"
 bucket_name = "adobe-commerce-catalog"
 
+[[env.next.r2_buckets]]
+binding = "ORDERS_BUCKET"
+preview_bucket_name = "helix-commerce-orders-dev"
+bucket_name = "helix-commerce-orders"
+
 [[env.next.queues.producers]]
 queue = "helix-product-indexer-queue"
 binding = "INDEXER_QUEUE"
@@ -108,6 +125,11 @@ kv_namespaces = [
 binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog-dev"
 bucket_name = "adobe-commerce-catalog"
+
+[[env.productions.r2_buckets]]
+binding = "ORDERS_BUCKET"
+preview_bucket_name = "helix-commerce-orders-dev"
+bucket_name = "helix-commerce-orders"
 
 [[env.production.queues.producers]]
 queue = "helix-product-indexer-queue"

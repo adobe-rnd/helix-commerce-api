@@ -10,25 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
-import { errorResponse } from '../../utils/http.js';
-
 /**
  * @type {RouteHandler}
  */
-export default async function fetch(ctx) {
-  const { config } = ctx;
-
-  await assertAuthorization(ctx);
-
-  const token = await ctx.env.KEYS.get(config.siteKey);
-  if (!token) {
-    return errorResponse(404);
-  }
-
-  return new Response(JSON.stringify({ token }), {
-    headers: {
-      'Content-Type': 'application/json',
-    },
+// eslint-disable-next-line no-unused-vars
+export default async function remove(ctx) {
+  return new Response('Not Implemented', {
+    status: 501,
   });
 }

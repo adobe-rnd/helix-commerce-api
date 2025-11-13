@@ -17,7 +17,7 @@
 import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import { DEFAULT_CONTEXT } from '../fixtures/context.js';
 
 describe('StorageClient Class Tests', () => {
   let StorageClient;
@@ -37,8 +37,8 @@ describe('StorageClient Class Tests', () => {
       }
     };
 
-    const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-      '../../../src/utils/batch.js': {
+    const module = await esmock('../../src/utils/StorageClient.js', {
+      '../../src/utils/batch.js': {
         BatchProcessor: BatchProcessorMock,
       },
     });
@@ -167,8 +167,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -232,8 +232,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -298,8 +298,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -347,8 +347,8 @@ describe('StorageClient Class Tests', () => {
 
       const storeProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -829,8 +829,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -898,8 +898,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -969,8 +969,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -1018,8 +1018,8 @@ describe('StorageClient Class Tests', () => {
 
       const deleteProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });

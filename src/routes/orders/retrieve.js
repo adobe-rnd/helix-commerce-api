@@ -10,19 +10,20 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import operationsLog from './operations-log/handler.js';
-import orders from './orders/handler.js';
-import customers from './customers/handler.js';
+import { assertAuthorization } from '../../utils/auth.js';
+import StorageClient from '../../utils/StorageClient.js';
 
 /**
- * @type {Record<string, RouteHandler>}
+ * @type {RouteHandler}
  */
-export default {
-  catalog,
-  auth,
-  orders,
-  customers,
-  'operations-log': operationsLog,
-};
+export default async function retrieve(ctx) {
+  await assertAuthorization(ctx);
+  const storage = StorageClient.fromContext(ctx);
+  const order = await storage.getOrder(ctx.config.orderId);
+  return new Response(JSON.stringify({ order }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
