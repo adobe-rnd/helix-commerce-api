@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2021", 
+    "target": "ES2021",
     "moduleResolution": "node",
     "checkJs": true,
     "allowJs": true,
@@ -23,8 +23,7 @@
     "./node_modules/@adobe/helix-admin-support/types/*.d.ts"
   ],
   "exclude": [
-    "node_modules/@adobe/helix-admin-support/src/index.js",
-    "node_modules/@adobe/helix-admin-support/test",
+    "node_modules",
     "dist"
   ]
 }

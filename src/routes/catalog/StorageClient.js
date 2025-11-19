@@ -14,7 +14,7 @@ import { slugger, StorageClient as SharedStorageClient } from '@dylandepass/heli
 import { BatchProcessor } from '../../utils/batch.js';
 import { errorWithResponse } from '../../utils/http.js';
 import { extractAndReplaceImages } from '../../utils/media.js';
-import { purge } from '../cache/purge.js';
+import { purgeBatch } from '../cache/purge.js';
 
 export default class StorageClient extends SharedStorageClient {
   /**
@@ -87,6 +87,7 @@ export default class StorageClient extends SharedStorageClient {
 
   /**
    * Handler function to process a batch of products.
+   * Saves products to storage and purges cache for successfully saved products in a single batch.
    * @param {SharedTypes.ProductBusEntry[]} batch - An array of products to save.
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>}
@@ -102,6 +103,9 @@ export default class StorageClient extends SharedStorageClient {
         storeViewCode,
       },
     } = this.ctx;
+
+    // Track successfully saved products for batch cache purging
+    const successfullySavedProducts = [];
 
     const storePromises = batch.map(async (product) => {
       if (!asyncImages) {
@@ -137,15 +141,13 @@ export default class StorageClient extends SharedStorageClient {
           });
         }
 
-        try {
-          await purge(
-            this.ctx,
-            sku,
-            urlKey,
-          );
-        } catch (purgeError) {
-          log.warn(`Cache purge failed for ${sku}: ${purgeError.message}`);
-        }
+        // Track this product for batch cache purging
+        successfullySavedProducts.push({
+          sku,
+          urlKey,
+          storeCode,
+          storeViewCode,
+        });
 
         /**
          * @type {Partial<BatchResult>}
@@ -170,6 +172,19 @@ export default class StorageClient extends SharedStorageClient {
     });
 
     const batchResults = await Promise.all(storePromises);
+
+    // Purge cache for all successfully saved products in a single batch
+    if (successfullySavedProducts.length > 0) {
+      try {
+        await purgeBatch(this.ctx, { org, site }, successfullySavedProducts);
+        log.info(`Cache purged for ${successfullySavedProducts.length} successfully saved products`);
+      } catch (purgeError) {
+        // Log but don't fail the entire operation if purge fails
+        // The products are already saved successfully
+        log.error(`Failed to purge cache for saved products: ${purgeError.message}`);
+      }
+    }
+
     return batchResults;
   }
 

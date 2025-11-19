@@ -19,6 +19,7 @@ import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 
 describe('Cache Purge Orchestration Tests', () => {
   let purge;
+  let purgeBatch;
   let resolveProductPathStub;
   let computeProductSkuKeyStub;
   let computeProductUrlKeyKeyStub;
@@ -81,6 +82,7 @@ describe('Cache Purge Orchestration Tests', () => {
     });
 
     purge = module.purge;
+    purgeBatch = module.purgeBatch;
   });
 
   afterEach(() => {
@@ -408,6 +410,299 @@ describe('Cache Purge Orchestration Tests', () => {
     it.skip('should truncate key list in logs when more than 10 keys', async () => {
       // This test requires modifying the purge logic to truncate key display
       // Skipping as it tests a nice-to-have feature not currently implemented
+    });
+  });
+
+  describe('purgeBatch function', () => {
+    let ctx;
+
+    beforeEach(() => {
+      ctx = DEFAULT_CONTEXT({
+        log: {
+          debug: sinon.stub(),
+          info: sinon.stub(),
+          warn: sinon.stub(),
+          error: sinon.stub(),
+        },
+        attributes: {
+          helixConfigCache: {
+            cdn: {
+              prod: {
+                type: 'fastly',
+                host: 'cdn.example.com',
+                serviceId: 'service123',
+                authToken: 'token123',
+              },
+            },
+            content: {
+              contentBusId: 'content-bus-123',
+            },
+            public: {
+              patterns: {
+                base: { storeCode: 'us', storeViewCode: 'en' },
+                '/products/{{urlKey}}': { pageType: 'product' },
+              },
+            },
+          },
+        },
+      });
+
+      // Setup key computation stubs
+      computeProductSkuKeyStub.callsFake(async (org, site, storeCode, storeViewCode, sku) => `sku-${sku}-${storeCode}-${storeViewCode}`);
+      computeProductUrlKeyKeyStub.callsFake(async (org, site, storeCode, storeViewCode, urlKey) => `urlkey-${urlKey}-${storeCode}-${storeViewCode}`);
+      computeAuthoredContentKeyStub.callsFake(async (contentBusId, path) => `content-${path}`);
+      resolveProductPathStub.callsFake((publicConfig, params) => (params.urlKey ? `/products/${params.urlKey}` : null));
+    });
+
+    it('should batch purge multiple products in a single CDN call', async () => {
+      const products = [
+        {
+          sku: 'PROD-123', urlKey: 'product-123', storeCode: 'us', storeViewCode: 'en',
+        },
+        {
+          sku: 'PROD-456', urlKey: 'product-456', storeCode: 'us', storeViewCode: 'en',
+        },
+        {
+          sku: 'PROD-789', storeCode: 'uk', storeViewCode: 'en',
+        },
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      // Verify CDN client was called only once
+      assert.strictEqual(FastlyPurgeClientStub.purge.callCount, 1);
+
+      // Verify all keys were collected
+      const { keys } = FastlyPurgeClientStub.purge.firstCall.args[2];
+
+      // Product 1: sku + urlKey + content = 3 keys
+      assert(keys.includes('sku-PROD-123-us-en'));
+      assert(keys.includes('urlkey-product-123-us-en'));
+      assert(keys.includes('content-/products/product-123'));
+
+      // Product 2: sku + urlKey + content = 3 keys
+      assert(keys.includes('sku-PROD-456-us-en'));
+      assert(keys.includes('urlkey-product-456-us-en'));
+      assert(keys.includes('content-/products/product-456'));
+
+      // Product 3: sku only (no urlKey, so no content key) = 1 key
+      assert(keys.includes('sku-PROD-789-uk-en'));
+
+      // Total: 7 unique keys
+      assert.strictEqual(keys.length, 7);
+
+      // Verify logging
+      assert(ctx.log.info.calledWith(sinon.match(/Purging 7 unique cache keys for 3 products/)));
+    });
+
+    it('should deduplicate keys when multiple products have the same identifiers', async () => {
+      const products = [
+        {
+          sku: 'PROD-123', urlKey: 'product-123', storeCode: 'us', storeViewCode: 'en',
+        },
+        {
+          sku: 'PROD-123', urlKey: 'product-123', storeCode: 'us', storeViewCode: 'en',
+        },
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      // Verify keys were deduplicated
+      const { keys } = FastlyPurgeClientStub.purge.firstCall.args[2];
+      assert.strictEqual(keys.length, 3); // sku + urlKey + content (deduplicated)
+
+      // Verify logging shows deduplication
+      assert(ctx.log.info.calledWith(sinon.match(/Purging 3 unique cache keys for 2 products/)));
+    });
+
+    it('should handle products with different store codes and view codes', async () => {
+      const products = [
+        {
+          sku: 'PROD-123', storeCode: 'us', storeViewCode: 'en',
+        },
+        {
+          sku: 'PROD-123', storeCode: 'us', storeViewCode: 'es',
+        },
+        {
+          sku: 'PROD-123', storeCode: 'uk', storeViewCode: 'en',
+        },
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      const { keys } = FastlyPurgeClientStub.purge.firstCall.args[2];
+
+      // All three should generate different keys
+      assert(keys.includes('sku-PROD-123-us-en'));
+      assert(keys.includes('sku-PROD-123-us-es'));
+      assert(keys.includes('sku-PROD-123-uk-en'));
+      assert.strictEqual(keys.length, 3);
+    });
+
+    it('should skip content key when contentBusId is not configured', async () => {
+      ctx.attributes.helixConfigCache = {
+        cdn: {
+          prod: {
+            type: 'fastly',
+            host: 'cdn.example.com',
+            serviceId: 'service123',
+            authToken: 'token123',
+          },
+        },
+        public: {
+          patterns: {},
+        },
+      };
+
+      const products = [
+        {
+          sku: 'PROD-123', urlKey: 'product-123', storeCode: 'us', storeViewCode: 'en',
+        },
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      const { keys } = FastlyPurgeClientStub.purge.firstCall.args[2];
+
+      // Only sku and urlKey keys, no content key
+      assert.strictEqual(keys.length, 2);
+      assert(keys.includes('sku-PROD-123-us-en'));
+      assert(keys.includes('urlkey-product-123-us-en'));
+      assert(!keys.some((k) => k.startsWith('content-')));
+    });
+
+    it('should warn and return early when CDN config is missing', async () => {
+      ctx.attributes.helixConfigCache = {};
+
+      const products = [
+        {
+          sku: 'PROD-123', storeCode: 'us', storeViewCode: 'en',
+        },
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      // Verify warning was logged
+      assert(ctx.log.warn.calledWith('No production CDN configuration found, skipping batch purge'));
+
+      // Verify purge was not called
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
+
+    it('should warn and return early when no keys are generated', async () => {
+      // Remove contentBusId so no content keys are generated
+      ctx.attributes.helixConfigCache = {
+        cdn: {
+          prod: {
+            type: 'fastly',
+            host: 'cdn.example.com',
+            serviceId: 'service123',
+            authToken: 'token123',
+          },
+        },
+        public: {
+          patterns: {},
+        },
+      };
+
+      const products = [
+        {
+          storeCode: 'us', storeViewCode: 'en',
+        }, // No sku or urlKey
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      // Verify warning was logged
+      assert(ctx.log.warn.calledWith('No keys to purge in batch, skipping purge'));
+
+      // Verify purge was not called
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
+
+    it('should work with Cloudflare CDN', async () => {
+      ctx.attributes.helixConfigCache = {
+        cdn: {
+          prod: {
+            type: 'cloudflare',
+            host: 'cdn.example.com',
+            zoneId: 'zone123',
+            apiToken: 'cf-token',
+          },
+        },
+      };
+
+      const products = [
+        {
+          sku: 'PROD-123', storeCode: 'us', storeViewCode: 'en',
+        },
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      // Verify Cloudflare client was used
+      assert(CloudflarePurgeClientStub.purge.calledOnce);
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
+
+    it('should work with Akamai CDN', async () => {
+      ctx.attributes.helixConfigCache = {
+        cdn: {
+          prod: {
+            type: 'akamai',
+            host: 'cdn.example.com',
+            endpoint: 'akaa-test.purge.akamaiapis.net',
+            clientSecret: 'secret',
+            clientToken: 'token',
+            accessToken: 'access',
+          },
+        },
+      };
+
+      const products = [
+        {
+          sku: 'PROD-123', storeCode: 'us', storeViewCode: 'en',
+        },
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      // Verify Akamai client was used
+      assert(AkamaiPurgeClientStub.purge.calledOnce);
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
+
+    it('should work with Managed CDN', async () => {
+      ctx.attributes.helixConfigCache = {
+        cdn: {
+          prod: {
+            type: 'managed',
+            host: 'main--site--org.hlx.page',
+          },
+        },
+      };
+
+      const products = [
+        {
+          sku: 'PROD-123', storeCode: 'us', storeViewCode: 'en',
+        },
+      ];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      // Verify Managed client was used
+      assert(ManagedPurgeClientStub.purge.calledOnce);
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
+
+    it('should handle empty products array', async () => {
+      const products = [];
+
+      await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, products);
+
+      // Should warn about no keys
+      assert(ctx.log.warn.calledWith('No keys to purge in batch, skipping purge'));
+      assert(FastlyPurgeClientStub.purge.notCalled);
     });
   });
 });

@@ -135,3 +135,90 @@ export async function purge(ctx, sku, urlKey) {
 
   await purgeProductionCDN(ctx, cdnConfig, { keys });
 }
+
+/**
+ * Purges cached product data for multiple products in a single batched operation.
+ *
+ * This function computes all surrogate keys for all products upfront, then makes
+ * a single call to the CDN (or minimal batched calls based on CDN limits). This is
+ * significantly more efficient than calling purge() once per product, as it avoids
+ * N separate CDN API requests.
+ *
+ * Each product entry should contain:
+ * - sku: Product SKU
+ * - urlKey: (optional) Product URL key
+ * - storeCode: Store code
+ * - storeViewCode: Store view code
+ *
+ * The function automatically deduplicates cache keys and handles missing configurations
+ * gracefully by logging warnings.
+ *
+ * @param {Context} ctx - The request context with logging and config
+ * @param {Object} config - The site configuration (org, site)
+ * @param {string} config.org - Organization identifier
+ * @param {string} config.site - Site identifier
+ * @param {Array<{sku: string, urlKey?: string, storeCode: string, storeViewCode: string}>} products
+ *   Array of product objects to purge. Each product must have sku, storeCode, and storeViewCode.
+ *   The urlKey is optional.
+ * @returns {Promise<void>}
+ *
+ * @example
+ * await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, [
+ *   { sku: 'PROD-123', urlKey: 'product-123', storeCode: 'us', storeViewCode: 'en' },
+ *   { sku: 'PROD-456', storeCode: 'us', storeViewCode: 'en' }
+ * ]);
+ */
+export async function purgeBatch(ctx, config, products) {
+  const { log } = ctx;
+  const { org, site } = config;
+
+  const helixConfig = ctx.attributes.helixConfigCache;
+  const cdnConfig = helixConfig?.cdn?.prod;
+
+  if (!cdnConfig) {
+    log.warn('No production CDN configuration found, skipping batch purge');
+    return;
+  }
+
+  // Collect all cache keys from all products
+  const keyPromises = [];
+  for (const product of products) {
+    const {
+      sku, urlKey, storeCode, storeViewCode,
+    } = product;
+
+    if (sku) {
+      keyPromises.push(computeProductSkuKey(org, site, storeCode, storeViewCode, sku));
+    }
+    if (urlKey) {
+      keyPromises.push(computeProductUrlKeyKey(org, site, storeCode, storeViewCode, urlKey));
+    }
+
+    if (helixConfig?.content?.contentBusId) {
+      const path = resolveProductPath(helixConfig.public, {
+        sku, urlKey, storeCode, storeViewCode,
+      });
+      if (path) {
+        keyPromises.push(computeAuthoredContentKey(helixConfig.content.contentBusId, path));
+      }
+    }
+  }
+
+  // Await all key computations
+  const allKeys = await Promise.all(keyPromises);
+
+  // Deduplicate keys (use Set to remove duplicates)
+  const uniqueKeys = [...new Set(allKeys)];
+
+  if (!uniqueKeys.length) {
+    log.warn('No keys to purge in batch, skipping purge');
+    return;
+  }
+
+  log.info(`Purging ${uniqueKeys.length} unique cache keys for ${products.length} products`);
+
+  // Make a single CDN call with all keys
+  // The CDN clients will automatically batch internally based on their limits
+  // (Fastly: 256, Cloudflare: 30, Managed: 256, Akamai: unlimited)
+  await purgeProductionCDN(ctx, cdnConfig, { keys: uniqueKeys });
+}
