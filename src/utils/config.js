@@ -134,10 +134,5 @@ export async function fetchHelixConfig(ctx, org, site /* we ignore ref for now ,
   } catch (e) {
     const msg = `Fetching config from ${url} failed: ${e.message}`;
     throw errorWithResponse(502, msg);
-    /* c8 ignore next 5 */
-  } finally {
-    if (fopts.signal) {
-      fopts.signal.clear();
-    }
   }
 }
