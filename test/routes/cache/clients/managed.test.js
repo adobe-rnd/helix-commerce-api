@@ -123,8 +123,13 @@ describe('ManagedPurgeClient Tests', () => {
         // Verify Surrogate-Key header contains space-separated keys
         assert.strictEqual(options.headers['Surrogate-Key'], 'key1 key2 key3');
 
-        // Verify success logging
-        assert(ctx.log.info.calledWith(sinon.match(/surrogate key\(s\) succeeded/)));
+        // Verify logging
+        assert(ctx.log.info.calledTwice, 'Should log purge start and success');
+        assert(ctx.log.info.firstCall.calledWith(sinon.match(/purging keys/)), 'Should log purge start');
+        assert(ctx.log.info.firstCall.calledWith(sinon.match(/managed-site\/us\/en/)), 'Should include site ID');
+        assert(ctx.log.info.firstCall.calledWith(sinon.match(/\[1\]/)), 'Should include request ID');
+        assert(ctx.log.info.firstCall.calledWith(sinon.match(/main--site--org\.hlx\.page/)), 'Should include host');
+        assert(ctx.log.info.secondCall.calledWith(sinon.match(/surrogate key\(s\) succeeded/)), 'Should log success');
       });
 
       it('should split large key sets into batches of 256', async () => {
@@ -205,7 +210,10 @@ describe('ManagedPurgeClient Tests', () => {
         assert(thrownError.message.includes('403'));
 
         // Verify error logging
-        assert(ctx.log.error.called);
+        assert(ctx.log.error.calledOnce, 'Should log error');
+        assert(ctx.log.error.firstCall.calledWith(sinon.match(/surrogate key\(s\) failed/)), 'Should log failure message');
+        assert(ctx.log.error.firstCall.calledWith(sinon.match(/403/)), 'Should include status code');
+        assert(ctx.log.error.firstCall.calledWith(sinon.match(/managed-site\/us\/en/)), 'Should include site ID');
       });
 
       it('should throw error on network failure', async () => {
@@ -225,6 +233,11 @@ describe('ManagedPurgeClient Tests', () => {
         // Verify error was thrown
         assert(thrownError);
         assert(thrownError.message.includes('failed'));
+
+        // Verify error logging
+        assert(ctx.log.error.calledOnce, 'Should log error');
+        assert(ctx.log.error.firstCall.calledWith(sinon.match(/failed/)), 'Should log failure');
+        assert(ctx.log.error.firstCall.calledWith(sinon.match(/managed-site\/us\/en/)), 'Should include site ID');
       });
     });
 

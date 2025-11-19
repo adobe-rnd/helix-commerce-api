@@ -162,9 +162,13 @@ describe('CloudflarePurgeClient Tests', () => {
       const body = JSON.parse(options.body);
       assert.deepStrictEqual(body.tags, keys);
 
-      // Verify success logging
-      assert(ctx.log.info.calledWith(sinon.match(/purging/)));
-      assert(ctx.log.info.calledWith(sinon.match(/succeeded/)));
+      // Verify logging
+      assert(ctx.log.info.calledTwice, 'Should log purge start and success');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/purging/)), 'Should log purge start');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/testsite\/us\/en/)), 'Should include site ID');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/\[1\]/)), 'Should include request ID');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/cloudflare/)), 'Should include CDN type');
+      assert(ctx.log.info.secondCall.calledWith(sinon.match(/succeeded/)), 'Should log success');
     });
 
     it('should split large tag sets into batches of 30 (Cloudflare API limit)', async () => {
@@ -222,7 +226,10 @@ describe('CloudflarePurgeClient Tests', () => {
       assert(thrownError.message.includes('purge failed'));
 
       // Verify error logging includes cf-ray header
-      assert(ctx.log.error.calledWith(sinon.match(/cf-ray/)));
+      assert(ctx.log.error.callCount >= 1, 'Should log error');
+      assert(ctx.log.error.calledWith(sinon.match(/purge failed/)), 'Should log failure');
+      assert(ctx.log.error.calledWith(sinon.match(/cf-ray/)), 'Should include cf-ray header');
+      assert(ctx.log.error.calledWith(sinon.match(/testsite\/us\/en/)), 'Should include site ID');
     });
 
     it('should throw error when HTTP request fails', async () => {
@@ -252,7 +259,9 @@ describe('CloudflarePurgeClient Tests', () => {
       assert(thrownError.message.includes('403'));
 
       // Verify error logging
-      assert(ctx.log.error.called);
+      assert(ctx.log.error.callCount >= 1, 'Should log error');
+      assert(ctx.log.error.calledWith(sinon.match(/403/)), 'Should include status code');
+      assert(ctx.log.error.calledWith(sinon.match(/testsite\/us\/en/)), 'Should include site ID');
     });
 
     it('should do nothing when keys array is empty', async () => {

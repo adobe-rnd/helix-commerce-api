@@ -157,8 +157,12 @@ describe('FastlyPurgeClient Tests', () => {
       assert.deepStrictEqual(body.surrogate_keys, keys);
 
       // Verify logging
-      assert(ctx.log.info.calledWith(sinon.match(/purging keys/)));
-      assert(ctx.log.info.calledWith(sinon.match(/succeeded/)));
+      assert(ctx.log.info.calledTwice, 'Should log purge start and success');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/purging keys/)), 'Should log purge start');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/mysite\/us\/en/)), 'Should include site ID');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/\[1\]/)), 'Should include request ID');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/fastly/)), 'Should include CDN type');
+      assert(ctx.log.info.secondCall.calledWith(sinon.match(/succeeded/)), 'Should log success');
     });
 
     it('should handle large batches by splitting into multiple requests (256 per batch)', async () => {
@@ -213,8 +217,11 @@ describe('FastlyPurgeClient Tests', () => {
       assert(thrownError.message.includes('failed'));
       assert(thrownError.message.includes('403'));
 
-      // Verify error was logged
-      assert(ctx.log.error.called);
+      // Verify error logging
+      assert(ctx.log.error.calledOnce, 'Should log error');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/purging.*failed/)), 'Should log failure');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/403/)), 'Should include status code');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/mysite\/us\/en/)), 'Should include site ID');
     });
 
     it('should throw error when network request fails', async () => {
@@ -235,8 +242,10 @@ describe('FastlyPurgeClient Tests', () => {
       assert(thrownError);
       assert(thrownError.message.includes('failed'));
 
-      // Verify error was logged
-      assert(ctx.log.error.called);
+      // Verify error logging
+      assert(ctx.log.error.calledOnce, 'Should log error');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/failed/)), 'Should log failure');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/mysite\/us\/en/)), 'Should include site ID');
     });
 
     it('should do nothing when keys array is empty', async () => {

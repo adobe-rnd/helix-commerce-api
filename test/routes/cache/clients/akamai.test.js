@@ -203,9 +203,13 @@ describe('AkamaiPurgeClient Tests', () => {
       const body = JSON.parse(options.body);
       assert.deepStrictEqual(body.objects, keys);
 
-      // Verify success logging
-      assert(ctx.log.info.calledWith(sinon.match(/purging keys/)));
-      assert(ctx.log.info.calledWith(sinon.match(/succeeded/)));
+      // Verify logging
+      assert(ctx.log.info.calledTwice, 'Should log purge start and success');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/purging keys/)), 'Should log purge start');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/akamai-site\/us\/en/)), 'Should include site ID');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/\[1\]/)), 'Should include request ID');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/akamai/)), 'Should include CDN type');
+      assert(ctx.log.info.secondCall.calledWith(sinon.match(/succeeded/)), 'Should log success');
     });
 
     it('should include abort signal with 10 second timeout', async () => {
@@ -255,7 +259,10 @@ describe('AkamaiPurgeClient Tests', () => {
       assert(thrownError.message.includes('403'));
 
       // Verify error logging
-      assert(ctx.log.error.called);
+      assert(ctx.log.error.calledOnce, 'Should log error');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/key purge failed/)), 'Should log failure');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/403/)), 'Should include status code');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/akamai-site\/us\/en/)), 'Should include site ID');
     });
 
     it('should throw error when network request fails', async () => {
@@ -277,7 +284,9 @@ describe('AkamaiPurgeClient Tests', () => {
       assert(thrownError.message.includes('failed'));
 
       // Verify error logging
-      assert(ctx.log.error.called);
+      assert(ctx.log.error.calledOnce, 'Should log error');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/failed/)), 'Should log failure');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/akamai-site\/us\/en/)), 'Should include site ID');
     });
 
     it('should do nothing when keys array is empty', async () => {
