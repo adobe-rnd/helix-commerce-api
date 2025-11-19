@@ -15,7 +15,7 @@ import { FastlyPurgeClient } from './clients/fastly.js';
 import { CloudflarePurgeClient } from './clients/cloudflare.js';
 import { ManagedPurgeClient } from './clients/managed.js';
 import { AkamaiPurgeClient } from './clients/akamai.js';
-import { fetchHelixConfig, resolveProductPath } from '../../utils/config.js';
+import { resolveProductPath } from '../../utils/config.js';
 
 /**
  * Map of CDN type identifiers to their corresponding purge client implementations.
@@ -103,7 +103,7 @@ export async function purge(ctx, sku, urlKey) {
     org, site, storeCode, storeViewCode,
   } = ctx.config;
 
-  const helixConfig = await fetchHelixConfig(ctx, org, site);
+  const helixConfig = ctx.attributes.helixConfigCache;
   const cdnConfig = helixConfig?.cdn?.prod;
 
   if (!cdnConfig) {

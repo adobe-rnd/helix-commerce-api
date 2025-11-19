@@ -19,7 +19,6 @@ import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 
 describe('Cache Purge Orchestration Tests', () => {
   let purge;
-  let fetchHelixConfigStub;
   let resolveProductPathStub;
   let computeProductSkuKeyStub;
   let computeProductUrlKeyKeyStub;
@@ -31,7 +30,6 @@ describe('Cache Purge Orchestration Tests', () => {
 
   beforeEach(async () => {
     // Stub all dependencies
-    fetchHelixConfigStub = sinon.stub();
     resolveProductPathStub = sinon.stub();
     computeProductSkuKeyStub = sinon.stub();
     computeProductUrlKeyKeyStub = sinon.stub();
@@ -61,7 +59,6 @@ describe('Cache Purge Orchestration Tests', () => {
     // Mock the module
     const module = await esmock('../../../src/routes/cache/purge.js', {
       '../../../src/utils/config.js': {
-        fetchHelixConfig: fetchHelixConfigStub,
         resolveProductPath: resolveProductPathStub,
       },
       '@dylandepass/helix-product-shared': {
@@ -107,25 +104,26 @@ describe('Cache Purge Orchestration Tests', () => {
           storeCode: 'us',
           storeViewCode: 'en',
         },
-      });
-
-      // Default: Return valid helix config
-      fetchHelixConfigStub.resolves({
-        cdn: {
-          prod: {
-            type: 'fastly',
-            host: 'cdn.example.com',
-            serviceId: 'service123',
-            authToken: 'token123',
-          },
-        },
-        content: {
-          contentBusId: 'content-bus-123',
-        },
-        public: {
-          patterns: {
-            base: { storeCode: 'us', storeViewCode: 'en' },
-            '/products/{{urlKey}}': { pageType: 'product' },
+        attributes: {
+          // Cached helix config (fetched once in update.js)
+          helixConfigCache: {
+            cdn: {
+              prod: {
+                type: 'fastly',
+                host: 'cdn.example.com',
+                serviceId: 'service123',
+                authToken: 'token123',
+              },
+            },
+            content: {
+              contentBusId: 'content-bus-123',
+            },
+            public: {
+              patterns: {
+                base: { storeCode: 'us', storeViewCode: 'en' },
+                '/products/{{urlKey}}': { pageType: 'product' },
+              },
+            },
           },
         },
       });
@@ -142,9 +140,6 @@ describe('Cache Purge Orchestration Tests', () => {
       const urlKey = 'my-product';
 
       await purge(ctx, sku, urlKey);
-
-      // Verify config was fetched
-      assert(fetchHelixConfigStub.calledOnceWith(ctx, 'myorg', 'mysite'));
 
       // Verify keys were computed
       assert(computeProductSkuKeyStub.calledWith('myorg', 'mysite', 'us', 'en', 'PROD123'));
@@ -171,7 +166,7 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should purge Cloudflare CDN when type is cloudflare', async () => {
       // Override config to use Cloudflare
-      fetchHelixConfigStub.resolves({
+      ctx.attributes.helixConfigCache = {
         cdn: {
           prod: {
             type: 'cloudflare',
@@ -180,7 +175,7 @@ describe('Cache Purge Orchestration Tests', () => {
             apiToken: 'cf-token',
           },
         },
-      });
+      };
 
       await purge(ctx, 'SKU123', null);
 
@@ -196,7 +191,7 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should purge Akamai CDN when type is akamai', async () => {
       // Override config to use Akamai
-      fetchHelixConfigStub.resolves({
+      ctx.attributes.helixConfigCache = {
         cdn: {
           prod: {
             type: 'akamai',
@@ -207,7 +202,7 @@ describe('Cache Purge Orchestration Tests', () => {
             accessToken: 'access',
           },
         },
-      });
+      };
 
       await purge(ctx, 'SKU123', null);
 
@@ -218,14 +213,14 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should purge Managed CDN when type is managed', async () => {
       // Override config to use Managed CDN
-      fetchHelixConfigStub.resolves({
+      ctx.attributes.helixConfigCache = {
         cdn: {
           prod: {
             type: 'managed',
             host: 'main--site--org.hlx.page',
           },
         },
-      });
+      };
 
       await purge(ctx, 'SKU123', null);
 
@@ -236,7 +231,7 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should only purge SKU key when urlKey is not provided', async () => {
       // Override config to not have content bus ID
-      fetchHelixConfigStub.resolves({
+      ctx.attributes.helixConfigCache = {
         cdn: {
           prod: {
             type: 'fastly',
@@ -249,7 +244,7 @@ describe('Cache Purge Orchestration Tests', () => {
         public: {
           patterns: {},
         },
-      });
+      };
 
       const sku = 'PROD123';
       const urlKey = null;
@@ -284,7 +279,7 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should not compute content key when contentBusId is missing', async () => {
       // Override config without contentBusId
-      fetchHelixConfigStub.resolves({
+      ctx.attributes.helixConfigCache = {
         cdn: {
           prod: {
             type: 'fastly',
@@ -296,7 +291,7 @@ describe('Cache Purge Orchestration Tests', () => {
         public: {
           patterns: {},
         },
-      });
+      };
 
       await purge(ctx, 'SKU123', 'my-product');
 
@@ -324,7 +319,7 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should log warning and return early when CDN config is missing (config without cdn.prod)', async () => {
       // Return config without cdn.prod
-      fetchHelixConfigStub.resolves({});
+      ctx.attributes.helixConfigCache = {};
 
       await purge(ctx, 'SKU123', null);
 
@@ -337,7 +332,7 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should log warning and return early when helix config is null', async () => {
       // Return null config
-      fetchHelixConfigStub.resolves(null);
+      ctx.attributes.helixConfigCache = null;
 
       await purge(ctx, 'SKU123', null);
 
@@ -350,14 +345,14 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should throw error for unsupported CDN type', async () => {
       // Use unsupported CDN type
-      fetchHelixConfigStub.resolves({
+      ctx.attributes.helixConfigCache = {
         cdn: {
           prod: {
             type: 'unsupported-cdn',
             host: 'cdn.example.com',
           },
         },
-      });
+      };
 
       // Execute and expect error
       let thrownError;
@@ -389,7 +384,7 @@ describe('Cache Purge Orchestration Tests', () => {
 
     it('should log warning and skip purge when no keys are generated', async () => {
       // Override config to not have content bus ID so no content key is generated
-      fetchHelixConfigStub.resolves({
+      ctx.attributes.helixConfigCache = {
         cdn: {
           prod: {
             type: 'fastly',
@@ -398,7 +393,7 @@ describe('Cache Purge Orchestration Tests', () => {
             authToken: 'token123',
           },
         },
-      });
+      };
 
       // Don't provide SKU or urlKey
       await purge(ctx, null, null);
