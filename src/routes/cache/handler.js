@@ -28,15 +28,15 @@ function validateCacheApiKey(ctx) {
     return false;
   }
 
-  const authHeader = ctx.info.headers.authorization;
-  if (!authHeader) {
+  const cacheAuthHeader = ctx.info.headers['x-cache-api-key'];
+  if (!cacheAuthHeader) {
     return false;
   }
 
   // Support both "Bearer <token>" and direct token formats
-  const token = authHeader.startsWith('Bearer ')
-    ? authHeader.substring(7)
-    : authHeader;
+  const token = cacheAuthHeader.startsWith('Bearer ')
+    ? cacheAuthHeader.substring(7)
+    : cacheAuthHeader;
 
   return token === CACHE_API_KEY;
 }
