@@ -14,6 +14,7 @@ import { slugger, StorageClient as SharedStorageClient } from '@dylandepass/heli
 import { BatchProcessor } from '../../utils/batch.js';
 import { errorWithResponse } from '../../utils/http.js';
 import { extractAndReplaceImages } from '../../utils/media.js';
+import { purge } from '../cache/purge.js';
 
 export default class StorageClient extends SharedStorageClient {
   /**
@@ -134,6 +135,16 @@ export default class StorageClient extends SharedStorageClient {
             httpMetadata: { contentType: 'text/plain' },
             customMetadata,
           });
+        }
+
+        try {
+          await purge(
+            this.ctx,
+            sku,
+            urlKey,
+          );
+        } catch (purgeError) {
+          log.warn(`Cache purge failed for ${sku}: ${purgeError.message}`);
         }
 
         /**

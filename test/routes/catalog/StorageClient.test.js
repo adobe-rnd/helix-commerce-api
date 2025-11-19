@@ -22,6 +22,7 @@ import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 describe('StorageClient Class Tests', () => {
   let StorageClient;
   let BatchProcessorMock;
+  let purgeMock;
   let config;
 
   beforeEach(async () => {
@@ -37,9 +38,14 @@ describe('StorageClient Class Tests', () => {
       }
     };
 
+    purgeMock = sinon.stub().resolves();
+
     const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
       '../../../src/utils/batch.js': {
         BatchProcessor: BatchProcessorMock,
+      },
+      '../../../src/routes/cache/purge.js': {
+        purge: purgeMock,
       },
     });
 
@@ -380,7 +386,7 @@ describe('StorageClient Class Tests', () => {
 
       beforeEach(async () => {
         ctx = DEFAULT_CONTEXT({
-          log: { debug: sinon.stub(), error: sinon.stub() },
+          log: { debug: sinon.stub(), warn: sinon.stub(), error: sinon.stub() },
           env: {
             CATALOG_BUCKET: {
               put: sinon.stub(),
@@ -783,6 +789,50 @@ describe('StorageClient Class Tests', () => {
           {
             sku: 'sku3',
             sluggedSku: 'sku3',
+            message: 'Product saved successfully.',
+            status: 200,
+          },
+        ]);
+
+        assert(ctx.log.error.notCalled);
+      });
+
+      it('should log warning when cache purge fails but still save product successfully', async () => {
+        const client = new StorageClient(ctx);
+        const batch = [
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+        ];
+
+        ctx.env.CATALOG_BUCKET.put.resolves({ status: 200 });
+        purgeMock.rejects(new Error('Purge service unavailable'));
+
+        const results = await client.storeProductsBatch(batch);
+
+        assert(ctx.env.CATALOG_BUCKET.put.calledTwice);
+        assert(ctx.env.CATALOG_BUCKET.put.firstCall.calledWithExactly(
+          'org/site/store/view/products/sku1.json',
+          JSON.stringify(batch[0]),
+          {
+            httpMetadata: { contentType: 'application/json' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          },
+        ));
+        assert(ctx.env.CATALOG_BUCKET.put.secondCall.calledWithExactly(
+          'org/site/store/view/urlkeys/product-1',
+          '',
+          {
+            httpMetadata: { contentType: 'text/plain' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          },
+        ));
+
+        assert(purgeMock.calledOnceWithExactly(ctx, 'sku1', 'product-1'));
+        assert(ctx.log.warn.calledOnceWithExactly('Cache purge failed for sku1: Purge service unavailable'));
+
+        assert.deepStrictEqual(results, [
+          {
+            sku: 'sku1',
+            sluggedSku: 'sku1',
             message: 'Product saved successfully.',
             status: 200,
           },
