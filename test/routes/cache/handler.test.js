@@ -51,7 +51,7 @@ describe('Cache Handler Tests', () => {
         info: {
           method: 'POST',
           headers: {
-            authorization: 'Bearer test-key',
+            'x-cache-api-key': 'Bearer test-key',
           },
         },
         config: {
@@ -115,7 +115,7 @@ describe('Cache Handler Tests', () => {
         info: {
           method: 'POST',
           headers: {
-            authorization: 'Bearer wrong-key',
+            'x-cache-api-key': 'Bearer wrong-key',
           },
         },
         config: {
@@ -153,7 +153,7 @@ describe('Cache Handler Tests', () => {
         info: {
           method: 'POST',
           headers: {
-            authorization: 'Bearer secret-key',
+            'x-cache-api-key': 'Bearer secret-key',
           },
         },
         config: {
@@ -191,7 +191,7 @@ describe('Cache Handler Tests', () => {
         info: {
           method: 'POST',
           headers: {
-            authorization: 'secret-key',
+            'x-cache-api-key': 'secret-key',
           },
         },
         config: {
@@ -225,7 +225,7 @@ describe('Cache Handler Tests', () => {
       info: {
         method: 'POST',
         headers: {
-          authorization: 'Bearer secret-key',
+          'x-cache-api-key': 'Bearer secret-key',
         },
       },
       config: {
@@ -321,7 +321,7 @@ describe('Cache Handler Tests', () => {
       info: {
         method: 'POST',
         headers: {
-          authorization: 'Bearer secret-key',
+          'x-cache-api-key': 'Bearer secret-key',
         },
       },
       config: {
