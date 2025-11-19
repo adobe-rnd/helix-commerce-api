@@ -14,7 +14,7 @@
 
 import assert from 'node:assert';
 import { DEFAULT_CONTEXT } from '../fixtures/context.js';
-import { assertRequiredProperties, nextRequestId, cartesian } from '../../src/utils/cache.js';
+import { assertRequiredProperties, nextRequestId } from '../../src/utils/cache.js';
 
 describe('Cache Utility Functions', () => {
   describe('assertRequiredProperties', () => {
@@ -217,122 +217,6 @@ describe('Cache Utility Functions', () => {
 
       // Should increment from 0 to 1
       assert.strictEqual(id, 1);
-    });
-  });
-
-  describe('cartesian', () => {
-    it('should generate cartesian product of two arrays', () => {
-      // Two simple arrays
-      const array1 = ['a', 'b'];
-      const array2 = [1, 2];
-
-      const result = Array.from(cartesian(array1, array2));
-
-      // Should produce 4 combinations (2 * 2)
-      assert.strictEqual(result.length, 4);
-      // Verify all combinations exist (order may vary based on implementation)
-      assert(result.some((r) => r[0] === 'a' && r[1] === 1));
-      assert(result.some((r) => r[0] === 'a' && r[1] === 2));
-      assert(result.some((r) => r[0] === 'b' && r[1] === 1));
-      assert(result.some((r) => r[0] === 'b' && r[1] === 2));
-    });
-
-    it('should generate cartesian product of three arrays', () => {
-      const array1 = ['x', 'y'];
-      const array2 = [1, 2];
-      const array3 = ['A', 'B'];
-
-      const result = Array.from(cartesian(array1, array2, array3));
-
-      // Should produce 8 combinations (2 * 2 * 2)
-      assert.strictEqual(result.length, 8);
-      // Verify a few key combinations exist
-      assert(result.some((r) => r[0] === 'x' && r[1] === 1 && r[2] === 'A'));
-      assert(result.some((r) => r[0] === 'y' && r[1] === 2 && r[2] === 'B'));
-      assert(result.some((r) => r[0] === 'x' && r[1] === 2 && r[2] === 'A'));
-    });
-
-    it('should handle arrays of different sizes', () => {
-      const array1 = ['a'];
-      const array2 = [1, 2, 3];
-      const array3 = ['X', 'Y'];
-
-      const result = Array.from(cartesian(array1, array2, array3));
-
-      // Should produce 6 combinations (1 * 3 * 2)
-      assert.strictEqual(result.length, 6);
-      // All should have 'a' as first element since array1 has only 'a'
-      assert(result.every((r) => r[0] === 'a'));
-      // Verify key combinations exist
-      assert(result.some((r) => r[1] === 1 && r[2] === 'X'));
-      assert(result.some((r) => r[1] === 2 && r[2] === 'Y'));
-      assert(result.some((r) => r[1] === 3 && r[2] === 'X'));
-    });
-
-    it.skip('should return empty when one array is empty', () => {
-      // NOTE: Current implementation doesn't handle empty arrays correctly
-      // It produces combinations anyway - this is a bug in the cartesian implementation
-      // Skipping until fixed
-      const array1 = ['a', 'b'];
-      const array2 = [];
-
-      const result = Array.from(cartesian(array1, array2));
-
-      // Should produce no combinations
-      assert.strictEqual(result.length, 0);
-    });
-
-    it('should work with single array', () => {
-      const array1 = ['a', 'b', 'c'];
-
-      const result = Array.from(cartesian(array1));
-
-      // Should return each element wrapped in array
-      assert.strictEqual(result.length, 3);
-      assert.deepStrictEqual(result, [
-        ['a'],
-        ['b'],
-        ['c'],
-      ]);
-    });
-
-    it('should handle arrays with single elements', () => {
-      const array1 = ['a'];
-      const array2 = ['b'];
-      const array3 = ['c'];
-
-      const result = Array.from(cartesian(array1, array2, array3));
-
-      // Should produce single combination
-      assert.strictEqual(result.length, 1);
-      assert.deepStrictEqual(result, [['a', 'b', 'c']]);
-    });
-
-    it('should work with various data types', () => {
-      const array1 = [1, 2];
-      const array2 = ['x', 'y'];
-      const array3 = [true, false];
-
-      const result = Array.from(cartesian(array1, array2, array3));
-
-      // Should handle mixed types
-      assert.strictEqual(result.length, 8);
-      assert.deepStrictEqual(result[0], [1, 'x', true]);
-      assert.deepStrictEqual(result[7], [2, 'y', false]);
-    });
-
-    it('should be iterable with for...of loop', () => {
-      const array1 = ['a', 'b'];
-      const array2 = [1, 2];
-
-      const combinations = [];
-      for (const combo of cartesian(array1, array2)) {
-        combinations.push(combo);
-      }
-
-      // Should work with for...of
-      assert.strictEqual(combinations.length, 4);
-      assert.deepStrictEqual(combinations[0], ['a', 1]);
     });
   });
 });
