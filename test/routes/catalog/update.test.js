@@ -14,16 +14,26 @@
 
 import assert from 'node:assert';
 import sinon from 'sinon';
+import esmock from 'esmock';
 import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
-import handleProductSaveRequest from '../../../src/routes/catalog/update.js';
 
 describe('Product Save Tests', () => {
   /** @type {sinon.SinonStub} */
   let storageStub;
+  let fetchHelixConfigStub;
+  let handleProductSaveRequest;
 
   beforeEach(async () => {
     storageStub = sinon.stub();
     storageStub.saveProducts = sinon.stub();
+    fetchHelixConfigStub = sinon.stub().resolves({});
+
+    // Mock the module with fetchHelixConfig stub
+    handleProductSaveRequest = await esmock('../../../src/routes/catalog/update.js', {
+      '../../../src/utils/config.js': {
+        fetchHelixConfig: fetchHelixConfigStub,
+      },
+    });
   });
 
   afterEach(() => {
@@ -47,9 +57,16 @@ describe('Product Save Tests', () => {
         data: { sku: '1234', urlKey: 'product-url-key', name: 'product-name' },
         config: {
           sku: '1234',
+          org: 'myorg',
+          site: 'mysite',
         },
         attributes: {
           storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
         },
       });
       const request = { };
@@ -59,6 +76,53 @@ describe('Product Save Tests', () => {
 
       assert.equal(response.status, 201);
       assert(storageStub.saveProducts.calledOnce);
+    });
+
+    it('should fetch helix config and cache it in context attributes for bulk operations', async () => {
+      const mockHelixConfig = {
+        cdn: {
+          prod: {
+            type: 'fastly',
+            host: 'cdn.example.com',
+            serviceId: 'service123',
+            authToken: 'token123',
+          },
+        },
+        content: {
+          contentBusId: 'content-bus-123',
+        },
+      };
+      fetchHelixConfigStub.resolves(mockHelixConfig);
+
+      const ctx = DEFAULT_CONTEXT({
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: { sku: '1234', urlKey: 'product-url-key', name: 'product-name' },
+        config: {
+          sku: '1234',
+          org: 'myorg',
+          site: 'mysite',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      });
+
+      storageStub.saveProducts.resolves([{ sku: '1234', sluggedSku: '1234' }]);
+      const response = await handleProductSaveRequest(ctx);
+
+      // Verify config was fetched
+      assert(fetchHelixConfigStub.calledOnceWith(ctx, 'myorg', 'mysite'));
+
+      // Verify config was cached in context
+      assert.strictEqual(ctx.attributes.helixConfigCache, mockHelixConfig);
+
+      // Verify response was successful
+      assert.equal(response.status, 201);
     });
   });
 });

@@ -22,6 +22,7 @@ import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 describe('StorageClient Class Tests', () => {
   let StorageClient;
   let BatchProcessorMock;
+  let purgeBatchMock;
   let config;
 
   beforeEach(async () => {
@@ -37,9 +38,14 @@ describe('StorageClient Class Tests', () => {
       }
     };
 
+    purgeBatchMock = sinon.stub().resolves();
+
     const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
       '../../../src/utils/batch.js': {
         BatchProcessor: BatchProcessorMock,
+      },
+      '../../../src/routes/cache/purge.js': {
+        purgeBatch: purgeBatchMock,
       },
     });
 
@@ -380,7 +386,9 @@ describe('StorageClient Class Tests', () => {
 
       beforeEach(async () => {
         ctx = DEFAULT_CONTEXT({
-          log: { debug: sinon.stub(), error: sinon.stub() },
+          log: {
+            debug: sinon.stub(), warn: sinon.stub(), error: sinon.stub(), info: sinon.stub(),
+          },
           env: {
             CATALOG_BUCKET: {
               put: sinon.stub(),
@@ -789,6 +797,209 @@ describe('StorageClient Class Tests', () => {
         ]);
 
         assert(ctx.log.error.notCalled);
+      });
+
+      it('should call purgeBatch once after all products are saved successfully', async () => {
+        const client = new StorageClient(ctx);
+        const batch = [
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
+        ];
+
+        ctx.env.CATALOG_BUCKET.put.resolves({ status: 200 });
+
+        const results = await client.storeProductsBatch(batch);
+
+        assert(ctx.env.CATALOG_BUCKET.put.callCount === 4);
+
+        // Verify purgeBatch was called once with all successfully saved products
+        assert(purgeBatchMock.calledOnce);
+        assert(purgeBatchMock.calledWithExactly(
+          ctx,
+          { org: 'org', site: 'site' },
+          [
+            {
+              sku: 'sku1', urlKey: 'product-1', storeCode: 'store', storeViewCode: 'view',
+            },
+            {
+              sku: 'sku2', urlKey: 'product-2', storeCode: 'store', storeViewCode: 'view',
+            },
+          ],
+        ));
+
+        // Verify success info log is called
+        assert(ctx.log.info.calledOnceWithExactly('Cache purged for 2 successfully saved products'));
+
+        assert.deepStrictEqual(results, [
+          {
+            sku: 'sku1',
+            sluggedSku: 'sku1',
+            message: 'Product saved successfully.',
+            status: 200,
+          },
+          {
+            sku: 'sku2',
+            sluggedSku: 'sku2',
+            message: 'Product saved successfully.',
+            status: 200,
+          },
+        ]);
+
+        assert(ctx.log.error.notCalled);
+        assert(ctx.log.warn.notCalled);
+      });
+
+      it('should only purge cache for successfully saved products when some fail', async () => {
+        const client = new StorageClient(ctx);
+        const batch = [
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
+        ];
+
+        // First product succeeds
+        ctx.env.CATALOG_BUCKET.put.withArgs(
+          'org/site/store/view/products/sku1.json',
+          JSON.stringify(batch[0]),
+          {
+            httpMetadata: { contentType: 'application/json' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          },
+        ).resolves({ status: 200 });
+
+        ctx.env.CATALOG_BUCKET.put.withArgs(
+          'org/site/store/view/urlkeys/product-1',
+          '',
+          {
+            httpMetadata: { contentType: 'text/plain' },
+            customMetadata: { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          },
+        ).resolves({ status: 200 });
+
+        // Second product fails
+        ctx.env.CATALOG_BUCKET.put.withArgs(
+          'org/site/store/view/products/sku2.json',
+          JSON.stringify(batch[1]),
+          {
+            httpMetadata: { contentType: 'application/json' },
+            customMetadata: { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
+          },
+        ).rejects(new Error('PUT failed for sku2'));
+
+        const results = await client.storeProductsBatch(batch);
+
+        // Verify purgeBatch was called only with the successfully saved product
+        assert(purgeBatchMock.calledOnce);
+        assert(purgeBatchMock.calledWithExactly(
+          ctx,
+          { org: 'org', site: 'site' },
+          [
+            {
+              sku: 'sku1', urlKey: 'product-1', storeCode: 'store', storeViewCode: 'view',
+            },
+          ],
+        ));
+
+        // Verify success info log is called for the one successfully purged product
+        assert(ctx.log.info.calledOnceWithExactly('Cache purged for 1 successfully saved products'));
+
+        assert.deepStrictEqual(results, [
+          {
+            sku: 'sku1',
+            sluggedSku: 'sku1',
+            message: 'Product saved successfully.',
+            status: 200,
+          },
+          {
+            sku: 'sku2',
+            sluggedSku: 'sku2',
+            status: 500,
+            message: 'Error: PUT failed for sku2',
+          },
+        ]);
+
+        // Error log is called once for the failed product save
+        assert(ctx.log.error.calledOnce);
+        assert(ctx.log.error.calledWithExactly('Error storing product SKU: sku2:', sinon.match.instanceOf(Error)));
+      });
+
+      it('should not call purgeBatch when all products fail to save', async () => {
+        const client = new StorageClient(ctx);
+        const batch = [
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
+        ];
+
+        ctx.env.CATALOG_BUCKET.put.rejects(new Error('PUT failed'));
+
+        const results = await client.storeProductsBatch(batch);
+
+        // Verify purgeBatch was not called since no products were saved successfully
+        assert(purgeBatchMock.notCalled);
+
+        assert.deepStrictEqual(results, [
+          {
+            sku: 'sku1',
+            sluggedSku: 'sku1',
+            status: 500,
+            message: 'Error: PUT failed',
+          },
+          {
+            sku: 'sku2',
+            sluggedSku: 'sku2',
+            status: 500,
+            message: 'Error: PUT failed',
+          },
+        ]);
+
+        assert(ctx.log.error.calledTwice);
+      });
+
+      it('should log error when batch cache purge fails but still save products successfully', async () => {
+        const client = new StorageClient(ctx);
+        const batch = [
+          { sku: 'sku1', name: 'Product 1', urlKey: 'product-1' },
+          { sku: 'sku2', name: 'Product 2', urlKey: 'product-2' },
+        ];
+
+        ctx.env.CATALOG_BUCKET.put.resolves({ status: 200 });
+        purgeBatchMock.rejects(new Error('Purge service unavailable'));
+
+        const results = await client.storeProductsBatch(batch);
+
+        assert(ctx.env.CATALOG_BUCKET.put.callCount === 4);
+
+        // Verify purgeBatch was called once with all successfully saved products
+        assert(purgeBatchMock.calledOnce);
+        assert(purgeBatchMock.calledWithExactly(
+          ctx,
+          { org: 'org', site: 'site' },
+          [
+            {
+              sku: 'sku1', urlKey: 'product-1', storeCode: 'store', storeViewCode: 'view',
+            },
+            {
+              sku: 'sku2', urlKey: 'product-2', storeCode: 'store', storeViewCode: 'view',
+            },
+          ],
+        ));
+        assert(ctx.log.error.calledOnceWithExactly('Failed to purge cache for saved products: Purge service unavailable'));
+
+        assert.deepStrictEqual(results, [
+          {
+            sku: 'sku1',
+            sluggedSku: 'sku1',
+            message: 'Product saved successfully.',
+            status: 200,
+          },
+          {
+            sku: 'sku2',
+            sluggedSku: 'sku2',
+            message: 'Product saved successfully.',
+            status: 200,
+          },
+        ]);
+
+        assert(ctx.log.warn.notCalled);
       });
     });
   });
