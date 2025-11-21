@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.16.2...v1.17.0) (2025-11-21)
+
+
+### Features
+
+* push invalidation support ([#118](https://github.com/adobe-rnd/helix-commerce-api/issues/118)) ([a35aa1e](https://github.com/adobe-rnd/helix-commerce-api/commit/a35aa1e1258091b5712914e6b9e4abd32a77c355))
+
 ## [1.16.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.16.1...v1.16.2) (2025-10-17)
 
 
