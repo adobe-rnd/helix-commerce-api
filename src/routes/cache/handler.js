@@ -54,11 +54,12 @@ function validateCacheApiKey(ctx) {
  * - storeViewCode: Store view code for the product
  *
  * @param {Context} ctx - The request context
- * @returns {Promise<Response>} HTTP response with purge results
+ * @returns {Promise<Response>} HTTP response - 200 (empty body) on success,
+ *                                              error response otherwise
  *
  * @example
  * POST /{org}/{site}/cache
- * Authorization: Bearer <CACHE_API_KEY>
+ * x-cache-api-key: Bearer <CACHE_API_KEY>
  * Content-Type: application/json
  *
  * {
@@ -109,59 +110,21 @@ async function handleBulkPurge(ctx) {
   }
 
   // Purge all products in a single batched operation
-  let successCount = 0;
-  let failureCount = 0;
-  const results = [];
-
   try {
     // Use purgeBatch to compute all cache keys upfront and make a single CDN call
     await purgeBatch(ctx, config, data.products);
 
-    // All products succeeded
-    successCount = data.products.length;
-    for (const product of data.products) {
-      results.push({
-        sku: product.sku,
-        urlKey: product.urlKey,
-        storeCode: product.storeCode,
-        storeViewCode: product.storeViewCode,
-        status: 'success',
-      });
-    }
+    log.info(`Cache purge completed: ${data.products.length} products purged successfully`);
 
-    log.info(`Cache purge completed: ${successCount} products purged successfully`);
+    return new Response('', {
+      status: 200,
+    });
   } catch (error) {
-    // If batch purge fails, all products fail
+    // If batch purge fails, return 500
     log.error('Failed to purge cache for batch:', error);
-    failureCount = data.products.length;
-    for (const product of data.products) {
-      results.push({
-        sku: product.sku,
-        urlKey: product.urlKey,
-        storeCode: product.storeCode,
-        storeViewCode: product.storeViewCode,
-        status: 'error',
-        error: error.message,
-      });
-    }
 
-    log.info(`Cache purge failed: ${failureCount} products failed`);
+    return errorResponse(500, `cache purge failed: ${error.message}`);
   }
-
-  return new Response(
-    JSON.stringify({
-      success: failureCount === 0,
-      purged: successCount,
-      failed: failureCount,
-      results,
-    }),
-    {
-      status: failureCount === 0 ? 200 : 207, // 207 Multi-Status for partial success
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
 }
 
 /**

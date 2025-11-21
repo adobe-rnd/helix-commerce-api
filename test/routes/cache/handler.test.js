@@ -353,13 +353,8 @@ describe('Cache Handler Tests', () => {
 
       assert.strictEqual(response.status, 200);
 
-      const body = JSON.parse(await response.text());
-      assert.strictEqual(body.success, true);
-      assert.strictEqual(body.purged, 1);
-      assert.strictEqual(body.failed, 0);
-      assert.strictEqual(body.results.length, 1);
-      assert.strictEqual(body.results[0].status, 'success');
-      assert.strictEqual(body.results[0].sku, 'TEST-123');
+      const body = await response.text();
+      assert.strictEqual(body, '');
 
       // Verify helix config was fetched once
       assert(fetchHelixConfigStub.calledOnce);
@@ -397,11 +392,8 @@ describe('Cache Handler Tests', () => {
 
       assert.strictEqual(response.status, 200);
 
-      const body = JSON.parse(await response.text());
-      assert.strictEqual(body.success, true);
-      assert.strictEqual(body.purged, 3);
-      assert.strictEqual(body.failed, 0);
-      assert.strictEqual(body.results.length, 3);
+      const body = await response.text();
+      assert.strictEqual(body, '');
 
       // Verify helix config was fetched once (not once per product)
       assert(fetchHelixConfigStub.calledOnce);
@@ -432,9 +424,8 @@ describe('Cache Handler Tests', () => {
 
       assert.strictEqual(response.status, 200);
 
-      const body = JSON.parse(await response.text());
-      assert.strictEqual(body.success, true);
-      assert.strictEqual(body.results[0].urlKey, undefined);
+      const body = await response.text();
+      assert.strictEqual(body, '');
 
       // Verify purgeBatch was called with the products (urlKey will be undefined in product object)
       assert(purgeBatchStub.calledOnce);
@@ -461,12 +452,12 @@ describe('Cache Handler Tests', () => {
       assert.strictEqual(response.headers.get('x-error'), 'site configuration not found');
     });
 
-    it('should handle batch purge failures (207 Multi-Status)', async () => {
+    it('should return 500 when batch purge fails', async () => {
       fetchHelixConfigStub.resolves({
         cdn: { prod: { type: 'fastly', host: 'cdn.example.com' } },
       });
 
-      // Batch purge fails - with batching, all products fail together
+      // Batch purge fails
       purgeBatchStub.rejects(new Error('CDN purge failed'));
 
       const ctx = validCtx();
@@ -480,20 +471,8 @@ describe('Cache Handler Tests', () => {
 
       const response = await cacheHandler.default(ctx);
 
-      assert.strictEqual(response.status, 207); // Multi-Status
-
-      const body = JSON.parse(await response.text());
-      assert.strictEqual(body.success, false);
-      assert.strictEqual(body.purged, 0);
-      assert.strictEqual(body.failed, 3);
-      assert.strictEqual(body.results.length, 3);
-      // With batching, if the CDN call fails, all products fail
-      assert.strictEqual(body.results[0].status, 'error');
-      assert.strictEqual(body.results[0].error, 'CDN purge failed');
-      assert.strictEqual(body.results[1].status, 'error');
-      assert.strictEqual(body.results[1].error, 'CDN purge failed');
-      assert.strictEqual(body.results[2].status, 'error');
-      assert.strictEqual(body.results[2].error, 'CDN purge failed');
+      assert.strictEqual(response.status, 500);
+      assert.strictEqual(response.headers.get('x-error'), 'cache purge failed: CDN purge failed');
     });
 
     it('should cache helix config in context attributes', async () => {
@@ -516,13 +495,11 @@ describe('Cache Handler Tests', () => {
       assert.strictEqual(ctx.attributes.helixConfigCache, mockHelixConfig);
     });
 
-    it('should log success and failure counts', async () => {
+    it('should log success count', async () => {
       fetchHelixConfigStub.resolves({
         cdn: { prod: { type: 'fastly', host: 'cdn.example.com' } },
       });
-
-      // With batched purging, if the batch fails, all products fail
-      purgeBatchStub.rejects(new Error('CDN purge failed'));
+      purgeBatchStub.resolves();
 
       const ctx = validCtx();
       ctx.data = {
@@ -534,8 +511,8 @@ describe('Cache Handler Tests', () => {
 
       await cacheHandler.default(ctx);
 
-      // Verify logging - with batch purge, all products fail together
-      assert(ctx.log.info.calledWith(sinon.match(/2 products failed/)));
+      // Verify success logging
+      assert(ctx.log.info.calledWith(sinon.match(/2 products purged successfully/)));
     });
   });
 

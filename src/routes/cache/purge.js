@@ -50,7 +50,6 @@ const PURGE_CLIENTS = {
 async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
   const { type } = cdnConfig;
 
-  /* c8 ignore next 3 */
   if ((!keys || !keys.length)) {
     return;
   }
