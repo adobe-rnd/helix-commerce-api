@@ -556,12 +556,11 @@ export default class StorageClient extends SharedStorageClient {
   }
 
   /**
-   * @param {string} id
+   * Get hash table for a customer's address hash -> id lookup
    * @param {string} email
-   * @param {Address} address
-   * @returns {Promise<Address>}
+   * @returns {Promise<Record<string, string>>} { hash: id }
    */
-  async saveAddress(id, email, address) {
+  async getAddressHashTable(email) {
     const {
       env,
       config: {
@@ -569,6 +568,57 @@ export default class StorageClient extends SharedStorageClient {
         site,
       },
     } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/addresses/.hashtable.json`;
+    const resp = await env.ORDERS_BUCKET.get(key);
+    if (!resp) {
+      return {};
+    }
+    return resp.json();
+  }
+
+  /**
+   * Save hash table for a customer's address hash -> id lookup
+   * @param {string} email
+   * @param {Record<string, string>} hashTable { hash: id }
+   * @returns {Promise<void>}
+   */
+  async saveAddressHashTable(email, hashTable) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/addresses/.hashtable.json`;
+    await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(hashTable), {
+      httpMetadata: { contentType: 'application/json' },
+    });
+  }
+
+  /**
+   * @param {string} hash
+   * @param {string} email
+   * @param {Address} address
+   * @returns {Promise<Address>}
+   */
+  async saveAddress(hash, email, address) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const hashTable = await this.getAddressHashTable(email);
+    if (hashTable[hash]) {
+      if (hashTable[hash] === address.id) {
+        throw errorWithResponse(400, 'Address already exists, id mismatch');
+      }
+      return address;
+    }
+
+    const id = crypto.randomUUID();
     const key = `${org}/${site}/customers/${email}/addresses/${id}.json`;
     await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(address), {
       httpMetadata: { contentType: 'application/json' },
@@ -577,6 +627,10 @@ export default class StorageClient extends SharedStorageClient {
         id,
       },
     });
+
+    // persist hash table with new hash -> id
+    hashTable[hash] = id;
+    await this.saveAddressHashTable(email, hashTable);
     return {
       ...address,
       id,
