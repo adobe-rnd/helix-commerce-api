@@ -14,6 +14,7 @@ import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from '../../utils/StorageClient.js';
 import { assertAuthorization } from '../../utils/auth.js';
+import { fetchHelixConfig } from '../../utils/config.js';
 
 const MAX_PRODUCT_BULK = 50;
 const MAX_IMAGES_PER_JOB = 500;
@@ -80,6 +81,10 @@ async function doUpdate(ctx, products) {
 
   try {
     const { log, config } = ctx;
+
+    const helixConfig = await fetchHelixConfig(ctx, config.org, config.site);
+    ctx.attributes.helixConfigCache = helixConfig;
+
     const storage = StorageClient.fromContext(ctx);
     // images are fetched asynchronously if there are more than 10 products,
     // of it there are more than 10 images total across all products

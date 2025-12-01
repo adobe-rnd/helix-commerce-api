@@ -14,17 +14,27 @@
 
 import assert from 'node:assert';
 import sinon from 'sinon';
+import esmock from 'esmock';
 import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
-import handleProductSaveRequest from '../../../src/routes/catalog/update.js';
 import { createProductFixture } from '../../fixtures/product.js';
 
 describe('Product Bulk Save Tests', () => {
   /** @type {sinon.SinonStub} */
   let storageStub;
+  let fetchHelixConfigStub;
+  let handleProductSaveRequest;
 
   beforeEach(async () => {
     storageStub = sinon.stub();
     storageStub.saveProducts = sinon.stub();
+    fetchHelixConfigStub = sinon.stub().resolves({});
+
+    // Mock the module with fetchHelixConfig stub
+    handleProductSaveRequest = await esmock('../../../src/routes/catalog/update.js', {
+      '../../../src/utils/config.js': {
+        fetchHelixConfig: fetchHelixConfigStub,
+      },
+    });
   });
 
   afterEach(() => {
@@ -80,9 +90,14 @@ describe('Product Bulk Save Tests', () => {
       ];
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub(), info: sinon.stub() },
-        config: { sku: '*' },
+        config: { sku: '*', org: 'myorg', site: 'mysite' },
         attributes: { storageClient: storageStub },
         info: { method: 'POST' },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
       });
       ctx.data = products;
       const request = {};
@@ -98,9 +113,17 @@ describe('Product Bulk Save Tests', () => {
       const products = Array.from({ length: 11 }, (_, i) => ({ sku: `sku-${i}`, name: `Name ${i}` }));
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub(), info: sinon.stub() },
-        config: { sku: '*' },
+        config: { sku: '*', org: 'myorg', site: 'mysite' },
         attributes: { storageClient: storageStub },
         info: { method: 'POST' },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+          IMAGE_COLLECTOR_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
       });
       ctx.data = products;
       const request = {};
