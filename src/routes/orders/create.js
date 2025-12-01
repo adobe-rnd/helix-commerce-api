@@ -14,7 +14,6 @@ import StorageClient from '../../utils/StorageClient.js';
 import { errorWithResponse } from '../../utils/http.js';
 import { validate } from '../../utils/validation.js';
 import OrderSchema from '../../schemas/Order.js';
-import Platform from './payments/Platform.js';
 import { createAddress } from '../customers/addresses.js';
 
 /**
@@ -35,16 +34,9 @@ export default async function create(ctx) {
   // validate payload
   assertValidOrder(ctx.data);
 
-  // find assigned backend for site(/store/view), if any
-  const platform = await Platform.fromContext(ctx);
-
-  // platform-specific validation
-  platform.assertValidOrder(ctx.data);
-  await platform.validateLineItems(ctx.data.items);
-
   // create internal order
   const storage = StorageClient.fromContext(ctx);
-  const order = await storage.createOrder(ctx.data, platform.type);
+  const order = await storage.createOrder(ctx.data);
 
   // create link to customer
   await storage.linkOrderToCustomer(order.customer.email, order.id, order);
@@ -52,15 +44,8 @@ export default async function create(ctx) {
   // add address to customer, tbd
   await createAddress(ctx, order.customer.email, order.shipping);
 
-  /** @type {PaymentLink|null} */
-  let paymentLink = null;
-  if (platform.type !== 'none') {
-    paymentLink = await platform.createPaymentLink(order);
-  }
-
   return new Response(JSON.stringify({
     order,
-    payment: paymentLink,
   }), {
     status: 200,
     headers: {

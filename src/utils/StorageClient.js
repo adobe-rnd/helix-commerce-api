@@ -386,7 +386,7 @@ export default class StorageClient extends SharedStorageClient {
 
   /**
    * @param {Order} data
-   * @param {string} platformType
+   * @param {string} [platformType]
    * @returns {Promise<Order>}
    */
   async createOrder(data, platformType) {

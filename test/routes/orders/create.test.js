@@ -57,7 +57,7 @@ describe('routes/orders create tests', () => {
             called.createOrder = true;
             assert.equal(data.storeCode, 'store1');
             assert.equal(data.storeViewCode, 'view1');
-            assert.equal(platformType, 'none');
+            assert.equal(platformType, undefined);
             return {
               id: 'order1',
               createdAt: '2021-01-01T00:00:00.000Z',
