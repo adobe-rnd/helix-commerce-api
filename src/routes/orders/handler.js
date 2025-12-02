@@ -24,6 +24,14 @@ const allHandlers = {
   GET: list,
   // POST ${org}/${site}/orders
   POST: create,
+  OPTIONS: async () => new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  }),
 };
 
 /**
@@ -34,6 +42,14 @@ const oneHandlers = {
   GET: retrieve,
   // DELETE ${org}/${site}/orders/${id}
   DELETE: remove,
+  OPTIONS: async () => new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, DELETE',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  }),
 };
 
 /**

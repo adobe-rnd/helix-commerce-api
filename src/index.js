@@ -79,6 +79,26 @@ export async function makeContext(eCtx, req, env) {
   return ctx;
 }
 
+/**
+ * @param {Response} resp
+ * @returns {Promise<Response>}
+ */
+async function applyCORSHeaders(resp) {
+  const origin = resp.headers.get('access-control-allow-origin') || '*';
+  const methods = resp.headers.get('access-control-allow-methods') || 'GET, POST, PUT, DELETE, OPTIONS';
+  const headers = resp.headers.get('access-control-allow-headers') || 'Content-Type';
+  console.log('origin:', origin);
+  return new Response(await resp.text(), {
+    status: resp.status,
+    headers: {
+      ...Object.fromEntries([...resp.headers.entries()].map(([k, v]) => [k.toLowerCase(), v])),
+      'access-control-allow-origin': origin,
+      'access-control-allow-methods': methods,
+      'access-control-allow-headers': headers,
+    },
+  });
+}
+
 export default {
   /**
    * @param {import("@cloudflare/workers-types").Request} request
@@ -97,7 +117,8 @@ export default {
       if (!fn) {
         return errorResponse(404, 'route not found');
       }
-      const resp = await fn(ctx, request);
+      let resp = await fn(ctx, request);
+      resp = await applyCORSHeaders(resp);
       return resp;
     } catch (e) {
       if (e.response) {
