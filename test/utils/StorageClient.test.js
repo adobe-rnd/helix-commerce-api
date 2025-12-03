@@ -2070,7 +2070,6 @@ describe('StorageClient Class Tests', () => {
     });
 
     it('saveAddress creates new address and updates hash table when hash absent', async () => {
-      // @ts-ignore
       sinon.stub(globalThis.crypto, 'randomUUID').returns('id-123');
       const putToStub = sinon.stub().resolves(false);
       const getHashStub = sinon.stub().resolves({});
@@ -2097,27 +2096,16 @@ describe('StorageClient Class Tests', () => {
       assert(saveHashStub.calledWithExactly('user@example.com', { hash1: 'id-123' }));
     });
 
-    it('saveAddress returns existing address when hash exists with different id; throws on same id', async () => {
+    it('saveAddress returns existing address when hash exists', async () => {
       const ctx = DEFAULT_CONTEXT({
         env: { ORDERS_BUCKET: {} },
         config,
       });
       const client = new StorageClient(ctx);
       sinon.stub(client, 'getAddressHashTable').resolves({ h: 'abc' });
-      const addr = { id: 'def', line1: '123' };
+      const addr = { line1: '123' };
       const res = await client.saveAddress('h', 'e', addr);
-      assert.strictEqual(res, addr);
-      // same id should throw
-      sinon.restore();
-      const client2 = new StorageClient(ctx);
-      sinon.stub(client2, 'getAddressHashTable').resolves({ h: 'same' });
-      let threw;
-      try {
-        await client2.saveAddress('h', 'e', { id: 'same', line1: 'x' });
-      } catch (e) {
-        threw = e;
-      }
-      assert.strictEqual(threw?.response?.status, 400);
+      assert.deepStrictEqual(res, { ...addr, id: 'abc' });
     });
 
     it('getAddress returns null when missing and parsed JSON when found', async () => {

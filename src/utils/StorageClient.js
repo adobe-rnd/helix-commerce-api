@@ -638,10 +638,13 @@ export default class StorageClient extends SharedStorageClient {
     } = this.ctx;
     const hashTable = await this.getAddressHashTable(email);
     if (hashTable[hash]) {
-      if (hashTable[hash] === address.id) {
-        throw errorWithResponse(400, 'Address already exists, id mismatch');
-      }
-      return address;
+      // address hash already exists, return it as the address
+      // NOTE: that this does not handle address updates by ID, yet
+      const id = hashTable[hash];
+      return {
+        ...address,
+        id,
+      };
     }
 
     const id = crypto.randomUUID();
