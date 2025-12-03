@@ -12,7 +12,7 @@
 
 import { ProductBusPrice } from './ProductBus.js';
 import AddressSchema from './Address.js';
-import { EmailSchema } from './common.js';
+import CustomerSchema from './Customer.js';
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
 export const OrderItem = {
@@ -46,13 +46,7 @@ const Order = {
     // provided by client
     storeCode: { type: 'string' },
     storeViewCode: { type: 'string' },
-    customer: {
-      type: 'object',
-      properties: {
-        email: EmailSchema,
-      },
-      required: ['email'],
-    },
+    customer: CustomerSchema,
     shipping: AddressSchema,
     items: { type: 'array', items: OrderItem },
   },

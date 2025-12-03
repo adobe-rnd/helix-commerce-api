@@ -19,6 +19,8 @@ import handler from '../../../src/routes/orders/create.js';
 describe('routes/orders create tests', () => {
   it('should create an order without payment by default', async () => {
     const called = {
+      customerExists: false,
+      saveCustomer: false,
       createOrder: false,
       linkOrderToCustomer: false,
       saveAddress: false,
@@ -31,6 +33,8 @@ describe('routes/orders create tests', () => {
         storeViewCode: 'view1',
         customer: {
           email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
         },
         shipping: {
           name: 'Test User',
@@ -53,6 +57,21 @@ describe('routes/orders create tests', () => {
       },
       attributes: {
         storageClient: {
+          customerExists: async (email) => {
+            called.customerExists = true;
+            assert.equal(email, 'test@example.com');
+            return false;
+          },
+          saveCustomer: async (customer) => {
+            called.saveCustomer = true;
+            assert.strictEqual(customer.email, 'test@example.com');
+            assert.strictEqual(customer.firstName, 'Test');
+            assert.strictEqual(customer.lastName, 'User');
+            assert.strictEqual(customer.phone, undefined);
+            assert.ok(/[\d]{4}-[\d]{2}-[\d]{2}T[\d]{2}:[\d]{2}:[\d]{2}\.[\d]{3}Z/.test(customer.createdAt));
+            assert.ok(/[\d]{4}-[\d]{2}-[\d]{2}T[\d]{2}:[\d]{2}:[\d]{2}\.[\d]{3}Z/.test(customer.updatedAt));
+            return customer;
+          },
           createOrder: async (data, platformType) => {
             called.createOrder = true;
             assert.equal(data.storeCode, 'store1');

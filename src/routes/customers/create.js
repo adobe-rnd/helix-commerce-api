@@ -11,7 +11,7 @@
  */
 
 import StorageClient from '../../utils/StorageClient.js';
-import { errorWithResponse } from '../../utils/http.js';
+import { errorWithResponse, errorResponse } from '../../utils/http.js';
 import { validate } from '../../utils/validation.js';
 import CustomerSchema from '../../schemas/Customer.js';
 
@@ -55,6 +55,9 @@ export default async function create(ctx) {
   assertValidCustomer(ctx.data);
 
   const customer = await createCustomer(ctx, ctx.data);
+  if (!customer) {
+    return errorResponse(409, 'customer already exists');
+  }
 
   return new Response(JSON.stringify({
     customer,

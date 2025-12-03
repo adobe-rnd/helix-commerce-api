@@ -21,8 +21,6 @@ export default async function retrieve(ctx) {
 
   await assertAuthorization(ctx);
 
-  console.log('config', config);
-
   const token = await ctx.env.KEYS.get(config.siteKey);
   if (!token) {
     return errorResponse(404);

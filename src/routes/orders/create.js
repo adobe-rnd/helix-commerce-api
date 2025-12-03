@@ -16,6 +16,7 @@ import { assertAuthorization } from '../../utils/auth.js';
 import { validate } from '../../utils/validation.js';
 import OrderSchema from '../../schemas/Order.js';
 import { createAddress } from '../customers/addresses.js';
+import { assertValidCustomer, createCustomer } from '../customers/create.js';
 
 /**
  * @param {any} order
@@ -35,6 +36,10 @@ export default async function create(ctx) {
   await assertAuthorization(ctx);
   // validate payload
   assertValidOrder(ctx.data);
+
+  // validate customer, create if needed
+  assertValidCustomer(ctx.data.customer);
+  await createCustomer(ctx, ctx.data.customer);
 
   // create internal order
   const storage = StorageClient.fromContext(ctx);

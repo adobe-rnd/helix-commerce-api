@@ -122,7 +122,7 @@ declare global {
     firstName: string;
     lastName: string;
     email: string;
-    phone: string;
+    phone?: string;
     createdAt: string;
     updatedAt: string;
   }
