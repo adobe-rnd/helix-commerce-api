@@ -10,21 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import operationsLog from './operations-log/handler.js';
-import orders from './orders/handler.js';
-import customers from './customers/handler.js';
-import cache from './cache/handler.js';
-
-/**
- * @type {Record<string, RouteHandler>}
- */
-export default {
-  catalog,
-  auth,
-  orders,
-  customers,
-  'operations-log': operationsLog,
-  cache,
+/** @type {import("../utils/validation.js").StringSchema} */
+export const EmailSchema = {
+  type: 'string',
+  pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+  maxLength: 255,
 };

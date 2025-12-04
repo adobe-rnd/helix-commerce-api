@@ -17,7 +17,7 @@
 import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import { DEFAULT_CONTEXT } from '../fixtures/context.js';
 
 describe('StorageClient Class Tests', () => {
   let StorageClient;
@@ -40,11 +40,11 @@ describe('StorageClient Class Tests', () => {
 
     purgeBatchMock = sinon.stub().resolves();
 
-    const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-      '../../../src/utils/batch.js': {
+    const module = await esmock('../../src/utils/StorageClient.js', {
+      '../../src/utils/batch.js': {
         BatchProcessor: BatchProcessorMock,
       },
-      '../../../src/routes/cache/purge.js': {
+      '../../src/routes/cache/purge.js': {
         purgeBatch: purgeBatchMock,
       },
     });
@@ -173,8 +173,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -238,8 +238,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -304,8 +304,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -353,8 +353,8 @@ describe('StorageClient Class Tests', () => {
 
       const storeProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -1040,8 +1040,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -1109,8 +1109,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -1180,8 +1180,8 @@ describe('StorageClient Class Tests', () => {
         },
       ]);
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -1229,8 +1229,8 @@ describe('StorageClient Class Tests', () => {
 
       const deleteProductsBatchStub = sinon.stub().rejects(new Error('Batch processing failed'));
 
-      const module = await esmock('../../../src/routes/catalog/StorageClient.js', {
-        '../../../src/utils/batch.js': {
+      const module = await esmock('../../src/utils/StorageClient.js', {
+        '../../src/utils/batch.js': {
           BatchProcessor: BatchProcessorMock,
         },
       });
@@ -1867,6 +1867,366 @@ describe('StorageClient Class Tests', () => {
       assert(ctx.env.CATALOG_BUCKET.head.calledTwice);
       assert(thrownError instanceof Error);
       assert.strictEqual(thrownError.message, 'Head request failed');
+    });
+  });
+
+  describe('orders and customers', () => {
+    let clock;
+    beforeEach(() => {
+      clock = sinon.useFakeTimers(new Date('2025-01-01T00:00:00Z'));
+    });
+    afterEach(() => {
+      clock.restore();
+      if (globalThis.crypto?.randomUUID?.restore) {
+        // @ts-ignore
+        globalThis.crypto.randomUUID.restore();
+      }
+    });
+
+    it('createOrder stores order and returns populated object', async () => {
+      const putStub = sinon.stub().resolves();
+      sinon.stub(globalThis.crypto, 'randomUUID').returns('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');
+      const ctx = DEFAULT_CONTEXT({
+        env: {
+          ORDERS_BUCKET: { put: putStub },
+        },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      const data = { storeCode: 's', storeViewCode: 'v' };
+      const order = await client.createOrder(data, 'magento');
+
+      assert.strictEqual(order.state, 'pending');
+      assert.strictEqual(order.createdAt, '2025-01-01T00:00:00.000Z');
+      assert.strictEqual(order.updatedAt, '2025-01-01T00:00:00.000Z');
+      // validate bucket call
+      assert(putStub.calledOnce);
+      const [key, body, opts] = putStub.firstCall.args;
+      assert.match(key, /^org\/site\/orders\/2025-01-01T00:00:00\.000Z-aaaaaaaa\.json$/);
+      assert.strictEqual(JSON.parse(body).id, order.id);
+      assert.deepStrictEqual(opts.httpMetadata, { contentType: 'application/json' });
+      assert.deepStrictEqual(opts.customMetadata, {
+        id: order.id,
+        storeCode: data.storeCode,
+        storeViewCode: data.storeViewCode,
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+        platformType: 'magento',
+      });
+    });
+
+    it('getCustomer returns undefined when not found and parsed JSON when found', async () => {
+      const getStub = sinon.stub();
+      getStub.onCall(0).resolves(null);
+      getStub.onCall(1).resolves({ json: sinon.stub().resolves({ email: 'e' }) });
+      const ctx = DEFAULT_CONTEXT({
+        env: {
+          ORDERS_BUCKET: { get: getStub },
+        },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      const res1 = await client.getCustomer('e');
+      const res2 = await client.getCustomer('e');
+      assert.strictEqual(res1, undefined);
+      assert.deepStrictEqual(res2, { email: 'e' });
+    });
+
+    it('customerExists returns true/false based on head', async () => {
+      const headStub = sinon.stub();
+      headStub.onCall(0).resolves(null);
+      headStub.onCall(1).resolves({});
+      const ctx = DEFAULT_CONTEXT({
+        env: {
+          ORDERS_BUCKET: { head: headStub },
+        },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      assert.strictEqual(await client.customerExists('a@b.com'), false);
+      assert.strictEqual(await client.customerExists('a@b.com'), true);
+    });
+
+    it('saveCustomer persists via putTo and returns the customer', async () => {
+      const putToStub = sinon.stub().resolves(false);
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'putTo').callsFake(putToStub);
+      const customer = { email: 'a@b.com', createdAt: 't1', updatedAt: 't2' };
+      const res = await client.saveCustomer(customer);
+      assert.deepStrictEqual(res, customer);
+      assert(putToStub.calledOnce);
+      const [bucket, key, body, opts] = putToStub.firstCall.args;
+      assert.strictEqual(bucket, ctx.env.ORDERS_BUCKET);
+      assert.strictEqual(key, 'org/site/customers/a@b.com/.info.json');
+      assert.deepStrictEqual(JSON.parse(body), customer);
+      assert.deepStrictEqual(opts.httpMetadata, { contentType: 'application/json' });
+      assert.deepStrictEqual(opts.customMetadata, {
+        email: 'a@b.com',
+        createdAt: 't1',
+        updatedAt: 't2',
+      });
+    });
+
+    it('listCustomers maps objects to customers with email and metadata', async () => {
+      const listStub = sinon.stub().resolves({
+        objects: [
+          {
+            key: 'org/site/customers/user1@example.com',
+            customMetadata: { createdAt: 't1' },
+          },
+          {
+            key: 'org/site/customers/user2@example.com',
+            customMetadata: { createdAt: 't2' },
+          },
+        ],
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: {
+          ORDERS_BUCKET: { list: listStub },
+        },
+        config,
+        data: { cursor: undefined },
+      });
+      const client = new StorageClient(ctx);
+      const res = await client.listCustomers();
+      assert.deepStrictEqual(res, [
+        { email: 'user1@example.com', createdAt: 't1' },
+        { email: 'user2@example.com', createdAt: 't2' },
+      ]);
+    });
+
+    it('deleteCustomer deletes info and associated resources with pagination', async () => {
+      const deleteStub = sinon.stub().resolves();
+      const listStub = sinon.stub();
+      // First prefix (orders) page
+      listStub.onCall(0).resolves({
+        objects: [{ key: 'org/site/customers/user@example.com/orders/o1' }],
+        truncated: false,
+        cursor: '',
+      });
+      // Second prefix (addresses) page
+      listStub.onCall(1).resolves({
+        objects: [
+          { key: 'org/site/customers/user@example.com/addresses/a1' },
+          { key: 'org/site/customers/user@example.com/addresses/a2' },
+        ],
+        truncated: false,
+        cursor: '',
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: {
+          ORDERS_BUCKET: {
+            delete: deleteStub,
+            list: listStub,
+          },
+        },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      await client.deleteCustomer('user@example.com', true, true);
+      // info.json delete
+      assert(deleteStub.firstCall.calledWithExactly('org/site/customers/user@example.com/.info.json'));
+      // batch deletes for orders and addresses
+      assert(deleteStub.secondCall.calledWithExactly(['org/site/customers/user@example.com/orders/o1']));
+      assert(deleteStub.thirdCall.calledWithExactly([
+        'org/site/customers/user@example.com/addresses/a1',
+        'org/site/customers/user@example.com/addresses/a2',
+      ]));
+    });
+
+    it('getAddressHashTable returns empty object when missing, else parsed JSON', async () => {
+      const getStub = sinon.stub();
+      getStub.onCall(0).resolves(null);
+      getStub.onCall(1).resolves({ json: sinon.stub().resolves({ hash: 'id' }) });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { get: getStub } },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      const res1 = await client.getAddressHashTable('e');
+      const res2 = await client.getAddressHashTable('e');
+      assert.deepStrictEqual(res1, {});
+      assert.deepStrictEqual(res2, { hash: 'id' });
+    });
+
+    it('saveAddressHashTable persists via putTo', async () => {
+      const putToStub = sinon.stub().resolves(false);
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'putTo').callsFake(putToStub);
+      await client.saveAddressHashTable('e', { a: '1' });
+      const [bucket, key, body, opts] = putToStub.firstCall.args;
+      assert.strictEqual(bucket, ctx.env.ORDERS_BUCKET);
+      assert.strictEqual(key, 'org/site/customers/e/addresses/.hashtable.json');
+      assert.strictEqual(body, JSON.stringify({ a: '1' }));
+      assert.deepStrictEqual(opts.httpMetadata, { contentType: 'application/json' });
+    });
+
+    it('saveAddress creates new address and updates hash table when hash absent', async () => {
+      sinon.stub(globalThis.crypto, 'randomUUID').returns('id-123');
+      const putToStub = sinon.stub().resolves(false);
+      const getHashStub = sinon.stub().resolves({});
+      const saveHashStub = sinon.stub().resolves();
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'putTo').callsFake(putToStub);
+      sinon.stub(client, 'getAddressHashTable').callsFake(getHashStub);
+      sinon.stub(client, 'saveAddressHashTable').callsFake(saveHashStub);
+      const addr = { line1: '123 Main' };
+      const res = await client.saveAddress('hash1', 'user@example.com', addr);
+      assert.deepStrictEqual(res, { ...addr, id: 'id-123' });
+      // put address
+      const [bucket, key, body, opts] = putToStub.firstCall.args;
+      assert.strictEqual(bucket, ctx.env.ORDERS_BUCKET);
+      assert.strictEqual(key, 'org/site/customers/user@example.com/addresses/id-123.json');
+      assert.strictEqual(body, JSON.stringify(addr));
+      assert.deepStrictEqual(opts.httpMetadata, { contentType: 'application/json' });
+      assert.deepStrictEqual(opts.customMetadata, { email: 'user@example.com', id: 'id-123' });
+      // saved hashtable updated
+      assert(saveHashStub.calledWithExactly('user@example.com', { hash1: 'id-123' }));
+    });
+
+    it('saveAddress returns existing address when hash exists', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'getAddressHashTable').resolves({ h: 'abc' });
+      const addr = { line1: '123' };
+      const res = await client.saveAddress('h', 'e', addr);
+      assert.deepStrictEqual(res, { ...addr, id: 'abc' });
+    });
+
+    it('getAddress returns null when missing and parsed JSON when found', async () => {
+      const getStub = sinon.stub();
+      getStub.onCall(0).resolves(null);
+      getStub.onCall(1).resolves({ json: sinon.stub().resolves({ id: 'a1' }) });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { get: getStub } },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      const res1 = await client.getAddress('e', 'a1');
+      const res2 = await client.getAddress('e', 'a1');
+      assert.strictEqual(res1, null);
+      assert.deepStrictEqual(res2, { id: 'a1' });
+    });
+
+    it('linkOrderToCustomer writes link when new and throws when exists', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      const putToStub = sinon.stub()
+        .onFirstCall()
+        .resolves(false)
+        .onSecondCall()
+        .resolves(true);
+      sinon.stub(client, 'putTo').callsFake(putToStub);
+      const order = {
+        id: 'o1',
+        createdAt: 't1',
+        updatedAt: 't2',
+        storeCode: 's',
+        storeViewCode: 'v',
+        state: 'pending',
+      };
+      const ok = await client.linkOrderToCustomer('user@example.com', 'o1', order);
+      assert.strictEqual(ok, true);
+      let threw;
+      try {
+        await client.linkOrderToCustomer('user@example.com', 'o1', order);
+      } catch (e) {
+        threw = e;
+      }
+      assert.strictEqual(threw?.response?.status, 400);
+    });
+
+    it('updateOrderLink returns false when missing and updates when present', async () => {
+      const headStub = sinon.stub();
+      headStub.onCall(0).resolves(null);
+      headStub.onCall(1).resolves({ customMetadata: { id: 'o1', createdAt: 't1', state: 'pending' } });
+      const putToStub = sinon.stub().resolves(false);
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { head: headStub } },
+        config,
+        log: { warn: sinon.stub() },
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'putTo').callsFake(putToStub);
+      const r1 = await client.updateOrderLink('user@example.com', 'o1', { state: 'complete' });
+      assert.strictEqual(r1, false);
+      const r2 = await client.updateOrderLink('user@example.com', 'o1', { state: 'complete' });
+      assert.strictEqual(r2, true);
+      assert(putToStub.calledOnce);
+      const [bucket, key, body, opts] = putToStub.firstCall.args;
+      assert.strictEqual(bucket, ctx.env.ORDERS_BUCKET);
+      assert.strictEqual(key, 'org/site/customers/user@example.com/orders/o1');
+      assert.strictEqual(body, '');
+      // merged metadata
+      assert.strictEqual(opts.customMetadata.id, 'o1');
+      assert.strictEqual(opts.customMetadata.createdAt, 't1');
+      assert.strictEqual(opts.customMetadata.state, 'complete');
+      assert.ok(opts.customMetadata.updatedAt);
+    });
+
+    it('getOrder returns null when missing and parsed JSON when found', async () => {
+      const getStub = sinon.stub();
+      getStub.onCall(0).resolves(null);
+      getStub.onCall(1).resolves({ json: sinon.stub().resolves({ id: 'o1' }) });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { get: getStub } },
+        config,
+      });
+      const client = new StorageClient(ctx);
+      const r1 = await client.getOrder('o1');
+      const r2 = await client.getOrder('o1');
+      assert.strictEqual(r1, null);
+      assert.deepStrictEqual(r2, { id: 'o1' });
+    });
+
+    it('listOrders lists orders globally and per-customer', async () => {
+      const listStub = sinon.stub();
+      // global orders (ids with .json)
+      listStub.onCall(0).resolves({
+        objects: [
+          { key: 'org/site/orders/a.json', customMetadata: { state: 'pending' } },
+          { key: 'org/site/orders/b.json', customMetadata: { state: 'complete' } },
+        ],
+      });
+      // per customer orders (links without .json)
+      listStub.onCall(1).resolves({
+        objects: [
+          { key: 'org/site/customers/user@example.com/orders/o1', customMetadata: { state: 'pending' } },
+        ],
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { list: listStub } },
+        config,
+        data: { cursor: undefined },
+      });
+      const client = new StorageClient(ctx);
+      const all = await client.listOrders();
+      const byUser = await client.listOrders('user@example.com');
+      assert.deepStrictEqual(all, [
+        { id: 'a', state: 'pending' },
+        { id: 'b', state: 'complete' },
+      ]);
+      assert.deepStrictEqual(byUser, [
+        { id: 'o1', state: 'pending' },
+      ]);
     });
   });
 });

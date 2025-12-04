@@ -14,9 +14,9 @@
 
 import assert from 'node:assert';
 import { SUPERUSER_CONTEXT } from '../../fixtures/context.js';
-import handler from '../../../src/routes/auth/fetch.js';
+import handler from '../../../src/routes/auth/retrieve.js';
 
-describe('routes/auth fetch tests', () => {
+describe('routes/auth retrieve tests', () => {
   it('no token in storage, responds 404', async () => {
     const ctx = SUPERUSER_CONTEXT({
       env: {

@@ -10,21 +10,23 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import operationsLog from './operations-log/handler.js';
-import orders from './orders/handler.js';
-import customers from './customers/handler.js';
-import cache from './cache/handler.js';
+import { EmailSchema } from './common.js';
 
-/**
- * @type {Record<string, RouteHandler>}
- */
-export default {
-  catalog,
-  auth,
-  orders,
-  customers,
-  'operations-log': operationsLog,
-  cache,
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const Order = {
+  type: 'object',
+  properties: {
+    // managed by service
+    // createdAt: { type: 'string' },
+    // updatedAt: { type: 'string' },
+
+    // provided by client
+    firstName: { type: 'string', maxLength: 255 },
+    lastName: { type: 'string', maxLength: 255 },
+    email: EmailSchema,
+    phone: { type: 'string' },
+  },
+  required: ['firstName', 'lastName', 'email'],
 };
+
+export default Order;

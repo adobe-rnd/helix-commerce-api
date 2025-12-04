@@ -11,10 +11,10 @@
  */
 
 import { slugger, StorageClient as SharedStorageClient } from '@dylandepass/helix-product-shared';
-import { BatchProcessor } from '../../utils/batch.js';
-import { errorWithResponse } from '../../utils/http.js';
-import { extractAndReplaceImages } from '../../utils/media.js';
-import { purgeBatch } from '../cache/purge.js';
+import { BatchProcessor } from './batch.js';
+import { errorWithResponse } from './http.js';
+import { extractAndReplaceImages } from './media.js';
+import { purgeBatch } from '../routes/cache/purge.js';
 
 export default class StorageClient extends SharedStorageClient {
   /**
@@ -408,5 +408,411 @@ export default class StorageClient extends SharedStorageClient {
     }
 
     return customMetadataArray;
+  }
+
+  /**
+   * @param {Order} data
+   * @param {string} [platformType]
+   * @returns {Promise<Order>}
+   */
+  async createOrder(data, platformType) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+
+    const now = new Date().toISOString();
+    const id = `${now}-${crypto.randomUUID().split('-')[0]}`;
+    const order = {
+      ...data,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      /** @type {'pending'} */
+      state: 'pending',
+    };
+
+    const key = `${org}/${site}/orders/${id}.json`;
+    await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(order), {
+      httpMetadata: { contentType: 'application/json' },
+      customMetadata: {
+        id,
+        storeCode: data.storeCode,
+        storeViewCode: data.storeViewCode,
+        createdAt: now,
+        updatedAt: now,
+        platformType,
+      },
+    });
+    return order;
+  }
+
+  /**
+   * @param {string} email
+   * @returns {Promise<Customer | undefined>}
+   */
+  async getCustomer(email) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+
+    const key = `${org}/${site}/customers/${email}/.info.json`;
+    const resp = await env.ORDERS_BUCKET.get(key);
+    if (!resp) {
+      return undefined;
+    }
+    return resp.json();
+  }
+
+  /**
+   * @param {string} email
+   * @returns {Promise<boolean>}
+   */
+  async customerExists(email) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const customer = await env.ORDERS_BUCKET.head(`${org}/${site}/customers/${email}/.info.json`);
+    return customer !== null;
+  }
+
+  /**
+   * @param {Customer} customer
+   * @returns {Promise<Customer>}
+   */
+  async saveCustomer(customer) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const { email } = customer;
+    const key = `${org}/${site}/customers/${email}/.info.json`;
+    await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(customer), {
+      httpMetadata: { contentType: 'application/json' },
+      customMetadata: {
+        email: customer.email,
+        createdAt: customer.createdAt,
+        updatedAt: customer.updatedAt,
+      },
+    });
+    return customer;
+  }
+
+  async listCustomers() {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const prefix = `${org}/${site}/customers/`;
+    const res = await env.ORDERS_BUCKET.list({
+      prefix,
+      limit: 100,
+      cursor: this.ctx.data.cursor,
+      // @ts-ignore not defined in types for some reason
+      include: ['customMetadata'],
+    });
+    return res.objects.map((obj) => {
+      const email = obj.key.substring(prefix.length);
+      return {
+        email,
+        ...obj.customMetadata,
+      };
+    });
+  }
+
+  /**
+   * @param {string} email
+   * @param {boolean} rmAddresses - whether to remove associated addresses
+   * @param {boolean} rmOrders - Whether to delete the customer's orders.
+   */
+  async deleteCustomer(email, rmAddresses = true, rmOrders = true) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/.info.json`;
+    await env.ORDERS_BUCKET.delete(key);
+
+    const rmPrefixes = [];
+    if (rmOrders) {
+      rmPrefixes.push(`${org}/${site}/customers/${email}/orders/`);
+    }
+    if (rmAddresses) {
+      rmPrefixes.push(`${org}/${site}/customers/${email}/addresses/`);
+    }
+    await Promise.all(rmPrefixes.map(async (prefix) => {
+      let truncated;
+      let cursor = '';
+      while (truncated !== false) {
+        // eslint-disable-next-line no-await-in-loop
+        const resp = await env.ORDERS_BUCKET.list({
+          prefix,
+          limit: 1000,
+          cursor,
+        });
+        // eslint-disable-next-line no-await-in-loop
+        await env.ORDERS_BUCKET.delete(resp.objects.map((obj) => obj.key));
+
+        truncated = resp.truncated;
+        if (resp.truncated) {
+          cursor = resp.cursor;
+        }
+      }
+    }));
+  }
+
+  /**
+   * Get hash table for a customer's address hash -> id lookup
+   * @param {string} email
+   * @returns {Promise<Record<string, string>>} { hash: id }
+   */
+  async getAddressHashTable(email) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/addresses/.hashtable.json`;
+    const resp = await env.ORDERS_BUCKET.get(key);
+    if (!resp) {
+      return {};
+    }
+    return resp.json();
+  }
+
+  /**
+   * Save hash table for a customer's address hash -> id lookup
+   * @param {string} email
+   * @param {Record<string, string>} hashTable { hash: id }
+   * @returns {Promise<void>}
+   */
+  async saveAddressHashTable(email, hashTable) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/addresses/.hashtable.json`;
+    await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(hashTable), {
+      httpMetadata: { contentType: 'application/json' },
+    });
+  }
+
+  /**
+   * @param {string} hash
+   * @param {string} email
+   * @param {Address} address
+   * @returns {Promise<Address>}
+   */
+  async saveAddress(hash, email, address) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const hashTable = await this.getAddressHashTable(email);
+    if (hashTable[hash]) {
+      // address hash already exists, return it as the address
+      // NOTE: that this does not handle address updates by ID, yet
+      const id = hashTable[hash];
+      return {
+        ...address,
+        id,
+      };
+    }
+
+    const id = crypto.randomUUID();
+    const key = `${org}/${site}/customers/${email}/addresses/${id}.json`;
+    await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(address), {
+      httpMetadata: { contentType: 'application/json' },
+      customMetadata: {
+        email,
+        id,
+      },
+    });
+
+    // persist hash table with new hash -> id
+    hashTable[hash] = id;
+    await this.saveAddressHashTable(email, hashTable);
+    return {
+      ...address,
+      id,
+    };
+  }
+
+  /**
+   * @param {string} email
+   * @param {string} addressId
+   * @returns {Promise<Address | null>}
+   */
+  async getAddress(email, addressId) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/addresses/${addressId}.json`;
+    const resp = await env.ORDERS_BUCKET.get(key);
+    if (!resp) {
+      return null;
+    }
+    return resp.json();
+  }
+
+  /**
+   * @param {string} email
+   * @param {string} orderId
+   * @param {Order} order
+   * @returns {Promise<boolean>}
+   */
+  async linkOrderToCustomer(email, orderId, order) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/orders/${orderId}`;
+    const existed = await this.putTo(env.ORDERS_BUCKET, key, '', {
+      customMetadata: {
+        id: order.id,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+        storeCode: order.storeCode,
+        storeViewCode: order.storeViewCode,
+        state: order.state,
+      },
+      onlyIf: {
+        etagDoesNotMatch: '*',
+      },
+    });
+    if (existed) {
+      // order link already exists
+      throw errorWithResponse(400, 'Order link already exists');
+    }
+    return true;
+  }
+
+  /**
+   * @param {string} email
+   * @param {string} orderId
+   * @param {Partial<OrderMetadata>} metadata
+   * @returns {Promise<boolean>}
+   */
+  async updateOrderLink(email, orderId, metadata) {
+    const {
+      env,
+      log,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/orders/${orderId}`;
+    const existing = await env.ORDERS_BUCKET.head(key);
+    if (!existing) {
+      log.warn(`Order link not found: ${email}/${orderId}`);
+      return false;
+    }
+
+    const merged = {
+      ...existing.customMetadata,
+      ...metadata,
+      createdAt: existing.customMetadata.createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    await this.putTo(env.ORDERS_BUCKET, key, '', {
+      customMetadata: merged,
+    });
+    return true;
+  }
+
+  /**
+   * @param {string} orderId
+   * @returns {Promise<Order | null>}
+   */
+  async getOrder(orderId) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+
+    // get the actual order data
+    const key = `${org}/${site}/orders/${orderId}.json`;
+    const resp = await env.ORDERS_BUCKET.get(key);
+    if (!resp) {
+      return null;
+    }
+
+    /** @type {Order} */
+    const order = await resp.json();
+    return order;
+  }
+
+  /**
+   * List orders, optionally filtered by email
+   * @param {string} [email]
+   * @returns {Promise<OrderMetadata[]>}
+   */
+  async listOrders(email) {
+    const {
+      env,
+      config: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const prefix = email
+      ? `${org}/${site}/customers/${email}/orders/`
+      : `${org}/${site}/orders/`;
+    const res = await env.ORDERS_BUCKET.list({
+      prefix,
+      limit: 100,
+      cursor: this.ctx.data.cursor,
+      // @ts-ignore not defined in types for some reason
+      include: ['customMetadata'],
+    });
+    return res.objects.map((obj) => {
+      const id = obj.key.substring(prefix.length).replace(/\.json$/, '');
+      /** @type {OrderMetadata} */
+      // @ts-ignore
+      const order = {
+        id,
+        ...obj.customMetadata,
+      };
+      return order;
+    });
   }
 }

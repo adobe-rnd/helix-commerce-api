@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Adobe. All rights reserved.
+ * Copyright 2025 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -10,18 +10,20 @@
  * governing permissions and limitations under the License.
  */
 
-import StorageClient from './StorageClient.js';
+import StorageClient from '../../utils/StorageClient.js';
+import { assertAuthorization } from '../../utils/auth.js';
 
 /**
  * @type {RouteHandler}
  */
-export default async function fetch(ctx) {
-  const { sku } = ctx.config;
-
+export default async function list(ctx) {
+  await assertAuthorization(ctx);
   const storage = StorageClient.fromContext(ctx);
-  const product = await storage.getProduct(sku);
-
-  return new Response(JSON.stringify(product), {
-    headers: { 'Content-Type': 'application/json' },
+  const orders = await storage.listOrders();
+  return new Response(JSON.stringify({ orders }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }

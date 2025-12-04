@@ -11,29 +11,45 @@
  */
 
 import { errorResponse } from '../../utils/http.js';
-import lookup from './lookup.js';
+import list from './list.js';
 import retrieve from './retrieve.js';
-import update from './update.js';
+import create from './create.js';
 import remove from './remove.js';
 
 /**
- * @type {Record<string, Record<string, RouteHandler>>}
+ * @type {Record<string, RouteHandler>}
  */
-const handlers = {
-  lookup: {
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/lookup?urlkey={urlkey}
-    GET: lookup,
-  },
-  products: {
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    GET: retrieve,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    PUT: update,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/*
-    POST: update,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    DELETE: remove,
-  },
+const allHandlers = {
+  // GET ${org}/${site}/orders
+  GET: list,
+  // POST ${org}/${site}/orders
+  POST: create,
+  OPTIONS: async () => new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  }),
+};
+
+/**
+ * @type {Record<string, RouteHandler>}
+ */
+const oneHandlers = {
+  // GET ${org}/${site}/orders/${id}
+  GET: retrieve,
+  // DELETE ${org}/${site}/orders/${id}
+  DELETE: remove,
+  OPTIONS: async () => new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, DELETE',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  }),
 };
 
 /**
@@ -45,22 +61,15 @@ export default async function handler(ctx, request) {
     info: { method },
   } = ctx;
   const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
-  const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(3);
+  const [orderId] = pathSegments.slice(['org', 'site', 'route'].length);
 
-  if (!Object.keys(handlers).includes(subRoute)
-    || (subRoute === 'products' && !sku)
-    || (subRoute === 'lookup' && sku)) {
-    return errorResponse(404, 'invalid path');
-  }
+  const handlers = orderId ? oneHandlers : allHandlers;
 
   Object.assign(config, {
-    storeCode,
-    storeViewCode,
-    subRoute,
-    sku: sku && sku.endsWith('.json') ? sku.slice(0, -5) : sku,
+    orderId,
   });
 
-  const fn = handlers[subRoute]?.[method];
+  const fn = handlers[method];
   if (!fn) {
     return errorResponse(405, 'method not allowed');
   }

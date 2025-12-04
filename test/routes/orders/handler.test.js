@@ -10,21 +10,16 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import operationsLog from './operations-log/handler.js';
-import orders from './orders/handler.js';
-import customers from './customers/handler.js';
-import cache from './cache/handler.js';
+// @ts-nocheck
 
-/**
- * @type {Record<string, RouteHandler>}
- */
-export default {
-  catalog,
-  auth,
-  orders,
-  customers,
-  'operations-log': operationsLog,
-  cache,
-};
+import assert from 'node:assert';
+import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import handler from '../../../src/routes/orders/handler.js';
+
+describe('routes/orders handler tests', () => {
+  it('should 405 on invalid method', async () => {
+    const ctx = DEFAULT_CONTEXT({ info: { method: 'PATCH' }, url: { pathname: '/org/site/orders' } });
+    const resp = await handler(ctx);
+    assert.equal(resp.status, 405);
+  });
+});

@@ -20,18 +20,18 @@ import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 describe('catalogHandler Tests', () => {
   let catalogHandler;
   let handleProductLookupRequestStub;
-  let handleProductFetchRequestStub;
+  let handleProductRetrieveRequestStub;
   let handleProductSaveRequestStub;
   let handleProductRemoveRequestStub;
   beforeEach(async () => {
     handleProductLookupRequestStub = sinon.stub();
-    handleProductFetchRequestStub = sinon.stub();
+    handleProductRetrieveRequestStub = sinon.stub();
     handleProductSaveRequestStub = sinon.stub();
     handleProductRemoveRequestStub = sinon.stub();
 
     catalogHandler = (await esmock('../../../src/routes/catalog/handler.js', {
       '../../../src/routes/catalog/lookup.js': { default: handleProductLookupRequestStub },
-      '../../../src/routes/catalog/fetch.js': { default: handleProductFetchRequestStub },
+      '../../../src/routes/catalog/retrieve.js': { default: handleProductRetrieveRequestStub },
       '../../../src/routes/catalog/update.js': { default: handleProductSaveRequestStub },
       '../../../src/routes/catalog/remove.js': { default: handleProductRemoveRequestStub },
     })).default;
@@ -99,7 +99,7 @@ describe('catalogHandler Tests', () => {
     assert(handleProductSaveRequestStub.calledOnceWith(ctx, request));
   });
 
-  it('should call handleProductFetchRequest when method is GET', async () => {
+  it('should call handleProductRetrieveRequestStub when method is GET', async () => {
     const ctx = DEFAULT_CONTEXT({
       info: { method: 'GET' },
       url: { pathname: '/org/site/catalog/store/view/products/sku' },
@@ -108,12 +108,12 @@ describe('catalogHandler Tests', () => {
     const request = {};
 
     const mockResponse = new Response(null, { status: 200 });
-    handleProductFetchRequestStub.returns(mockResponse);
+    handleProductRetrieveRequestStub.returns(mockResponse);
 
     const response = await catalogHandler(ctx, request);
 
     assert.equal(response.status, 200);
-    assert(handleProductFetchRequestStub.calledOnceWith(ctx));
+    assert(handleProductRetrieveRequestStub.calledOnceWith(ctx));
   });
 
   it('should call handleProductDeleteRequest when method is DELETE', async () => {

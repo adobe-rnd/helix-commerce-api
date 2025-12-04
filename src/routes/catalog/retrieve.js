@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Adobe. All rights reserved.
+ * Copyright 2024 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -10,21 +10,18 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import operationsLog from './operations-log/handler.js';
-import orders from './orders/handler.js';
-import customers from './customers/handler.js';
-import cache from './cache/handler.js';
+import StorageClient from '../../utils/StorageClient.js';
 
 /**
- * @type {Record<string, RouteHandler>}
+ * @type {RouteHandler}
  */
-export default {
-  catalog,
-  auth,
-  orders,
-  customers,
-  'operations-log': operationsLog,
-  cache,
-};
+export default async function retrieve(ctx) {
+  const { sku } = ctx.config;
+
+  const storage = StorageClient.fromContext(ctx);
+  const product = await storage.getProduct(sku);
+
+  return new Response(JSON.stringify(product), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+}

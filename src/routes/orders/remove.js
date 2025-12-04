@@ -10,35 +10,15 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../../utils/http.js';
-import retrieve from './retrieve.js';
-import update from './update.js';
-import rotate from './rotate.js';
-
-/**
- * @type {Record<string, Record<string, RouteHandler>>}
- */
-const handlers = {
-  token: {
-    GET: retrieve,
-    PUT: update,
-    POST: rotate,
-  },
-};
+import { assertAuthorization } from '../../utils/auth.js';
 
 /**
  * @type {RouteHandler}
  */
-export default async function handler(ctx, req) {
-  const {
-    info: { method },
-    url: { pathname },
-  } = ctx;
-  const [subRoute] = pathname.split('/').filter(Boolean).slice(['org', 'site', 'route'].length);
-
-  const fn = handlers[subRoute]?.[method];
-  if (!fn) {
-    return errorResponse(404);
-  }
-  return fn(ctx, req);
+// eslint-disable-next-line no-unused-vars
+export default async function remove(ctx) {
+  await assertAuthorization(ctx);
+  return new Response('Not Implemented', {
+    status: 501,
+  });
 }

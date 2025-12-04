@@ -10,23 +10,22 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
+import { assertAuthorization } from '../../utils/auth.js';
+import StorageClient from '../../utils/StorageClient.js';
 
 /**
  * @type {RouteHandler}
  */
-export default async function fetch(ctx) {
-  const { config } = ctx;
-
+export default async function retrieve(ctx) {
   await assertAuthorization(ctx);
-
-  const token = await ctx.env.KEYS.get(config.siteKey);
-  if (!token) {
-    return errorResponse(404);
+  const storage = StorageClient.fromContext(ctx);
+  const order = await storage.getOrder(ctx.config.orderId);
+  if (!order) {
+    return errorResponse(404, 'Not found');
   }
-
-  return new Response(JSON.stringify({ token }), {
+  return new Response(JSON.stringify({ order }), {
+    status: 200,
     headers: {
       'Content-Type': 'application/json',
     },
