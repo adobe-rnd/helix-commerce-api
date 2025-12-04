@@ -1,3 +1,21 @@
+# [1.18.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.17.0...v1.18.0) (2025-12-04)
+
+
+### Bug Fixes
+
+* address comment ([266c692](https://github.com/adobe-rnd/helix-commerce-api/commit/266c692087708332f5502d7226b23572776ff8f1))
+* address comments ([74fd3be](https://github.com/adobe-rnd/helix-commerce-api/commit/74fd3becef1722f0327728c288794da2a5dbd4db))
+* assert auth, ors ([c23ac6d](https://github.com/adobe-rnd/helix-commerce-api/commit/c23ac6d199b2f2f2d5609e1251fe4f1148d56a12))
+* cors tweak ([dd89ae2](https://github.com/adobe-rnd/helix-commerce-api/commit/dd89ae2584f0290508addc6dd56f8d3494333fb9))
+* hash lookup table for customer addresses ([afeaf04](https://github.com/adobe-rnd/helix-commerce-api/commit/afeaf04620f209e06a90368c42ad8116c02e0262))
+* remove customer ([49381a4](https://github.com/adobe-rnd/helix-commerce-api/commit/49381a4e8392fe241070e6d54fa3ab5309cb727a))
+* remove payments for now ([312ba43](https://github.com/adobe-rnd/helix-commerce-api/commit/312ba4355d213d1ea2d472101e357b6285bc43ba))
+
+
+### Features
+
+* add orders api ([dd68baf](https://github.com/adobe-rnd/helix-commerce-api/commit/dd68bafa7d35db43aa72169c8c5f13cdc8eb130a))
+
 # [1.17.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.16.2...v1.17.0) (2025-11-21)
 
 
