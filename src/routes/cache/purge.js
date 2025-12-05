@@ -81,18 +81,18 @@ async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
  * The function gracefully handles missing configurations by logging warnings and
  * skipping the purge operation.
  *
- * @param {Context} ctx - The request context with logging, config, and env
+ * @param {Context} ctx - The request context with logging and env
+ * @param {RequestInfo} requestInfo - Request information with org and site
  * @param {string} path - Product path to purge (without .json extension)
  * @returns {Promise<void>}
  *
  * @example
  * // Purge by path
- * await purge(ctx, '/us/en/products/awesome-product');
+ * await purge(ctx, requestInfo, '/us/en/products/awesome-product');
  */
-export async function purge(ctx, path) {
+export async function purge(ctx, requestInfo, path) {
   const { log } = ctx;
-
-  // const { org, site } = ctx.config;
+  // const { org, site } = requestInfo;
 
   const helixConfig = ctx.attributes.helixConfigCache;
   const cdnConfig = helixConfig?.cdn?.prod;
@@ -135,23 +135,21 @@ export async function purge(ctx, path) {
  * The function automatically deduplicates cache keys and handles missing configurations
  * gracefully by logging warnings.
  *
- * @param {Context} ctx - The request context with logging and config
- * @param {Object} config - The site configuration (org, site)
- * @param {string} config.org - Organization identifier
- * @param {string} config.site - Site identifier
+ * @param {Context} ctx - The request context with logging
+ * @param {Readonly<import('../../utils/RequestInfo.js').RequestInfo>} requestInfo
  * @param {Array<{path: string}>} products
  *   Array of product objects to purge. Each product must have a path.
  * @returns {Promise<void>}
  *
  * @example
- * await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, [
+ * await purgeBatch(ctx, requestInfo, [
  *   { path: '/us/en/products/blender-pro-500' },
  *   { path: '/us/en/products/mixer-deluxe' }
  * ]);
  */
-export async function purgeBatch(ctx, config, products) {
+export async function purgeBatch(ctx, requestInfo, products) {
   const { log } = ctx;
-  // const { org, site } = config;
+  // const { org, site } = requestInfo;
 
   const helixConfig = ctx.attributes.helixConfigCache;
   const cdnConfig = helixConfig?.cdn?.prod;

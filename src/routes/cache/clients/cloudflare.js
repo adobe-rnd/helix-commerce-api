@@ -58,8 +58,8 @@ export class CloudflarePurgeClient {
    * @throws {Error} If any API request fails or returns success: false
    */
   static async purge(ctx, purgeConfig, { keys }) {
-    const { log, config } = ctx;
-    const { siteKey } = config;
+    const { log, requestInfo } = ctx;
+    const { siteKey } = requestInfo;
 
     const { host, zoneId, apiToken } = purgeConfig;
     const url = `https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`;

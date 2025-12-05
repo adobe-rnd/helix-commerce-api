@@ -56,18 +56,9 @@ const oneHandlers = {
  * @type {RouteHandler}
  */
 export default async function handler(ctx, request) {
-  const {
-    variables,
-    config,
-    info: { method },
-  } = ctx;
-
-  const { orderId } = variables;
+  const { requestInfo } = ctx;
+  const { method, orderId } = requestInfo;
   const handlers = orderId ? oneHandlers : allHandlers;
-
-  Object.assign(config, {
-    orderId,
-  });
 
   const fn = handlers[method];
   if (!fn) {

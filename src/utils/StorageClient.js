@@ -36,18 +36,8 @@ export default class StorageClient extends SharedStorageClient {
     this.ctx = ctx;
   }
 
-  /** @type {Config} */
-  get config() {
-    return this.ctx.config;
-  }
-
   get catalogKey() {
-    const {
-      config: {
-        org,
-        site,
-      },
-    } = this.ctx;
+    const { org, site } = this.ctx.requestInfo;
     return `${org}/${site}`;
   }
 
@@ -59,7 +49,7 @@ export default class StorageClient extends SharedStorageClient {
   async getProductByPath(path) {
     const {
       env,
-      config: { org, site },
+      requestInfo: { org, site },
     } = this.ctx;
 
     // Require .json extension
@@ -106,7 +96,7 @@ export default class StorageClient extends SharedStorageClient {
     const {
       env,
       log,
-      config: { org, site },
+      requestInfo: { org, site },
     } = this.ctx;
 
     // Track successfully saved products for batch cache purging
@@ -185,7 +175,7 @@ export default class StorageClient extends SharedStorageClient {
     // Purge cache for all successfully saved products in a single batch
     if (successfullySavedProducts.length > 0) {
       try {
-        await purgeBatch(this.ctx, { org, site }, successfullySavedProducts);
+        await purgeBatch(this.ctx, this.ctx.requestInfo, successfullySavedProducts);
         log.info(`Cache purged for ${successfullySavedProducts.length} successfully saved products`);
       } catch (purgeError) {
         // Log but don't fail the entire operation if purge fails
@@ -225,21 +215,21 @@ export default class StorageClient extends SharedStorageClient {
     const {
       log,
       env,
-      config: { org, site },
+      requestInfo: { org, site },
     } = this.ctx;
 
     const deletionPromises = batch.map(async (path) => {
       try {
         // Path should NOT have .json extension (we add it)
-        if (path.endsWith('.json')) {
+        if (!path.endsWith('.json')) {
           return {
             path,
             status: 400,
-            message: 'path must not include .json extension',
+            message: 'path must end with .json',
           };
         }
 
-        const productKey = `${org}/${site}${path}.json`;
+        const productKey = `${org}/${site}${path}`;
 
         const productHead = await env.CATALOG_BUCKET.head(productKey);
         if (!productHead) {
@@ -286,7 +276,7 @@ export default class StorageClient extends SharedStorageClient {
   async createOrder(data, platformType) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -323,7 +313,7 @@ export default class StorageClient extends SharedStorageClient {
   async getCustomer(email) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -344,7 +334,7 @@ export default class StorageClient extends SharedStorageClient {
   async customerExists(email) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -360,7 +350,7 @@ export default class StorageClient extends SharedStorageClient {
   async saveCustomer(customer) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -381,7 +371,7 @@ export default class StorageClient extends SharedStorageClient {
   async listCustomers() {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -411,14 +401,13 @@ export default class StorageClient extends SharedStorageClient {
   async deleteCustomer(email, rmAddresses = true, rmOrders = true) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
     } = this.ctx;
     const key = `${org}/${site}/customers/${email}/.info.json`;
     await env.ORDERS_BUCKET.delete(key);
-
     const rmPrefixes = [];
     if (rmOrders) {
       rmPrefixes.push(`${org}/${site}/customers/${email}/orders/`);
@@ -455,7 +444,7 @@ export default class StorageClient extends SharedStorageClient {
   async getAddressHashTable(email) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -477,7 +466,7 @@ export default class StorageClient extends SharedStorageClient {
   async saveAddressHashTable(email, hashTable) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -497,7 +486,7 @@ export default class StorageClient extends SharedStorageClient {
   async saveAddress(hash, email, address) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -540,7 +529,7 @@ export default class StorageClient extends SharedStorageClient {
   async getAddress(email, addressId) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -562,7 +551,7 @@ export default class StorageClient extends SharedStorageClient {
   async linkOrderToCustomer(email, orderId, order) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -596,7 +585,7 @@ export default class StorageClient extends SharedStorageClient {
     const {
       env,
       log,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -627,7 +616,7 @@ export default class StorageClient extends SharedStorageClient {
   async getOrder(orderId) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },
@@ -653,7 +642,7 @@ export default class StorageClient extends SharedStorageClient {
   async listOrders(email) {
     const {
       env,
-      config: {
+      requestInfo: {
         org,
         site,
       },

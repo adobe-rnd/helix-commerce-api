@@ -16,7 +16,7 @@ import StorageClient from '../../utils/StorageClient.js';
  * @type {RouteHandler}
  */
 export default async function retrieve(ctx) {
-  const { path } = ctx.variables;
+  const { path } = ctx.requestInfo;
 
   const storage = StorageClient.fromContext(ctx);
   const product = await storage.getProductByPath(path);

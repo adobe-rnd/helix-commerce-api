@@ -21,14 +21,15 @@ import { purgeBatch } from './purge.js';
  * @returns {boolean} True if the API key is valid
  */
 function validateCacheApiKey(ctx) {
-  const { CACHE_API_KEY } = ctx.env;
+  const { requestInfo, env } = ctx;
+  const { CACHE_API_KEY } = env;
 
   if (!CACHE_API_KEY) {
     ctx.log.warn('CACHE_API_KEY not configured');
     return false;
   }
 
-  const cacheAuthHeader = ctx.info.headers['x-cache-api-key'];
+  const cacheAuthHeader = requestInfo.getHeader('x-cache-api-key');
   if (!cacheAuthHeader) {
     return false;
   }
@@ -67,7 +68,8 @@ function validateCacheApiKey(ctx) {
  * }
  */
 async function handleBulkPurge(ctx) {
-  const { log, data, config } = ctx;
+  const { log, data, requestInfo } = ctx;
+  const { org, site, siteKey } = requestInfo;
 
   // Validate API key
   if (!validateCacheApiKey(ctx)) {
@@ -95,18 +97,18 @@ async function handleBulkPurge(ctx) {
   }
 
   // Fetch helix config once for the entire request
-  const helixConfig = await fetchHelixConfig(ctx, config.org, config.site);
+  const helixConfig = await fetchHelixConfig(ctx, org, site);
   ctx.attributes.helixConfigCache = helixConfig;
 
   if (!helixConfig) {
-    log.warn(`No helix config found for ${config.org}/${config.site}`);
+    log.warn(`No helix config found for ${siteKey}`);
     return errorResponse(404, 'site configuration not found');
   }
 
   // Purge all products in a single batched operation
   try {
     // Use purgeBatch to compute all cache keys upfront and make a single CDN call
-    await purgeBatch(ctx, config, data.products);
+    await purgeBatch(ctx, requestInfo, data.products);
 
     log.info(`Cache purge completed: ${data.products.length} products purged successfully`);
 
@@ -131,9 +133,10 @@ async function handleBulkPurge(ctx) {
  * @type {RouteHandler}
  */
 export default async function cacheHandler(ctx) {
-  const { info } = ctx;
+  const { requestInfo } = ctx;
+  const { method } = requestInfo;
 
-  if (info.method === 'POST') {
+  if (method === 'POST') {
     return handleBulkPurge(ctx);
   }
 

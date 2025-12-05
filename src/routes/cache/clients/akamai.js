@@ -224,8 +224,8 @@ export class AkamaiPurgeClient {
    * @throws {Error} If the API request fails or returns a non-OK status
    */
   static async purge(ctx, purgeConfig, { keys }) {
-    const { log, config } = ctx;
-    const { siteKey } = config;
+    const { log, requestInfo } = ctx;
+    const { siteKey } = requestInfo;
     const { host } = purgeConfig;
 
     let msg;

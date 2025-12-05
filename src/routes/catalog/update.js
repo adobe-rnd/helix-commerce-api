@@ -80,9 +80,10 @@ async function doUpdate(ctx, products) {
   let results;
 
   try {
-    const { log, config } = ctx;
+    const { log, requestInfo } = ctx;
+    const { org, site } = requestInfo;
 
-    const helixConfig = await fetchHelixConfig(ctx, config.org, config.site);
+    const helixConfig = await fetchHelixConfig(ctx, org, site);
     ctx.attributes.helixConfigCache = helixConfig;
 
     const storage = StorageClient.fromContext(ctx);
@@ -92,8 +93,8 @@ async function doUpdate(ctx, products) {
     results = await storage.saveProductsByPath(products, asyncImages);
 
     const payload = {
-      org: config.org,
-      site: config.site,
+      org,
+      site,
       // @ts-ignore
       products: results.map((r) => ({ path: r.path, action: 'update' })),
       timestamp: Date.now(),
@@ -136,14 +137,13 @@ async function doUpdate(ctx, products) {
  * @type {RouteHandler}
  */
 export default async function update(ctx) {
-  const { variables, data } = ctx;
+  const { requestInfo, data } = ctx;
+  const { path, method } = requestInfo;
   await assertAuthorization(ctx);
-
-  const { path } = variables;
 
   // Handle bulk operations (POST with literal "*")
   if (path === '/*') {
-    if (ctx.info.method !== 'POST') {
+    if (method !== 'POST') {
       return errorResponse(405, 'method not allowed');
     }
 

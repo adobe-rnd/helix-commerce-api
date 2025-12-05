@@ -19,12 +19,9 @@ import remove from './remove.js';
  * @type {RouteHandler}
  */
 export default async function handler(ctx, request) {
-  const {
-    variables,
-    info: { method },
-  } = ctx;
+  const { requestInfo } = ctx;
+  const { path, method } = requestInfo;
 
-  const { path } = variables;
   if (!path) {
     return errorResponse(404, 'path is required');
   }

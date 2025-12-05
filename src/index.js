@@ -12,6 +12,7 @@
 
 import { errorResponse } from './utils/http.js';
 import Router from './utils/router/index.js';
+import { RequestInfo } from './utils/RequestInfo.js';
 import handlers from './routes/index.js';
 import logMetrics from './utils/metrics.js';
 
@@ -89,17 +90,6 @@ export async function makeContext(eCtx, req, env) {
     imageUploads: [],
     productUploadsMs: [],
   };
-
-  const filename = ctx.url.pathname.split('/').pop() ?? '';
-  ctx.info = {
-    filename,
-    method: req.method.toUpperCase(),
-    extension: filename.split('.').pop(),
-    headers: Object.fromEntries(
-      [...req.headers.entries()]
-        .map(([k, v]) => [k.toLowerCase(), v]),
-    ),
-  };
   ctx.data = await parseData(req);
   return ctx;
 }
@@ -142,19 +132,8 @@ export default {
         return errorResponse(404, 'route not found');
       }
 
-      const { handler, variables } = match;
-
-      // Store variables in context
-      ctx.variables = variables;
-
-      // Build config object for backward compatibility
-      const { org, site, route } = variables;
-      ctx.config = {
-        org,
-        site,
-        route,
-        siteKey: `${org}--${site}`,
-      };
+      const { handler } = match;
+      ctx.requestInfo = RequestInfo.fromRouterMatch(request, match);
 
       let resp = await handler(ctx, request);
       resp = await applyCORSHeaders(resp);

@@ -17,11 +17,12 @@ import { errorResponse } from '../../utils/http.js';
  * @type {RouteHandler}
  */
 export default async function retrieve(ctx) {
-  const { config } = ctx;
+  const { requestInfo } = ctx;
+  const { siteKey } = requestInfo;
 
   await assertAuthorization(ctx);
 
-  const token = await ctx.env.KEYS.get(config.siteKey);
+  const token = await ctx.env.KEYS.get(siteKey);
   if (!token) {
     return errorResponse(404);
   }

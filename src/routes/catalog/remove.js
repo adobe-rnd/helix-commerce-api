@@ -18,8 +18,8 @@ import StorageClient from '../../utils/StorageClient.js';
  * @type {RouteHandler}
  */
 export default async function remove(ctx) {
-  const { log, config, variables } = ctx;
-  const { path } = variables;
+  const { log, requestInfo } = ctx;
+  const { path, org, site } = requestInfo;
 
   if (path === '/*') {
     return errorResponse(400, 'Wildcard path deletions not supported');
@@ -36,8 +36,8 @@ export default async function remove(ctx) {
   }));
 
   await ctx.env.INDEXER_QUEUE.send({
-    org: config.org,
-    site: config.site,
+    org,
+    site,
     // @ts-ignore
     products,
     timestamp: Date.now(),

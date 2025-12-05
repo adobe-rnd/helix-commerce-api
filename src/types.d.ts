@@ -14,16 +14,39 @@ declare global {
   export type RouteHandler = (ctx: Context, request: import("@cloudflare/workers-types").Request) => Promise<Response>;
 
   /**
-   * Resolved config object
+   * HTTP request information with normalized headers
    */
-  export interface Config {
+  export interface HttpRequest {
+    method: string;
+    headers: Record<string, string>;
+    url: URL;
+    scheme: string;
+    host: string;
+    pathname: string;
+    filename: string;
+    extension: string | undefined;
+    getHeader(name: string): string | undefined;
+  }
+
+  /**
+   * Decomposed path information from router
+   */
+  export interface PathInfo {
+    route: string;
     org: string;
     site: string;
+    path: string;
     siteKey: string;
-    route: string;
-    orderId?: string;
-    email?: string;
+    variables: Record<string, string>;
+    email: string | undefined;
+    orderId: string | undefined;
+    getVariable(name: string): string | undefined;
   }
+
+  /**
+   * Combined request and path information
+   */
+  export interface RequestInfo extends HttpRequest, PathInfo {}
 
   export interface Env {
     VERSION: string;
@@ -44,8 +67,7 @@ declare global {
     url: URL;
     env: Env;
     log: Console;
-    config: Config;
-    variables: Record<string, string>;
+    requestInfo: Readonly<RequestInfo>;
     metrics?: {
       startedAt: number;
       payloadValidationMs: number[];
@@ -55,12 +77,6 @@ declare global {
     };
     /** parsed from body or query params */
     data: any;
-    info: {
-      filename: string;
-      method: string;
-      extension: string | undefined;
-      headers: Record<string, string>;
-    }
     attributes: {
       storageClient?: StorageClient;
       paymentPlatform?: Platform;

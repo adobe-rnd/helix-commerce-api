@@ -64,8 +64,8 @@ export class ManagedPurgeClient {
       return;
     }
 
-    const { log, config, env: { HLX_ADMIN_MANAGED_PURGEPROXY_TOKEN: authToken } } = ctx;
-    const { siteKey } = config;
+    const { log, requestInfo, env: { HLX_ADMIN_MANAGED_PURGEPROXY_TOKEN: authToken } } = ctx;
+    const { siteKey } = requestInfo;
 
     /** @type {import('@adobe/helix-admin-support').ManagedConfig & { envId?: string }} */
     const configWithEnvId = purgeConfig;
