@@ -31,10 +31,11 @@ const handlers = {
  */
 export default async function handler(ctx, req) {
   const {
+    variables,
     info: { method },
-    url: { pathname },
   } = ctx;
-  const [subRoute] = pathname.split('/').filter(Boolean).slice(['org', 'site', 'route'].length);
+
+  const { subRoute } = variables;
 
   const fn = handlers[subRoute]?.[method];
   if (!fn) {

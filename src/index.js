@@ -11,9 +11,34 @@
  */
 
 import { errorResponse } from './utils/http.js';
-import { resolveConfig } from './utils/config.js';
+import Router from './utils/router/index.js';
 import handlers from './routes/index.js';
 import logMetrics from './utils/metrics.js';
+
+/**
+ * Name selector for routes.
+ */
+const nameSelector = (segs) => {
+  const literals = segs.filter((seg) => seg !== '*' && !seg.startsWith(':'));
+  if (literals.length === 0) {
+    return 'org';
+  }
+  if (literals.at(0) === 'sites' && literals.length > 1) {
+    literals.shift();
+  }
+  return literals.join('-');
+};
+
+const router = new Router(nameSelector)
+  .add('/:org/sites/:site/catalog/*', handlers.catalog)
+  .add('/:org/sites/:site/auth/:subRoute', handlers.auth)
+  .add('/:org/sites/:site/orders/:orderId', handlers.orders)
+  .add('/:org/sites/:site/orders', handlers.orders)
+  .add('/:org/sites/:site/customers/:email/:subroute', handlers.customers)
+  .add('/:org/sites/:site/customers/:email', handlers.customers)
+  .add('/:org/sites/:site/customers', handlers.customers)
+  .add('/:org/sites/:site/cache', handlers.cache)
+  .add('/:org/sites/:site/operations-log', handlers['operations-log']);
 
 /**
  * @param {import("@cloudflare/workers-types").Request} req
@@ -110,14 +135,28 @@ export default {
     const ctx = await makeContext(eCtx, request, env);
 
     try {
-      ctx.config = await resolveConfig(ctx);
-      console.debug('resolved config: ', JSON.stringify(ctx.config, null, 2));
+      // Use router to match request and extract variables
+      const match = router.match(ctx.url.pathname);
 
-      const fn = handlers[ctx.config.route];
-      if (!fn) {
+      if (!match) {
         return errorResponse(404, 'route not found');
       }
-      let resp = await fn(ctx, request);
+
+      const { handler, variables } = match;
+
+      // Store variables in context
+      ctx.variables = variables;
+
+      // Build config object for backward compatibility
+      const { org, site, route } = variables;
+      ctx.config = {
+        org,
+        site,
+        route,
+        siteKey: `${org}--${site}`,
+      };
+
+      let resp = await handler(ctx, request);
       resp = await applyCORSHeaders(resp);
       return resp;
     } catch (e) {

@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { slugger, StorageClient as SharedStorageClient } from '@dylandepass/helix-product-shared';
+import { StorageClient as SharedStorageClient } from '@dylandepass/helix-product-shared';
 import { BatchProcessor } from './batch.js';
 import { errorWithResponse } from './http.js';
 import { extractAndReplaceImages } from './media.js';
@@ -46,37 +46,48 @@ export default class StorageClient extends SharedStorageClient {
       config: {
         org,
         site,
-        storeCode,
-        storeViewCode,
       },
     } = this.ctx;
-    return `${org}/${site}/${storeCode}/${storeViewCode}`;
+    return `${org}/${site}`;
   }
 
   /**
-   * Load product by SKU.
-   * @param {string} sku - The SKU of the product.
+   * Load product by path.
+   * @param {string} path - The path to the product
    * @returns {Promise<SharedTypes.ProductBusEntry>} - A promise that resolves to the product.
    */
-  async getProduct(sku) {
-    const data = await this.fetchProduct(this.catalogKey, sku);
-    if (!data) {
+  async getProductByPath(path) {
+    const {
+      env,
+      config: { org, site },
+    } = this.ctx;
+
+    // Require .json extension
+    if (!path.endsWith('.json')) {
+      throw errorWithResponse(400, 'path must end with .json');
+    }
+
+    const key = `${org}/${site}${path}`;
+    const obj = await env.CATALOG_BUCKET.get(key);
+    if (!obj) {
       throw errorWithResponse(404, 'Product not found');
     }
+
+    const data = await obj.json();
     return data;
   }
 
   /**
-   * Save products in batches
+   * Save products by path in batches.
    *
-   * @param {SharedTypes.ProductBusEntry[]} products - The products to save.
+   * @param {SharedTypes.ProductBusEntry[]} products - The products to save (with path field).
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>}
    */
-  async saveProducts(products, asyncImages = true) {
+  async saveProductsByPath(products, asyncImages = true) {
     const processor = new BatchProcessor(
       this.ctx,
-      async (batch) => this.storeProductsBatch(batch, asyncImages),
+      async (batch) => this.storeProductsBatchByPath(batch, asyncImages),
     );
     const saveResults = await processor.process(products);
 
@@ -86,22 +97,16 @@ export default class StorageClient extends SharedStorageClient {
   }
 
   /**
-   * Handler function to process a batch of products.
-   * Saves products to storage and purges cache for successfully saved products in a single batch.
-   * @param {SharedTypes.ProductBusEntry[]} batch - An array of products to save.
+   * Handler function to process a batch of products using paths.
+   * @param {SharedTypes.ProductBusEntry[]} batch - An array of products to save (with path field).
    * @param {boolean} [asyncImages=true] - Whether images should be fetched asynchronously.
    * @returns {Promise<Partial<BatchResult>[]>}
    */
-  async storeProductsBatch(batch, asyncImages = true) {
+  async storeProductsBatchByPath(batch, asyncImages = true) {
     const {
       env,
       log,
-      config: {
-        org,
-        site,
-        storeCode,
-        storeViewCode,
-      },
+      config: { org, site },
     } = this.ctx;
 
     // Track successfully saved products for batch cache purging
@@ -112,19 +117,34 @@ export default class StorageClient extends SharedStorageClient {
         product = await extractAndReplaceImages(this.ctx, org, site, product);
       }
 
-      const { sku, name, urlKey } = product;
-      const sluggedSku = slugger(sku);
-      const key = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
+      const { sku, name, path } = product;
+      if (!path) {
+        return {
+          sku,
+          path: undefined,
+          status: 400,
+          message: 'Product path is required',
+        };
+      }
+
+      // Path should NOT have .json extension (we add it)
+      if (path.endsWith('.json')) {
+        return {
+          sku,
+          path,
+          status: 400,
+          message: 'path must not include .json extension',
+        };
+      }
+
+      const key = `${org}/${site}${path}.json`;
       const body = JSON.stringify(product);
 
       try {
         const t0 = Date.now();
-        const customMetadata = { sku, name };
-        if (urlKey) {
-          customMetadata.urlKey = urlKey;
-        }
+        const customMetadata = { sku, name, path };
 
-        // Attempt to save the product
+        // Save the product at its path location
         await env.CATALOG_BUCKET.put(key, body, {
           httpMetadata: { contentType: 'application/json' },
           customMetadata,
@@ -132,21 +152,10 @@ export default class StorageClient extends SharedStorageClient {
         const dt = Date.now() - t0;
         this.ctx.metrics?.productUploadsMs?.push(dt);
 
-        // If urlKey exists, save the urlKey metadata
-        if (urlKey) {
-          const metadataKey = `${org}/${site}/${storeCode}/${storeViewCode}/urlkeys/${urlKey}`;
-          await env.CATALOG_BUCKET.put(metadataKey, '', {
-            httpMetadata: { contentType: 'text/plain' },
-            customMetadata,
-          });
-        }
-
         // Track this product for batch cache purging
         successfullySavedProducts.push({
           sku,
-          urlKey,
-          storeCode,
-          storeViewCode,
+          path,
         });
 
         /**
@@ -154,17 +163,17 @@ export default class StorageClient extends SharedStorageClient {
          */
         const result = {
           sku,
-          sluggedSku,
+          path,
           message: 'Product saved successfully.',
           status: 200,
         };
 
         return result;
       } catch (error) {
-        log.error(`Error storing product SKU: ${sku}:`, error);
+        log.error(`Error storing product SKU: ${sku} at path: ${path}:`, error);
         return {
           sku,
-          sluggedSku,
+          path,
           status: error.code || 500,
           message: `Error: ${error.message}`,
         };
@@ -189,78 +198,76 @@ export default class StorageClient extends SharedStorageClient {
   }
 
   /**
-   * Deletes multiple products by their SKUs in batches while tracking each deletion's response.
-   * @param {string[]} skus - An array of SKUs of the products to delete.
+   * Deletes multiple products by their paths in batches while tracking each deletion's response.
+   * @param {string[]} paths - An array of paths of the products to delete.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of deletion results.
-   * @throws {Error} - Throws an error if the input parameters are invalid.
    */
-  async deleteProducts(skus) {
+  async deleteProductsByPath(paths) {
     const { log } = this.ctx;
 
-    const processor = new BatchProcessor(this.ctx, (batch) => this.deleteProductsBatch(batch));
-    const deleteResults = await processor.process(skus);
+    const processor = new BatchProcessor(
+      this.ctx,
+      (batch) => this.deleteProductsBatchByPath(batch),
+    );
+    const deleteResults = await processor.process(paths);
 
-    log.info(`Completed deletion of ${skus.length} products.`);
+    log.info(`Completed deletion of ${paths.length} products.`);
 
     return deleteResults;
   }
 
   /**
-   * Handler function to process a batch of SKUs for deletion.
-   * @param {string[]} batch - An array of SKUs to delete.
+   * Handler function to process a batch of paths for deletion.
+   * @param {string[]} batch - An array of paths to delete.
    * @returns {Promise<Partial<BatchResult>[]>} - Resolves with an array of deletion results.
    */
-  async deleteProductsBatch(batch) {
+  async deleteProductsBatchByPath(batch) {
     const {
       log,
       env,
-      config: {
-        org,
-        site,
-        storeCode,
-        storeViewCode,
-      },
+      config: { org, site },
     } = this.ctx;
 
-    const deletionPromises = batch.map(async (sku) => {
-      const sluggedSku = slugger(sku);
-
+    const deletionPromises = batch.map(async (path) => {
       try {
-        const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
+        // Path should NOT have .json extension (we add it)
+        if (path.endsWith('.json')) {
+          return {
+            path,
+            status: 400,
+            message: 'path must not include .json extension',
+          };
+        }
+
+        const productKey = `${org}/${site}${path}.json`;
+
         const productHead = await env.CATALOG_BUCKET.head(productKey);
         if (!productHead) {
-          log.warn(`Product with SKU: ${sku} not found. Skipping deletion.`);
+          log.warn(`Product at path: ${path} not found. Skipping deletion.`);
           return {
-            sku,
-            sluggedSku,
-            statusCode: 404,
+            path,
+            status: 404,
             message: 'Product not found.',
           };
         }
+
         const { customMetadata } = productHead;
         await env.CATALOG_BUCKET.delete(productKey);
-
-        const { urlKey } = customMetadata;
-        if (urlKey) {
-          const urlKeyPath = `${org}/${site}/${storeCode}/${storeViewCode}/urlkeys/${urlKey}`;
-          await env.CATALOG_BUCKET.delete(urlKeyPath);
-        }
 
         /**
          * @type {Partial<BatchResult>}
          */
         const result = {
-          sku,
-          sluggedSku,
+          sku: customMetadata?.sku,
+          path,
           status: 200,
           message: 'Product deleted successfully.',
         };
         return result;
       } catch (error) {
-        log.error(`Failed to delete product with SKU: ${sku}. Error: ${error.message}`);
+        log.error(`Failed to delete product at path: ${path}. Error: ${error.message}`);
         return {
-          sku,
-          sluggedSku,
+          path,
           status: error.code || 500,
           message: `Error: ${error.message}`,
         };
@@ -269,145 +276,6 @@ export default class StorageClient extends SharedStorageClient {
 
     const batchResults = await Promise.all(deletionPromises);
     return batchResults;
-  }
-
-  /**
-   * Resolve SKU from a URL key.
-   * @param {string} urlKey - The URL key.
-   * @returns {Promise<string>} - A promise that resolves to the SKU.
-   */
-  async lookupSku(urlKey) {
-    const {
-      env,
-      config: {
-        org,
-        site,
-        storeCode,
-        storeViewCode,
-      },
-    } = this.ctx;
-
-    // Make a HEAD request to retrieve the SKU from metadata based on the URL key
-    const urlKeyPath = `${org}/${site}/${storeCode}/${storeViewCode}/urlkeys/${urlKey}`;
-    const headResponse = await env.CATALOG_BUCKET.head(urlKeyPath);
-
-    if (!headResponse || !headResponse.customMetadata?.sku) {
-      // SKU not found for the provided URL key
-      throw errorWithResponse(404, 'Product not found');
-    }
-    // Return the resolved SKU
-    return headResponse.customMetadata.sku;
-  }
-
-  /**
-   * Resolve URL key from a SKU.
-   * @param {string} sku - The SKU of the product.
-   * @returns {Promise<string | undefined>} - A promise that resolves to the URL key or undefined.
-   */
-  async lookupUrlKey(sku) {
-    const {
-      env,
-      config: {
-        org,
-        site,
-        storeCode,
-        storeViewCode,
-      },
-    } = this.ctx;
-
-    // Construct the path to the product JSON file
-    const sluggedSku = slugger(sku);
-    const productKey = `${org}/${site}/${storeCode}/${storeViewCode}/products/${sluggedSku}.json`;
-
-    const headResponse = await env.CATALOG_BUCKET.head(productKey);
-    if (!headResponse || !headResponse.customMetadata) {
-      return undefined;
-    }
-    const { urlKey } = headResponse.customMetadata;
-
-    if (!urlKey) {
-      return undefined;
-    }
-
-    return urlKey;
-  }
-
-  /**
-   * List all products from R2.
-   * TODO: Setup pagination
-   * @returns {Promise<SharedTypes.ProductBusEntry[]>} - A promise that resolves to the products.
-   */
-  async listAllProducts() {
-    const {
-      env,
-      config: {
-        org,
-        site,
-        storeCode,
-        storeViewCode,
-      },
-    } = this.ctx;
-
-    const { skusOnly } = this.ctx.data;
-
-    const listResponse = await env.CATALOG_BUCKET.list({
-      prefix: `${org}/${site}/${storeCode}/${storeViewCode}/products/`,
-    });
-    const files = listResponse.objects;
-
-    const batchSize = 50;
-    const customMetadataArray = [];
-
-    // Helper function to split the array into chunks of a specific size
-    function chunkArray(array, size) {
-      const result = [];
-      for (let i = 0; i < array.length; i += size) {
-        result.push(array.slice(i, i + size));
-      }
-      return result;
-    }
-
-    const fileChunks = chunkArray(files, batchSize);
-
-    // Process each chunk sequentially
-    for (const chunk of fileChunks) {
-      // eslint-disable-next-line no-await-in-loop
-      const chunkResults = await Promise.all(
-        chunk.map(async (file) => {
-          const objectKey = file.key;
-          const sku = objectKey.split('/').pop().replace('.json', '');
-          const links = {
-            product: `${this.ctx.url.origin}/${org}/${site}/catalog/${storeCode}/${storeViewCode}/products/${sku}.json`,
-          };
-
-          if (skusOnly) {
-            return {
-              sku,
-              links,
-            };
-          }
-
-          const headResponse = await env.CATALOG_BUCKET.head(objectKey);
-          if (headResponse) {
-            const { customMetadata } = headResponse;
-            return {
-              ...customMetadata,
-              links,
-            };
-          } else {
-            return {
-              sku,
-              links,
-            };
-          }
-        }),
-      );
-
-      // Append the results of this chunk to the overall results array
-      customMetadataArray.push(...chunkResults);
-    }
-
-    return customMetadataArray;
   }
 
   /**
@@ -440,8 +308,6 @@ export default class StorageClient extends SharedStorageClient {
       httpMetadata: { contentType: 'application/json' },
       customMetadata: {
         id,
-        storeCode: data.storeCode,
-        storeViewCode: data.storeViewCode,
         createdAt: now,
         updatedAt: now,
         platformType,
@@ -707,8 +573,6 @@ export default class StorageClient extends SharedStorageClient {
         id: order.id,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
-        storeCode: order.storeCode,
-        storeViewCode: order.storeViewCode,
         state: order.state,
       },
       onlyIf: {

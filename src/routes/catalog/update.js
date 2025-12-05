@@ -89,15 +89,13 @@ async function doUpdate(ctx, products) {
     // images are fetched asynchronously if there are more than 10 products,
     // of it there are more than 10 images total across all products
     const asyncImages = shouldProcessImagesAsync(ctx, products);
-    results = await storage.saveProducts(products, asyncImages);
+    results = await storage.saveProductsByPath(products, asyncImages);
 
     const payload = {
       org: config.org,
       site: config.site,
-      storeCode: config.storeCode,
-      storeViewCode: config.storeViewCode,
       // @ts-ignore
-      products: results.map((r) => ({ sku: r.sluggedSku, action: 'update' })),
+      products: results.map((r) => ({ path: r.path, action: 'update' })),
       timestamp: Date.now(),
     };
 
@@ -138,10 +136,13 @@ async function doUpdate(ctx, products) {
  * @type {RouteHandler}
  */
 export default async function update(ctx) {
-  const { config, data } = ctx;
+  const { variables, data } = ctx;
   await assertAuthorization(ctx);
 
-  if (config.sku === '*') {
+  const { path } = variables;
+
+  // Handle bulk operations (POST with literal "*")
+  if (path === '/*') {
     if (ctx.info.method !== 'POST') {
       return errorResponse(405, 'method not allowed');
     }
@@ -154,7 +155,12 @@ export default async function update(ctx) {
       return errorResponse(400, `data must be an array of ${MAX_PRODUCT_BULK} or fewer products`);
     }
 
+    // Validate each product has a path field
     for (const product of data) {
+      if (!product.path) {
+        return errorResponse(400, 'each product must have a path field for bulk operations');
+      }
+
       const t0 = Date.now();
       assertValidProduct(ctx, product);
       const dt = Date.now() - t0;
@@ -164,9 +170,14 @@ export default async function update(ctx) {
     return doUpdate(ctx, data);
   }
 
+  // Handle single product operation
+  // Strip .json from URL path before adding to product data
+  const productPath = path.endsWith('.json') ? path.slice(0, -5) : path;
+  const productWithPath = { ...data, path: productPath };
+
   const t0 = Date.now();
-  assertValidProduct(ctx, data);
+  assertValidProduct(ctx, productWithPath);
   const dt = Date.now() - t0;
   if (ctx.metrics) ctx.metrics.payloadValidationMs.push(dt);
-  return doUpdate(ctx, [data]);
+  return doUpdate(ctx, [productWithPath]);
 }

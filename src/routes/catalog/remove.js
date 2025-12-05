@@ -18,28 +18,26 @@ import StorageClient from '../../utils/StorageClient.js';
  * @type {RouteHandler}
  */
 export default async function remove(ctx) {
-  const { log, config } = ctx;
-  const { sku } = config;
+  const { log, config, variables } = ctx;
+  const { path } = variables;
 
-  if (sku === '*') {
-    return errorResponse(400, 'Wildcard SKU deletions is not currently supported');
+  if (path === '/*') {
+    return errorResponse(400, 'Wildcard path deletions not supported');
   }
 
   await assertAuthorization(ctx);
 
   const storage = StorageClient.fromContext(ctx);
-  const deleteResults = await storage.deleteProducts([sku]);
+  const deleteResults = await storage.deleteProductsByPath([path]);
 
   const products = deleteResults.map((res) => ({
-    sku: res.sluggedSku,
+    path: res.path,
     action: 'delete',
   }));
 
   await ctx.env.INDEXER_QUEUE.send({
     org: config.org,
     site: config.site,
-    storeCode: config.storeCode,
-    storeViewCode: config.storeViewCode,
     // @ts-ignore
     products,
     timestamp: Date.now(),

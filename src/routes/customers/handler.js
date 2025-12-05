@@ -21,12 +21,13 @@ import StorageClient from '../../utils/StorageClient.js';
  * @type {RouteHandler}
  */
 export default async function handler(ctx, req) {
-  const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route'].length);
-  // eslint-disable-next-line no-unused-vars
-  const [email, subroute] = segments;
-  Object.assign(ctx.config, {
-    email,
-  });
+  const { variables, config } = ctx;
+  const { email, subroute } = variables;
+
+  // Store email in config for backward compatibility
+  if (email) {
+    Object.assign(config, { email });
+  }
 
   if (subroute) {
     if (subroute === 'addresses') {

@@ -44,28 +44,25 @@ function validateCacheApiKey(ctx) {
 /**
  * Handles bulk cache purge requests for a specific site.
  *
- * This endpoint accepts a bulk request to purge cache entries for multiple products
- * across different store codes and store view codes within the same org/site.
+ * This endpoint accepts a bulk request to purge cache entries for multiple products.
  *
  * The request body should contain an array of product objects with:
  * - sku: Product SKU to purge
- * - urlKey: (optional) Product URL key to purge
- * - storeCode: Store code for the product
- * - storeViewCode: Store view code for the product
+ * - path: Product path to purge
  *
  * @param {Context} ctx - The request context
  * @returns {Promise<Response>} HTTP response - 200 (empty body) on success,
  *                                              error response otherwise
  *
  * @example
- * POST /{org}/{site}/cache
+ * POST /{org}/sites/{site}/cache
  * x-cache-api-key: Bearer <CACHE_API_KEY>
  * Content-Type: application/json
  *
  * {
  *   "products": [
- *     { "sku": "PROD-123", "urlKey": "product-123", "storeCode": "us", "storeViewCode": "en" },
- *     { "sku": "PROD-456", "storeCode": "us", "storeViewCode": "en" }
+ *     { "sku": "PROD-123", "path": "/us/en/products/blender-pro-500.json" },
+ *     { "sku": "PROD-456", "path": "/us/en/products/mixer-deluxe.json" }
  *   ]
  * }
  */
@@ -92,11 +89,8 @@ async function handleBulkPurge(ctx) {
     if (!product.sku) {
       return errorResponse(400, 'each product must have a "sku" property');
     }
-    if (!product.storeCode) {
-      return errorResponse(400, 'each product must have a "storeCode" property');
-    }
-    if (!product.storeViewCode) {
-      return errorResponse(400, 'each product must have a "storeViewCode" property');
+    if (!product.path) {
+      return errorResponse(400, 'each product must have a "path" property');
     }
   }
 

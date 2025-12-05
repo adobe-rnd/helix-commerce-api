@@ -225,8 +225,7 @@ export class AkamaiPurgeClient {
    */
   static async purge(ctx, purgeConfig, { keys }) {
     const { log, config } = ctx;
-    const { siteKey, storeCode, storeViewCode } = config;
-    const siteId = `${siteKey}/${storeCode}/${storeViewCode}`;
+    const { siteKey } = config;
     const { host } = purgeConfig;
 
     let msg;
@@ -236,20 +235,20 @@ export class AkamaiPurgeClient {
       const id = nextRequestId(ctx);
       try {
         /* c8 ignore next */
-        log.info(`${siteId} [${id}] [akamai] ${host} purging keys '${keys}'`);
+        log.info(`${siteKey} [${id}] [akamai] ${host} purging keys '${keys}'`);
         resp = await AkamaiPurgeClient.sendPurgeRequest(ctx, purgeConfig, 'tag', keys);
       } /* c8 ignore next 4 */ catch (err) {
-        msg = `${siteId} [${id}] [akamai] ${host} key purge failed: ${err}`;
+        msg = `${siteKey} [${id}] [akamai] ${host} key purge failed: ${err}`;
         log.error(msg);
         throw new Error(msg);
       }
       const result = await resp.text();
       if (resp.ok) {
         /* c8 ignore next */
-        log.info(`${siteId} [${id}] [akamai] ${host} key purge succeeded: ${resp.status} - ${result}`);
+        log.info(`${siteKey} [${id}] [akamai] ${host} key purge succeeded: ${resp.status} - ${result}`);
       } else {
         /* c8 ignore next */
-        msg = `${siteId} [${id}] [akamai] ${host} key purge failed: ${resp.status} - ${result}`;
+        msg = `${siteKey} [${id}] [akamai] ${host} key purge failed: ${resp.status} - ${result}`;
         log.error(msg);
         throw new Error(msg);
       }

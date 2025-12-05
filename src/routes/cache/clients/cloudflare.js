@@ -59,8 +59,7 @@ export class CloudflarePurgeClient {
    */
   static async purge(ctx, purgeConfig, { keys }) {
     const { log, config } = ctx;
-    const { siteKey, storeCode, storeViewCode } = config;
-    const siteId = `${siteKey}/${storeCode}/${storeViewCode}`;
+    const { siteKey } = config;
 
     const { host, zoneId, apiToken } = purgeConfig;
     const url = `https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`;
@@ -81,18 +80,18 @@ export class CloudflarePurgeClient {
     await processQueue(payloads, async (body) => {
       const id = nextRequestId(ctx);
       /* c8 ignore next */
-      log.info(`${siteId} [${id}] [cloudflare] purging '${host}' with ${JSON.stringify(body)}`);
+      log.info(`${siteKey} [${id}] [cloudflare] purging '${host}' with ${JSON.stringify(body)}`);
       const resp = await ffetch(url, { method, headers, body: JSON.stringify(body) });
       const result = await resp.text();
       if (resp.ok && JSON.parse(result).success === true) {
         /* c8 ignore next */
-        log.info(`${siteId} [${id}] [cloudflare] ${host} purge succeeded: ${result}`);
+        log.info(`${siteKey} [${id}] [cloudflare] ${host} purge succeeded: ${result}`);
       } else {
         /* c8 ignore next */
-        const msg = `${siteId} [${id}] [cloudflare] ${host} purge failed: ${resp.status} - ${result} - cf-ray: ${resp.headers.get('cf-ray')}`;
+        const msg = `${siteKey} [${id}] [cloudflare] ${host} purge failed: ${resp.status} - ${result} - cf-ray: ${resp.headers.get('cf-ray')}`;
         log.error(msg);
         /* c8 ignore next */
-        log.error(`${siteId} [${id}] [cloudflare] ${host} purge body was: ${JSON.stringify(body)}`);
+        log.error(`${siteKey} [${id}] [cloudflare] ${host} purge body was: ${JSON.stringify(body)}`);
         throw new Error(msg);
       }
     });

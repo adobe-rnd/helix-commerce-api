@@ -16,10 +16,10 @@ import StorageClient from '../../utils/StorageClient.js';
  * @type {RouteHandler}
  */
 export default async function retrieve(ctx) {
-  const { sku } = ctx.config;
+  const { path } = ctx.variables;
 
   const storage = StorageClient.fromContext(ctx);
-  const product = await storage.getProduct(sku);
+  const product = await storage.getProductByPath(path);
 
   return new Response(JSON.stringify(product), {
     headers: { 'Content-Type': 'application/json' },

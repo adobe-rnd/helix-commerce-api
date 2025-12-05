@@ -11,59 +11,37 @@
  */
 
 import { errorResponse } from '../../utils/http.js';
-import lookup from './lookup.js';
 import retrieve from './retrieve.js';
 import update from './update.js';
 import remove from './remove.js';
-
-/**
- * @type {Record<string, Record<string, RouteHandler>>}
- */
-const handlers = {
-  lookup: {
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/lookup?urlkey={urlkey}
-    GET: lookup,
-  },
-  products: {
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    GET: retrieve,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    PUT: update,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/*
-    POST: update,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    DELETE: remove,
-  },
-};
 
 /**
  * @type {RouteHandler}
  */
 export default async function handler(ctx, request) {
   const {
-    config,
+    variables,
     info: { method },
   } = ctx;
-  const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
-  const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(3);
 
-  if (!Object.keys(handlers).includes(subRoute)
-    || (subRoute === 'products' && !sku)
-    || (subRoute === 'lookup' && sku)) {
-    return errorResponse(404, 'invalid path');
+  const { path } = variables;
+  if (!path) {
+    return errorResponse(404, 'path is required');
   }
 
-  Object.assign(config, {
-    storeCode,
-    storeViewCode,
-    subRoute,
-    sku: sku && sku.endsWith('.json') ? sku.slice(0, -5) : sku,
-  });
-
-  const fn = handlers[subRoute]?.[method];
-  if (!fn) {
-    return errorResponse(405, 'method not allowed');
+  switch (method) {
+    case 'GET':
+      return retrieve(ctx, request);
+    case 'POST':
+      if (path !== '/*') {
+        return errorResponse(400, 'POST only allowed for bulk operations at /*');
+      }
+      return update(ctx, request);
+    case 'PUT':
+      return update(ctx, request);
+    case 'DELETE':
+      return remove(ctx, request);
+    default:
+      return errorResponse(405, 'method not allowed');
   }
-
-  return fn(ctx, request);
 }

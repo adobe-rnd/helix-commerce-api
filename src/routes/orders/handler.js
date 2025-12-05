@@ -57,12 +57,12 @@ const oneHandlers = {
  */
 export default async function handler(ctx, request) {
   const {
+    variables,
     config,
     info: { method },
   } = ctx;
-  const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
-  const [orderId] = pathSegments.slice(['org', 'site', 'route'].length);
 
+  const { orderId } = variables;
   const handlers = orderId ? oneHandlers : allHandlers;
 
   Object.assign(config, {

@@ -21,9 +21,6 @@ declare global {
     site: string;
     siteKey: string;
     route: string;
-    storeCode?: string;
-    storeViewCode?: string;
-    sku?: string;
     orderId?: string;
     email?: string;
   }
@@ -48,6 +45,7 @@ declare global {
     env: Env;
     log: Console;
     config: Config;
+    variables: Record<string, string>;
     metrics?: {
       startedAt: number;
       payloadValidationMs: number[];
@@ -73,10 +71,9 @@ declare global {
 
   export interface BatchResult {
     sku: string;
-    sluggedSku: string;
+    path: string;
     status: number;
     message?: string;
-    paths: Record<string, AdminStatus>;
   };
 
   export interface OrderItem {
@@ -93,8 +90,6 @@ declare global {
     id: string;
     createdAt: string;
     updatedAt: string;
-    storeCode: string;
-    storeViewCode: string;
     state: OrderState;
   }
 
@@ -103,8 +98,6 @@ declare global {
     state: OrderState;
     createdAt: string;
     updatedAt: string;
-    storeCode: string;
-    storeViewCode: string;
     customer: Customer;
     shipping: ShippingAddress;
     items: OrderItem[];

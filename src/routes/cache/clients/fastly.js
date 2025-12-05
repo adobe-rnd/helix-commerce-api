@@ -59,8 +59,7 @@ export class FastlyPurgeClient {
    */
   static async purge(ctx, purgeConfig, { keys }) {
     const { log, config } = ctx;
-    const { siteKey, storeCode, storeViewCode } = config;
-    const siteId = `${siteKey}/${storeCode}/${storeViewCode}`;
+    const { siteKey } = config;
 
     const {
       host,
@@ -88,18 +87,18 @@ export class FastlyPurgeClient {
         let resp;
         const id = nextRequestId(ctx);
         try {
-          log.info(`${siteId} [${id}] [fastly] ${host} purging keys '${batch}'`);
+          log.info(`${siteKey} [${id}] [fastly] ${host} purging keys '${batch}'`);
           resp = await ffetch(url, { method, headers, body: JSON.stringify(body) });
         } catch (err) {
-          msg = `${siteId} [${id}] [fastly] ${host} purging ${batch.length} surrogate key(s) failed: ${err}`;
+          msg = `${siteKey} [${id}] [fastly] ${host} purging ${batch.length} surrogate key(s) failed: ${err}`;
           log.error(msg);
           throw new Error(msg);
         }
         const result = await resp.text();
         if (resp.ok) {
-          log.info(`${siteId} [fastly] ${host} purging ${keys.length} surrogate key(s) succeeded: ${resp.status} - ${result}`);
+          log.info(`${siteKey} [fastly] ${host} purging ${keys.length} surrogate key(s) succeeded: ${resp.status} - ${result}`);
         } else {
-          msg = `${siteId} [fastly] ${host} purging ${keys.length} surrogate key(s) failed: ${resp.status} - ${result}`;
+          msg = `${siteKey} [fastly] ${host} purging ${keys.length} surrogate key(s) failed: ${resp.status} - ${result}`;
           log.error(msg);
           throw new Error(msg);
         }
