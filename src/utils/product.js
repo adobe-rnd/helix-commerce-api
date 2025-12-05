@@ -11,6 +11,7 @@
  */
 
 import ProductBusEntry from '../schemas/ProductBus.js';
+import { errorWithResponse } from './http.js';
 // import { errorWithResponse } from './http.js';
 import { validate } from './validation.js';
 
@@ -42,6 +43,6 @@ export function assertValidProduct(ctx, product) {
   const errors = validate(product, ProductBusEntry);
   if (errors) {
     log.info('Invalid product', { errors });
-    // throw errorWithResponse(400, 'Invalid product', { errors });
+    throw errorWithResponse(400, `Invalid product: ${errors.map((e) => e.message).join(', ')}`);
   }
 }

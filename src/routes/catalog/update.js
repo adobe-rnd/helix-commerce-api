@@ -173,11 +173,20 @@ export default async function update(ctx) {
   // Handle single product operation
   // Strip .json from URL path before adding to product data
   const productPath = path.endsWith('.json') ? path.slice(0, -5) : path;
-  const productWithPath = { ...data, path: productPath };
+
+  // verify path in body matches URL path
+  if (data.path) {
+    if (data.path !== productPath) {
+      return errorResponse(400, `path in body (${data.path}) must match path in URL (${productPath})`);
+    }
+  } else {
+    // If body doesn't have path, add it from URL
+    data.path = productPath;
+  }
 
   const t0 = Date.now();
-  assertValidProduct(ctx, productWithPath);
+  assertValidProduct(ctx, data);
   const dt = Date.now() - t0;
   if (ctx.metrics) ctx.metrics.payloadValidationMs.push(dt);
-  return doUpdate(ctx, [productWithPath]);
+  return doUpdate(ctx, [data]);
 }
