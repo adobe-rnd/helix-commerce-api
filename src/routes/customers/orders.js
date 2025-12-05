@@ -19,11 +19,10 @@ import { errorResponse } from '../../utils/http.js';
  */
 // eslint-disable-next-line no-unused-vars
 export default async function handler(ctx, req) {
-  // eslint-disable-next-line no-unused-vars
-  const { email } = ctx.config;
-  const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route', 'email', 'subroute'].length);
-  const [orderId] = segments;
-  switch (ctx.info.method) {
+  const { requestInfo } = ctx;
+  const { email, method } = requestInfo;
+  const { orderId } = requestInfo;
+  switch (method) {
     case 'GET': {
       const storage = StorageClient.fromContext(ctx);
       if (orderId) {

@@ -80,24 +80,23 @@ async function doUpdate(ctx, products) {
   let results;
 
   try {
-    const { log, config } = ctx;
+    const { log, requestInfo } = ctx;
+    const { org, site } = requestInfo;
 
-    const helixConfig = await fetchHelixConfig(ctx, config.org, config.site);
+    const helixConfig = await fetchHelixConfig(ctx, org, site);
     ctx.attributes.helixConfigCache = helixConfig;
 
     const storage = StorageClient.fromContext(ctx);
     // images are fetched asynchronously if there are more than 10 products,
     // of it there are more than 10 images total across all products
     const asyncImages = shouldProcessImagesAsync(ctx, products);
-    results = await storage.saveProducts(products, asyncImages);
+    results = await storage.saveProductsByPath(products, asyncImages);
 
     const payload = {
-      org: config.org,
-      site: config.site,
-      storeCode: config.storeCode,
-      storeViewCode: config.storeViewCode,
+      org,
+      site,
       // @ts-ignore
-      products: results.map((r) => ({ sku: r.sluggedSku, action: 'update' })),
+      products: results.map((r) => ({ path: r.path, action: 'update' })),
       timestamp: Date.now(),
     };
 
@@ -138,11 +137,13 @@ async function doUpdate(ctx, products) {
  * @type {RouteHandler}
  */
 export default async function update(ctx) {
-  const { config, data } = ctx;
+  const { requestInfo, data } = ctx;
+  const { path, method } = requestInfo;
   await assertAuthorization(ctx);
 
-  if (config.sku === '*') {
-    if (ctx.info.method !== 'POST') {
+  // Handle bulk operations (POST with literal "*")
+  if (path === '/*') {
+    if (method !== 'POST') {
       return errorResponse(405, 'method not allowed');
     }
 
@@ -154,7 +155,12 @@ export default async function update(ctx) {
       return errorResponse(400, `data must be an array of ${MAX_PRODUCT_BULK} or fewer products`);
     }
 
+    // Validate each product has a path field
     for (const product of data) {
+      if (!product.path) {
+        return errorResponse(400, 'each product must have a path field for bulk operations');
+      }
+
       const t0 = Date.now();
       assertValidProduct(ctx, product);
       const dt = Date.now() - t0;
@@ -162,6 +168,20 @@ export default async function update(ctx) {
     }
 
     return doUpdate(ctx, data);
+  }
+
+  // Handle single product operation
+  // Strip .json from URL path before adding to product data
+  const productPath = path.endsWith('.json') ? path.slice(0, -5) : path;
+
+  // verify path in body matches URL path
+  if (data.path) {
+    if (data.path !== productPath) {
+      return errorResponse(400, `path in body (${data.path}) must match path in URL (${productPath})`);
+    }
+  } else {
+    // If body doesn't have path, add it from URL
+    data.path = productPath;
   }
 
   const t0 = Date.now();

@@ -142,6 +142,11 @@ const ProductBusEntry = {
   type: 'object',
   properties: {
     sku: { type: 'string' },
+    path: {
+      type: 'string',
+      pattern: /^\/[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)*$/,
+      maxLength: 900,
+    },
     urlKey: { type: 'string', 'not.pattern': /^[A-Z\s]+$/ },
     description: { type: 'string' },
     name: { type: 'string' },
@@ -192,7 +197,7 @@ const ProductBusEntry = {
       { type: 'array', items: MerchantFeedShipping },
     ],
   },
-  required: ['sku', 'name'],
+  required: ['sku', 'name', 'path'],
 };
 
 export default ProductBusEntry;

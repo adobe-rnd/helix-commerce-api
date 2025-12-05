@@ -56,18 +56,9 @@ const oneHandlers = {
  * @type {RouteHandler}
  */
 export default async function handler(ctx, request) {
-  const {
-    config,
-    info: { method },
-  } = ctx;
-  const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
-  const [orderId] = pathSegments.slice(['org', 'site', 'route'].length);
-
+  const { requestInfo } = ctx;
+  const { method, orderId } = requestInfo;
   const handlers = orderId ? oneHandlers : allHandlers;
-
-  Object.assign(config, {
-    orderId,
-  });
 
   const fn = handlers[method];
   if (!fn) {

@@ -64,9 +64,8 @@ export class ManagedPurgeClient {
       return;
     }
 
-    const { log, config, env: { HLX_ADMIN_MANAGED_PURGEPROXY_TOKEN: authToken } } = ctx;
-    const { siteKey, storeCode, storeViewCode } = config;
-    const siteId = `${siteKey}/${storeCode}/${storeViewCode}`;
+    const { log, requestInfo, env: { HLX_ADMIN_MANAGED_PURGEPROXY_TOKEN: authToken } } = ctx;
+    const { siteKey } = requestInfo;
 
     /** @type {import('@adobe/helix-admin-support').ManagedConfig & { envId?: string }} */
     const configWithEnvId = purgeConfig;
@@ -86,7 +85,7 @@ export class ManagedPurgeClient {
         let resp;
         const id = nextRequestId(ctx);
         try {
-          log.info(`${siteId} [${id}] [managed] ${envId || host} purging keys '${batch}'`);
+          log.info(`${siteKey} [${id}] [managed] ${envId || host} purging keys '${batch}'`);
           // Create a fresh headers object for each request to avoid mutation issues
           const headers = {
             accept: 'application/json',
@@ -95,15 +94,15 @@ export class ManagedPurgeClient {
           };
           resp = await ffetch(url, { method, headers });
         } catch (err) {
-          msg = `${siteId} [${id}] [managed] ${envId || host} purging ${batch.length} surrogate key(s) failed: ${err}`;
+          msg = `${siteKey} [${id}] [managed] ${envId || host} purging ${batch.length} surrogate key(s) failed: ${err}`;
           log.error(msg);
           throw new Error(msg);
         }
         const result = await resp.text();
         if (resp.ok) {
-          log.info(`${siteId} [managed] ${host} purging ${keys.length} surrogate key(s) succeeded: ${resp.status} - ${result}`);
+          log.info(`${siteKey} [managed] ${host} purging ${keys.length} surrogate key(s) succeeded: ${resp.status} - ${result}`);
         } else {
-          msg = `${siteId} [managed] ${host} purging ${keys.length} surrogate key(s) failed: ${resp.status} - ${result}`;
+          msg = `${siteKey} [managed] ${host} purging ${keys.length} surrogate key(s) failed: ${resp.status} - ${result}`;
           log.error(msg);
           throw new Error(msg);
         }

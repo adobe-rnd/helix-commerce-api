@@ -30,11 +30,10 @@ const handlers = {
  * @type {RouteHandler}
  */
 export default async function handler(ctx, req) {
-  const {
-    info: { method },
-    url: { pathname },
-  } = ctx;
-  const [subRoute] = pathname.split('/').filter(Boolean).slice(['org', 'site', 'route'].length);
+  const { requestInfo } = ctx;
+
+  const subRoute = requestInfo.getVariable('subRoute');
+  const { method } = requestInfo;
 
   const fn = handlers[subRoute]?.[method];
   if (!fn) {

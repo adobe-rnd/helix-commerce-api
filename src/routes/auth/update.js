@@ -22,9 +22,11 @@ const generateToken = () => crypto.randomUUID().toUpperCase();
  * @returns {Promise<string>}
  */
 export async function updateToken(ctx, token = generateToken()) {
-  const { config } = ctx;
+  const { requestInfo } = ctx;
+  const { siteKey } = requestInfo;
+
   try {
-    await ctx.env.KEYS.put(config.siteKey, token);
+    await ctx.env.KEYS.put(siteKey, token);
   } catch (e) {
     ctx.log.error('failed to update token', e);
     throw errorWithResponse(503, 'failed to update token');

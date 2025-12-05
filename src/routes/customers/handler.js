@@ -21,12 +21,9 @@ import StorageClient from '../../utils/StorageClient.js';
  * @type {RouteHandler}
  */
 export default async function handler(ctx, req) {
-  const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route'].length);
-  // eslint-disable-next-line no-unused-vars
-  const [email, subroute] = segments;
-  Object.assign(ctx.config, {
-    email,
-  });
+  const { requestInfo } = ctx;
+  const { email } = requestInfo;
+  const subroute = requestInfo.getVariable('subroute');
 
   if (subroute) {
     if (subroute === 'addresses') {
@@ -38,7 +35,7 @@ export default async function handler(ctx, req) {
     return errorResponse(404, 'Not found');
   }
 
-  switch (ctx.info.method) {
+  switch (ctx.requestInfo.method) {
     case 'POST': {
       await assertAuthorization(ctx);
       if (!email) {
