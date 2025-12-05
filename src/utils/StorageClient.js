@@ -57,7 +57,7 @@ export default class StorageClient extends SharedStorageClient {
       throw errorWithResponse(400, 'path must end with .json');
     }
 
-    const key = `${org}/${site}${path}`;
+    const key = `${org}/${site}/catalog${path}`;
     const obj = await env.CATALOG_BUCKET.get(key);
     if (!obj) {
       throw errorWithResponse(404, 'Product not found');
@@ -127,7 +127,7 @@ export default class StorageClient extends SharedStorageClient {
         };
       }
 
-      const key = `${org}/${site}${path}.json`;
+      const key = `${org}/${site}/catalog${path}.json`;
       const body = JSON.stringify(product);
 
       try {
@@ -229,9 +229,9 @@ export default class StorageClient extends SharedStorageClient {
           };
         }
 
-        const productKey = `${org}/${site}${path}`;
+        const key = `${org}/${site}/catalog${path}`;
 
-        const productHead = await env.CATALOG_BUCKET.head(productKey);
+        const productHead = await env.CATALOG_BUCKET.head(key);
         if (!productHead) {
           log.warn(`Product at path: ${path} not found. Skipping deletion.`);
           return {
@@ -242,7 +242,7 @@ export default class StorageClient extends SharedStorageClient {
         }
 
         const { customMetadata } = productHead;
-        await env.CATALOG_BUCKET.delete(productKey);
+        await env.CATALOG_BUCKET.delete(key);
 
         /**
          * @type {Partial<BatchResult>}
