@@ -29,6 +29,7 @@ export const nameSelector = (segs) => {
   if (literals.length === 0) {
     return 'org';
   }
+  // @ts-ignore
   if (literals.at(0) === 'sites' && literals.length > 1) {
     literals.shift();
   }
