@@ -14,6 +14,7 @@
 
 /**
  * Class containing decomposed path information from router.
+ * @implements {PathInfo}
  */
 class PathInfo {
   #route;
@@ -85,6 +86,7 @@ class PathInfo {
 
 /**
  * Class containing HTTP request information.
+ * @implements {HttpRequest}
  */
 class HttpRequest {
   #method;
@@ -152,6 +154,7 @@ class HttpRequest {
 
 /**
  * Class containing the aspects of both HTTP request and decomposed path.
+ * @implements {RequestInfo}
  */
 export class RequestInfo {
   #request;
