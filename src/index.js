@@ -19,7 +19,7 @@ import logMetrics from './utils/metrics.js';
 /**
  * Name selector for routes.
  */
-const nameSelector = (segs) => {
+export const nameSelector = (segs) => {
   const literals = segs.filter((seg) => seg !== '*' && !seg.startsWith(':'));
   if (literals.length === 0) {
     return 'org';

@@ -38,6 +38,20 @@ describe('catalogHandler Tests', () => {
     sinon.restore();
   });
 
+  it('should return 404 when path is missing', async () => {
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        path: undefined,
+        method: 'GET',
+      },
+    });
+    const request = {};
+    const response = await catalogHandler(ctx, request);
+
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('x-error'), 'path is required');
+  });
+
   it('should return 405 when method is not allowed', async () => {
     const ctx = DEFAULT_CONTEXT({
       requestInfo: {
@@ -103,5 +117,38 @@ describe('catalogHandler Tests', () => {
 
     assert.equal(response.status, 200);
     assert(handleProductRemoveRequestStub.calledOnceWith(ctx));
+  });
+
+  it('should return 400 when POST is used with non-/* path', async () => {
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        path: '/products/test-product.json',
+        method: 'POST',
+      },
+    });
+    const request = {};
+
+    const response = await catalogHandler(ctx, request);
+
+    assert.equal(response.status, 400);
+    assert.equal(response.headers.get('x-error'), 'POST only allowed for bulk operations at /*');
+  });
+
+  it('should call handleProductSaveRequest when POST is used with /* path', async () => {
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        path: '/*',
+        method: 'POST',
+      },
+    });
+    const request = {};
+
+    const mockResponse = new Response(null, { status: 201 });
+    handleProductSaveRequestStub.returns(mockResponse);
+
+    const response = await catalogHandler(ctx, request);
+
+    assert.equal(response.status, 201);
+    assert(handleProductSaveRequestStub.calledOnceWith(ctx, request));
   });
 });

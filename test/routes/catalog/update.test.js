@@ -128,5 +128,51 @@ describe('Product Save Tests', () => {
       // Verify response was successful
       assert.equal(response.status, 201);
     });
+
+    it('should return 400 when path in body does not match URL path', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: { sku: '1234', path: '/products/different-product', name: 'product-name' },
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+      }, { path: '/products/test-product.json' });
+
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 400);
+      assert.equal(response.headers.get('x-error'), 'path in body (/products/different-product) must match path in URL (/products/test-product)');
+    });
+
+    it('should add path from URL when not present in body', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: { sku: '1234', name: 'product-name' }, // No path in body
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+
+      storageStub.saveProductsByPath.resolves([{ sku: '1234', path: '/products/test-product' }]);
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 201);
+      // Verify path was added from URL (without .json)
+      assert.equal(ctx.data.path, '/products/test-product');
+    });
   });
 });

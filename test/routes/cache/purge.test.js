@@ -442,5 +442,61 @@ describe('Cache Purge Tests', () => {
       // Verify only 2 content keys were computed (for products with paths)
       assert.strictEqual(computeAuthoredContentKeyStub.callCount, 2);
     });
+
+    it('should skip purge when all products have no path', async () => {
+      const products = [
+        { sku: 'PROD-123' },
+        { sku: 'PROD-456' },
+        { sku: 'PROD-789' },
+      ];
+
+      await purgeBatch(ctx, requestInfo, products);
+
+      assert.strictEqual(computeProductPathKeyStub.callCount, 0);
+      assert.strictEqual(computeAuthoredContentKeyStub.callCount, 0);
+      assert(ctx.log.warn.calledWith('No keys to purge in batch, skipping purge'));
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
+  });
+
+  describe('purgeProductionCDN', () => {
+    let purgeProductionCDN;
+    let ctx;
+    let cdnConfig;
+
+    beforeEach(async () => {
+      const module = await import('../../../src/routes/cache/purge.js');
+      purgeProductionCDN = module.purgeProductionCDN;
+
+      ctx = DEFAULT_CONTEXT({
+        log: {
+          info: sinon.stub(),
+          warn: sinon.stub(),
+          error: sinon.stub(),
+        },
+      });
+
+      cdnConfig = {
+        type: 'fastly',
+        host: 'example.com',
+        serviceId: 'service123',
+        authToken: 'token123',
+      };
+    });
+
+    it('should do nothing when keys array is empty', async () => {
+      await purgeProductionCDN(ctx, cdnConfig, { keys: [] });
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
+
+    it('should do nothing when keys is undefined', async () => {
+      await purgeProductionCDN(ctx, cdnConfig, { keys: undefined });
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
+
+    it('should do nothing when keys is null', async () => {
+      await purgeProductionCDN(ctx, cdnConfig, { keys: null });
+      assert(FastlyPurgeClientStub.purge.notCalled);
+    });
   });
 });

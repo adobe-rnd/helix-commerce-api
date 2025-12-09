@@ -151,5 +151,59 @@ describe('Product Bulk Save Tests', () => {
       const [, asyncImagesFlag] = storageStub.saveProductsByPath.firstCall.args;
       assert.equal(asyncImagesFlag, true);
     });
+
+    it('should return 400 when a product in bulk array is missing path field', async () => {
+      const products = [
+        { sku: '1234', path: '/products/product-1', name: 'product-name' },
+        { sku: '5678', name: 'product-name-2' }, // Missing path
+      ];
+      const ctx = DEFAULT_CONTEXT({
+        log: { error: sinon.stub(), info: sinon.stub() },
+        requestInfo: {
+          path: '/*',
+          method: 'POST',
+          org: 'myorg',
+          site: 'mysite',
+        },
+      }, { path: '/*' });
+      ctx.data = products;
+      const request = {};
+
+      const response = await handleProductSaveRequest(ctx, request, storageStub);
+
+      assert.equal(response.status, 400);
+      assert.equal(response.headers.get('x-error'), 'each product must have a path field for bulk operations');
+    });
+
+    it('should handle errors during save and still return 201 with results', async () => {
+      const products = [
+        { sku: '1234', path: '/products/product-1', name: 'product-name' },
+      ];
+      const ctx = DEFAULT_CONTEXT({
+        log: { error: sinon.stub(), info: sinon.stub() },
+        requestInfo: {
+          path: '/*',
+          method: 'POST',
+          org: 'myorg',
+          site: 'mysite',
+        },
+        attributes: { storageClient: storageStub },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().rejects(new Error('Queue error')),
+          },
+        },
+      }, { path: '/*' });
+      ctx.data = products;
+      const request = {};
+
+      storageStub.saveProductsByPath.resolves(products.map((p) => ({ sku: p.sku, path: p.path })));
+      const response = await handleProductSaveRequest(ctx, request, storageStub);
+
+      // Should still return 201 even though there was an error
+      assert.equal(response.status, 201);
+      // Verify error was logged
+      assert(ctx.log.error.calledOnce);
+    });
   });
 });

@@ -46,7 +46,7 @@ const PURGE_CLIENTS = {
  * @param {Array<string>} [params.keys] - Surrogate keys (cache tags) to purge
  * @throws {Error} If the CDN type is not supported
  */
-async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
+export async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
   const { type } = cdnConfig;
 
   if ((!keys || !keys.length)) {
