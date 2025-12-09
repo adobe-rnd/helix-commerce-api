@@ -14,7 +14,6 @@
  * @param {Partial<Context>} [overrides = {}]
  * @param {{
  *  path?: string;
- *  configMap?: Record<string, Config>;
  *  baseUrl?: string;
  * }} opts
  * @returns {Context}
@@ -23,47 +22,66 @@ export const DEFAULT_CONTEXT = (
   overrides = {},
   {
     path = '',
-    configMap = {},
     baseUrl = 'https://www.example.com/org/site/content',
   } = {},
-) => ({
-  url: new URL(`${baseUrl}${path}`),
-  log: console,
-  // @ts-ignore
-  config: {
-    siteKey: 'org--site',
-  },
-  ...overrides,
-  attributes: {
-    key: 'test-key',
-    ...(overrides.attributes ?? {}),
-  },
-  env: {
-    SUPERUSER_KEY: 'su-test-key',
-    KEYS: {
-      // @ts-ignore
-      get: async () => 'test-key',
-    },
-    CONFIGS: {
-      // @ts-ignore
-      get: async (id) => configMap[id],
-    },
-    INDEXER_QUEUE: {
-      send: () => Promise.resolve(),
-      sendBatch: () => Promise.resolve(),
-    },
-    ...(overrides.env ?? {}),
-  },
-  // @ts-ignore
-  info: {
+) => {
+  const defaultRequestInfo = {
+    org: 'org',
+    site: 'site',
+    path,
     method: 'GET',
     headers: {},
-    ...(overrides.info ?? {}),
-  },
-  data: typeof overrides.data === 'string' ? overrides.data : {
-    ...(overrides.data ?? {}),
-  },
-});
+    variables: {},
+    route: undefined,
+    get siteKey() {
+      return `${this.org}--${this.site}`;
+    },
+    getHeader: (name) => ({}[name.toLowerCase()]),
+    getVariable(name) {
+      return this.variables?.[name];
+    },
+  };
+
+  const requestInfo = {
+    ...defaultRequestInfo,
+    ...(overrides.requestInfo ?? {}),
+    // Ensure methods and getters are preserved
+    getHeader: overrides.requestInfo?.getHeader || defaultRequestInfo.getHeader,
+    getVariable: overrides.requestInfo?.getVariable || defaultRequestInfo.getVariable,
+    get siteKey() {
+      return `${this.org}--${this.site}`;
+    },
+  };
+
+  // Filter out requestInfo from overrides to avoid replacement
+  const { requestInfo: _, ...otherOverrides } = overrides;
+
+  return {
+    url: new URL(`${baseUrl}${path}`),
+    log: console,
+    requestInfo,
+    ...otherOverrides,
+    attributes: {
+      key: 'test-key',
+      ...(overrides.attributes ?? {}),
+    },
+    env: {
+      SUPERUSER_KEY: 'su-test-key',
+      KEYS: {
+      // @ts-ignore
+        get: async () => 'test-key',
+      },
+      INDEXER_QUEUE: {
+        send: () => Promise.resolve(),
+        sendBatch: () => Promise.resolve(),
+      },
+      ...(overrides.env ?? {}),
+    },
+    data: typeof overrides.data === 'string' ? overrides.data : {
+      ...(overrides.data ?? {}),
+    },
+  };
+};
 
 export const SUPERUSER_CONTEXT = (overrides = {}) => DEFAULT_CONTEXT({
   ...overrides,

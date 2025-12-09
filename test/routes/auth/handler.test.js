@@ -19,7 +19,12 @@ import handler from '../../../src/routes/auth/handler.js';
 
 describe('routes/auth handler tests', () => {
   it('should 404 on invalid route', async () => {
-    const ctx = DEFAULT_CONTEXT({ url: { pathname: '/org/site/auth/invalid' } });
+    const ctx = DEFAULT_CONTEXT({
+      url: { pathname: '/org/site/auth/invalid' },
+      requestInfo: {
+        variables: { subRoute: 'invalid' },
+      },
+    });
     const resp = await handler(ctx);
     assert.equal(resp.status, 404);
   });
@@ -28,7 +33,12 @@ describe('routes/auth handler tests', () => {
     const mocked = await esmock('../../../src/routes/auth/handler.js', {
       '../../../src/routes/auth/retrieve.js': async () => ({ status: 200 }),
     });
-    const ctx = DEFAULT_CONTEXT({ url: { pathname: '/org/site/auth/token' } });
+    const ctx = DEFAULT_CONTEXT({
+      url: { pathname: '/org/site/auth/token' },
+      requestInfo: {
+        variables: { subRoute: 'token' },
+      },
+    });
     const resp = await mocked.default(ctx);
     assert.equal(resp.status, 200);
   });

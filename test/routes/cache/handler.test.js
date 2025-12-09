@@ -42,25 +42,22 @@ describe('Cache Handler Tests', () => {
 
   describe('authentication', () => {
     it('should return 401 when CACHE_API_KEY is not configured', async () => {
+      const headers = { 'x-cache-api-key': 'Bearer test-key' };
       const ctx = DEFAULT_CONTEXT({
         log: {
           warn: sinon.stub(),
           info: sinon.stub(),
           error: sinon.stub(),
         },
-        info: {
-          method: 'POST',
-          headers: {
-            'x-cache-api-key': 'Bearer test-key',
-          },
-        },
-        config: {
+        requestInfo: {
           org: 'test-org',
           site: 'test-site',
+          method: 'POST',
+          getHeader: (name) => headers[name.toLowerCase()],
         },
         data: {
           products: [
-            { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
+            { sku: 'TEST-123', path: '/us/en/products/test-product' },
           ],
         },
         env: {
@@ -75,23 +72,22 @@ describe('Cache Handler Tests', () => {
     });
 
     it('should return 401 when authorization header is missing', async () => {
+      const headers = {};
       const ctx = DEFAULT_CONTEXT({
         log: {
           warn: sinon.stub(),
           info: sinon.stub(),
           error: sinon.stub(),
         },
-        info: {
-          method: 'POST',
-          headers: {},
-        },
-        config: {
+        requestInfo: {
           org: 'test-org',
           site: 'test-site',
+          method: 'POST',
+          getHeader: (name) => headers[name.toLowerCase()],
         },
         data: {
           products: [
-            { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
+            { sku: 'TEST-123', path: '/us/en/products/test-product' },
           ],
         },
         env: {
@@ -106,25 +102,22 @@ describe('Cache Handler Tests', () => {
     });
 
     it('should return 401 when API key is incorrect', async () => {
+      const headers = { 'x-cache-api-key': 'Bearer wrong-key' };
       const ctx = DEFAULT_CONTEXT({
         log: {
           warn: sinon.stub(),
           info: sinon.stub(),
           error: sinon.stub(),
         },
-        info: {
-          method: 'POST',
-          headers: {
-            'x-cache-api-key': 'Bearer wrong-key',
-          },
-        },
-        config: {
+        requestInfo: {
           org: 'test-org',
           site: 'test-site',
+          method: 'POST',
+          getHeader: (name) => headers[name.toLowerCase()],
         },
         data: {
           products: [
-            { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
+            { sku: 'TEST-123', path: '/us/en/products/test-product' },
           ],
         },
         env: {
@@ -144,25 +137,23 @@ describe('Cache Handler Tests', () => {
       });
       purgeBatchStub.resolves();
 
+      const headers = { 'x-cache-api-key': 'Bearer secret-key' };
       const ctx = DEFAULT_CONTEXT({
         log: {
           warn: sinon.stub(),
           info: sinon.stub(),
           error: sinon.stub(),
         },
-        info: {
-          method: 'POST',
-          headers: {
-            'x-cache-api-key': 'Bearer secret-key',
-          },
-        },
-        config: {
+        requestInfo: {
           org: 'test-org',
           site: 'test-site',
+          siteKey: 'test-org--test-site',
+          method: 'POST',
+          getHeader: (name) => headers[name.toLowerCase()],
         },
         data: {
           products: [
-            { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
+            { sku: 'TEST-123', path: '/us/en/products/test-product' },
           ],
         },
         env: {
@@ -182,25 +173,23 @@ describe('Cache Handler Tests', () => {
       });
       purgeBatchStub.resolves();
 
+      const headers = { 'x-cache-api-key': 'secret-key' };
       const ctx = DEFAULT_CONTEXT({
         log: {
           warn: sinon.stub(),
           info: sinon.stub(),
           error: sinon.stub(),
         },
-        info: {
-          method: 'POST',
-          headers: {
-            'x-cache-api-key': 'secret-key',
-          },
-        },
-        config: {
+        requestInfo: {
           org: 'test-org',
           site: 'test-site',
+          siteKey: 'test-org--test-site',
+          method: 'POST',
+          getHeader: (name) => headers[name.toLowerCase()],
         },
         data: {
           products: [
-            { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
+            { sku: 'TEST-123', path: '/us/en/products/test-product' },
           ],
         },
         env: {
@@ -216,27 +205,27 @@ describe('Cache Handler Tests', () => {
   });
 
   describe('request validation', () => {
-    const validCtx = () => DEFAULT_CONTEXT({
-      log: {
-        warn: sinon.stub(),
-        info: sinon.stub(),
-        error: sinon.stub(),
-      },
-      info: {
-        method: 'POST',
-        headers: {
-          'x-cache-api-key': 'Bearer secret-key',
+    const validCtx = () => {
+      const headers = { 'x-cache-api-key': 'Bearer secret-key' };
+      return DEFAULT_CONTEXT({
+        log: {
+          warn: sinon.stub(),
+          info: sinon.stub(),
+          error: sinon.stub(),
         },
-      },
-      config: {
-        org: 'test-org',
-        site: 'test-site',
-      },
-      env: {
-        CACHE_API_KEY: 'secret-key',
-      },
-      attributes: {},
-    });
+        requestInfo: {
+          org: 'test-org',
+          site: 'test-site',
+          siteKey: 'test-org--test-site',
+          method: 'POST',
+          getHeader: (name) => headers[name.toLowerCase()],
+        },
+        env: {
+          CACHE_API_KEY: 'secret-key',
+        },
+        attributes: {},
+      });
+    };
 
     it('should return 400 when request body is missing', async () => {
       const ctx = validCtx();
@@ -272,7 +261,7 @@ describe('Cache Handler Tests', () => {
       const ctx = validCtx();
       ctx.data = {
         products: [
-          { storeCode: 'us', storeViewCode: 'en' },
+          { path: '/us/en/products/test-product' },
         ],
       };
 
@@ -282,57 +271,43 @@ describe('Cache Handler Tests', () => {
       assert.strictEqual(response.headers.get('x-error'), 'each product must have a "sku" property');
     });
 
-    it('should return 400 when product is missing storeCode', async () => {
+    it('should return 400 when product is missing path', async () => {
       const ctx = validCtx();
       ctx.data = {
         products: [
-          { sku: 'TEST-123', storeViewCode: 'en' },
+          { sku: 'TEST-123' },
         ],
       };
 
       const response = await cacheHandler.default(ctx);
 
       assert.strictEqual(response.status, 400);
-      assert.strictEqual(response.headers.get('x-error'), 'each product must have a "storeCode" property');
-    });
-
-    it('should return 400 when product is missing storeViewCode', async () => {
-      const ctx = validCtx();
-      ctx.data = {
-        products: [
-          { sku: 'TEST-123', storeCode: 'us' },
-        ],
-      };
-
-      const response = await cacheHandler.default(ctx);
-
-      assert.strictEqual(response.status, 400);
-      assert.strictEqual(response.headers.get('x-error'), 'each product must have a "storeViewCode" property');
+      assert.strictEqual(response.headers.get('x-error'), 'each product must have a "path" property');
     });
   });
 
   describe('bulk purge', () => {
-    const validCtx = () => DEFAULT_CONTEXT({
-      log: {
-        warn: sinon.stub(),
-        info: sinon.stub(),
-        error: sinon.stub(),
-      },
-      info: {
-        method: 'POST',
-        headers: {
-          'x-cache-api-key': 'Bearer secret-key',
+    const validCtx = () => {
+      const headers = { 'x-cache-api-key': 'Bearer secret-key' };
+      return DEFAULT_CONTEXT({
+        log: {
+          warn: sinon.stub(),
+          info: sinon.stub(),
+          error: sinon.stub(),
         },
-      },
-      config: {
-        org: 'test-org',
-        site: 'test-site',
-      },
-      env: {
-        CACHE_API_KEY: 'secret-key',
-      },
-      attributes: {},
-    });
+        requestInfo: {
+          org: 'test-org',
+          site: 'test-site',
+          siteKey: 'test-org--test-site',
+          method: 'POST',
+          getHeader: (name) => headers[name.toLowerCase()],
+        },
+        env: {
+          CACHE_API_KEY: 'secret-key',
+        },
+        attributes: {},
+      });
+    };
 
     it('should successfully purge single product', async () => {
       fetchHelixConfigStub.resolves({
@@ -343,9 +318,7 @@ describe('Cache Handler Tests', () => {
       const ctx = validCtx();
       ctx.data = {
         products: [
-          {
-            sku: 'TEST-123', urlKey: 'test-product', storeCode: 'us', storeViewCode: 'en',
-          },
+          { sku: 'TEST-123', path: '/us/en/products/test-product' },
         ],
       };
 
@@ -378,13 +351,9 @@ describe('Cache Handler Tests', () => {
       const ctx = validCtx();
       ctx.data = {
         products: [
-          {
-            sku: 'TEST-123', urlKey: 'test-123', storeCode: 'us', storeViewCode: 'en',
-          },
-          {
-            sku: 'TEST-456', urlKey: 'test-456', storeCode: 'us', storeViewCode: 'en',
-          },
-          { sku: 'TEST-789', storeCode: 'uk', storeViewCode: 'en' },
+          { sku: 'TEST-123', path: '/us/en/products/test-123' },
+          { sku: 'TEST-456', path: '/us/en/products/test-456' },
+          { sku: 'TEST-789', path: '/uk/en/products/test-789' },
         ],
       };
 
@@ -407,42 +376,13 @@ describe('Cache Handler Tests', () => {
       ));
     });
 
-    it('should handle products without urlKey', async () => {
-      fetchHelixConfigStub.resolves({
-        cdn: { prod: { type: 'fastly', host: 'cdn.example.com' } },
-      });
-      purgeBatchStub.resolves();
-
-      const ctx = validCtx();
-      ctx.data = {
-        products: [
-          { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
-        ],
-      };
-
-      const response = await cacheHandler.default(ctx);
-
-      assert.strictEqual(response.status, 200);
-
-      const body = await response.text();
-      assert.strictEqual(body, '');
-
-      // Verify purgeBatch was called with the products (urlKey will be undefined in product object)
-      assert(purgeBatchStub.calledOnce);
-      assert(purgeBatchStub.calledWith(
-        sinon.match.any,
-        sinon.match({ org: 'test-org', site: 'test-site' }),
-        ctx.data.products,
-      ));
-    });
-
     it('should return 404 when helix config is not found', async () => {
       fetchHelixConfigStub.resolves(null);
 
       const ctx = validCtx();
       ctx.data = {
         products: [
-          { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
+          { sku: 'TEST-123', path: '/us/en/products/test-product' },
         ],
       };
 
@@ -463,9 +403,9 @@ describe('Cache Handler Tests', () => {
       const ctx = validCtx();
       ctx.data = {
         products: [
-          { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
-          { sku: 'TEST-456', storeCode: 'us', storeViewCode: 'en' },
-          { sku: 'TEST-789', storeCode: 'us', storeViewCode: 'en' },
+          { sku: 'TEST-123', path: '/us/en/products/test-123' },
+          { sku: 'TEST-456', path: '/us/en/products/test-456' },
+          { sku: 'TEST-789', path: '/us/en/products/test-789' },
         ],
       };
 
@@ -485,7 +425,7 @@ describe('Cache Handler Tests', () => {
       const ctx = validCtx();
       ctx.data = {
         products: [
-          { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
+          { sku: 'TEST-123', path: '/us/en/products/test-product' },
         ],
       };
 
@@ -504,8 +444,8 @@ describe('Cache Handler Tests', () => {
       const ctx = validCtx();
       ctx.data = {
         products: [
-          { sku: 'TEST-123', storeCode: 'us', storeViewCode: 'en' },
-          { sku: 'TEST-456', storeCode: 'us', storeViewCode: 'en' },
+          { sku: 'TEST-123', path: '/us/en/products/test-123' },
+          { sku: 'TEST-456', path: '/us/en/products/test-456' },
         ],
       };
 
@@ -520,9 +460,9 @@ describe('Cache Handler Tests', () => {
     it('should return 405 for GET requests', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: { warn: sinon.stub(), info: sinon.stub(), error: sinon.stub() },
-        info: {
+        requestInfo: {
           method: 'GET',
-          headers: {},
+          getHeader: () => null,
         },
       });
 
@@ -535,9 +475,9 @@ describe('Cache Handler Tests', () => {
     it('should return 405 for PUT requests', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: { warn: sinon.stub(), info: sinon.stub(), error: sinon.stub() },
-        info: {
+        requestInfo: {
           method: 'PUT',
-          headers: {},
+          getHeader: () => null,
         },
       });
 
@@ -550,9 +490,9 @@ describe('Cache Handler Tests', () => {
     it('should return 405 for DELETE requests', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: { warn: sinon.stub(), info: sinon.stub(), error: sinon.stub() },
-        info: {
+        requestInfo: {
           method: 'DELETE',
-          headers: {},
+          getHeader: () => null,
         },
       });
 

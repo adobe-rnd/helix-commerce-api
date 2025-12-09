@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { computeAuthoredContentKey /* computeProductPathKey */ } from '@dylandepass/helix-product-shared';
+import { computeAuthoredContentKey, computeProductPathKey } from '@dylandepass/helix-product-shared';
 import { FastlyPurgeClient } from './clients/fastly.js';
 import { CloudflarePurgeClient } from './clients/cloudflare.js';
 import { ManagedPurgeClient } from './clients/managed.js';
@@ -82,7 +82,7 @@ async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
  * skipping the purge operation.
  *
  * @param {Context} ctx - The request context with logging and env
- * @param {RequestInfo} requestInfo - Request information with org and site
+ * @param {Readonly<import('../../utils/RequestInfo.js').RequestInfo>} requestInfo
  * @param {string} path - Product path to purge (without .json extension)
  * @returns {Promise<void>}
  *
@@ -92,7 +92,7 @@ async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
  */
 export async function purge(ctx, requestInfo, path) {
   const { log } = ctx;
-  // const { org, site } = requestInfo;
+  const { org, site } = requestInfo;
 
   const helixConfig = ctx.attributes.helixConfigCache;
   const cdnConfig = helixConfig?.cdn?.prod;
@@ -104,7 +104,7 @@ export async function purge(ctx, requestInfo, path) {
 
   const keys = [];
   if (path) {
-    // keys.push(await computeProductPathKey(org, site, path));
+    keys.push(await computeProductPathKey(org, site, path));
   }
 
   if (helixConfig?.content?.contentBusId) {
@@ -149,7 +149,7 @@ export async function purge(ctx, requestInfo, path) {
  */
 export async function purgeBatch(ctx, requestInfo, products) {
   const { log } = ctx;
-  // const { org, site } = requestInfo;
+  const { org, site } = requestInfo;
 
   const helixConfig = ctx.attributes.helixConfigCache;
   const cdnConfig = helixConfig?.cdn?.prod;
@@ -165,7 +165,7 @@ export async function purgeBatch(ctx, requestInfo, products) {
     const { path } = product;
 
     if (path) {
-      // keyPromises.push(computeProductPathKey(org, site, path));
+      keyPromises.push(computeProductPathKey(org, site, path));
 
       if (helixConfig?.content?.contentBusId) {
         keyPromises.push(computeAuthoredContentKey(helixConfig.content.contentBusId, path));

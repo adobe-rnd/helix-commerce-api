@@ -153,7 +153,9 @@ describe('Router', () => {
 
     assert.throws(
       () => router.external('nonexistent', {}),
-      'route not found: nonexistent',
+      {
+        message: 'route not found: nonexistent',
+      },
     );
   });
 

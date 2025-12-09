@@ -18,7 +18,12 @@ import handler from '../../../src/routes/orders/handler.js';
 
 describe('routes/orders handler tests', () => {
   it('should 405 on invalid method', async () => {
-    const ctx = DEFAULT_CONTEXT({ info: { method: 'PATCH' }, url: { pathname: '/org/site/orders' } });
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        method: 'PATCH',
+        orderId: undefined,
+      },
+    });
     const resp = await handler(ctx);
     assert.equal(resp.status, 405);
   });

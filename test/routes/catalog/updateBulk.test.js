@@ -26,7 +26,7 @@ describe('Product Bulk Save Tests', () => {
 
   beforeEach(async () => {
     storageStub = sinon.stub();
-    storageStub.saveProducts = sinon.stub();
+    storageStub.saveProductsByPath = sinon.stub();
     fetchHelixConfigStub = sinon.stub().resolves({});
 
     // Mock the module with fetchHelixConfig stub
@@ -42,9 +42,11 @@ describe('Product Bulk Save Tests', () => {
   });
 
   describe('handleProductSaveRequest (bulk)', () => {
-    it('should return 405 if config.sku is "*" and method is not POST', async () => {
-      const ctx = DEFAULT_CONTEXT({ log: { error: sinon.stub() }, config: { sku: '*' }, info: { method: 'PUT' } });
-      const request = { json: sinon.stub().resolves([createProductFixture(), createProductFixture({ sku: '1234-2' })]) };
+    it('should return 405 if path is "/*" and method is not POST', async () => {
+      const ctx = DEFAULT_CONTEXT({}, { path: '/*' });
+      ctx.log = { error: sinon.stub() };
+      ctx.requestInfo.method = 'PUT';
+      const request = { json: sinon.stub().resolves([createProductFixture(), createProductFixture({ sku: '1234-2', path: '/products/test-2' })]) };
 
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
@@ -55,10 +57,12 @@ describe('Product Bulk Save Tests', () => {
     it('should return 400 if data is not an array', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub() },
-        data: { sku: '1234', urlKey: 'product-url-key', name: 'product-name' },
-        config: { sku: '*' },
-        info: { method: 'POST' },
-      });
+        data: { sku: '1234', path: '/products/test-product', name: 'product-name' },
+        requestInfo: {
+          path: '/*',
+          method: 'POST',
+        },
+      }, { path: '/*' });
       const request = {};
 
       const response = await handleProductSaveRequest(ctx, request, storageStub);
@@ -68,12 +72,14 @@ describe('Product Bulk Save Tests', () => {
     });
 
     it('should return 400 if data exceeds max bulk size', async () => {
-      const products = Array.from({ length: 51 }, (_, i) => ({ sku: `bulk-${i}`, name: `Bulk ${i}` }));
+      const products = Array.from({ length: 51 }, (_, i) => ({ sku: `bulk-${i}`, path: `/products/bulk-${i}`, name: `Bulk ${i}` }));
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub() },
-        config: { sku: '*' },
-        info: { method: 'POST' },
-      });
+        requestInfo: {
+          path: '/*',
+          method: 'POST',
+        },
+      }, { path: '/*' });
       ctx.data = products;
       const request = {};
 
@@ -85,37 +91,45 @@ describe('Product Bulk Save Tests', () => {
 
     it('should return 201 when products are successfully saved (bulk)', async () => {
       const products = [
-        { sku: '1234', name: 'product-name' },
-        { sku: '5678', name: 'product-name-2' },
+        { sku: '1234', path: '/products/product-1', name: 'product-name' },
+        { sku: '5678', path: '/products/product-2', name: 'product-name-2' },
       ];
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub(), info: sinon.stub() },
-        config: { sku: '*', org: 'myorg', site: 'mysite' },
+        requestInfo: {
+          path: '/*',
+          method: 'POST',
+          org: 'myorg',
+          site: 'mysite',
+        },
         attributes: { storageClient: storageStub },
-        info: { method: 'POST' },
         env: {
           INDEXER_QUEUE: {
             send: sinon.stub().resolves(),
           },
         },
-      });
+      }, { path: '/*' });
       ctx.data = products;
       const request = {};
 
-      storageStub.saveProducts.resolves(products.map((p) => ({ sku: p.sku, sluggedSku: p.sku })));
+      storageStub.saveProductsByPath.resolves(products.map((p) => ({ sku: p.sku, path: p.path })));
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       assert.equal(response.status, 201);
-      assert(storageStub.saveProducts.calledOnce);
+      assert(storageStub.saveProductsByPath.calledOnce);
     });
 
     it('should select async image processing when product list is large', async () => {
-      const products = Array.from({ length: 11 }, (_, i) => ({ sku: `sku-${i}`, name: `Name ${i}` }));
+      const products = Array.from({ length: 11 }, (_, i) => ({ sku: `sku-${i}`, path: `/products/sku-${i}`, name: `Name ${i}` }));
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub(), info: sinon.stub() },
-        config: { sku: '*', org: 'myorg', site: 'mysite' },
+        requestInfo: {
+          path: '/*',
+          method: 'POST',
+          org: 'myorg',
+          site: 'mysite',
+        },
         attributes: { storageClient: storageStub },
-        info: { method: 'POST' },
         env: {
           INDEXER_QUEUE: {
             send: sinon.stub().resolves(),
@@ -124,17 +138,17 @@ describe('Product Bulk Save Tests', () => {
             send: sinon.stub().resolves(),
           },
         },
-      });
+      }, { path: '/*' });
       ctx.data = products;
       const request = {};
 
-      storageStub.saveProducts.resolves(products.map((p) => ({ sku: p.sku, sluggedSku: p.sku })));
+      storageStub.saveProductsByPath.resolves(products.map((p) => ({ sku: p.sku, path: p.path })));
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       assert.equal(response.status, 201);
       // called with asyncImages = true due to >10 products
-      assert(storageStub.saveProducts.calledOnce);
-      const [, asyncImagesFlag] = storageStub.saveProducts.firstCall.args;
+      assert(storageStub.saveProductsByPath.calledOnce);
+      const [, asyncImagesFlag] = storageStub.saveProductsByPath.firstCall.args;
       assert.equal(asyncImagesFlag, true);
     });
   });

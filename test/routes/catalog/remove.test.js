@@ -23,8 +23,8 @@ describe('Catalog Remove Tests', () => {
 
   beforeEach(async () => {
     storageStub = sinon.stub();
-    storageStub.deleteProducts = sinon.stub();
-    storageStub.deleteProducts.resolves([{ success: true, sku: '12345' }]);
+    storageStub.deleteProductsByPath = sinon.stub();
+    storageStub.deleteProductsByPath.resolves([{ success: true, path: '/products/test-product' }]);
   });
 
   afterEach(() => {
@@ -32,39 +32,53 @@ describe('Catalog Remove Tests', () => {
   });
 
   describe('handleProductRemoveRequest', () => {
-    it('should return 400 if SKU is "*" (wildcard)', async () => {
-      const config = { sku: '*' };
+    it('should return 400 if path is "/*" (wildcard)', async () => {
       const ctx = DEFAULT_CONTEXT({
-        config,
+        requestInfo: {
+          org: 'org',
+          site: 'site',
+          path: '/*',
+          method: 'DELETE',
+        },
         attributes: {
           storageClient: storageStub,
+          key: 'test-key',
         },
-      });
+      }, { path: '/*' });
 
       const response = await handleProductRemoveRequest(ctx, storageStub);
       assert.strictEqual(response.status, 400);
-      assert.strictEqual(response.headers.get('x-error'), 'Wildcard SKU deletions is not currently supported');
+      assert.strictEqual(response.headers.get('x-error'), 'Wildcard path deletions not supported');
     });
 
     it('should successfully delete a product and return 200 with results', async () => {
-      const config = {
-        sku: '12345',
-        helixApiKey: 'test-helix-api-key',
-      };
       const ctx = DEFAULT_CONTEXT({
-        config,
+        requestInfo: {
+          org: 'org',
+          site: 'site',
+          path: '/products/test-product.json',
+          method: 'DELETE',
+        },
         log: {
           info: sinon.stub(),
           error: sinon.stub(),
         },
         attributes: {
           storageClient: storageStub,
+          key: 'test-key',
         },
-      });
-      const deleteResults = [{ success: true, sku: '12345' }];
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+      const deleteResults = [{ success: true, path: '/products/test-product' }];
+      storageStub.deleteProductsByPath.resolves(deleteResults);
+
       const response = await handleProductRemoveRequest(ctx, storageStub);
 
-      assert(storageStub.deleteProducts.calledOnceWithExactly(['12345']));
+      assert(storageStub.deleteProductsByPath.calledOnceWithExactly(['/products/test-product.json']));
 
       assert(ctx.log.info.calledOnce);
       const logArgs = ctx.log.info.getCall(0).args[0];
@@ -77,24 +91,31 @@ describe('Catalog Remove Tests', () => {
       assert.strictEqual(responseBody, JSON.stringify(deleteResults));
     });
 
-    it('should propagate error thrown by deleteProducts', async () => {
-      const config = {
-        sku: '12345',
-        helixApiKey: 'test-helix-api-key',
-      };
+    it('should propagate error thrown by deleteProductsByPath', async () => {
       const ctx = DEFAULT_CONTEXT({
-        config,
+        requestInfo: {
+          org: 'org',
+          site: 'site',
+          path: '/products/test-product.json',
+          method: 'DELETE',
+        },
         log: {
           info: sinon.stub(),
           error: sinon.stub(),
         },
         attributes: {
           storageClient: storageStub,
+          key: 'test-key',
         },
-      });
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
       const error = new Error('Deletion failed');
 
-      storageStub.deleteProducts.rejects(error);
+      storageStub.deleteProductsByPath.rejects(error);
 
       let thrownError;
       try {
@@ -103,33 +124,40 @@ describe('Catalog Remove Tests', () => {
         thrownError = e;
       }
 
-      assert(storageStub.deleteProducts.calledOnceWithExactly(['12345']));
+      assert(storageStub.deleteProductsByPath.calledOnceWithExactly(['/products/test-product.json']));
       assert.strictEqual(thrownError, error);
       assert(ctx.log.info.notCalled);
     });
 
-    it('should handle deleteProducts returning unexpected results', async () => {
-      const config = {
-        sku: '12345',
-        helixApiKey: 'test-helix-api-key',
-      };
+    it('should handle deleteProductsByPath returning unexpected results', async () => {
       const ctx = DEFAULT_CONTEXT({
-        config,
+        requestInfo: {
+          org: 'org',
+          site: 'site',
+          path: '/products/test-product.json',
+          method: 'DELETE',
+        },
         log: {
           info: sinon.stub(),
           error: sinon.stub(),
         },
         attributes: {
           storageClient: storageStub,
+          key: 'test-key',
         },
-      });
-      const deleteResults = [{ success: false, sku: '12345', reason: 'Not found' }];
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+      const deleteResults = [{ success: false, path: '/products/test-product', reason: 'Not found' }];
 
-      storageStub.deleteProducts.resolves(deleteResults);
+      storageStub.deleteProductsByPath.resolves(deleteResults);
 
       const response = await handleProductRemoveRequest(ctx, storageStub);
 
-      assert(storageStub.deleteProducts.calledOnceWithExactly(['12345']));
+      assert(storageStub.deleteProductsByPath.calledOnceWithExactly(['/products/test-product.json']));
 
       assert(ctx.log.info.calledOnce);
       const logArgs = ctx.log.info.getCall(0).args[0];

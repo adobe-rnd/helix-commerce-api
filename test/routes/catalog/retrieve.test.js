@@ -24,38 +24,42 @@ describe('handleProductRetrieveRequest', () => {
 
   beforeEach(async () => {
     storageStub = sinon.stub();
-    storageStub.getProduct = sinon.stub();
+    storageStub.getProductByPath = sinon.stub();
 
     ctx = DEFAULT_CONTEXT({
-      url: new URL('https://example.com/products/sku1'),
-      config: {},
+      url: new URL('https://example.com/products/test-product.json'),
+      requestInfo: {
+        org: 'org',
+        site: 'site',
+        path: '/products/test-product.json',
+        method: 'GET',
+      },
       attributes: {
         storageClient: storageStub,
       },
-    });
+    }, { path: '/products/test-product.json' });
   });
 
   afterEach(async () => {
     sinon.restore();
   });
 
-  it('should return the product response when getProduct succeeds', async () => {
-    const product = { sku: 'sku1', name: 'Product 1' };
-    ctx.config.sku = 'sku1';
+  it('should return the product response when getProductByPath succeeds', async () => {
+    const product = { sku: 'sku1', path: '/products/test-product', name: 'Product 1' };
 
-    storageStub.getProduct.resolves(product);
+    storageStub.getProductByPath.resolves(product);
     const response = await handleProductRetrieveRequest(ctx);
 
     assert.equal(response.headers.get('Content-Type'), 'application/json');
     const responseBody = await response.text();
     assert.equal(responseBody, JSON.stringify(product));
-    assert(storageStub.getProduct.calledOnceWith('sku1'));
+    assert(storageStub.getProductByPath.calledOnceWith('/products/test-product.json'));
   });
 
-  it('should return e.response when getProduct throws an error with a response property', async () => {
+  it('should return e.response when getProductByPath throws an error with a response property', async () => {
     const errorResponse = new Response('Not Found', { status: 404 });
     const error = new ResponseError('Product not found', errorResponse);
-    storageStub.getProduct.rejects(error);
+    storageStub.getProductByPath.rejects(error);
 
     let thrownError;
     try {
