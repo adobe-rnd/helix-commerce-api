@@ -11,24 +11,10 @@
  */
 
 import { errorResponse } from './utils/http.js';
-import Router from './utils/router/index.js';
+import Router, { nameSelector } from './utils/router/index.js';
 import { RequestInfo } from './utils/RequestInfo.js';
 import handlers from './routes/index.js';
 import logMetrics from './utils/metrics.js';
-
-/**
- * Name selector for routes.
- */
-export const nameSelector = (segs) => {
-  const literals = segs.filter((seg) => seg !== '*' && !seg.startsWith(':'));
-  if (literals.length === 0) {
-    return 'org';
-  }
-  if (literals.at(0) === 'sites' && literals.length > 1) {
-    literals.shift();
-  }
-  return literals.join('-');
-};
 
 const router = new Router(nameSelector)
   .add('/:org/sites/:site/catalog/*', handlers.catalog)

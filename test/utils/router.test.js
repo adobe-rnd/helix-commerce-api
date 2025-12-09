@@ -11,7 +11,7 @@
  */
 
 import assert from 'assert';
-import Router from '../../src/utils/router/index.js';
+import Router, { nameSelector } from '../../src/utils/router/index.js';
 
 describe('Router', () => {
   it('should match literal routes', () => {
@@ -183,5 +183,32 @@ describe('Router', () => {
     });
 
     assert.strictEqual(externalPath, '/adobe/sites/mysite/catalog/us/en/products/blender-pro-500');
+  });
+
+  describe('nameSelector', () => {
+    it('should return "org" when all segments are variables', () => {
+      const result = nameSelector([':org', ':site', ':id']);
+      assert.strictEqual(result, 'org');
+    });
+
+    it('should return "org" when all segments are wildcards', () => {
+      const result = nameSelector(['*']);
+      assert.strictEqual(result, 'org');
+    });
+
+    it('should return joined literals for normal routes', () => {
+      const result = nameSelector(['catalog', 'products']);
+      assert.strictEqual(result, 'catalog-products');
+    });
+
+    it('should skip "sites" prefix and return remaining literals', () => {
+      const result = nameSelector(['sites', 'catalog', ':id']);
+      assert.strictEqual(result, 'catalog');
+    });
+
+    it('should handle mixed segments', () => {
+      const result = nameSelector([':org', 'catalog', '*']);
+      assert.strictEqual(result, 'catalog');
+    });
   });
 });

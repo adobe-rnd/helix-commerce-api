@@ -12,6 +12,30 @@
 import { Node } from './node.js';
 
 /**
+ * Default name selector for routes.
+ * Extracts literal segments (non-variable, non-wildcard) and joins them with hyphens.
+ * Special handling: removes 'sites' prefix if it's the first literal and other literals exist.
+ *
+ * @param {string[]} segs - Route segments
+ * @returns {string} Route name
+ *
+ * @example
+ * nameSelector([':org', 'sites', ':site', 'catalog']) // => 'catalog'
+ * nameSelector(['catalog', 'products']) // => 'catalog-products'
+ * nameSelector([':org', ':site', ':id']) // => 'org'
+ */
+export const nameSelector = (segs) => {
+  const literals = segs.filter((seg) => seg !== '*' && !seg.startsWith(':'));
+  if (literals.length === 0) {
+    return 'org';
+  }
+  if (literals.at(0) === 'sites' && literals.length > 1) {
+    literals.shift();
+  }
+  return literals.join('-');
+};
+
+/**
  * Router that will match an incoming request to a handler.
  */
 export default class Router {
@@ -30,9 +54,9 @@ export default class Router {
    */
   #routes;
 
-  constructor(nameSelector) {
+  constructor(selector) {
     this.#root = new Node('');
-    this.#nameSelector = nameSelector;
+    this.#nameSelector = selector;
     this.#routes = new Map();
   }
 

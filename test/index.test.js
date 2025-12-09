@@ -344,39 +344,4 @@ describe('index tests', () => {
       assert(Array.isArray(ctx.metrics.productUploadsMs));
     });
   });
-
-  describe('nameSelector', () => {
-    let nameSelector;
-
-    beforeEach(async () => {
-      // @ts-ignore
-      const module = await import('../src/index.js');
-      nameSelector = module.nameSelector;
-    });
-
-    it('should return "org" when all segments are variables', () => {
-      const result = nameSelector([':org', ':site', ':id']);
-      assert.strictEqual(result, 'org');
-    });
-
-    it('should return "org" when all segments are wildcards', () => {
-      const result = nameSelector(['*']);
-      assert.strictEqual(result, 'org');
-    });
-
-    it('should return joined literals for normal routes', () => {
-      const result = nameSelector(['catalog', 'products']);
-      assert.strictEqual(result, 'catalog-products');
-    });
-
-    it('should skip "sites" prefix and return remaining literals', () => {
-      const result = nameSelector(['sites', 'catalog', ':id']);
-      assert.strictEqual(result, 'catalog');
-    });
-
-    it('should handle mixed segments', () => {
-      const result = nameSelector([':org', 'catalog', '*']);
-      assert.strictEqual(result, 'catalog');
-    });
-  });
 });
