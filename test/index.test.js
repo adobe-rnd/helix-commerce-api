@@ -45,7 +45,7 @@ describe('index tests', () => {
     // Setup mock request
     mockRequest = {
       method: 'GET',
-      url: 'https://api.example.com/test-org/sites/test-site/catalog/product-123',
+      url: 'https://api.example.com/test-org/sites/test-site/catalog/products/test-product.json',
       headers: new Map([
         ['content-type', 'application/json'],
       ]),
@@ -212,7 +212,7 @@ describe('index tests', () => {
 
   describe('parseData', () => {
     it('should return query params for GET requests', async () => {
-      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/test?foo=bar&baz=qux';
+      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/products/test.json?foo=bar&baz=qux';
       mockRequest.method = 'GET';
 
       await worker.default.fetch(mockRequest, mockEnv, mockExecutionContext);
@@ -223,7 +223,7 @@ describe('index tests', () => {
     });
 
     it('should return empty object for GET requests without query params', async () => {
-      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/test';
+      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/products/test.json';
       mockRequest.method = 'GET';
 
       await worker.default.fetch(mockRequest, mockEnv, mockExecutionContext);
@@ -253,7 +253,7 @@ describe('index tests', () => {
     });
 
     it('should return query params for POST requests with empty body', async () => {
-      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/test?foo=bar';
+      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/products/test.json?foo=bar';
       mockRequest.method = 'POST';
       mockRequest.text.resolves('');
 
@@ -264,7 +264,7 @@ describe('index tests', () => {
     });
 
     it('should handle PUT requests', async () => {
-      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/test';
+      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/products/test.json';
       mockRequest.method = 'PUT';
       mockRequest.text.resolves('{"updated":"data"}');
 
@@ -275,7 +275,7 @@ describe('index tests', () => {
     });
 
     it('should handle PATCH requests', async () => {
-      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/test';
+      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/products/test.json';
       mockRequest.method = 'PATCH';
       mockRequest.text.resolves('{"patched":"data"}');
 
@@ -286,7 +286,7 @@ describe('index tests', () => {
     });
 
     it('should handle HEAD requests', async () => {
-      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/test?foo=bar';
+      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/products/test.json?foo=bar';
       mockRequest.method = 'HEAD';
 
       await worker.default.fetch(mockRequest, mockEnv, mockExecutionContext);
@@ -296,7 +296,7 @@ describe('index tests', () => {
     });
 
     it('should handle OPTIONS requests', async () => {
-      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/test';
+      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/products/test.json';
       mockRequest.method = 'OPTIONS';
 
       await worker.default.fetch(mockRequest, mockEnv, mockExecutionContext);
@@ -306,7 +306,7 @@ describe('index tests', () => {
     });
 
     it('should return empty object for DELETE requests', async () => {
-      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/test';
+      mockRequest.url = 'https://api.example.com/test-org/sites/test-site/catalog/products/test.json';
       mockRequest.method = 'DELETE';
 
       await worker.default.fetch(mockRequest, mockEnv, mockExecutionContext);
