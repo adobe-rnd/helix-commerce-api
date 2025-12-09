@@ -21,14 +21,15 @@ import { purgeBatch } from './purge.js';
  * @returns {boolean} True if the API key is valid
  */
 function validateCacheApiKey(ctx) {
-  const { CACHE_API_KEY } = ctx.env;
+  const { requestInfo, env } = ctx;
+  const { CACHE_API_KEY } = env;
 
   if (!CACHE_API_KEY) {
     ctx.log.warn('CACHE_API_KEY not configured');
     return false;
   }
 
-  const cacheAuthHeader = ctx.info.headers['x-cache-api-key'];
+  const cacheAuthHeader = requestInfo.getHeader('x-cache-api-key');
   if (!cacheAuthHeader) {
     return false;
   }
@@ -44,33 +45,31 @@ function validateCacheApiKey(ctx) {
 /**
  * Handles bulk cache purge requests for a specific site.
  *
- * This endpoint accepts a bulk request to purge cache entries for multiple products
- * across different store codes and store view codes within the same org/site.
+ * This endpoint accepts a bulk request to purge cache entries for multiple products.
  *
  * The request body should contain an array of product objects with:
  * - sku: Product SKU to purge
- * - urlKey: (optional) Product URL key to purge
- * - storeCode: Store code for the product
- * - storeViewCode: Store view code for the product
+ * - path: Product path to purge
  *
  * @param {Context} ctx - The request context
  * @returns {Promise<Response>} HTTP response - 200 (empty body) on success,
  *                                              error response otherwise
  *
  * @example
- * POST /{org}/{site}/cache
+ * POST /{org}/sites/{site}/cache
  * x-cache-api-key: Bearer <CACHE_API_KEY>
  * Content-Type: application/json
  *
  * {
  *   "products": [
- *     { "sku": "PROD-123", "urlKey": "product-123", "storeCode": "us", "storeViewCode": "en" },
- *     { "sku": "PROD-456", "storeCode": "us", "storeViewCode": "en" }
+ *     { "sku": "PROD-123", "path": "/us/en/products/blender-pro-500.json" },
+ *     { "sku": "PROD-456", "path": "/us/en/products/mixer-deluxe.json" }
  *   ]
  * }
  */
 async function handleBulkPurge(ctx) {
-  const { log, data, config } = ctx;
+  const { log, data, requestInfo } = ctx;
+  const { org, site, siteKey } = requestInfo;
 
   // Validate API key
   if (!validateCacheApiKey(ctx)) {
@@ -92,27 +91,24 @@ async function handleBulkPurge(ctx) {
     if (!product.sku) {
       return errorResponse(400, 'each product must have a "sku" property');
     }
-    if (!product.storeCode) {
-      return errorResponse(400, 'each product must have a "storeCode" property');
-    }
-    if (!product.storeViewCode) {
-      return errorResponse(400, 'each product must have a "storeViewCode" property');
+    if (!product.path) {
+      return errorResponse(400, 'each product must have a "path" property');
     }
   }
 
   // Fetch helix config once for the entire request
-  const helixConfig = await fetchHelixConfig(ctx, config.org, config.site);
+  const helixConfig = await fetchHelixConfig(ctx, org, site);
   ctx.attributes.helixConfigCache = helixConfig;
 
   if (!helixConfig) {
-    log.warn(`No helix config found for ${config.org}/${config.site}`);
+    log.warn(`No helix config found for ${siteKey}`);
     return errorResponse(404, 'site configuration not found');
   }
 
   // Purge all products in a single batched operation
   try {
     // Use purgeBatch to compute all cache keys upfront and make a single CDN call
-    await purgeBatch(ctx, config, data.products);
+    await purgeBatch(ctx, requestInfo, data.products);
 
     log.info(`Cache purge completed: ${data.products.length} products purged successfully`);
 
@@ -137,9 +133,10 @@ async function handleBulkPurge(ctx) {
  * @type {RouteHandler}
  */
 export default async function cacheHandler(ctx) {
-  const { info } = ctx;
+  const { requestInfo } = ctx;
+  const { method } = requestInfo;
 
-  if (info.method === 'POST') {
+  if (method === 'POST') {
     return handleBulkPurge(ctx);
   }
 

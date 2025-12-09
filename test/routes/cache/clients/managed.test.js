@@ -78,10 +78,9 @@ describe('ManagedPurgeClient Tests', () => {
           info: sinon.stub(),
           error: sinon.stub(),
         },
-        config: {
-          siteKey: 'managed-site',
-          storeCode: 'us',
-          storeViewCode: 'en',
+        requestInfo: {
+          org: 'test-org',
+          site: 'test-site',
         },
         attributes: {
           subRequestId: 0,
@@ -126,7 +125,7 @@ describe('ManagedPurgeClient Tests', () => {
         // Verify logging
         assert(ctx.log.info.calledTwice, 'Should log purge start and success');
         assert(ctx.log.info.firstCall.calledWith(sinon.match(/purging keys/)), 'Should log purge start');
-        assert(ctx.log.info.firstCall.calledWith(sinon.match(/managed-site\/us\/en/)), 'Should include site ID');
+        assert(ctx.log.info.firstCall.calledWith(sinon.match(/test-org--test-site/)), 'Should include site ID');
         assert(ctx.log.info.firstCall.calledWith(sinon.match(/\[1\]/)), 'Should include request ID');
         assert(ctx.log.info.firstCall.calledWith(sinon.match(/main--site--org\.hlx\.page/)), 'Should include host');
         assert(ctx.log.info.secondCall.calledWith(sinon.match(/surrogate key\(s\) succeeded/)), 'Should log success');
@@ -213,7 +212,7 @@ describe('ManagedPurgeClient Tests', () => {
         assert(ctx.log.error.calledOnce, 'Should log error');
         assert(ctx.log.error.firstCall.calledWith(sinon.match(/surrogate key\(s\) failed/)), 'Should log failure message');
         assert(ctx.log.error.firstCall.calledWith(sinon.match(/403/)), 'Should include status code');
-        assert(ctx.log.error.firstCall.calledWith(sinon.match(/managed-site\/us\/en/)), 'Should include site ID');
+        assert(ctx.log.error.firstCall.calledWith(sinon.match(/test-org--test-site/)), 'Should include site ID');
       });
 
       it('should throw error on network failure', async () => {
@@ -237,7 +236,7 @@ describe('ManagedPurgeClient Tests', () => {
         // Verify error logging
         assert(ctx.log.error.calledOnce, 'Should log error');
         assert(ctx.log.error.firstCall.calledWith(sinon.match(/failed/)), 'Should log failure');
-        assert(ctx.log.error.firstCall.calledWith(sinon.match(/managed-site\/us\/en/)), 'Should include site ID');
+        assert(ctx.log.error.firstCall.calledWith(sinon.match(/test-org--test-site/)), 'Should include site ID');
       });
     });
 

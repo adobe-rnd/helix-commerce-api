@@ -13,8 +13,8 @@ kv_namespaces = [
 
 [[r2_buckets]]
 binding = "CATALOG_BUCKET"
-preview_bucket_name = "adobe-commerce-catalog"
-bucket_name = "adobe-commerce-catalog-dev"
+preview_bucket_name = "helix-product-bus"
+bucket_name = "helix-product-bus"
 remote = true
 
 [[r2_buckets]]
@@ -51,8 +51,8 @@ kv_namespaces = [
 
 [[env.ci.r2_buckets]]
 binding = "CATALOG_BUCKET"
-preview_bucket_name = "adobe-commerce-catalog-dev"
-bucket_name = "adobe-commerce-catalog-dev"
+preview_bucket_name = "helix-product-bus"
+bucket_name = "helix-product-bus"
 
 [[env.ci.r2_buckets]]
 binding = "ORDERS_BUCKET"
@@ -87,8 +87,8 @@ kv_namespaces = [
 
 [[env.next.r2_buckets]]
 binding = "CATALOG_BUCKET"
-preview_bucket_name = "adobe-commerce-catalog"
-bucket_name = "adobe-commerce-catalog"
+preview_bucket_name = "helix-product-bus"
+bucket_name = "helix-product-bus"
 
 [[env.next.r2_buckets]]
 binding = "ORDERS_BUCKET"
@@ -96,11 +96,11 @@ preview_bucket_name = "helix-commerce-orders-dev"
 bucket_name = "helix-commerce-orders"
 
 [[env.next.queues.producers]]
-queue = "helix-product-indexer-queue"
+queue = "helix-product-indexer-queue-next"
 binding = "INDEXER_QUEUE"
 
 [[env.next.queues.producers]]
-queue = "helix-product-image-collector-queue"
+queue = "helix-product-image-collector-queue-next"
 binding = "IMAGE_COLLECTOR_QUEUE"
 
 [env.next.vars]
@@ -123,10 +123,10 @@ kv_namespaces = [
 
 [[env.production.r2_buckets]]
 binding = "CATALOG_BUCKET"
-preview_bucket_name = "adobe-commerce-catalog-dev"
-bucket_name = "adobe-commerce-catalog"
+preview_bucket_name = "helix-product-bus"
+bucket_name = "helix-product-bus"
 
-[[env.productions.r2_buckets]]
+[[env.production.r2_buckets]]
 binding = "ORDERS_BUCKET"
 preview_bucket_name = "helix-commerce-orders-dev"
 bucket_name = "helix-commerce-orders"

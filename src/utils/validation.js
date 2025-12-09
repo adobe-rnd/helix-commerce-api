@@ -35,6 +35,21 @@ const SCHEMA_DEF_TYPES = {
 const NO_DOT_NOTATION_REGEX = /^[^a-zA-Z_]|.*(\s)|.*[^a-zA-Z0-9_]/;
 
 /**
+ * Base path pattern for product paths.
+ * Allows only lowercase alphanumeric characters, hyphens, and forward slashes.
+ * This prevents directory traversal (..), double slashes, and other malformed paths.
+ * Pattern: /segment or /segment/segment or /segment/segment/segment/...
+ * where each segment is: lowercase-alphanumeric-with-hyphens
+ */
+export const PATH_PATTERN = /^\/[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)*$/;
+
+/**
+ * Path pattern with optional .json extension for URLs.
+ * Use this for validating URL paths that may include the .json extension.
+ */
+export const PATH_PATTERN_WITH_JSON = /^\/[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)*(\.json)?$/;
+
+/**
  * @param {unknown} obj
  * @param {SchemaType} ptype
  * @param {string} path

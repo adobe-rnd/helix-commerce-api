@@ -18,7 +18,7 @@ import { errorWithResponse } from './http.js';
 export async function assertAuthorization(ctx) {
   let actual = ctx.attributes.key;
   if (typeof ctx.attributes.key === 'undefined') {
-    ctx.attributes.key = ctx.info.headers.authorization?.slice('Bearer '.length);
+    ctx.attributes.key = ctx.requestInfo.getHeader('authorization')?.slice('Bearer '.length);
     actual = ctx.attributes.key;
   }
   if (actual === ctx.env.SUPERUSER_KEY) {
@@ -30,7 +30,7 @@ export async function assertAuthorization(ctx) {
     throw errorWithResponse(403, 'invalid key');
   }
 
-  const expected = await ctx.env.KEYS.get(ctx.config.siteKey);
+  const expected = await ctx.env.KEYS.get(ctx.requestInfo.siteKey);
   if (!expected) {
     throw errorWithResponse(403, 'no key found for site');
   }

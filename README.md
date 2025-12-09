@@ -7,8 +7,7 @@ Product API for Edge Delivery Services.
   - [PUT a product (small example)](#put-a-product-small-example)
   - [PUT a product (complete example with all properties)](#put-a-product-complete-example-with-all-properties)
   - [Bulk POST products](#bulk-post-products)
-  - [Lookup by URL key](#lookup-by-url-key)
-  - [Lookup (list all products)](#lookup-list-all-products)
+  - [DELETE a product](#delete-a-product)
 - [Auth token management](#auth-token-management)
   - [Fetch auth token (GET)](#fetch-auth-token-get)
   - [Rotate auth token (POST)](#rotate-auth-token-post)
@@ -26,20 +25,21 @@ Set some environment variables to make the curl examples easier to read:
 ```bash
 export ORG="acme"
 export SITE="main"
-export STORE="us"
-export VIEW="en"
 export KEY="<SITE_API_KEY>"
 ```
 
 - All modifying requests require an Authorization header: `Authorization: Bearer <SITE_API_KEY>`
 - Send JSON with `Content-Type: application/json`
+- Products are stored and accessed by their URL path (e.g., `/products/blender-pro-500`)
 
 #### GET a product
+
+Products are retrieved by their path:
 
 ```bash
 curl -sS \
   -H "Authorization: Bearer $KEY" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/<sku>.json"
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/products/blender-pro-500.json"
 ```
 
 Example response body:
@@ -47,9 +47,9 @@ Example response body:
 ```json
 {
   "sku": "sku-123",
-  "name": "Product Name",
-  "urlKey": "product-url-key",
-  "url": "https://www.example.com/products/product-url-key",
+  "name": "Blender Pro 500",
+  "path": "/products/blender-pro-500",
+  "url": "https://www.example.com/products/blender-pro-500",
   "images": [
     { "url": "./media_xyz.jpg", "label": "main" }
   ]
@@ -58,22 +58,24 @@ Example response body:
 
 #### PUT a product (small example)
 
-Minimal payload with the most important properties.
+Minimal payload with the most important properties. The URL path determines where the product is stored.
 
 ```bash
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/test-sku.json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/products/test-product.json" \
   --data-binary @- <<'JSON'
 {
   "sku": "test-sku",
   "name": "Test Product",
-  "urlKey": "test-product",
+  "path": "/products/test-product",
   "url": "https://www.example.com/products/test-product"
 }
 JSON
 ```
+
+**Note**: The `path` field in the JSON represents the product's canonical path (e.g., `/products/test-product`). The API endpoint path includes `/catalog/` as part of the API structure (e.g., `/catalog/products/test-product.json`), but this prefix is not included in the product's `path` field.
 
 #### PUT a product (complete example with all properties)
 
@@ -81,13 +83,13 @@ JSON
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/products/blender-pro-500.json" \
   --data-binary @- <<'JSON'
 {
   "sku": "sku-123",
-  "urlKey": "product-url-key",
+  "path": "/products/blender-pro-500",
   "description": "Long product description...",
-  "name": "Product Name",
+  "name": "Blender Pro 500",
   "metaTitle": "Product Name | Brand",
   "metaDescription": "Short SEO description...",
   "gtin": "0123456789012",
@@ -162,25 +164,25 @@ JSON
 
 #### Bulk POST products
 
-Send up to 50 products at once by POSTing to the wildcard SKU path.
+Send up to 50 products at once by POSTing to the wildcard path. Each product must include a `path` field.
 
 ```bash
 curl -sS -X POST \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/*" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/*" \
   --data-binary @- <<'JSON'
 [
   {
     "sku": "bulk-001",
     "name": "Bulk Product 1",
-    "urlKey": "bulk-product-1",
+    "path": "/products/bulk-product-1",
     "url": "https://www.example.com/products/bulk-product-1"
   },
   {
     "sku": "bulk-002",
     "name": "Bulk Product 2",
-    "urlKey": "bulk-product-2",
+    "path": "/products/bulk-product-2",
     "url": "https://www.example.com/products/bulk-product-2"
   }
 ]
@@ -188,90 +190,32 @@ JSON
 ```
 
 Notes:
-- Bulk POST must target `products/*` and will return 400 if the body is not an array or contains more than 50 items.
+- Bulk POST must target `catalog/*` and will return 400 if the body is not an array or contains more than 50 items.
+- Each product in the array must include a valid `path` field that follows the pattern `/[a-z0-9-/]+`.
 - Successful PUT/POST responses return 201 and include the saved product(s).
 - If many products or images are included in a single bulk POST, the images will be processed asynchronously. Until they complete processing, the product-bus entry will continue to point to the URL provided in the POST.
 
-#### Lookup by URL key
+#### DELETE a product
 
-Redirect to the product JSON using a `urlKey` (or `urlkey`) query parameter.
-
-```bash
-curl -sS -i \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/lookup?urlkey=product-url-key"
-```
-
-Example (headers):
-
-```http
-HTTP/1.1 301 Moved Permanently
-Location: https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json
-```
-
-#### Lookup (list all products)
+Delete a product by its path:
 
 ```bash
-curl -sS \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/lookup"
+curl -sS -X DELETE \
+  -H "Authorization: Bearer $KEY" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/products/blender-pro-500.json"
 ```
 
-Example response body:
+Example response:
 
 ```json
 {
-  "total": 2,
-  "products": [
-    {
-      "sku": "sku-123",
-      "name": "Product Name",
-      "urlKey": "product-url-key",
-      "links": {
-        "product": "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json"
-      }
-    },
-    {
-      "sku": "sku-456",
-      "name": "Another Product",
-      "links": {
-        "product": "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-456.json"
-      }
-    }
-  ]
-}
-```
-
-With `skusOnly=true` (returns only SKUs and product links):
-
-```bash
-curl -sS \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/lookup?skusOnly=true"
-```
-
-Example response body:
-
-```json
-{
-  "total": 2,
-  "products": [
-    {
-      "sku": "sku-123",
-      "links": {
-        "product": "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-123.json"
-      }
-    },
-    {
-      "sku": "sku-456",
-      "links": {
-        "product": "https://api.adobecommerce.live/$ORG/$SITE/catalog/$STORE/$VIEW/products/sku-456.json"
-      }
-    }
-  ]
+  "message": "Product deleted successfully"
 }
 ```
 
 ### Auth token management
 
-Base URL structure: `https://<host>/{org}/{site}/auth/token`
+Base URL structure: `https://<host>/{org}/sites/{site}/auth/token`
 
 All auth routes require `Authorization: Bearer <SITE_API_KEY>` (or a superuser key).
 
@@ -280,7 +224,7 @@ All auth routes require `Authorization: Bearer <SITE_API_KEY>` (or a superuser k
 ```bash
 curl -sS \
   -H "Authorization: Bearer $KEY" \
-  "https://api.adobecommerce.live/$ORG/$SITE/auth/token"
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/token"
 ```
 
 Example response body:
@@ -296,7 +240,7 @@ Generates a new token. Do not include a `token` in the request body.
 ```bash
 curl -sS -X POST \
   -H "Authorization: Bearer $KEY" \
-  "https://api.adobecommerce.live/$ORG/$SITE/auth/token"
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/token"
 ```
 
 Example response body:
@@ -313,7 +257,7 @@ Explicitly sets the token value.
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/auth/token" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/token" \
   --data-binary '{"token":"SPECIFIC_TOKEN_VALUE"}'
 ```
 
@@ -330,7 +274,7 @@ Example response body:
 | Property | Type | Description |
 | --- | --- | --- |
 | `sku` | `string` | Unique stock keeping unit. Required. |
-| `urlKey` | `string` | Slug-like key for building product URLs. Must not contain uppercase letters or spaces. |
+| `path` | `string` | URL path where the product is accessible (e.g., `/products/blender-pro-500`). Must match pattern `/[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)*`. Required. |
 | `description` | `string` | Long description, free text or HTML. |
 | `name` | `string` | Human-readable product name. Required. |
 | `metaTitle` | `string` | SEO title. |

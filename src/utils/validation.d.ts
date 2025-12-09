@@ -119,3 +119,15 @@ export interface ValidationError {
 }
 
 export declare function validate(obj: unknown, schema: AnySchema): ValidationError[] | undefined;
+
+/**
+ * Pattern for validating URL paths.
+ * Matches paths like /segment or /segment-with-dashes/another-segment
+ */
+export declare const PATH_PATTERN: RegExp;
+
+/**
+ * Path pattern with optional .json extension for URLs.
+ * Use this for validating URL paths that may include the .json extension.
+ */
+export declare const PATH_PATTERN_WITH_JSON: RegExp;

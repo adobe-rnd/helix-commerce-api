@@ -26,7 +26,7 @@ describe('utils/metrics logMetrics', () => {
     const startedAt = Date.now() - 100;
     const ctx = DEFAULT_CONTEXT({
       log: { info: sinon.stub(), debug: sinon.stub() },
-      config: { route: 'catalog/products' },
+      requestInfo: { route: 'catalog/products' },
       metrics: {
         startedAt,
         payloadValidationMs: [2, 5, 3, 10],
@@ -128,7 +128,7 @@ describe('utils/metrics logMetrics', () => {
   it('omits optional sections when arrays empty', () => {
     const ctx = DEFAULT_CONTEXT({
       log: { info: sinon.stub(), debug: sinon.stub() },
-      config: { route: 'catalog/products' },
+      requestInfo: { route: 'catalog/products' },
       metrics: {
         startedAt: Date.now() - 50,
         payloadValidationMs: [],

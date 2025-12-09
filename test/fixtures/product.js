@@ -18,11 +18,12 @@
 export function createProductFixture(overrides = {}) {
   const product = {
     sku: 'test-sku',
+    path: '/products/test-product',
     name: 'Test Product Name',
     metaTitle: 'Test Product - test-sku | Test Brand',
     metaDescription: 'Experience the excellence of our Test Product, engineered to meet all your everyday needs with unmatched reliability and performance. Discover quality and innovation that sets you apart, available now at unbeatable prices.',
     metaKeyword: 'Keyword 1, Keyword 2, Keyword 3',
-    description: 'Introducing our Test Product, designed to deliver exceptional performance and reliability for all your daily tasks. Crafted with premium materials, it ensures durability and a sleek, modern aesthetic that complements any environment. Whether you’re using it at home or in the office, its user-friendly features make it effortless to operate and maintain. Experience unparalleled functionality combined with innovative technology that sets our Test Product apart from the competition. Upgrade your lifestyle today with a product that promises quality, efficiency, and outstanding value.',
+    description: 'Introducing our Test Product, designed to deliver exceptional performance and reliability for all your daily tasks. Crafted with premium materials, it ensures durability and a sleek, modern aesthetic that complements any environment. Whether you\'re using it at home or in the office, its user-friendly features make it effortless to operate and maintain. Experience unparalleled functionality combined with innovative technology that sets our Test Product apart from the competition. Upgrade your lifestyle today with a product that promises quality, efficiency, and outstanding value.',
     url: 'https://www.example.com/products/test-product-url-key',
     urlKey: 'test-product-url-key',
     shortDescription: '',

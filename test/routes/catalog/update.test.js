@@ -25,7 +25,7 @@ describe('Product Save Tests', () => {
 
   beforeEach(async () => {
     storageStub = sinon.stub();
-    storageStub.saveProducts = sinon.stub();
+    storageStub.saveProductsByPath = sinon.stub();
     fetchHelixConfigStub = sinon.stub().resolves({});
 
     // Mock the module with fetchHelixConfig stub
@@ -41,9 +41,11 @@ describe('Product Save Tests', () => {
   });
 
   describe('handleProductSaveRequest', () => {
-    it('should return 405 if config.sku is "*" and method is not POST', async () => {
-      const ctx = DEFAULT_CONTEXT({ log: { error: sinon.stub() }, config: { sku: '*' }, info: { method: 'PUT' } });
-      const request = { json: sinon.stub().resolves({ sku: '1234', urlKey: 'foo', name: 'foo' }) };
+    it('should return 405 if path is "/*" and method is not POST', async () => {
+      const ctx = DEFAULT_CONTEXT({}, { path: '/*' });
+      ctx.log = { error: sinon.stub() };
+      ctx.requestInfo.method = 'PUT';
+      const request = { json: sinon.stub().resolves({ sku: '1234', path: '/products/foo', name: 'foo' }) };
 
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
@@ -54,11 +56,12 @@ describe('Product Save Tests', () => {
     it('should return 201 when product is successfully saved and paths are purged', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub(), info: sinon.stub() },
-        data: { sku: '1234', urlKey: 'product-url-key', name: 'product-name' },
-        config: {
-          sku: '1234',
+        data: { sku: '1234', path: '/products/test-product', name: 'product-name' },
+        requestInfo: {
           org: 'myorg',
           site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
         },
         attributes: {
           storageClient: storageStub,
@@ -68,14 +71,14 @@ describe('Product Save Tests', () => {
             send: sinon.stub().resolves(),
           },
         },
-      });
+      }, { path: '/products/test-product.json' });
       const request = { };
 
-      storageStub.saveProducts.resolves([]);
+      storageStub.saveProductsByPath.resolves([{ sku: '1234', path: '/products/test-product' }]);
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       assert.equal(response.status, 201);
-      assert(storageStub.saveProducts.calledOnce);
+      assert(storageStub.saveProductsByPath.calledOnce);
     });
 
     it('should fetch helix config and cache it in context attributes for bulk operations', async () => {
@@ -96,11 +99,12 @@ describe('Product Save Tests', () => {
 
       const ctx = DEFAULT_CONTEXT({
         log: { error: sinon.stub(), info: sinon.stub() },
-        data: { sku: '1234', urlKey: 'product-url-key', name: 'product-name' },
-        config: {
-          sku: '1234',
+        data: { sku: '1234', path: '/products/test-product', name: 'product-name' },
+        requestInfo: {
           org: 'myorg',
           site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
         },
         attributes: {
           storageClient: storageStub,
@@ -110,9 +114,9 @@ describe('Product Save Tests', () => {
             send: sinon.stub().resolves(),
           },
         },
-      });
+      }, { path: '/products/test-product.json' });
 
-      storageStub.saveProducts.resolves([{ sku: '1234', sluggedSku: '1234' }]);
+      storageStub.saveProductsByPath.resolves([{ sku: '1234', path: '/products/test-product' }]);
       const response = await handleProductSaveRequest(ctx);
 
       // Verify config was fetched
@@ -123,6 +127,52 @@ describe('Product Save Tests', () => {
 
       // Verify response was successful
       assert.equal(response.status, 201);
+    });
+
+    it('should return 400 when path in body does not match URL path', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: { sku: '1234', path: '/products/different-product', name: 'product-name' },
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+      }, { path: '/products/test-product.json' });
+
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 400);
+      assert.equal(response.headers.get('x-error'), 'path in body (/products/different-product) must match path in URL (/products/test-product)');
+    });
+
+    it('should add path from URL when not present in body', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: { sku: '1234', name: 'product-name' }, // No path in body
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+
+      storageStub.saveProductsByPath.resolves([{ sku: '1234', path: '/products/test-product' }]);
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 201);
+      // Verify path was added from URL (without .json)
+      assert.equal(ctx.data.path, '/products/test-product');
     });
   });
 });

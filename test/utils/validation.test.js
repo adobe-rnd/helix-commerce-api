@@ -14,7 +14,7 @@
 
 import assert from 'assert';
 import { pruneUndefined as pruneUndef } from '../../src/utils/product.js';
-import { validate } from '../../src/utils/validation.js';
+import { validate, PATH_PATTERN, PATH_PATTERN_WITH_JSON } from '../../src/utils/validation.js';
 
 function check(val, schema, expectedErrors) {
   const errs = validate(val, schema);
@@ -754,6 +754,261 @@ describe('util', () => {
 
           const [err] = validate(invalid, schema3);
           assert.strictEqual(err.path, '$.foo[\'level 2\'].root');
+        });
+      });
+    });
+  });
+
+  describe('Path Pattern Tests', () => {
+    describe('PATH_PATTERN (no .json extension)', () => {
+      describe('valid paths', () => {
+        const validPaths = [
+          '/products',
+          '/products/123',
+          '/products/test-product',
+          '/products/test-product-123',
+          '/us/en/products/test',
+          '/us/en/products/electronics/blender-pro-500',
+          '/emea/uk/en/products/category/subcategory/item',
+          '/a',
+          '/a/b',
+          '/a/b/c/d/e/f/g/h',
+          '/test-123',
+          '/test-123-456',
+          '/000',
+          '/123abc',
+          '/products-123/items-456/test-789',
+          '/en/products/product-with-many-hyphens-in-name',
+        ];
+
+        validPaths.forEach((path) => {
+          it(`should match valid path: ${path}`, () => {
+            assert.ok(PATH_PATTERN.test(path), `Expected ${path} to match PATH_PATTERN`);
+          });
+        });
+      });
+
+      describe('invalid paths - security vulnerabilities', () => {
+        const securityPaths = [
+          { path: '/products/../admin', reason: 'directory traversal (..)' },
+          { path: '/../etc/passwd', reason: 'directory traversal at start' },
+          { path: '/products/../../etc/passwd', reason: 'multiple directory traversal' },
+          { path: '/products/.', reason: 'current directory (.)' },
+          { path: '/products/./test', reason: 'current directory in middle' },
+          { path: '/products/...', reason: 'triple dots' },
+        ];
+
+        securityPaths.forEach(({ path, reason }) => {
+          it(`should reject ${reason}: ${path}`, () => {
+            assert.ok(!PATH_PATTERN.test(path), `Expected ${path} to be rejected`);
+          });
+        });
+      });
+
+      describe('invalid paths - malformed', () => {
+        const malformedPaths = [
+          { path: '/products//test', reason: 'double slashes' },
+          { path: '//products', reason: 'double slashes at start' },
+          { path: '/products/test//', reason: 'double slashes at end' },
+          { path: 'products/test', reason: 'no leading slash' },
+          { path: '/products/', reason: 'trailing slash' },
+          { path: '/', reason: 'root only' },
+          { path: '', reason: 'empty string' },
+          { path: '/products test', reason: 'space in path' },
+          { path: '/products\ttest', reason: 'tab in path' },
+          { path: '/products\ntest', reason: 'newline in path' },
+        ];
+
+        malformedPaths.forEach(({ path, reason }) => {
+          it(`should reject ${reason}: ${path}`, () => {
+            assert.ok(!PATH_PATTERN.test(path), `Expected ${path} to be rejected`);
+          });
+        });
+      });
+
+      describe('invalid paths - character restrictions', () => {
+        const invalidCharPaths = [
+          { path: '/Products/Test', reason: 'uppercase letters' },
+          { path: '/PRODUCTS', reason: 'all uppercase' },
+          { path: '/products/Test', reason: 'mixed case' },
+          { path: '/products/test_item', reason: 'underscore' },
+          { path: '/products/test.json', reason: '.json extension (not allowed without _WITH_JSON)' },
+          { path: '/products/test.html', reason: '.html extension' },
+          { path: '/products/test@123', reason: 'at sign' },
+          { path: '/products/test#123', reason: 'hash' },
+          { path: '/products/test%20item', reason: 'percent encoding' },
+          { path: '/products/test&item', reason: 'ampersand' },
+          { path: '/products/test+item', reason: 'plus sign' },
+          { path: '/products/test=item', reason: 'equals sign' },
+          { path: '/products/test?query', reason: 'question mark' },
+          { path: '/products/test*', reason: 'asterisk' },
+          { path: '/products/test|item', reason: 'pipe' },
+          { path: '/products/test\\item', reason: 'backslash' },
+          { path: '/products/test[0]', reason: 'square brackets' },
+          { path: '/products/test{id}', reason: 'curly braces' },
+          { path: '/products/test(1)', reason: 'parentheses' },
+          { path: '/products/test,item', reason: 'comma' },
+          { path: '/products/test;item', reason: 'semicolon' },
+          { path: '/products/test:item', reason: 'colon' },
+          { path: '/products/test\'item', reason: 'single quote' },
+          { path: '/products/test"item', reason: 'double quote' },
+          { path: '/products/test<item', reason: 'less than' },
+          { path: '/products/test>item', reason: 'greater than' },
+          { path: '/products/café', reason: 'non-ASCII characters (é)' },
+          { path: '/products/测试', reason: 'non-ASCII characters (Chinese)' },
+          { path: '/products/тест', reason: 'non-ASCII characters (Cyrillic)' },
+          { path: '/products/🎉', reason: 'emoji' },
+        ];
+
+        invalidCharPaths.forEach(({ path, reason }) => {
+          it(`should reject ${reason}: ${path}`, () => {
+            assert.ok(!PATH_PATTERN.test(path), `Expected ${path} to be rejected`);
+          });
+        });
+      });
+
+      describe('edge cases - hyphen placement', () => {
+        it('should reject path starting with hyphen', () => {
+          assert.ok(!PATH_PATTERN.test('/-products'));
+        });
+
+        it('should reject path ending with hyphen', () => {
+          assert.ok(!PATH_PATTERN.test('/products-'));
+        });
+
+        it('should reject segment starting with hyphen', () => {
+          assert.ok(!PATH_PATTERN.test('/products/-test'));
+        });
+
+        it('should reject segment ending with hyphen', () => {
+          assert.ok(!PATH_PATTERN.test('/products/test-'));
+        });
+
+        it('should reject double hyphens', () => {
+          assert.ok(!PATH_PATTERN.test('/products/test--item'));
+        });
+
+        it('should accept single hyphen between alphanumerics', () => {
+          assert.ok(PATH_PATTERN.test('/products/test-item'));
+        });
+
+        it('should accept multiple hyphens with alphanumerics between', () => {
+          assert.ok(PATH_PATTERN.test('/products/test-item-123-abc'));
+        });
+      });
+    });
+
+    describe('PATH_PATTERN_WITH_JSON (optional .json extension)', () => {
+      describe('valid paths with .json', () => {
+        const validPaths = [
+          '/products.json',
+          '/products/123.json',
+          '/products/test-product.json',
+          '/us/en/products/test.json',
+          '/us/en/products/electronics/blender-pro-500.json',
+          '/a.json',
+          '/test-123.json',
+        ];
+
+        validPaths.forEach((path) => {
+          it(`should match valid path with .json: ${path}`, () => {
+            assert.ok(PATH_PATTERN_WITH_JSON.test(path), `Expected ${path} to match`);
+          });
+        });
+      });
+
+      describe('valid paths without .json', () => {
+        const validPaths = [
+          '/products',
+          '/products/test-product',
+          '/us/en/products/test',
+          '/a',
+          '/test-123',
+        ];
+
+        validPaths.forEach((path) => {
+          it(`should match valid path without .json: ${path}`, () => {
+            assert.ok(PATH_PATTERN_WITH_JSON.test(path), `Expected ${path} to match`);
+          });
+        });
+      });
+
+      describe('invalid paths with .json', () => {
+        const invalidPaths = [
+          { path: '/products/../admin.json', reason: 'directory traversal with .json' },
+          { path: '/Products/Test.json', reason: 'uppercase with .json' },
+          { path: '/products//test.json', reason: 'double slashes with .json' },
+          { path: 'products/test.json', reason: 'no leading slash with .json' },
+          { path: '/products/.json', reason: 'dot segment with .json' },
+          { path: '/products/test .json', reason: 'space before .json' },
+        ];
+
+        invalidPaths.forEach(({ path, reason }) => {
+          it(`should reject ${reason}: ${path}`, () => {
+            assert.ok(!PATH_PATTERN_WITH_JSON.test(path), `Expected ${path} to be rejected`);
+          });
+        });
+      });
+
+      describe('other extensions should not match', () => {
+        const invalidExtensions = [
+          '/products/test.html',
+          '/products/test.xml',
+          '/products/test.txt',
+          '/products/test.pdf',
+          '/products/test.js',
+          '/products/test.css',
+          '/products/test.jpeg',
+          '/products/test.jsonl',
+          '/products/test.jsn',
+        ];
+
+        invalidExtensions.forEach((path) => {
+          it(`should reject non-.json extension: ${path}`, () => {
+            assert.ok(!PATH_PATTERN_WITH_JSON.test(path), `Expected ${path} to be rejected`);
+          });
+        });
+      });
+
+      describe('comparison with PATH_PATTERN', () => {
+        it('PATH_PATTERN should reject .json paths', () => {
+          const pathsWithJson = [
+            '/products/test.json',
+            '/us/en/products/test.json',
+            '/test.json',
+          ];
+
+          pathsWithJson.forEach((path) => {
+            assert.ok(!PATH_PATTERN.test(path), `PATH_PATTERN should reject ${path}`);
+          });
+        });
+
+        it('both patterns should accept paths without .json', () => {
+          const pathsWithoutJson = [
+            '/products/test',
+            '/us/en/products/test',
+            '/test',
+          ];
+
+          pathsWithoutJson.forEach((path) => {
+            assert.ok(PATH_PATTERN.test(path), `PATH_PATTERN should accept ${path}`);
+            assert.ok(PATH_PATTERN_WITH_JSON.test(path), `PATH_PATTERN_WITH_JSON should accept ${path}`);
+          });
+        });
+
+        it('both patterns should reject invalid paths', () => {
+          const invalidPaths = [
+            '/products/../admin',
+            '/Products/Test',
+            '/products//test',
+            'products/test',
+            '/products/.',
+          ];
+
+          invalidPaths.forEach((path) => {
+            assert.ok(!PATH_PATTERN.test(path), `PATH_PATTERN should reject ${path}`);
+            assert.ok(!PATH_PATTERN_WITH_JSON.test(path), `PATH_PATTERN_WITH_JSON should reject ${path}`);
+          });
         });
       });
     });
