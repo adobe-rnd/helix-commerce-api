@@ -96,11 +96,11 @@ preview_bucket_name = "helix-commerce-orders-dev"
 bucket_name = "helix-commerce-orders"
 
 [[env.next.queues.producers]]
-queue = "helix-product-indexer-queue"
+queue = "helix-product-indexer-queue-next"
 binding = "INDEXER_QUEUE"
 
 [[env.next.queues.producers]]
-queue = "helix-product-image-collector-queue"
+queue = "helix-product-image-collector-queue-next"
 binding = "IMAGE_COLLECTOR_QUEUE"
 
 [env.next.vars]
