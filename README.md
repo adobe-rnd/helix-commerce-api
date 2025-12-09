@@ -39,7 +39,7 @@ Products are retrieved by their path:
 ```bash
 curl -sS \
   -H "Authorization: Bearer $KEY" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/products/blender-pro-500.json"
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/products/blender-pro-500.json"
 ```
 
 Example response body:
@@ -64,7 +64,7 @@ Minimal payload with the most important properties. The URL path determines wher
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/products/test-product.json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/products/test-product.json" \
   --data-binary @- <<'JSON'
 {
   "sku": "test-sku",
@@ -75,7 +75,7 @@ curl -sS -X PUT \
 JSON
 ```
 
-**Note**: The `path` field in the JSON must match the path in the URL (excluding the `.json` extension).
+**Note**: The `path` field in the JSON represents the product's canonical path (e.g., `/products/test-product`). The API endpoint path includes `/catalog/` as part of the API structure (e.g., `/catalog/products/test-product.json`), but this prefix is not included in the product's `path` field.
 
 #### PUT a product (complete example with all properties)
 
@@ -83,7 +83,7 @@ JSON
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/products/blender-pro-500.json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/products/blender-pro-500.json" \
   --data-binary @- <<'JSON'
 {
   "sku": "sku-123",
@@ -170,7 +170,7 @@ Send up to 50 products at once by POSTing to the wildcard path. Each product mus
 curl -sS -X POST \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/*" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/*" \
   --data-binary @- <<'JSON'
 [
   {
@@ -202,7 +202,7 @@ Delete a product by its path:
 ```bash
 curl -sS -X DELETE \
   -H "Authorization: Bearer $KEY" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/products/blender-pro-500.json"
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/catalog/products/blender-pro-500.json"
 ```
 
 Example response:
@@ -213,24 +213,9 @@ Example response:
 }
 ```
 
-You can also delete multiple products in a single request by POSTing an array of paths:
-
-```bash
-curl -sS -X POST \
-  -H "Authorization: Bearer $KEY" \
-  -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/catalog/*/delete" \
-  --data-binary @- <<'JSON'
-[
-  "/products/bulk-product-1",
-  "/products/bulk-product-2"
-]
-JSON
-```
-
 ### Auth token management
 
-Base URL structure: `https://<host>/{org}/{site}/auth/token`
+Base URL structure: `https://<host>/{org}/sites/{site}/auth/token`
 
 All auth routes require `Authorization: Bearer <SITE_API_KEY>` (or a superuser key).
 
@@ -239,7 +224,7 @@ All auth routes require `Authorization: Bearer <SITE_API_KEY>` (or a superuser k
 ```bash
 curl -sS \
   -H "Authorization: Bearer $KEY" \
-  "https://api.adobecommerce.live/$ORG/$SITE/auth/token"
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/token"
 ```
 
 Example response body:
@@ -255,7 +240,7 @@ Generates a new token. Do not include a `token` in the request body.
 ```bash
 curl -sS -X POST \
   -H "Authorization: Bearer $KEY" \
-  "https://api.adobecommerce.live/$ORG/$SITE/auth/token"
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/token"
 ```
 
 Example response body:
@@ -272,7 +257,7 @@ Explicitly sets the token value.
 curl -sS -X PUT \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/$SITE/auth/token" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/token" \
   --data-binary '{"token":"SPECIFIC_TOKEN_VALUE"}'
 ```
 
