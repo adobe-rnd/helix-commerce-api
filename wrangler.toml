@@ -126,7 +126,7 @@ binding = "CATALOG_BUCKET"
 preview_bucket_name = "adobe-commerce-catalog-dev"
 bucket_name = "adobe-commerce-catalog"
 
-[[env.productions.r2_buckets]]
+[[env.production.r2_buckets]]
 binding = "ORDERS_BUCKET"
 preview_bucket_name = "helix-commerce-orders-dev"
 bucket_name = "helix-commerce-orders"

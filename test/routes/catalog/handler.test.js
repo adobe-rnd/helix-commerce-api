@@ -151,4 +151,151 @@ describe('catalogHandler Tests', () => {
     assert.equal(response.status, 201);
     assert(handleProductSaveRequestStub.calledOnceWith(ctx, request));
   });
+
+  describe('path validation', () => {
+    it('should reject path with directory traversal (/../)', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products/../admin/secrets.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+      assert(!handleProductRetrieveRequestStub.called, 'handler should not be called for invalid path');
+    });
+
+    it('should reject path with double slashes (//)', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products//test.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should reject path with single dot (/./ )', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products/./test.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should reject path with uppercase letters', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/Products/Test.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should reject path with special characters', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products/test@123.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should reject path not starting with /', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: 'products/test.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should accept valid simple path', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products/test-product-123.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const mockResponse = new Response(null, { status: 200 });
+      handleProductRetrieveRequestStub.returns(mockResponse);
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 200);
+      assert(handleProductRetrieveRequestStub.calledOnce);
+    });
+
+    it('should accept valid nested path', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/us/en/products/electronics/blender-pro-500.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const mockResponse = new Response(null, { status: 200 });
+      handleProductRetrieveRequestStub.returns(mockResponse);
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 200);
+      assert(handleProductRetrieveRequestStub.calledOnce);
+    });
+
+    it('should accept wildcard path for bulk operations', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/*',
+          method: 'POST',
+        },
+      });
+      const request = {};
+
+      const mockResponse = new Response(null, { status: 201 });
+      handleProductSaveRequestStub.returns(mockResponse);
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 201);
+      assert(handleProductSaveRequestStub.calledOnce);
+    });
+  });
 });

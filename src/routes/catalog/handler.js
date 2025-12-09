@@ -11,6 +11,7 @@
  */
 
 import { errorResponse } from '../../utils/http.js';
+import { PATH_PATTERN_WITH_JSON } from '../../utils/validation.js';
 import retrieve from './retrieve.js';
 import update from './update.js';
 import remove from './remove.js';
@@ -24,6 +25,11 @@ export default async function handler(ctx, request) {
 
   if (!path) {
     return errorResponse(404, 'path is required');
+  }
+
+  // Validate path format (skip validation for wildcard bulk operations)
+  if (path !== '/*' && !PATH_PATTERN_WITH_JSON.test(path)) {
+    return errorResponse(400, 'Invalid path format. Path must start with / and contain only lowercase letters, numbers, hyphens, and forward slashes');
   }
 
   switch (method) {
