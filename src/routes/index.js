@@ -16,6 +16,7 @@ import operationsLog from './operations-log/handler.js';
 import orders from './orders/handler.js';
 import customers from './customers/handler.js';
 import cache from './cache/handler.js';
+import indices from './indices/handler.js';
 
 /**
  * @type {Record<string, RouteHandler>}
@@ -27,4 +28,5 @@ export default {
   customers,
   'operations-log': operationsLog,
   cache,
+  indices,
 };

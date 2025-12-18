@@ -25,6 +25,7 @@ const router = new Router(nameSelector)
   .add('/:org/sites/:site/customers/:email', handlers.customers)
   .add('/:org/sites/:site/customers', handlers.customers)
   .add('/:org/sites/:site/cache', handlers.cache)
+  .add('/:org/sites/:site/index/*', handlers.indices)
   .add('/:org/sites/:site/operations-log', handlers['operations-log']);
 
 /**
