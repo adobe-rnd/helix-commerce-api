@@ -96,7 +96,7 @@ describe('Post-Deploy Tests', () => {
       // should process a single image synchronously
       assert.deepStrictEqual(retrievedProduct.images[0], {
         ...testImage,
-        url: './media_1b236d4445641e7aa141e11c62ea50a634d98022.png?width=750&format=png&optimize=medium',
+        url: './media_1b236d4445641e7aa141e11c62ea50a634d98022.png',
       });
 
       const deleteOptions = {
@@ -181,7 +181,7 @@ describe('Post-Deploy Tests', () => {
       // should be processed into a media url
       assert.deepStrictEqual(newRetrievedProduct.images[0], {
         ...testImage,
-        url: './media_1b236d4445641e7aa141e11c62ea50a634d98022.png?width=750&format=png&optimize=medium',
+        url: './media_1b236d4445641e7aa141e11c62ea50a634d98022.png',
       });
 
       const deleteOptions = {

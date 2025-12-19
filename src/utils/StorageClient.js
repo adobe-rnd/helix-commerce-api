@@ -10,10 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
-import { StorageClient as SharedStorageClient } from '@dylandepass/helix-product-shared';
+import {
+  StorageClient as SharedStorageClient,
+  extractAndReplaceImages,
+} from '@dylandepass/helix-product-shared';
 import { BatchProcessor } from './batch.js';
 import { errorWithResponse } from './http.js';
-import { extractAndReplaceImages } from './media.js';
 import { purgeBatch } from '../routes/cache/purge.js';
 
 export default class StorageClient extends SharedStorageClient {
