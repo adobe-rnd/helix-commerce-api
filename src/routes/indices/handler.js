@@ -15,8 +15,55 @@ import StorageClient from '../../utils/StorageClient.js';
 import { errorResponse } from '../../utils/http.js';
 
 /**
+ * Update the index registry with retry logic for concurrent modifications
+ * @param {StorageClient} storage
+ * @param {string} org
+ * @param {string} site
+ * @param {string} path
+ * @param {boolean} adding - true to add, false to remove
+ * @param {number} [retries=3] - number of retries on conflict
+ * @returns {Promise<void>}
+ */
+async function updateRegistry(storage, org, site, path, adding, retries = 3) {
+  const indexPath = `${path}/index.json`;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      // Fetch current registry with etag
+      // eslint-disable-next-line no-await-in-loop
+      const { data: registry, etag } = await storage.fetchIndexRegistry(org, site);
+
+      // Update registry
+      if (adding) {
+        registry[indexPath] = { lastmod: new Date().toISOString() };
+      } else {
+        delete registry[indexPath];
+      }
+
+      // Save with etag for conditional write
+      // eslint-disable-next-line no-await-in-loop
+      await storage.saveIndexRegistry(org, site, registry, etag);
+      return; // Success
+    } catch (e) {
+      if (e.code === 'PRECONDITION_FAILED' && attempt < retries) {
+        // Retry on conflict
+        // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
+        await new Promise((resolve) => setTimeout(resolve, 100 * (attempt + 1)));
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  throw new Error('Failed to update registry after multiple retries');
+}
+
+/**
  * Create an index.
- * Returns 400 if index already exists.
+ * Returns 409 if index already exists (checked via registry).
+ * Returns 409 if registry update fails due to conflict.
+ * Returns 502 if registry update fails for other reasons.
  * Returns 201 on success.
  * Assumes caller is authorized.
  *
@@ -26,12 +73,48 @@ import { errorResponse } from '../../utils/http.js';
 async function create(ctx) {
   const { org, site, path } = ctx.requestInfo;
   const storage = StorageClient.fromContext(ctx);
-  const exists = await storage.queryIndexExists(org, site, path);
-  if (exists) {
-    return errorResponse(400, 'index already exists');
+  const indexPath = `${path}/index.json`;
+
+  // Step 1: Check if index exists using registry
+  const { data: registry, etag } = await storage.fetchIndexRegistry(org, site);
+  if (registry[indexPath]) {
+    return errorResponse(409, 'index already exists');
   }
 
-  await storage.saveQueryIndexByPath(org, site, path, {});
+  // Step 2: Update registry first
+  try {
+    registry[indexPath] = { lastmod: new Date().toISOString() };
+    await storage.saveIndexRegistry(org, site, registry, etag);
+  } catch (e) {
+    if (e.code === 'PRECONDITION_FAILED') {
+      // Another request modified the registry concurrently
+      return errorResponse(409, 'conflict: concurrent modification');
+    }
+    // Other errors (network, storage, etc.)
+    ctx.log.error('Failed to update registry', e);
+    return errorResponse(502, 'failed to update registry');
+  }
+
+  // Step 3: Create the index.json file
+  try {
+    await storage.saveQueryIndexByPath(org, site, path, {});
+  } catch (e) {
+    // If index creation fails, we should try to rollback the registry
+    ctx.log.error('Failed to create index, attempting rollback', e);
+    try {
+      // Fetch latest registry and remove the entry we just added
+      const {
+        data: currentRegistry,
+        etag: currentEtag,
+      } = await storage.fetchIndexRegistry(org, site);
+      delete currentRegistry[indexPath];
+      await storage.saveIndexRegistry(org, site, currentRegistry, currentEtag);
+    } catch (rollbackError) {
+      ctx.log.error('Failed to rollback registry', rollbackError);
+    }
+    return errorResponse(502, 'failed to create index');
+  }
+
   return new Response('', { status: 201 });
 }
 
@@ -52,7 +135,17 @@ async function remove(ctx) {
     return errorResponse(404, 'index does not exist');
   }
   await storage.deleteQueryIndex(org, site, path);
-  return new Response('', { status: 204 });
+
+  // Update registry
+  try {
+    await updateRegistry(storage, org, site, path, false);
+  } catch (e) {
+    ctx.log.error('Failed to update registry', e);
+    // Don't fail the request if registry update fails
+    // The index was deleted successfully
+  }
+
+  return new Response(null, { status: 204 });
 }
 
 /**
