@@ -89,7 +89,6 @@ async function applyCORSHeaders(resp) {
   const origin = resp.headers.get('access-control-allow-origin') || '*';
   const methods = resp.headers.get('access-control-allow-methods') || 'GET, POST, PUT, DELETE, OPTIONS';
   const headers = resp.headers.get('access-control-allow-headers') || 'Content-Type';
-  console.log('origin:', origin);
   return new Response(await resp.text(), {
     status: resp.status,
     headers: {
