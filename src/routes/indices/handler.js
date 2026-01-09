@@ -73,7 +73,7 @@ async function updateRegistry(storage, org, site, path, adding, retries = 3) {
 async function create(ctx) {
   const { org, site, path } = ctx.requestInfo;
   const storage = StorageClient.fromContext(ctx);
-  const indexPath = `${path}/index.json`;
+  const indexPath = `${path.endsWith('/') ? path : `${path}/`}index.json`;
 
   // Step 1: Check if index exists using registry
   const { data: registry, etag } = await storage.fetchIndexRegistry(org, site);
