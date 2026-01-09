@@ -156,6 +156,48 @@ describe('routes/indices/handler', () => {
       assert.strictEqual(response.status, 404);
       assert.strictEqual(response.headers.get('x-error'), 'path is required');
     });
+
+    it('should return 400 for invalid path', async () => {
+      ctx.requestInfo.path = '/invalid path with spaces';
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 400);
+      assert.strictEqual(response.headers.get('x-error'), 'invalid path');
+      assert(storageClient.fetchIndexRegistry.notCalled);
+    });
+
+    it('should handle path with trailing slash normally', async () => {
+      ctx.requestInfo.path = '/products/';
+      storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
+      storageClient.saveIndexRegistry.resolves();
+      storageClient.saveQueryIndexByPath.resolves();
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 201);
+      // Should call saveQueryIndexByPath with path without trailing slash
+      assert(storageClient.saveQueryIndexByPath.calledWith('test-org', 'test-site', '/products', {}));
+      // Registry should have the normalized path
+      const [, , registry] = storageClient.saveIndexRegistry.firstCall.args;
+      assert(registry['/products/index.json']);
+    });
+
+    it('should handle path ending with /index.json normally', async () => {
+      ctx.requestInfo.path = '/products/index.json';
+      storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
+      storageClient.saveIndexRegistry.resolves();
+      storageClient.saveQueryIndexByPath.resolves();
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 201);
+      // Should call saveQueryIndexByPath with path without /index.json suffix
+      assert(storageClient.saveQueryIndexByPath.calledWith('test-org', 'test-site', '/products', {}));
+      // Registry should have the normalized path
+      const [, , registry] = storageClient.saveIndexRegistry.firstCall.args;
+      assert(registry['/products/index.json']);
+    });
   });
 
   describe('DELETE (remove)', () => {

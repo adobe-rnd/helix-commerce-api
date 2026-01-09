@@ -13,6 +13,7 @@
 import { assertAuthorization } from '../../utils/auth.js';
 import StorageClient from '../../utils/StorageClient.js';
 import { errorResponse } from '../../utils/http.js';
+import { PATH_PATTERN } from '../../utils/validation.js';
 
 /**
  * Update the index registry with retry logic for concurrent modifications
@@ -61,6 +62,7 @@ async function updateRegistry(storage, org, site, path, adding, retries = 3) {
 
 /**
  * Create an index.
+ * Returns 400 if path is invalid.
  * Returns 409 if index already exists (checked via registry).
  * Returns 409 if registry update fails due to conflict.
  * Returns 502 if registry update fails for other reasons.
@@ -71,9 +73,21 @@ async function updateRegistry(storage, org, site, path, adding, retries = 3) {
  * @returns {Promise<Response>}
  */
 async function create(ctx) {
-  const { org, site, path } = ctx.requestInfo;
+  let { path } = ctx.requestInfo;
+  const { org, site } = ctx.requestInfo;
+
+  path = path.replace(/\/+$/, '');
+
+  if (path.endsWith('/index.json')) {
+    path = path.slice(0, -('/index.json'.length));
+  }
+
+  if (!PATH_PATTERN.test(path)) {
+    return errorResponse(400, 'invalid path');
+  }
+
   const storage = StorageClient.fromContext(ctx);
-  const indexPath = `${path.endsWith('/') ? path : `${path}/`}index.json`;
+  const indexPath = `${path}/index.json`;
 
   // Step 1: Check if index exists using registry
   const { data: registry, etag } = await storage.fetchIndexRegistry(org, site);
