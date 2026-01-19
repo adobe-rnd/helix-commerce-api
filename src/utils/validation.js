@@ -36,18 +36,22 @@ const NO_DOT_NOTATION_REGEX = /^[^a-zA-Z_]|.*(\s)|.*[^a-zA-Z0-9_]/;
 
 /**
  * Base path pattern for product paths.
- * Allows only lowercase alphanumeric characters, hyphens, and forward slashes.
+ * Allows lowercase alphanumeric characters, hyphens,
+ * underscores (in directories only), and forward slashes.
  * This prevents directory traversal (..), double slashes, and other malformed paths.
- * Pattern: /segment or /segment/segment or /segment/segment/segment/...
- * where each segment is: lowercase-alphanumeric-with-hyphens
+ * Pattern: /segment or /dir/segment or /dir1/dir2/segment/...
+ * - Directory segments allow underscores (e.g., en_us)
+ * - Filename (last segment) only allows hyphens, no underscores
  */
-export const PATH_PATTERN = /^\/[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)*$/;
+export const PATH_PATTERN = /^\/([a-z0-9_]+([-_][a-z0-9_]+)*\/)*[a-z0-9]+(-[a-z0-9]+)*$/;
 
 /**
  * Path pattern with optional .json extension for URLs.
  * Use this for validating URL paths that may include the .json extension.
+ * - Directory segments allow underscores (e.g., en_us)
+ * - Filename (last segment) only allows hyphens, no underscores
  */
-export const PATH_PATTERN_WITH_JSON = /^\/[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)*(\.json)?$/;
+export const PATH_PATTERN_WITH_JSON = /^\/([a-z0-9_]+([-_][a-z0-9_]+)*\/)*[a-z0-9]+(-[a-z0-9]+)*(\.json)?$/;
 
 /**
  * @param {unknown} obj
