@@ -779,6 +779,10 @@ describe('util', () => {
           '/123abc',
           '/products-123/items-456/test-789',
           '/en/products/product-with-many-hyphens-in-name',
+          '/ca/en_us/products/test',
+          '/us/en_us/products/20-ounce-travel-cup',
+          '/en_us/test',
+          '/a_b/c_d/filename',
         ];
 
         validPaths.forEach((path) => {
@@ -831,7 +835,7 @@ describe('util', () => {
           { path: '/Products/Test', reason: 'uppercase letters' },
           { path: '/PRODUCTS', reason: 'all uppercase' },
           { path: '/products/Test', reason: 'mixed case' },
-          { path: '/products/test_item', reason: 'underscore' },
+          { path: '/products/test_item', reason: 'underscore in filename' },
           { path: '/products/test.json', reason: '.json extension (not allowed without _WITH_JSON)' },
           { path: '/products/test.html', reason: '.html extension' },
           { path: '/products/test@123', reason: 'at sign' },
@@ -896,6 +900,25 @@ describe('util', () => {
           assert.ok(PATH_PATTERN.test('/products/test-item-123-abc'));
         });
       });
+
+      describe('edge cases - underscore placement', () => {
+        it('should allow underscores in directory segments', () => {
+          assert.ok(PATH_PATTERN.test('/en_us/products/test'));
+          assert.ok(PATH_PATTERN.test('/ca/en_us/test'));
+          assert.ok(PATH_PATTERN.test('/a_b/c_d/filename'));
+        });
+
+        it('should reject underscores in filename (last segment)', () => {
+          assert.ok(!PATH_PATTERN.test('/products/test_item'));
+          assert.ok(!PATH_PATTERN.test('/test_file'));
+          assert.ok(!PATH_PATTERN.test('/en_us/products/test_product'));
+        });
+
+        it('should accept hyphens in filename', () => {
+          assert.ok(PATH_PATTERN.test('/ca/en_us/products/20-ounce-travel-cup'));
+          assert.ok(PATH_PATTERN.test('/en_us/test-file'));
+        });
+      });
     });
 
     describe('PATH_PATTERN_WITH_JSON (optional .json extension)', () => {
@@ -908,6 +931,8 @@ describe('util', () => {
           '/us/en/products/electronics/blender-pro-500.json',
           '/a.json',
           '/test-123.json',
+          '/ca/en_us/products/test.json',
+          '/en_us/test-file.json',
         ];
 
         validPaths.forEach((path) => {
@@ -924,6 +949,8 @@ describe('util', () => {
           '/us/en/products/test',
           '/a',
           '/test-123',
+          '/ca/en_us/products/test',
+          '/en_us/test-file',
         ];
 
         validPaths.forEach((path) => {
