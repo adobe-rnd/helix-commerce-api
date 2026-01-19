@@ -13,7 +13,7 @@
 import { assertAuthorization } from '../../utils/auth.js';
 import StorageClient from '../../utils/StorageClient.js';
 import { errorResponse } from '../../utils/http.js';
-import { PATH_PATTERN } from '../../utils/validation.js';
+import { DIRECTORY_PATH_PATTERN } from '../../utils/validation.js';
 
 /**
  * Update the index registry with retry logic for concurrent modifications
@@ -82,7 +82,7 @@ async function create(ctx) {
     path = path.slice(0, -('/index.json'.length));
   }
 
-  if (!PATH_PATTERN.test(path)) {
+  if (!DIRECTORY_PATH_PATTERN.test(path)) {
     return errorResponse(400, 'invalid path');
   }
 

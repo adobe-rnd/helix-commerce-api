@@ -14,7 +14,12 @@
 
 import assert from 'assert';
 import { pruneUndefined as pruneUndef } from '../../src/utils/product.js';
-import { validate, PATH_PATTERN, PATH_PATTERN_WITH_JSON } from '../../src/utils/validation.js';
+import {
+  validate,
+  PATH_PATTERN,
+  PATH_PATTERN_WITH_JSON,
+  DIRECTORY_PATH_PATTERN,
+} from '../../src/utils/validation.js';
 
 function check(val, schema, expectedErrors) {
   const errs = validate(val, schema);
@@ -1035,6 +1040,64 @@ describe('util', () => {
           invalidPaths.forEach((path) => {
             assert.ok(!PATH_PATTERN.test(path), `PATH_PATTERN should reject ${path}`);
             assert.ok(!PATH_PATTERN_WITH_JSON.test(path), `PATH_PATTERN_WITH_JSON should reject ${path}`);
+          });
+        });
+      });
+    });
+
+    describe('DIRECTORY_PATH_PATTERN (for index paths)', () => {
+      describe('valid directory paths', () => {
+        const validPaths = [
+          '/ca',
+          '/en_us',
+          '/ca/en_us',
+          '/us/en_us/products',
+          '/a_b/c_d/e_f',
+          '/products',
+          '/products/category',
+        ];
+
+        validPaths.forEach((path) => {
+          it(`should match valid directory path: ${path}`, () => {
+            assert.ok(DIRECTORY_PATH_PATTERN.test(path), `Expected ${path} to match`);
+          });
+        });
+      });
+
+      describe('invalid directory paths', () => {
+        const invalidPaths = [
+          { path: '/products/../admin', reason: 'directory traversal' },
+          { path: '/Products/Test', reason: 'uppercase letters' },
+          { path: '/products//test', reason: 'double slashes' },
+          { path: 'products/test', reason: 'no leading slash' },
+          { path: '/products/', reason: 'trailing slash' },
+          { path: '/', reason: 'root only' },
+          { path: '', reason: 'empty string' },
+          { path: '/products_', reason: 'trailing underscore' },
+          { path: '/products__test', reason: 'double underscores' },
+        ];
+
+        invalidPaths.forEach(({ path, reason }) => {
+          it(`should reject ${reason}: ${path}`, () => {
+            assert.ok(!DIRECTORY_PATH_PATTERN.test(path), `Expected ${path} to be rejected`);
+          });
+        });
+      });
+
+      describe('comparison with PATH_PATTERN', () => {
+        it('DIRECTORY_PATH_PATTERN should accept paths with underscores in last segment', () => {
+          // These are valid directory paths but invalid file paths
+          assert.ok(DIRECTORY_PATH_PATTERN.test('/en_us'), 'DIRECTORY_PATH_PATTERN should accept /en_us');
+          assert.ok(DIRECTORY_PATH_PATTERN.test('/ca/en_us'), 'DIRECTORY_PATH_PATTERN should accept /ca/en_us');
+          assert.ok(!PATH_PATTERN.test('/en_us'), 'PATH_PATTERN should reject /en_us (underscore in filename)');
+          assert.ok(!PATH_PATTERN.test('/ca/en_us'), 'PATH_PATTERN should reject /ca/en_us (underscore in filename)');
+        });
+
+        it('both patterns should accept paths without underscores in last segment', () => {
+          const paths = ['/products', '/ca/products', '/us/en/products'];
+          paths.forEach((path) => {
+            assert.ok(DIRECTORY_PATH_PATTERN.test(path), `DIRECTORY_PATH_PATTERN should accept ${path}`);
+            assert.ok(PATH_PATTERN.test(path), `PATH_PATTERN should accept ${path}`);
           });
         });
       });
