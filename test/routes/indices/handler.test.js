@@ -183,6 +183,20 @@ describe('routes/indices/handler', () => {
       assert(registry['/products/index.json']);
     });
 
+    it('should accept path with underscores (locale paths)', async () => {
+      ctx.requestInfo.path = '/ca/en_us';
+      storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
+      storageClient.saveIndexRegistry.resolves();
+      storageClient.saveQueryIndexByPath.resolves();
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 201);
+      assert(storageClient.saveQueryIndexByPath.calledWith('test-org', 'test-site', '/ca/en_us', {}));
+      const [, , registry] = storageClient.saveIndexRegistry.firstCall.args;
+      assert(registry['/ca/en_us/index.json']);
+    });
+
     it('should handle path ending with /index.json normally', async () => {
       ctx.requestInfo.path = '/products/index.json';
       storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });

@@ -54,6 +54,13 @@ export const PATH_PATTERN = /^\/([a-z0-9_]+([-_][a-z0-9_]+)*\/)*[a-z0-9]+(-[a-z0
 export const PATH_PATTERN_WITH_JSON = /^\/([a-z0-9_]+([-_][a-z0-9_]+)*\/)*[a-z0-9]+(-[a-z0-9]+)*(\.json)?$/;
 
 /**
+ * Directory path pattern for paths that don't end in a filename.
+ * All segments allow underscores as separators (e.g., /ca/en_us for index paths).
+ * Used for index routes where the path is a directory, not a file.
+ */
+export const DIRECTORY_PATH_PATTERN = /^\/[a-z0-9]+([-_][a-z0-9]+)*(\/[a-z0-9]+([-_][a-z0-9]+)*)*$/;
+
+/**
  * @param {unknown} obj
  * @param {SchemaType} ptype
  * @param {string} path
