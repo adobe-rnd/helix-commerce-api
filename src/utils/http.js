@@ -55,7 +55,10 @@ export class ResponseError extends Error {
 export function errorResponse(status, xError, body = '') {
   return new Response(typeof body === 'object' ? JSON.stringify(body) : body, {
     status,
-    headers: { 'x-error': xError },
+    headers: {
+      'x-error': xError,
+      ...(typeof body === 'object' ? { 'content-type': 'application/json' } : {}),
+    },
   });
 }
 

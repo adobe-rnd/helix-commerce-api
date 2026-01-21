@@ -10,6 +10,10 @@
  * governing permissions and limitations under the License.
  */
 
+export declare const PATH_PATTERN: RegExp;
+export declare const PATH_PATTERN_WITH_JSON: RegExp;
+export declare const DIRECTORY_PATH_PATTERN: RegExp;
+
 export type FilterPrefixedKeys<TObj, TPrefix extends string> = {
   [K in keyof TObj as K extends `${TPrefix}${infer I}` ? never : K]: TObj[K]
 }

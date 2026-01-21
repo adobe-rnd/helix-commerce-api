@@ -43,6 +43,6 @@ export function assertValidProduct(ctx, product) {
   const errors = validate(product, ProductBusEntry);
   if (errors) {
     log.info('Invalid product', { errors });
-    throw errorWithResponse(400, `Invalid product: ${errors.map((e) => e.message).join(', ')}`);
+    throw errorWithResponse(400, 'Invalid product', { errors });
   }
 }
