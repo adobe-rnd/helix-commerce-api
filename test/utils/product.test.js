@@ -12,6 +12,7 @@
 
 import assert from 'node:assert';
 import sinon from 'sinon';
+import { ResponseError } from '../../src/utils/http.js';
 import { assertValidProduct, pruneUndefined } from '../../src/utils/product.js';
 import { DEFAULT_CONTEXT } from '../fixtures/context.js';
 
@@ -52,7 +53,7 @@ describe('Product Utils', () => {
       });
     });
 
-    it('should throw error for invalid product with missing required fields', () => {
+    it('should throw error for invalid product with missing required fields', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: {
           info: sinon.stub(),
@@ -64,16 +65,32 @@ describe('Product Utils', () => {
         name: 'Test Product',
       };
 
-      assert.throws(() => {
+      let err;
+      try {
         assertValidProduct(ctx, invalidProduct);
-      }, /Invalid product:/);
+      } catch (e) {
+        err = e;
+      }
+
+      assert(err instanceof ResponseError);
+      assert.strictEqual(err.response.status, 400);
+      assert.strictEqual(err.response.headers.get('x-error'), 'Invalid product');
+      assert.deepStrictEqual(await err.response.json(), {
+        errors: [
+          {
+            details: "missing property keys: ['sku', 'path']",
+            message: 'object missing required properties',
+            path: '$',
+          },
+        ],
+      });
 
       // Verify error was logged
       assert(ctx.log.info.calledOnce);
       assert(ctx.log.info.firstCall.args[0] === 'Invalid product');
     });
 
-    it('should throw error with multiple validation errors', () => {
+    it('should throw error with multiple validation errors, breaks on first error', async () => {
       const ctx = DEFAULT_CONTEXT({
         log: {
           info: sinon.stub(),
@@ -86,9 +103,25 @@ describe('Product Utils', () => {
         name: null, // Should be string
       };
 
-      assert.throws(() => {
+      let err;
+      try {
         assertValidProduct(ctx, invalidProduct);
-      }, /Invalid product:/);
+      } catch (e) {
+        err = e;
+      }
+
+      assert(err instanceof ResponseError);
+      assert.strictEqual(err.response.status, 400);
+      assert.strictEqual(err.response.headers.get('x-error'), 'Invalid product');
+      assert.deepStrictEqual(await err.response.json(), {
+        errors: [
+          {
+            details: 'expected string, got number',
+            message: 'invalid type',
+            path: '$.sku',
+          },
+        ],
+      });
 
       assert(ctx.log.info.calledOnce);
     });
