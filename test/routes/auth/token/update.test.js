@@ -13,8 +13,8 @@
 // @ts-nocheck
 
 import assert from 'node:assert';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
-import handler from '../../../src/routes/auth/update.js';
+import { DEFAULT_CONTEXT } from '../../../fixtures/context.js';
+import handler from '../../../../src/routes/auth/token/update.js';
 
 describe('routes/auth update tests', () => {
   it('should reject invalid token', async () => {

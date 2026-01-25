@@ -11,16 +11,23 @@
       "./node_modules/@adobe/helix-admin-support/types"
     ],
     "paths": {
-      "*": ["types/*"],         
-      "@cloudflare/workers-types/*": ["node_modules/@cloudflare/workers-types/*"],
-      "@adobe/helix-admin-support": ["node_modules/@adobe/helix-admin-support/src/index.d.ts"]
+      "*": [
+        "types/*"
+      ],
+      "@cloudflare/workers-types/*": [
+        "node_modules/@cloudflare/workers-types/*"
+      ],
+      "@adobe/helix-admin-support": [
+        "node_modules/@adobe/helix-admin-support/src/index.d.ts"
+      ]
     }
   },
   "include": [
     "./**/*.js",
     "./src/types.d.ts",
     "./node_modules/@adobe/helix-admin-support/src/index.d.ts",
-    "./node_modules/@adobe/helix-admin-support/types/*.d.ts"
+    "./node_modules/@adobe/helix-admin-support/types/*.d.ts",
+    "./node_modules/@cloudflare/workers-types/index.d.ts"
   ],
   "exclude": [
     "node_modules",

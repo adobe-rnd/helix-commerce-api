@@ -10,42 +10,22 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
-import { errorResponse, errorWithResponse } from '../../utils/http.js';
-
-const generateToken = () => crypto.randomUUID().toUpperCase();
-
-/**
- *
- * @param {Context} ctx
- * @param {string} [token]
- * @returns {Promise<string>}
- */
-export async function updateToken(ctx, token = generateToken()) {
-  const { requestInfo } = ctx;
-  const { siteKey } = requestInfo;
-
-  try {
-    await ctx.env.KEYS.put(siteKey, token);
-  } catch (e) {
-    ctx.log.error('failed to update token', e);
-    throw errorWithResponse(503, 'failed to update token');
-  }
-  return token;
-}
+import { assertAuthorization } from '../../../utils/auth.js';
+import { errorResponse } from '../../../utils/http.js';
+import { updateToken } from './update.js';
 
 /**
  * @type {RouteHandler}
  */
-export default async function update(ctx) {
+export default async function rotate(ctx) {
   const { data } = ctx;
-  if (!data.token || typeof data.token !== 'string') {
-    return errorResponse(400, 'missing or invalid token');
+  if (data.token) {
+    return errorResponse(400, 'token can not be provided on rotate');
   }
 
   await assertAuthorization(ctx);
 
-  const token = await updateToken(ctx, data.token);
+  const token = await updateToken(ctx);
   return new Response(JSON.stringify({ token }), {
     headers: {
       'Content-Type': 'application/json',

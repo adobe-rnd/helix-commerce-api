@@ -38,3 +38,24 @@ export async function assertAuthorization(ctx) {
     throw errorWithResponse(403, 'access denied');
   }
 }
+
+/**
+ * Assert that the request is from a superuser
+ * @param {Context} ctx
+ */
+export async function assertSuperuser(ctx) {
+  let actual = ctx.attributes.key;
+  if (typeof ctx.attributes.key === 'undefined') {
+    ctx.attributes.key = ctx.requestInfo.getHeader('authorization')?.slice('Bearer '.length);
+    actual = ctx.attributes.key;
+  }
+  if (!ctx.env.SUPERUSER_KEY) {
+    throw errorWithResponse(404, 'missing actual key');
+  }
+  if (actual === ctx.env.SUPERUSER_KEY) {
+    ctx.log.debug('acting as superuser');
+    return;
+  }
+  // dont reveal superuser limit routes
+  throw errorWithResponse(404, 'not found');
+}

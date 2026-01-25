@@ -11,9 +11,16 @@
  */
 
 import { errorResponse } from '../../utils/http.js';
-import retrieve from './retrieve.js';
-import update from './update.js';
-import rotate from './rotate.js';
+import retrieve from './token/retrieve.js';
+import update from './token/update.js';
+import rotate from './token/rotate.js';
+import login from './login.js';
+import callback from './callback.js';
+import listAdmins from './admins/list.js';
+import retrieveAdmin from './admins/retrieve.js';
+import createAdmin from './admins/create.js';
+import removeAdmin from './admins/remove.js';
+// import logout from './logout.js';
 
 /**
  * @type {Record<string, Record<string, RouteHandler>>}
@@ -24,6 +31,26 @@ const handlers = {
     PUT: update,
     POST: rotate,
   },
+  login: {
+    POST: login,
+  },
+  logout: {
+    // POST: logout,
+  },
+  callback: {
+    POST: callback,
+  },
+  admins: {
+    GET: (ctx, req) => {
+      const email = ctx.requestInfo.getVariable('email');
+      if (email) {
+        return retrieveAdmin(ctx, req);
+      }
+      return listAdmins(ctx, req);
+    },
+    PUT: createAdmin,
+    DELETE: removeAdmin,
+  },
 };
 
 /**
@@ -31,7 +58,6 @@ const handlers = {
  */
 export default async function handler(ctx, req) {
   const { requestInfo } = ctx;
-
   const subRoute = requestInfo.getVariable('subRoute');
   const { method } = requestInfo;
 

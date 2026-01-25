@@ -19,6 +19,7 @@ import logMetrics from './utils/metrics.js';
 const router = new Router(nameSelector)
   .add('/:org/sites/:site/catalog/*', handlers.catalog)
   .add('/:org/sites/:site/auth/:subRoute', handlers.auth)
+  .add('/:org/sites/:site/auth/:subRoute/:email', handlers.auth)
   .add('/:org/sites/:site/orders/:orderId', handlers.orders)
   .add('/:org/sites/:site/orders', handlers.orders)
   .add('/:org/sites/:site/customers/:email/:subroute', handlers.customers)
@@ -89,7 +90,6 @@ async function applyCORSHeaders(resp) {
   const origin = resp.headers.get('access-control-allow-origin') || '*';
   const methods = resp.headers.get('access-control-allow-methods') || 'GET, POST, PUT, DELETE, OPTIONS';
   const headers = resp.headers.get('access-control-allow-headers') || 'Content-Type';
-  console.log('origin:', origin);
   return new Response(await resp.text(), {
     status: resp.status,
     headers: {

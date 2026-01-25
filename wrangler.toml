@@ -23,6 +23,12 @@ preview_bucket_name = "helix-commerce-orders-dev"
 bucket_name = "helix-commerce-orders-dev"
 remote = true
 
+[[r2_buckets]]
+binding = "AUTH_BUCKET"
+preview_bucket_name = "helix-commerce-auth-dev"
+bucket_name = "helix-commerce-auth-dev"
+remote = true
+
 [[queues.producers]]
 queue = "helix-product-indexer-queue-dev"
 binding = "INDEXER_QUEUE"
@@ -58,6 +64,11 @@ bucket_name = "helix-product-bus"
 binding = "ORDERS_BUCKET"
 preview_bucket_name = "helix-commerce-orders-dev"
 bucket_name = "helix-commerce-orders-dev"
+
+[[env.ci.r2_buckets]]
+binding = "AUTH_BUCKET"
+preview_bucket_name = "helix-commerce-auth-dev"
+bucket_name = "helix-commerce-auth-dev"
 
 [[env.ci.queues.producers]]
 queue = "helix-product-indexer-queue-ci"
@@ -95,6 +106,11 @@ binding = "ORDERS_BUCKET"
 preview_bucket_name = "helix-commerce-orders-dev"
 bucket_name = "helix-commerce-orders"
 
+[[env.next.r2_buckets]]
+binding = "AUTH_BUCKET"
+preview_bucket_name = "helix-commerce-auth-dev"
+bucket_name = "helix-commerce-auth"
+
 [[env.next.queues.producers]]
 queue = "helix-product-indexer-queue-next"
 binding = "INDEXER_QUEUE"
@@ -128,8 +144,13 @@ bucket_name = "helix-product-bus"
 
 [[env.production.r2_buckets]]
 binding = "ORDERS_BUCKET"
-preview_bucket_name = "helix-commerce-orders-dev"
+preview_bucket_name = "helix-commerce-orders"
 bucket_name = "helix-commerce-orders"
+
+[[env.production.r2_buckets]]
+binding = "AUTH_BUCKET"
+preview_bucket_name = "helix-commerce-auth"
+bucket_name = "helix-commerce-auth"
 
 [[env.production.queues.producers]]
 queue = "helix-product-indexer-queue"
@@ -149,3 +170,5 @@ head_sampling_rate = 1
 
 # [secrets]
 # SUPERUSER_KEY
+# OTP_SECRET
+# JWT_SECRET

@@ -10,24 +10,40 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
-import { errorResponse } from '../../utils/http.js';
+import { assertSuperuser } from '../../../utils/auth.js';
+import { errorResponse } from '../../../utils/http.js';
 
 /**
+ * Get admin metadata for a specific email
  * @type {RouteHandler}
  */
 export default async function retrieve(ctx) {
-  const { requestInfo } = ctx;
-  const { siteKey } = requestInfo;
+  const {
+    env,
+    requestInfo: { org, site },
+  } = ctx;
 
-  await assertAuthorization(ctx);
+  // superuser only
+  await assertSuperuser(ctx);
 
-  const token = await ctx.env.KEYS.get(siteKey);
-  if (!token) {
-    return errorResponse(404);
+  const email = ctx.requestInfo.getVariable('email');
+  if (!email) {
+    return errorResponse(400, 'missing email');
   }
 
-  return new Response(JSON.stringify({ token }), {
+  const key = `${org}/${site}/admins/${email}`;
+  const obj = await env.AUTH_BUCKET.head(key);
+
+  if (!obj) {
+    return errorResponse(404, 'admin not found');
+  }
+
+  return new Response(JSON.stringify({
+    email,
+    dateAdded: obj.customMetadata?.dateAdded,
+    addedBy: obj.customMetadata?.addedBy,
+  }), {
+    status: 200,
     headers: {
       'Content-Type': 'application/json',
     },

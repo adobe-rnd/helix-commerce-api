@@ -1,0 +1,52 @@
+/*
+ * Copyright 2025 Adobe. All rights reserved.
+ * This file is licensed to you under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+import { assertSuperuser } from '../../../utils/auth.js';
+
+/**
+ * List all admins for a site
+ * @type {RouteHandler}
+ */
+export default async function list(ctx) {
+  const {
+    env,
+    requestInfo: { org, site },
+  } = ctx;
+
+  // superuser only
+  await assertSuperuser(ctx);
+
+  const prefix = `${org}/${site}/admins/`;
+  const result = await env.AUTH_BUCKET.list({
+    prefix,
+    limit: 1000,
+    // @ts-ignore not defined in types for some reason
+    include: ['customMetadata'],
+  });
+
+  const admins = result.objects.map((obj) => {
+    const email = obj.key.substring(prefix.length);
+    /** @type {AdminData} */
+    return {
+      email,
+      dateAdded: obj.customMetadata?.dateAdded,
+      addedBy: obj.customMetadata?.addedBy,
+    };
+  });
+
+  return new Response(JSON.stringify({ admins }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}

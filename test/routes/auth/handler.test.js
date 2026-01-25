@@ -31,7 +31,7 @@ describe('routes/auth handler tests', () => {
 
   it('should respond on valid route', async () => {
     const mocked = await esmock('../../../src/routes/auth/handler.js', {
-      '../../../src/routes/auth/retrieve.js': async () => ({ status: 200 }),
+      '../../../src/routes/auth/token/retrieve.js': async () => ({ status: 200 }),
     });
     const ctx = DEFAULT_CONTEXT({
       url: { pathname: '/org/site/auth/token' },

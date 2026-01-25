@@ -21,3 +21,22 @@ global.__testdir = resolve(fileURLToPath(import.meta.url), '..');
 // crypto is available since node 20
 // @ts-ignore
 global.crypto ??= webcrypto;
+
+// Polyfill crypto.subtle.timingSafeEqual for tests (Cloudflare Workers has this built-in)
+// @ts-ignore
+if (!crypto.subtle.timingSafeEqual) {
+  // @ts-ignore
+  crypto.subtle.timingSafeEqual = (a, b) => {
+    if (a.byteLength !== b.byteLength) {
+      return false;
+    }
+    const aView = new Uint8Array(a);
+    const bView = new Uint8Array(b);
+    let result = 0;
+    for (let i = 0; i < aView.length; i += 1) {
+      // eslint-disable-next-line no-bitwise
+      result |= aView[i] ^ bView[i];
+    }
+    return result === 0;
+  };
+}
