@@ -15,6 +15,7 @@ import Router, { nameSelector } from './utils/router/index.js';
 import { RequestInfo } from './utils/RequestInfo.js';
 import handlers from './routes/index.js';
 import logMetrics from './utils/metrics.js';
+import AuthInfo from './utils/AuthInfo.js';
 
 const router = new Router(nameSelector)
   .add('/:org/sites/:site/catalog/*', handlers.catalog)
@@ -121,6 +122,8 @@ export default {
 
       const { handler } = match;
       ctx.requestInfo = RequestInfo.fromRouterMatch(request, match);
+      // @ts-ignore
+      ctx.authInfo = await AuthInfo.create(ctx, request);
 
       let resp = await handler(ctx, request);
       resp = await applyCORSHeaders(resp);

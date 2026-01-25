@@ -15,7 +15,7 @@
 import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import { DEFAULT_CONTEXT, createAuthInfoMock } from '../../fixtures/context.js';
 import { createProductFixture } from '../../fixtures/product.js';
 
 describe('Product Bulk Save Tests', () => {
@@ -43,7 +43,9 @@ describe('Product Bulk Save Tests', () => {
 
   describe('handleProductSaveRequest (bulk)', () => {
     it('should return 405 if path is "/*" and method is not POST', async () => {
-      const ctx = DEFAULT_CONTEXT({}, { path: '/*' });
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
+      }, { path: '/*' });
       ctx.log = { error: sinon.stub() };
       ctx.requestInfo.method = 'PUT';
       const request = { json: sinon.stub().resolves([createProductFixture(), createProductFixture({ sku: '1234-2', path: '/products/test-2' })]) };
@@ -56,6 +58,7 @@ describe('Product Bulk Save Tests', () => {
 
     it('should return 400 if data is not an array', async () => {
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub() },
         data: { sku: '1234', path: '/products/test-product', name: 'product-name' },
         requestInfo: {
@@ -74,6 +77,7 @@ describe('Product Bulk Save Tests', () => {
     it('should return 400 if data exceeds max bulk size', async () => {
       const products = Array.from({ length: 51 }, (_, i) => ({ sku: `bulk-${i}`, path: `/products/bulk-${i}`, name: `Bulk ${i}` }));
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub() },
         requestInfo: {
           path: '/*',
@@ -95,6 +99,7 @@ describe('Product Bulk Save Tests', () => {
         { sku: '5678', path: '/products/product-2', name: 'product-name-2' },
       ];
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub(), info: sinon.stub() },
         requestInfo: {
           path: '/*',
@@ -122,6 +127,7 @@ describe('Product Bulk Save Tests', () => {
     it('should select async image processing when product list is large', async () => {
       const products = Array.from({ length: 11 }, (_, i) => ({ sku: `sku-${i}`, path: `/products/sku-${i}`, name: `Name ${i}` }));
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub(), info: sinon.stub() },
         requestInfo: {
           path: '/*',
@@ -158,6 +164,7 @@ describe('Product Bulk Save Tests', () => {
         { sku: '5678', name: 'product-name-2' }, // Missing path
       ];
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub(), info: sinon.stub() },
         requestInfo: {
           path: '/*',
@@ -180,6 +187,7 @@ describe('Product Bulk Save Tests', () => {
         { sku: '1234', path: '/products/product-1', name: 'product-name' },
       ];
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub(), info: sinon.stub() },
         requestInfo: {
           path: '/*',

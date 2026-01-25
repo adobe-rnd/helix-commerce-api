@@ -13,12 +13,13 @@
 // @ts-nocheck
 
 import assert from 'node:assert';
-import { DEFAULT_CONTEXT } from '../../../fixtures/context.js';
+import { DEFAULT_CONTEXT, createAuthInfoMock } from '../../../fixtures/context.js';
 import handler from '../../../../src/routes/auth/token/update.js';
 
 describe('routes/auth update tests', () => {
   it('should reject invalid token', async () => {
     const ctx = DEFAULT_CONTEXT({
+      authInfo: createAuthInfoMock(['service_token:write']),
       data: { token: null },
       env: {
         KEYS: {
@@ -34,6 +35,7 @@ describe('routes/auth update tests', () => {
 
   it('should update token', async () => {
     const ctx = DEFAULT_CONTEXT({
+      authInfo: createAuthInfoMock(['service_token:write']),
       data: { token: 'new-key' },
       env: {
         KEYS: {
@@ -51,6 +53,7 @@ describe('routes/auth update tests', () => {
 
   it('should handle errors during token put', async () => {
     const ctx = DEFAULT_CONTEXT({
+      authInfo: createAuthInfoMock(['service_token:write']),
       data: { token: 'new-key' },
       env: {
         KEYS: {

@@ -34,8 +34,8 @@ describe('routes/auth/admins list tests', () => {
     }
 
     assert.ok(error);
-    assert.equal(error.response.status, 404);
-    assert.equal(error.response.headers.get('x-error'), 'not found');
+    assert.equal(error.response.status, 403);
+    assert.ok(error.response.headers.get('x-error').includes('access denied'));
   });
 
   it('should return empty list when no admins exist', async () => {

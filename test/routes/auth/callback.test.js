@@ -551,7 +551,8 @@ describe('routes/auth callback tests', () => {
     const payload = JSON.parse(atob(parts[1]));
 
     assert.equal(payload.email, email);
-    assert.equal(payload.role, 'user', 'should have user role');
+    assert.ok(Array.isArray(payload.roles), 'should have roles array');
+    assert.deepEqual(payload.roles, ['user'], 'should have user role');
   });
 
   it('should assign "admin" role when user is an admin', async () => {
@@ -605,7 +606,8 @@ describe('routes/auth callback tests', () => {
     const payload = JSON.parse(atob(parts[1]));
 
     assert.equal(payload.email, email);
-    assert.equal(payload.role, 'admin', 'should have admin role');
+    assert.ok(Array.isArray(payload.roles), 'should have roles array');
+    assert.deepEqual(payload.roles, ['admin'], 'should have admin role');
   });
 
   it('should check admin status with correct key format', async () => {

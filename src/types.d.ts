@@ -7,6 +7,7 @@ import type {
 import type StorageClient from "./routes/products/StorageClient.js";
 import type Platform from "./routes/orders/payments/Platform.js";
 import * as SharedTypes from '@dylandepass/helix-product-shared/types';
+import type AuthInfo from "./utils/AuthInfo.js";
 
 declare global {
   export * as SharedTypes from '@dylandepass/helix-product-shared/types';
@@ -90,6 +91,7 @@ declare global {
       paymentPlatform?: Platform;
       [key: string]: any;
     }
+    authInfo: AuthInfo;
     executionContext: ExecutionContext;
   }
 
@@ -156,6 +158,15 @@ declare global {
     country: string;
     phone: string;
     email: string;
+  }
+
+  export interface DecodedJWT {
+    email: string;
+    roles: string[];
+    org: string;
+    site: string;
+    iat: number; // issued at
+    exp: number; // expires at
   }
 
   export interface AdminMetadata extends Record<string, string> {

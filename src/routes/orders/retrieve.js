@@ -11,7 +11,6 @@
  */
 
 import { errorResponse } from '../../utils/http.js';
-import { assertAuthorization } from '../../utils/auth.js';
 import StorageClient from '../../utils/StorageClient.js';
 
 /**
@@ -20,7 +19,7 @@ import StorageClient from '../../utils/StorageClient.js';
 export default async function retrieve(ctx) {
   const { requestInfo } = ctx;
   const { orderId } = requestInfo;
-  await assertAuthorization(ctx);
+  ctx.authInfo.assertPermissions('orders:read');
   const storage = StorageClient.fromContext(ctx);
   const order = await storage.getOrder(orderId);
   if (!order) {

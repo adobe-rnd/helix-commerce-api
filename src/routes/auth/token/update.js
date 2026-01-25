@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../../utils/auth.js';
 import { errorResponse, errorWithResponse } from '../../../utils/http.js';
 
 const generateToken = () => crypto.randomUUID().toUpperCase();
@@ -43,7 +42,7 @@ export default async function update(ctx) {
     return errorResponse(400, 'missing or invalid token');
   }
 
-  await assertAuthorization(ctx);
+  ctx.authInfo.assertPermissions('service_token:write');
 
   const token = await updateToken(ctx, data.token);
   return new Response(JSON.stringify({ token }), {

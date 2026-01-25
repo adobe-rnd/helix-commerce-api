@@ -13,7 +13,7 @@
 // @ts-nocheck
 
 import assert from 'node:assert';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import { DEFAULT_CONTEXT, createAuthInfoMock } from '../../fixtures/context.js';
 import handler from '../../../src/routes/orders/create.js';
 
 describe('routes/orders create tests', () => {
@@ -26,6 +26,7 @@ describe('routes/orders create tests', () => {
       saveAddress: false,
     };
     const ctx = DEFAULT_CONTEXT({
+      authInfo: createAuthInfoMock(['orders:write']),
       info: { method: 'POST' },
       url: { pathname: '/org/site/orders' },
       data: {

@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
 import StorageClient from '../../utils/StorageClient.js';
 import { errorResponse } from '../../utils/http.js';
 import { DIRECTORY_PATH_PATTERN } from '../../utils/validation.js';
@@ -173,12 +172,12 @@ export default async function handler(ctx) {
     return errorResponse(404, 'path is required');
   }
 
-  await assertAuthorization(ctx);
-
   switch (method) {
     case 'POST':
+      ctx.authInfo.assertPermissions('indices:write');
       return create(ctx);
     case 'DELETE':
+      ctx.authInfo.assertPermissions('indices:write');
       return remove(ctx);
     default:
       return errorResponse(405, 'method not allowed');

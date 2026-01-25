@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../../utils/auth.js';
 import { errorResponse } from '../../../utils/http.js';
 import { updateToken } from './update.js';
 
@@ -23,7 +22,7 @@ export default async function rotate(ctx) {
     return errorResponse(400, 'token can not be provided on rotate');
   }
 
-  await assertAuthorization(ctx);
+  ctx.authInfo.assertPermissions('service_token:write');
 
   const token = await updateToken(ctx);
   return new Response(JSON.stringify({ token }), {

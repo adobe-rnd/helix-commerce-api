@@ -35,11 +35,11 @@ async function getSecretKey(ctx) {
  *
  * @param {Context} ctx
  * @param {string} email
- * @param {string} [role='user']
+ * @param {string[]} [roles=['user']]
  * @param {string} [expiresIn='24h']
  * @returns {Promise<string>} JWT
  */
-export async function createToken(ctx, email, role = 'user', expiresIn = '24h') {
+export async function createToken(ctx, email, roles = ['user'], expiresIn = '24h') {
   const { requestInfo } = ctx;
   const { org, site } = requestInfo;
 
@@ -47,7 +47,7 @@ export async function createToken(ctx, email, role = 'user', expiresIn = '24h') 
 
   const token = await new SignJWT({
     email,
-    role,
+    roles,
     org,
     site,
   })
@@ -66,7 +66,7 @@ export async function createToken(ctx, email, role = 'user', expiresIn = '24h') 
  *
  * @param {Context} ctx
  * @param {string} token
- * @returns {Promise<{email: string, role: string, org: string, site: string}>} decoded payload
+ * @returns {Promise<DecodedJWT>} decoded payload
  */
 export async function verifyToken(ctx, token) {
   const key = await getSecretKey(ctx);
@@ -75,16 +75,18 @@ export async function verifyToken(ctx, token) {
     algorithms: ['HS256'],
   });
 
-  /** @type {{email: string, role: string, org: string, site: string}} */
+  /** @type {DecodedJWT} */
   return {
     // @ts-ignore
     email: payload.email,
     // @ts-ignore
-    role: payload.role,
+    roles: payload.roles,
     // @ts-ignore
     org: payload.org,
     // @ts-ignore
     site: payload.site,
+    iat: payload.iat,
+    exp: payload.exp,
   };
 }
 
@@ -106,8 +108,8 @@ export function extractToken(req) {
 
   // fallback to Authorization header
   const authHeader = req.headers.get('authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.slice(7);
+  if (authHeader?.toLowerCase().startsWith('bearer ')) {
+    return authHeader.slice('bearer '.length);
   }
 
   return null;

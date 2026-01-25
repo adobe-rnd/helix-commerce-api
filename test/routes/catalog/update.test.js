@@ -15,7 +15,7 @@
 import assert from 'node:assert';
 import sinon from 'sinon';
 import esmock from 'esmock';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import { DEFAULT_CONTEXT, createAuthInfoMock } from '../../fixtures/context.js';
 
 describe('Product Save Tests', () => {
   /** @type {sinon.SinonStub} */
@@ -42,7 +42,9 @@ describe('Product Save Tests', () => {
 
   describe('handleProductSaveRequest', () => {
     it('should return 405 if path is "/*" and method is not POST', async () => {
-      const ctx = DEFAULT_CONTEXT({}, { path: '/*' });
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
+      }, { path: '/*' });
       ctx.log = { error: sinon.stub() };
       ctx.requestInfo.method = 'PUT';
       const request = { json: sinon.stub().resolves({ sku: '1234', path: '/products/foo', name: 'foo' }) };
@@ -55,6 +57,7 @@ describe('Product Save Tests', () => {
 
     it('should return 201 when product is successfully saved and paths are purged', async () => {
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub(), info: sinon.stub() },
         data: { sku: '1234', path: '/products/test-product', name: 'product-name' },
         requestInfo: {
@@ -98,6 +101,7 @@ describe('Product Save Tests', () => {
       fetchHelixConfigStub.resolves(mockHelixConfig);
 
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub(), info: sinon.stub() },
         data: { sku: '1234', path: '/products/test-product', name: 'product-name' },
         requestInfo: {
@@ -131,6 +135,7 @@ describe('Product Save Tests', () => {
 
     it('should return 400 when path in body does not match URL path', async () => {
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub(), info: sinon.stub() },
         data: { sku: '1234', path: '/products/different-product', name: 'product-name' },
         requestInfo: {
@@ -149,6 +154,7 @@ describe('Product Save Tests', () => {
 
     it('should add path from URL when not present in body', async () => {
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         log: { error: sinon.stub(), info: sinon.stub() },
         data: { sku: '1234', name: 'product-name' }, // No path in body
         requestInfo: {

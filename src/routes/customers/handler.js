@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
 import handleAddresses from './addresses.js';
 import handleOrders from './orders.js';
 import { errorResponse } from '../../utils/http.js';
@@ -37,7 +36,7 @@ export default async function handler(ctx, req) {
 
   switch (ctx.requestInfo.method) {
     case 'POST': {
-      await assertAuthorization(ctx);
+      ctx.authInfo.assertPermissions('customers:write');
       if (!email) {
         // create customer
         return create(ctx, req);
@@ -45,9 +44,9 @@ export default async function handler(ctx, req) {
       return errorResponse(404, 'Not found');
     }
     case 'GET': {
-      await assertAuthorization(ctx);
       const storage = StorageClient.fromContext(ctx);
       if (!email) {
+        ctx.authInfo.assertPermissions('customers:read');
         // list customers
         const customers = await storage.listCustomers();
         return new Response(JSON.stringify({ customers }), {
@@ -59,6 +58,8 @@ export default async function handler(ctx, req) {
       }
 
       // get a customer
+      ctx.authInfo.assertPermissions('customers:read');
+      ctx.authInfo.assertEmail(email);
       const customer = await storage.getCustomer(email);
       if (!customer) {
         return errorResponse(404, 'Not found');
@@ -76,8 +77,7 @@ export default async function handler(ctx, req) {
       }
 
       // delete customer
-      // assert authorized
-      await assertAuthorization(ctx);
+      ctx.authInfo.assertPermissions('customers:write');
       const storage = StorageClient.fromContext(ctx);
       await storage.deleteCustomer(email);
       return new Response(JSON.stringify({ success: true }), {

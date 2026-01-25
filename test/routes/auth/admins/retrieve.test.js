@@ -16,7 +16,7 @@ import assert from 'node:assert';
 import { DEFAULT_CONTEXT, SUPERUSER_CONTEXT } from '../../../fixtures/context.js';
 import handler from '../../../../src/routes/auth/admins/retrieve.js';
 
-describe('routes/auth/admins get tests', () => {
+describe('routes/auth/admins retrieve tests', () => {
   it('should reject non-superuser requests', async () => {
     const ctx = DEFAULT_CONTEXT({
       requestInfo: {
@@ -37,8 +37,8 @@ describe('routes/auth/admins get tests', () => {
     }
 
     assert.ok(error);
-    assert.equal(error.response.status, 404);
-    assert.equal(error.response.headers.get('x-error'), 'not found');
+    assert.equal(error.response.status, 403);
+    assert.ok(error.response.headers.get('x-error').includes('access denied'));
   });
 
   it('should return 400 when email is missing', async () => {

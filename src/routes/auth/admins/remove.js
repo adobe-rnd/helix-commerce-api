@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertSuperuser } from '../../../utils/auth.js';
 import { errorResponse } from '../../../utils/http.js';
 
 /**
@@ -23,8 +22,7 @@ export default async function remove(ctx) {
     requestInfo: { org, site },
   } = ctx;
 
-  // superuser only
-  await assertSuperuser(ctx);
+  ctx.authInfo.assertPermissions('admins:write');
 
   const email = ctx.requestInfo.getVariable('email');
   if (!email) {

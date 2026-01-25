@@ -12,7 +12,6 @@
 
 import StorageClient from '../../utils/StorageClient.js';
 import { errorWithResponse } from '../../utils/http.js';
-import { assertAuthorization } from '../../utils/auth.js';
 import { validate } from '../../utils/validation.js';
 import OrderSchema from '../../schemas/Order.js';
 import { createAddress } from '../customers/addresses.js';
@@ -33,7 +32,8 @@ export function assertValidOrder(order) {
  * @type {RouteHandler}
  */
 export default async function create(ctx) {
-  await assertAuthorization(ctx);
+  ctx.authInfo.assertPermissions('orders:write');
+
   // validate payload
   assertValidOrder(ctx.data);
 

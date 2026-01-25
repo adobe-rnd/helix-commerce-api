@@ -20,7 +20,7 @@ import handler from '../../../src/routes/auth/logout.js';
 /**
  * Helper to create a valid JWT
  */
-async function createTestJWT(email, org, site, role = 'user', secret = 'test-jwt-secret') {
+async function createTestJWT(email, org, site, roles = ['user'], secret = 'test-jwt-secret') {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secret);
   const key = await crypto.subtle.importKey(
@@ -33,7 +33,7 @@ async function createTestJWT(email, org, site, role = 'user', secret = 'test-jwt
 
   return new SignJWT({
     email,
-    role,
+    roles,
     org,
     site,
   })
@@ -191,7 +191,7 @@ describe('routes/auth logout tests', () => {
     // Create an expired token (expired 1 hour ago)
     const expiredToken = await new SignJWT({
       email,
-      role: 'user',
+      roles: ['user'],
       org,
       site,
     })

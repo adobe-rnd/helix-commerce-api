@@ -11,7 +11,6 @@
  */
 
 import StorageClient from '../../utils/StorageClient.js';
-import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 
 /**
@@ -42,7 +41,7 @@ export default async function handler(ctx, req) {
 
       // list orders for customer
       // assert authorized
-      await assertAuthorization(ctx);
+      ctx.authInfo.assertPermissions('orders:read');
       const orders = await storage.listOrders(email);
       return new Response(JSON.stringify({ orders }), {
         status: 200,

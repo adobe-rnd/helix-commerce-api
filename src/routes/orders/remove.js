@@ -10,14 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
-
 /**
  * @type {RouteHandler}
  */
 // eslint-disable-next-line no-unused-vars
 export default async function remove(ctx) {
-  await assertAuthorization(ctx);
+  ctx.authInfo.assertPermissions('orders:write');
   return new Response('Not Implemented', {
     status: 501,
   });

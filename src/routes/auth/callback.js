@@ -288,18 +288,18 @@ export default async function callback(ctx) {
     return errorResponse(401, 'invalid code');
   }
 
-  // 7. get user role (TODO: support other roles)
+  // 7. get roles (TODO: support other roles)
   const { org, site } = requestInfo;
   const adminKey = `${org}/${site}/admins/${email}`;
   const isAdmin = await env.AUTH_BUCKET.head(adminKey);
-  const role = isAdmin ? 'admin' : 'user';
+  const roles = isAdmin ? ['admin'] : ['user'];
 
-  ctx.log.debug('User role determined', { email, role, isAdmin: !!isAdmin });
+  ctx.log.debug('User role determined', { email, roles, isAdmin: !!isAdmin });
 
   // 8. generate JWT
   let token;
   try {
-    token = await createToken(ctx, email, role, '24h');
+    token = await createToken(ctx, email, roles, '24h');
   } catch (error) {
     ctx.log.error('Failed to create token', { email, error: error.message });
     throw errorWithResponse(500, 'internal server error');
@@ -321,7 +321,7 @@ export default async function callback(ctx) {
   return new Response(JSON.stringify({
     success: true,
     email,
-    role,
+    roles,
     org,
     site,
   }), {

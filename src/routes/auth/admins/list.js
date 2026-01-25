@@ -10,8 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertSuperuser } from '../../../utils/auth.js';
-
 /**
  * List all admins for a site
  * @type {RouteHandler}
@@ -22,8 +20,7 @@ export default async function list(ctx) {
     requestInfo: { org, site },
   } = ctx;
 
-  // superuser only
-  await assertSuperuser(ctx);
+  ctx.authInfo.assertPermissions('admins:read');
 
   const prefix = `${org}/${site}/admins/`;
   const result = await env.AUTH_BUCKET.list({

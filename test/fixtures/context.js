@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import { errorWithResponse } from '../../src/utils/http.js';
+
 /**
  * @param {Partial<Context>} [overrides = {}]
  * @param {{
@@ -57,11 +59,29 @@ export const DEFAULT_CONTEXT = (
   // eslint-disable-next-line no-unused-vars
   const { requestInfo: _, ...otherOverrides } = overrides;
 
+  // Create default unauthenticated authInfo stub
+  const defaultAuthInfo = {
+    isSuperuser: () => false,
+    isAdmin: () => false,
+    issuedAt: () => undefined,
+    expiresAt: () => undefined,
+    isExpired: () => false,
+    assertRole: () => { throw errorWithResponse(403, 'access denied'); },
+    assertPermissions: (...permissions) => {
+      const perm = permissions[0] || 'unknown';
+      throw errorWithResponse(403, `access denied, lacking ${perm}`);
+    },
+    assertAuthenticated: () => { throw errorWithResponse(401, 'unauthorized'); },
+    assertEmail: () => { throw errorWithResponse(403, 'access denied'); },
+  };
+
   return {
     url: new URL(`${baseUrl}${path}`),
     log: console,
     // @ts-ignore
     requestInfo,
+    // @ts-ignore
+    authInfo: overrides.authInfo ?? defaultAuthInfo,
     ...otherOverrides,
     attributes: {
       key: 'test-key',
@@ -85,13 +105,75 @@ export const DEFAULT_CONTEXT = (
   };
 };
 
-export const SUPERUSER_CONTEXT = (overrides = {}) => DEFAULT_CONTEXT({
-  ...overrides,
-  attributes: {
-    key: 'su-test-key',
-    ...(overrides.attributes ?? {}),
-  },
-});
+/**
+ * Create an authInfo mock with specific permissions
+ *
+ * @param {string[]} permissions
+ * @returns {object}
+ */
+export const createAuthInfoMock = (permissions = []) => {
+  const permissionSet = new Set(permissions);
+  return {
+    isSuperuser: () => permissions.includes('admins:read') || permissions.includes('admins:write'),
+    isAdmin: () => permissions.includes('catalog:write') && permissions.includes('orders:write'),
+    issuedAt: () => Date.now() / 1000,
+    expiresAt: () => (Date.now() / 1000) + 86400,
+    isExpired: () => false,
+    assertRole: (role) => {
+      // Simple role check based on permissions
+      if (role === 'admin' && !permissions.includes('catalog:write')) {
+        throw errorWithResponse(403, 'access denied');
+      }
+      if (role === 'superuser' && !permissions.includes('admins:read')) {
+        throw errorWithResponse(403, 'access denied');
+      }
+    },
+    assertPermissions: (...perms) => {
+      for (const perm of perms) {
+        if (!permissionSet.has(perm)) {
+          throw errorWithResponse(403, `access denied, lacking ${perm}`);
+        }
+      }
+    },
+    assertAuthenticated: () => {
+      if (permissions.length === 0) {
+        throw errorWithResponse(401, 'unauthorized');
+      }
+    },
+    assertEmail: (email, allowAdmin = true) => {
+      if (allowAdmin && permissions.includes('catalog:write')) {
+        return; // Admin can access any email
+      }
+      throw errorWithResponse(403, 'access denied');
+    },
+  };
+};
+
+export const SUPERUSER_CONTEXT = (overrides = {}) => {
+  const superuserPermissions = [
+    'catalog:read',
+    'catalog:write',
+    'orders:read',
+    'orders:write',
+    'indices:read',
+    'indices:write',
+    'customers:read',
+    'customers:write',
+    'service_token:read',
+    'service_token:write',
+    'admins:read',
+    'admins:write',
+  ];
+
+  return DEFAULT_CONTEXT({
+    ...overrides,
+    authInfo: overrides.authInfo ?? createAuthInfoMock(superuserPermissions),
+    attributes: {
+      key: 'su-test-key',
+      ...(overrides.attributes ?? {}),
+    },
+  });
+};
 
 /**
  * @param {string} path
