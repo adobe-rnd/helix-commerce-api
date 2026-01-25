@@ -157,7 +157,7 @@ describe('routes/auth callback tests', () => {
             if (key.includes('/attempts/')) {
               attemptsPuts.push({ key, options });
               // Simulate successful PUT
-            } else if (key.includes('/revoked/')) {
+            } else if (key.includes('/revoked-codes/')) {
               revokedPuts.push({ key, options });
               // Simulate successful conditional PUT (hash not yet revoked)
             }
@@ -362,7 +362,7 @@ describe('routes/auth callback tests', () => {
                 etag: 'etag-1',
               };
             }
-            if (key.includes('/revoked/')) {
+            if (key.includes('/revoked-codes/')) {
               return null;
             }
             return null;
@@ -378,7 +378,7 @@ describe('routes/auth callback tests', () => {
                 throw error;
               }
               // Success
-            } else if (key.includes('/revoked/')) {
+            } else if (key.includes('/revoked-codes/')) {
               // Revoke hash
             }
           },
@@ -461,7 +461,7 @@ describe('routes/auth callback tests', () => {
           put: async (key) => {
             if (key.includes('/attempts/')) {
               // Increment attempts
-            } else if (key.includes('/revoked/')) {
+            } else if (key.includes('/revoked-codes/')) {
               // Simulate hash already revoked (conditional PUT fails)
               const error = new Error('Precondition failed');
               error.code = 'PRECONDITION_FAILED';
@@ -522,7 +522,7 @@ describe('routes/auth callback tests', () => {
             if (key.includes('/attempts/')) {
               return null;
             }
-            if (key.includes('/revoked/')) {
+            if (key.includes('/revoked-codes/')) {
               return null;
             }
             if (key.includes('/admins/')) {
@@ -571,7 +571,7 @@ describe('routes/auth callback tests', () => {
             if (key.includes('/attempts/')) {
               return null;
             }
-            if (key.includes('/revoked/')) {
+            if (key.includes('/revoked-codes/')) {
               return null;
             }
             if (key.includes('/admins/')) {
@@ -631,7 +631,7 @@ describe('routes/auth callback tests', () => {
             if (key.includes('/attempts/')) {
               return null;
             }
-            if (key.includes('/revoked/')) {
+            if (key.includes('/revoked-codes/')) {
               return null;
             }
             if (key.includes('/admins/')) {

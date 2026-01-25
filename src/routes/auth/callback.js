@@ -61,7 +61,7 @@ async function createOTPHash(email, code, exp, secret) {
  *
  * @param {string} a
  * @param {string} b
- * @returns {boolean}
+ * @returns {boolean} true if equal, false otherwise
  */
 function timingSafeEqual(a, b) {
   const encoder = new TextEncoder();
@@ -74,11 +74,7 @@ function timingSafeEqual(a, b) {
   }
 
   // @ts-ignore incorrect cloudflare workers types
-  if (!crypto.subtle.timingSafeEqual(aenc, benc)) {
-    return false;
-  }
-
-  return true;
+  return crypto.subtle.timingSafeEqual(aenc, benc);
 }
 
 /**
@@ -196,7 +192,7 @@ async function checkAndRevokeHash(ctx, hash) {
     requestInfo: { org, site },
   } = ctx;
 
-  const key = `${org}/${site}/revoked/${hash}`;
+  const key = `${org}/${site}/revoked-codes/${hash}`;
   try {
     await env.AUTH_BUCKET.put(key, '', {
       customMetadata: {

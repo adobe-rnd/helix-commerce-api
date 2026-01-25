@@ -20,7 +20,7 @@ import listAdmins from './admins/list.js';
 import retrieveAdmin from './admins/retrieve.js';
 import createAdmin from './admins/create.js';
 import removeAdmin from './admins/remove.js';
-// import logout from './logout.js';
+import logout from './logout.js';
 
 /**
  * @type {Record<string, Record<string, RouteHandler>>}
@@ -35,7 +35,7 @@ const handlers = {
     POST: login,
   },
   logout: {
-    // POST: logout,
+    POST: logout,
   },
   callback: {
     POST: callback,
