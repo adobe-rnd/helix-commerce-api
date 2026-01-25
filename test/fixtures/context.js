@@ -54,11 +54,13 @@ export const DEFAULT_CONTEXT = (
   };
 
   // Filter out requestInfo from overrides to avoid replacement
+  // eslint-disable-next-line no-unused-vars
   const { requestInfo: _, ...otherOverrides } = overrides;
 
   return {
     url: new URL(`${baseUrl}${path}`),
     log: console,
+    // @ts-ignore
     requestInfo,
     ...otherOverrides,
     attributes: {
