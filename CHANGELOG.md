@@ -1,3 +1,13 @@
+# [2.0.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.19.0...v2.0.0) (2026-01-26)
+
+
+* Merge pull request [#131](https://github.com/adobe-rnd/helix-commerce-api/issues/131) from adobe-rnd/fix-ver ([35e6fc9](https://github.com/adobe-rnd/helix-commerce-api/commit/35e6fc9b2190e7150f4bacb150485bd90fdb06fd))
+
+
+### BREAKING CHANGES
+
+* fix version
+
 # [1.19.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.18.0...v1.19.0) (2026-01-26)
 
 
