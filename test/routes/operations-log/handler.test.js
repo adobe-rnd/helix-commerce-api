@@ -27,13 +27,11 @@ describe('routes/operations-log handler tests', () => {
 
   it('should 404 on invalid data or action', async () => {
     const ctx = DEFAULT_CONTEXT({
-      url: { pathname: '/org/site/operations-log' },
-      config: {
+      requestInfo: {
         org: 'org',
         site: 'site',
-        route: 'operations-log',
+        method: 'POST',
       },
-      info: { method: 'POST' },
     });
     let resp = await handler(ctx);
     assert.equal(resp.status, 404);
@@ -46,13 +44,11 @@ describe('routes/operations-log handler tests', () => {
   it('should log on valid action', async () => {
     const calls = [];
     const ctx = DEFAULT_CONTEXT({
-      url: { pathname: '/org/site/operations-log' },
-      config: {
+      requestInfo: {
         org: 'org',
         site: 'site',
-        route: 'operations-log',
+        method: 'POST',
       },
-      info: { method: 'POST' },
       data: {
         action: 'add-to-cart',
         sku: 'test-sku',

@@ -22,7 +22,9 @@ const allowedActions = new Set([
  * @type {RouteHandler}
  */
 export default async function handler(ctx) {
-  if (ctx.info.method !== 'POST') {
+  const { requestInfo } = ctx;
+  const { method, org, site } = requestInfo;
+  if (method !== 'POST') {
     return errorResponse(404, 'Not found');
   }
 
@@ -36,8 +38,8 @@ export default async function handler(ctx) {
   }
 
   ctx.log.info({
-    org: ctx.config.org,
-    site: ctx.config.site,
+    org,
+    site,
     action,
     payload: ctx.data,
   });

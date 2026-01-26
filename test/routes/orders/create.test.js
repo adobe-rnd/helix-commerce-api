@@ -29,8 +29,6 @@ describe('routes/orders create tests', () => {
       info: { method: 'POST' },
       url: { pathname: '/org/site/orders' },
       data: {
-        storeCode: 'store1',
-        storeViewCode: 'view1',
         customer: {
           email: 'test@example.com',
           firstName: 'Test',
@@ -74,8 +72,6 @@ describe('routes/orders create tests', () => {
           },
           createOrder: async (data, platformType) => {
             called.createOrder = true;
-            assert.equal(data.storeCode, 'store1');
-            assert.equal(data.storeViewCode, 'view1');
             assert.equal(platformType, undefined);
             return {
               id: 'order1',
@@ -123,8 +119,6 @@ describe('routes/orders create tests', () => {
       assert.equal(body.order.createdAt, '2021-01-01T00:00:00.000Z');
       assert.equal(body.order.updatedAt, '2021-01-01T00:00:00.000Z');
       assert.equal(body.order.state, 'pending');
-      assert.equal(body.order.storeCode, 'store1');
-      assert.equal(body.order.storeViewCode, 'view1');
       assert.equal(body.order.items.length, 1);
       assert.equal(body.order.items[0].sku, 'sku1');
       assert.equal(body.order.items[0].quantity, 1);

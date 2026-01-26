@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import { PATH_PATTERN } from '../utils/validation.js';
+
 const MAX_JSON_LD_LENGTH = 128_000;
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
@@ -142,6 +144,11 @@ const ProductBusEntry = {
   type: 'object',
   properties: {
     sku: { type: 'string' },
+    path: {
+      type: 'string',
+      pattern: PATH_PATTERN,
+      maxLength: 900,
+    },
     urlKey: { type: 'string', 'not.pattern': /^[A-Z\s]+$/ },
     description: { type: 'string' },
     name: { type: 'string' },
@@ -192,7 +199,7 @@ const ProductBusEntry = {
       { type: 'array', items: MerchantFeedShipping },
     ],
   },
-  required: ['sku', 'name'],
+  required: ['sku', 'name', 'path'],
 };
 
 export default ProductBusEntry;

@@ -11,59 +11,40 @@
  */
 
 import { errorResponse } from '../../utils/http.js';
-import lookup from './lookup.js';
+import { PATH_PATTERN_WITH_JSON } from '../../utils/validation.js';
 import retrieve from './retrieve.js';
 import update from './update.js';
 import remove from './remove.js';
 
 /**
- * @type {Record<string, Record<string, RouteHandler>>}
- */
-const handlers = {
-  lookup: {
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/lookup?urlkey={urlkey}
-    GET: lookup,
-  },
-  products: {
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    GET: retrieve,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    PUT: update,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/*
-    POST: update,
-    // api:/{org}/{site}/catalog/{storeCode}/{viewCode}/products/{sku}.json
-    DELETE: remove,
-  },
-};
-
-/**
  * @type {RouteHandler}
  */
 export default async function handler(ctx, request) {
-  const {
-    config,
-    info: { method },
-  } = ctx;
-  const pathSegments = ctx.url.pathname.split('/').filter(Boolean);
-  const [storeCode, storeViewCode, subRoute, sku] = pathSegments.slice(3);
+  const { requestInfo } = ctx;
+  const { path, method } = requestInfo;
 
-  if (!Object.keys(handlers).includes(subRoute)
-    || (subRoute === 'products' && !sku)
-    || (subRoute === 'lookup' && sku)) {
-    return errorResponse(404, 'invalid path');
+  if (!path) {
+    return errorResponse(404, 'path is required');
   }
 
-  Object.assign(config, {
-    storeCode,
-    storeViewCode,
-    subRoute,
-    sku: sku && sku.endsWith('.json') ? sku.slice(0, -5) : sku,
-  });
-
-  const fn = handlers[subRoute]?.[method];
-  if (!fn) {
-    return errorResponse(405, 'method not allowed');
+  // Validate path format (skip validation for wildcard bulk operations)
+  if (path !== '/*' && !PATH_PATTERN_WITH_JSON.test(path)) {
+    return errorResponse(400, 'Invalid path format. Path must start with / and contain only lowercase letters, numbers, hyphens, and forward slashes');
   }
 
-  return fn(ctx, request);
+  switch (method) {
+    case 'GET':
+      return retrieve(ctx, request);
+    case 'POST':
+      if (path !== '/*') {
+        return errorResponse(400, 'POST only allowed for bulk operations at /*');
+      }
+      return update(ctx, request);
+    case 'PUT':
+      return update(ctx, request);
+    case 'DELETE':
+      return remove(ctx, request);
+    default:
+      return errorResponse(405, 'method not allowed');
+  }
 }

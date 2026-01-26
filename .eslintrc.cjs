@@ -13,6 +13,7 @@
 module.exports = {
   root: true,
   extends: '@adobe/helix',
+  ignorePatterns: ['dist/'],
   env: {
     serviceworker: true,
     browser: true, // e.g. for crypto

@@ -11,9 +11,22 @@
  */
 
 import { errorResponse } from './utils/http.js';
-import { resolveConfig } from './utils/config.js';
+import Router, { nameSelector } from './utils/router/index.js';
+import { RequestInfo } from './utils/RequestInfo.js';
 import handlers from './routes/index.js';
 import logMetrics from './utils/metrics.js';
+
+const router = new Router(nameSelector)
+  .add('/:org/sites/:site/catalog/*', handlers.catalog)
+  .add('/:org/sites/:site/auth/:subRoute', handlers.auth)
+  .add('/:org/sites/:site/orders/:orderId', handlers.orders)
+  .add('/:org/sites/:site/orders', handlers.orders)
+  .add('/:org/sites/:site/customers/:email/:subroute', handlers.customers)
+  .add('/:org/sites/:site/customers/:email', handlers.customers)
+  .add('/:org/sites/:site/customers', handlers.customers)
+  .add('/:org/sites/:site/cache', handlers.cache)
+  .add('/:org/sites/:site/index/*', handlers.indices)
+  .add('/:org/sites/:site/operations-log', handlers['operations-log']);
 
 /**
  * @param {import("@cloudflare/workers-types").Request} req
@@ -64,17 +77,6 @@ export async function makeContext(eCtx, req, env) {
     imageUploads: [],
     productUploadsMs: [],
   };
-
-  const filename = ctx.url.pathname.split('/').pop() ?? '';
-  ctx.info = {
-    filename,
-    method: req.method.toUpperCase(),
-    extension: filename.split('.').pop(),
-    headers: Object.fromEntries(
-      [...req.headers.entries()]
-        .map(([k, v]) => [k.toLowerCase(), v]),
-    ),
-  };
   ctx.data = await parseData(req);
   return ctx;
 }
@@ -110,14 +112,17 @@ export default {
     const ctx = await makeContext(eCtx, request, env);
 
     try {
-      ctx.config = await resolveConfig(ctx);
-      console.debug('resolved config: ', JSON.stringify(ctx.config, null, 2));
+      // Use router to match request and extract variables
+      const match = router.match(ctx.url.pathname);
 
-      const fn = handlers[ctx.config.route];
-      if (!fn) {
+      if (!match) {
         return errorResponse(404, 'route not found');
       }
-      let resp = await fn(ctx, request);
+
+      const { handler } = match;
+      ctx.requestInfo = RequestInfo.fromRouterMatch(request, match);
+
+      let resp = await handler(ctx, request);
       resp = await applyCORSHeaders(resp);
       return resp;
     } catch (e) {

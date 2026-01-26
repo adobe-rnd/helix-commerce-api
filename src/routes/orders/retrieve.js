@@ -18,9 +18,11 @@ import StorageClient from '../../utils/StorageClient.js';
  * @type {RouteHandler}
  */
 export default async function retrieve(ctx) {
+  const { requestInfo } = ctx;
+  const { orderId } = requestInfo;
   await assertAuthorization(ctx);
   const storage = StorageClient.fromContext(ctx);
-  const order = await storage.getOrder(ctx.config.orderId);
+  const order = await storage.getOrder(orderId);
   if (!order) {
     return errorResponse(404, 'Not found');
   }

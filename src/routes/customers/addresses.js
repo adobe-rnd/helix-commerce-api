@@ -62,10 +62,11 @@ async function retrieveAddress(ctx, email, addressId) {
  * @type {RouteHandler}
  */
 export default async function handler(ctx) {
-  const { email } = ctx.config;
+  const { requestInfo } = ctx;
+  const { email, method } = requestInfo;
   const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route', 'email', 'subroute'].length);
   const [addressId] = segments;
-  switch (ctx.info.method) {
+  switch (method) {
     case 'GET': {
       const address = await retrieveAddress(ctx, email, addressId);
       if (!address) {

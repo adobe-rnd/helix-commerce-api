@@ -54,8 +54,10 @@ export default function logMetrics(ctx) {
       const alreadyExistsCount = m.imageUploads?.filter((u) => u.alreadyExists).length || 0;
       const productUploads = summarize(m.productUploadsMs || []);
 
+      const { requestInfo } = ctx;
+      const { route } = requestInfo;
       const metricsSummary = {
-        route: ctx.config?.route,
+        route,
         elapsedTotalMs,
       };
       if (validation && validation.count) {

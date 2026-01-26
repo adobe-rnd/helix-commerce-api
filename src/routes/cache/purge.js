@@ -10,12 +10,11 @@
  * governing permissions and limitations under the License.
  */
 
-import { computeAuthoredContentKey, computeProductSkuKey, computeProductUrlKeyKey } from '@dylandepass/helix-product-shared';
+import { computeAuthoredContentKey, computeProductPathKey } from '@dylandepass/helix-product-shared';
 import { FastlyPurgeClient } from './clients/fastly.js';
 import { CloudflarePurgeClient } from './clients/cloudflare.js';
 import { ManagedPurgeClient } from './clients/managed.js';
 import { AkamaiPurgeClient } from './clients/akamai.js';
-import { resolveProductPath } from '../../utils/config.js';
 
 /**
  * Map of CDN type identifiers to their corresponding purge client implementations.
@@ -47,7 +46,7 @@ const PURGE_CLIENTS = {
  * @param {Array<string>} [params.keys] - Surrogate keys (cache tags) to purge
  * @throws {Error} If the CDN type is not supported
  */
-async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
+export async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
   const { type } = cdnConfig;
 
   if ((!keys || !keys.length)) {
@@ -71,9 +70,9 @@ async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
 }
 
 /**
- * Purges cached product data from the production CDN by SKU and/or URL key.
+ * Purges cached product data from the production CDN by path.
  *
- * This function computes surrogate keys for the given product identifiers and
+ * This function computes surrogate keys for the given product path and
  * optionally includes the authored content key if a contentBusId is configured.
  * It then triggers a purge of all matching cache entries across the configured
  * CDN provider. This is typically called after product updates to ensure cache
@@ -82,25 +81,18 @@ async function purgeProductionCDN(ctx, cdnConfig, { keys }) {
  * The function gracefully handles missing configurations by logging warnings and
  * skipping the purge operation.
  *
- * @param {Context} ctx - The request context with logging, config, and env
- * @param {string} [sku] - Product SKU to purge (optional)
- * @param {string} [urlKey] - Product URL key to purge (optional)
+ * @param {Context} ctx - The request context with logging and env
+ * @param {Readonly<import('../../utils/RequestInfo.js').RequestInfo>} requestInfo
+ * @param {string} path - Product path to purge (without .json extension)
  * @returns {Promise<void>}
  *
  * @example
- * // Purge by both SKU and URL key
- * await purge(ctx, 'PROD-123', 'awesome-product');
- *
- * @example
- * // Purge by SKU only
- * await purge(ctx, 'PROD-123', null);
+ * // Purge by path
+ * await purge(ctx, requestInfo, '/us/en/products/awesome-product');
  */
-export async function purge(ctx, sku, urlKey) {
+export async function purge(ctx, requestInfo, path) {
   const { log } = ctx;
-
-  const {
-    org, site, storeCode, storeViewCode,
-  } = ctx.config;
+  const { org, site } = requestInfo;
 
   const helixConfig = ctx.attributes.helixConfigCache;
   const cdnConfig = helixConfig?.cdn?.prod;
@@ -111,17 +103,11 @@ export async function purge(ctx, sku, urlKey) {
   }
 
   const keys = [];
-  if (sku) {
-    keys.push(await computeProductSkuKey(org, site, storeCode, storeViewCode, sku));
-  }
-  if (urlKey) {
-    keys.push(await computeProductUrlKeyKey(org, site, storeCode, storeViewCode, urlKey));
+  if (path) {
+    keys.push(await computeProductPathKey(org, site, path));
   }
 
   if (helixConfig?.content?.contentBusId) {
-    const path = resolveProductPath(helixConfig.public, {
-      sku, urlKey, storeCode, storeViewCode,
-    });
     if (path) {
       keys.push(await computeAuthoredContentKey(helixConfig.content.contentBusId, path));
     }
@@ -144,32 +130,26 @@ export async function purge(ctx, sku, urlKey) {
  * N separate CDN API requests.
  *
  * Each product entry should contain:
- * - sku: Product SKU
- * - urlKey: (optional) Product URL key
- * - storeCode: Store code
- * - storeViewCode: Store view code
+ * - path: Product path (without .json extension)
  *
  * The function automatically deduplicates cache keys and handles missing configurations
  * gracefully by logging warnings.
  *
- * @param {Context} ctx - The request context with logging and config
- * @param {Object} config - The site configuration (org, site)
- * @param {string} config.org - Organization identifier
- * @param {string} config.site - Site identifier
- * @param {Array<{sku: string, urlKey?: string, storeCode: string, storeViewCode: string}>} products
- *   Array of product objects to purge. Each product must have sku, storeCode, and storeViewCode.
- *   The urlKey is optional.
+ * @param {Context} ctx - The request context with logging
+ * @param {Readonly<import('../../utils/RequestInfo.js').RequestInfo>} requestInfo
+ * @param {Array<{path: string}>} products
+ *   Array of product objects to purge. Each product must have a path.
  * @returns {Promise<void>}
  *
  * @example
- * await purgeBatch(ctx, { org: 'myorg', site: 'mysite' }, [
- *   { sku: 'PROD-123', urlKey: 'product-123', storeCode: 'us', storeViewCode: 'en' },
- *   { sku: 'PROD-456', storeCode: 'us', storeViewCode: 'en' }
+ * await purgeBatch(ctx, requestInfo, [
+ *   { path: '/us/en/products/blender-pro-500' },
+ *   { path: '/us/en/products/mixer-deluxe' }
  * ]);
  */
-export async function purgeBatch(ctx, config, products) {
+export async function purgeBatch(ctx, requestInfo, products) {
   const { log } = ctx;
-  const { org, site } = config;
+  const { org, site } = requestInfo;
 
   const helixConfig = ctx.attributes.helixConfigCache;
   const cdnConfig = helixConfig?.cdn?.prod;
@@ -182,22 +162,12 @@ export async function purgeBatch(ctx, config, products) {
   // Collect all cache keys from all products
   const keyPromises = [];
   for (const product of products) {
-    const {
-      sku, urlKey, storeCode, storeViewCode,
-    } = product;
+    const { path } = product;
 
-    if (sku) {
-      keyPromises.push(computeProductSkuKey(org, site, storeCode, storeViewCode, sku));
-    }
-    if (urlKey) {
-      keyPromises.push(computeProductUrlKeyKey(org, site, storeCode, storeViewCode, urlKey));
-    }
+    if (path) {
+      keyPromises.push(computeProductPathKey(org, site, path));
 
-    if (helixConfig?.content?.contentBusId) {
-      const path = resolveProductPath(helixConfig.public, {
-        sku, urlKey, storeCode, storeViewCode,
-      });
-      if (path) {
+      if (helixConfig?.content?.contentBusId) {
         keyPromises.push(computeAuthoredContentKey(helixConfig.content.contentBusId, path));
       }
     }

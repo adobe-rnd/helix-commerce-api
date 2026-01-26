@@ -10,6 +10,10 @@
  * governing permissions and limitations under the License.
  */
 
+export declare const PATH_PATTERN: RegExp;
+export declare const PATH_PATTERN_WITH_JSON: RegExp;
+export declare const DIRECTORY_PATH_PATTERN: RegExp;
+
 export type FilterPrefixedKeys<TObj, TPrefix extends string> = {
   [K in keyof TObj as K extends `${TPrefix}${infer I}` ? never : K]: TObj[K]
 }
@@ -119,3 +123,15 @@ export interface ValidationError {
 }
 
 export declare function validate(obj: unknown, schema: AnySchema): ValidationError[] | undefined;
+
+/**
+ * Pattern for validating URL paths.
+ * Matches paths like /segment or /segment-with-dashes/another-segment
+ */
+export declare const PATH_PATTERN: RegExp;
+
+/**
+ * Path pattern with optional .json extension for URLs.
+ * Use this for validating URL paths that may include the .json extension.
+ */
+export declare const PATH_PATTERN_WITH_JSON: RegExp;

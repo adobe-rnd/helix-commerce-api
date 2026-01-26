@@ -111,10 +111,9 @@ describe('FastlyPurgeClient Tests', () => {
           info: sinon.stub(),
           error: sinon.stub(),
         },
-        config: {
-          siteKey: 'mysite',
-          storeCode: 'us',
-          storeViewCode: 'en',
+        requestInfo: {
+          org: 'test-org',
+          site: 'test-site',
         },
         attributes: {
           subRequestId: 0,
@@ -159,7 +158,7 @@ describe('FastlyPurgeClient Tests', () => {
       // Verify logging
       assert(ctx.log.info.calledTwice, 'Should log purge start and success');
       assert(ctx.log.info.firstCall.calledWith(sinon.match(/purging keys/)), 'Should log purge start');
-      assert(ctx.log.info.firstCall.calledWith(sinon.match(/mysite\/us\/en/)), 'Should include site ID');
+      assert(ctx.log.info.firstCall.calledWith(sinon.match(/test-org--test-site/)), 'Should include site ID');
       assert(ctx.log.info.firstCall.calledWith(sinon.match(/\[1\]/)), 'Should include request ID');
       assert(ctx.log.info.firstCall.calledWith(sinon.match(/fastly/)), 'Should include CDN type');
       assert(ctx.log.info.secondCall.calledWith(sinon.match(/succeeded/)), 'Should log success');
@@ -221,7 +220,7 @@ describe('FastlyPurgeClient Tests', () => {
       assert(ctx.log.error.calledOnce, 'Should log error');
       assert(ctx.log.error.firstCall.calledWith(sinon.match(/purging.*failed/)), 'Should log failure');
       assert(ctx.log.error.firstCall.calledWith(sinon.match(/403/)), 'Should include status code');
-      assert(ctx.log.error.firstCall.calledWith(sinon.match(/mysite\/us\/en/)), 'Should include site ID');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/test-org--test-site/)), 'Should include site ID');
     });
 
     it('should throw error when network request fails', async () => {
@@ -245,7 +244,7 @@ describe('FastlyPurgeClient Tests', () => {
       // Verify error logging
       assert(ctx.log.error.calledOnce, 'Should log error');
       assert(ctx.log.error.firstCall.calledWith(sinon.match(/failed/)), 'Should log failure');
-      assert(ctx.log.error.firstCall.calledWith(sinon.match(/mysite\/us\/en/)), 'Should include site ID');
+      assert(ctx.log.error.firstCall.calledWith(sinon.match(/test-org--test-site/)), 'Should include site ID');
     });
 
     it('should do nothing when keys array is empty', async () => {
@@ -279,7 +278,7 @@ describe('FastlyPurgeClient Tests', () => {
 
       // Verify logs include site identifier (siteKey/storeCode/storeViewCode)
       const logCalls = ctx.log.info.getCalls();
-      const hasCorrectSiteId = logCalls.some((call) => call.args[0].includes('mysite/us/en'));
+      const hasCorrectSiteId = logCalls.some((call) => call.args[0].includes('test-org--test-site'));
       assert(hasCorrectSiteId, 'Logs should include site identifier');
     });
 

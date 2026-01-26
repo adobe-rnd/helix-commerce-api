@@ -44,13 +44,11 @@ const Order = {
     // state: { type: 'string', enum: ['pending', 'processing', 'completed', 'cancelled'] },
 
     // provided by client
-    storeCode: { type: 'string' },
-    storeViewCode: { type: 'string' },
     customer: CustomerSchema,
     shipping: AddressSchema,
     items: { type: 'array', items: OrderItem },
   },
-  required: ['storeCode', 'storeViewCode', 'items', 'customer', 'shipping'],
+  required: ['items', 'customer', 'shipping'],
 };
 
 export default Order;

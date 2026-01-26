@@ -21,6 +21,7 @@ describe('schemas/ProductBus.shipping any-of', () => {
     return {
       sku: 'sku-1',
       name: 'Product',
+      path: '/products/test-product',
       ...overrides,
     };
   }

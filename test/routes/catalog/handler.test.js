@@ -19,18 +19,15 @@ import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
 
 describe('catalogHandler Tests', () => {
   let catalogHandler;
-  let handleProductLookupRequestStub;
   let handleProductRetrieveRequestStub;
   let handleProductSaveRequestStub;
   let handleProductRemoveRequestStub;
   beforeEach(async () => {
-    handleProductLookupRequestStub = sinon.stub();
     handleProductRetrieveRequestStub = sinon.stub();
     handleProductSaveRequestStub = sinon.stub();
     handleProductRemoveRequestStub = sinon.stub();
 
     catalogHandler = (await esmock('../../../src/routes/catalog/handler.js', {
-      '../../../src/routes/catalog/lookup.js': { default: handleProductLookupRequestStub },
       '../../../src/routes/catalog/retrieve.js': { default: handleProductRetrieveRequestStub },
       '../../../src/routes/catalog/update.js': { default: handleProductSaveRequestStub },
       '../../../src/routes/catalog/remove.js': { default: handleProductRemoveRequestStub },
@@ -41,40 +38,26 @@ describe('catalogHandler Tests', () => {
     sinon.restore();
   });
 
+  it('should return 404 when path is missing', async () => {
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        path: undefined,
+        method: 'GET',
+      },
+    });
+    const request = {};
+    const response = await catalogHandler(ctx, request);
+
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('x-error'), 'path is required');
+  });
+
   it('should return 405 when method is not allowed', async () => {
     const ctx = DEFAULT_CONTEXT({
-      info: { method: 'HEAD' },
-      url: { pathname: '/org/site/catalog/store/view/products/sku1' },
-      config: {},
-    });
-    const request = {};
-    const response = await catalogHandler(ctx, request);
-
-    assert.equal(response.status, 405);
-  });
-
-  it('should call handleProductLookupRequest when method is GET and subRoute is "lookup"', async () => {
-    const ctx = DEFAULT_CONTEXT({
-      info: { method: 'GET' },
-      url: { pathname: '/org/site/catalog/store/view/lookup' },
-      config: {},
-    });
-    const request = {};
-
-    const mockResponse = new Response(null, { status: 200 });
-    handleProductLookupRequestStub.returns(mockResponse);
-
-    const response = await catalogHandler(ctx, request);
-
-    assert.equal(response.status, 200);
-    assert(handleProductLookupRequestStub.calledOnceWith(ctx));
-  });
-
-  it('should return 405 if subRoute is "lookup" but method is not GET', async () => {
-    const ctx = DEFAULT_CONTEXT({
-      info: { method: 'PUT' },
-      url: { pathname: '/org/site/catalog/store/view/lookup' },
-      config: {},
+      requestInfo: {
+        path: '/products/test-product.json',
+        method: 'HEAD',
+      },
     });
     const request = {};
     const response = await catalogHandler(ctx, request);
@@ -84,9 +67,10 @@ describe('catalogHandler Tests', () => {
 
   it('should call handleProductSaveRequest when method is PUT', async () => {
     const ctx = DEFAULT_CONTEXT({
-      info: { method: 'PUT' },
-      url: { pathname: '/org/site/catalog/store/view/products/sku' },
-      config: {},
+      requestInfo: {
+        path: '/products/test-product.json',
+        method: 'PUT',
+      },
     });
     const request = {};
 
@@ -101,9 +85,10 @@ describe('catalogHandler Tests', () => {
 
   it('should call handleProductRetrieveRequestStub when method is GET', async () => {
     const ctx = DEFAULT_CONTEXT({
-      info: { method: 'GET' },
-      url: { pathname: '/org/site/catalog/store/view/products/sku' },
-      config: {},
+      requestInfo: {
+        path: '/products/test-product.json',
+        method: 'GET',
+      },
     });
     const request = {};
 
@@ -118,9 +103,10 @@ describe('catalogHandler Tests', () => {
 
   it('should call handleProductDeleteRequest when method is DELETE', async () => {
     const ctx = DEFAULT_CONTEXT({
-      info: { method: 'DELETE' },
-      url: { pathname: '/org/site/catalog/store/view/products/sku' },
-      config: {},
+      requestInfo: {
+        path: '/products/test-product.json',
+        method: 'DELETE',
+      },
     });
     const request = {};
 
@@ -131,5 +117,185 @@ describe('catalogHandler Tests', () => {
 
     assert.equal(response.status, 200);
     assert(handleProductRemoveRequestStub.calledOnceWith(ctx));
+  });
+
+  it('should return 400 when POST is used with non-/* path', async () => {
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        path: '/products/test-product.json',
+        method: 'POST',
+      },
+    });
+    const request = {};
+
+    const response = await catalogHandler(ctx, request);
+
+    assert.equal(response.status, 400);
+    assert.equal(response.headers.get('x-error'), 'POST only allowed for bulk operations at /*');
+  });
+
+  it('should call handleProductSaveRequest when POST is used with /* path', async () => {
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        path: '/*',
+        method: 'POST',
+      },
+    });
+    const request = {};
+
+    const mockResponse = new Response(null, { status: 201 });
+    handleProductSaveRequestStub.returns(mockResponse);
+
+    const response = await catalogHandler(ctx, request);
+
+    assert.equal(response.status, 201);
+    assert(handleProductSaveRequestStub.calledOnceWith(ctx, request));
+  });
+
+  describe('path validation', () => {
+    it('should reject path with directory traversal (/../)', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products/../admin/secrets.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+      assert(!handleProductRetrieveRequestStub.called, 'handler should not be called for invalid path');
+    });
+
+    it('should reject path with double slashes (//)', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products//test.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should reject path with single dot (/./ )', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products/./test.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should reject path with uppercase letters', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/Products/Test.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should reject path with special characters', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products/test@123.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should reject path not starting with /', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: 'products/test.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 400);
+      assert.match(response.headers.get('x-error'), /Invalid path format/);
+    });
+
+    it('should accept valid simple path', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/products/test-product-123.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const mockResponse = new Response(null, { status: 200 });
+      handleProductRetrieveRequestStub.returns(mockResponse);
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 200);
+      assert(handleProductRetrieveRequestStub.calledOnce);
+    });
+
+    it('should accept valid nested path', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/us/en/products/electronics/blender-pro-500.json',
+          method: 'GET',
+        },
+      });
+      const request = {};
+
+      const mockResponse = new Response(null, { status: 200 });
+      handleProductRetrieveRequestStub.returns(mockResponse);
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 200);
+      assert(handleProductRetrieveRequestStub.calledOnce);
+    });
+
+    it('should accept wildcard path for bulk operations', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        requestInfo: {
+          path: '/*',
+          method: 'POST',
+        },
+      });
+      const request = {};
+
+      const mockResponse = new Response(null, { status: 201 });
+      handleProductSaveRequestStub.returns(mockResponse);
+
+      const response = await catalogHandler(ctx, request);
+
+      assert.equal(response.status, 201);
+      assert(handleProductSaveRequestStub.calledOnce);
+    });
   });
 });
