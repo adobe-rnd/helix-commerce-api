@@ -1,3 +1,23 @@
+# [1.19.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.18.0...v1.19.0) (2026-01-26)
+
+
+### Bug Fixes
+
+* allow underscores in path for indexing ([#125](https://github.com/adobe-rnd/helix-commerce-api/issues/125)) ([9f1ba17](https://github.com/adobe-rnd/helix-commerce-api/commit/9f1ba173621377c271b189e58af4c1a30c4b150a))
+* allow underscores in path segments ([#124](https://github.com/adobe-rnd/helix-commerce-api/issues/124)) ([c8498d3](https://github.com/adobe-rnd/helix-commerce-api/commit/c8498d300ab8b9f39f517da24170b948db9ab8e8))
+* move to shared media handling ([e9bd899](https://github.com/adobe-rnd/helix-commerce-api/commit/e9bd899b45bfad60e58bc8dee28bef8dc8ae9381))
+* respond with validation errors in body ([884806e](https://github.com/adobe-rnd/helix-commerce-api/commit/884806e86d2c090c1fd6c0dc9db2907df99e2d90))
+* upgrade dep ([adcb28a](https://github.com/adobe-rnd/helix-commerce-api/commit/adcb28ab25c06ebf03735d6f1799634208d34613))
+* upgrade shared ([3e5eab1](https://github.com/adobe-rnd/helix-commerce-api/commit/3e5eab18896d7362df5c0eb6e00b19a52f5fdbb3))
+* use index registry ([a2fdb5a](https://github.com/adobe-rnd/helix-commerce-api/commit/a2fdb5a945a006b306d8bca872cd471ee8c4410b))
+* validation, tests ([e754efb](https://github.com/adobe-rnd/helix-commerce-api/commit/e754efb3f63156ba65924303f0918b229c45bdb2))
+
+
+### Features
+
+* create/delete index route ([bd11d39](https://github.com/adobe-rnd/helix-commerce-api/commit/bd11d396359821fcd50884c5151e30f6cee8080f))
+* Path-Based Product Storage ([#120](https://github.com/adobe-rnd/helix-commerce-api/issues/120)) ([5b5cd1a](https://github.com/adobe-rnd/helix-commerce-api/commit/5b5cd1a643bb9d0fbea4983e0f834e30f4db5036))
+
 # [1.18.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.17.0...v1.18.0) (2025-12-04)
 
 
