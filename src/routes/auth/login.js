@@ -91,7 +91,7 @@ export default async function login(ctx) {
   //   email, code, hash, exp,
   // });
 
-  return new Response(JSON.stringify({ hash, exp }), {
+  return new Response(JSON.stringify({ email, hash, exp }), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
