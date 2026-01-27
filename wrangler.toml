@@ -172,3 +172,4 @@ head_sampling_rate = 1
 # SUPERUSER_KEY
 # OTP_SECRET
 # JWT_SECRET
+# RESEND_API_KEY
