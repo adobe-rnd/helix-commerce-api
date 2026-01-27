@@ -62,6 +62,7 @@ declare global {
 
     // emails
     RESEND_API_KEY: string;
+    FROM_EMAIL: string;
 
     // KV namespaces
     KEYS: KVNamespace<string>;

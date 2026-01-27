@@ -53,7 +53,7 @@ export async function sendEmail(ctx, recipientEmail, subject, body) {
   const resend = new Resend(env.RESEND_API_KEY);
   const resp = await resend.emails.send({
     // from: 'noreply@adobecommerce.live',
-    from: 'onboarding@resend.dev',
+    from: env.FROM_EMAIL || 'onboarding@resend.dev',
     to: recipientEmail,
     subject,
     html: body,
