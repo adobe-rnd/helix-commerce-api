@@ -49,12 +49,17 @@ export async function sendEmail(ctx, recipientEmail, subject, body) {
     throw errorWithResponse(500, 'internal server error');
   }
 
+  // ctx.log.debug('sending email to', recipientEmail, env.RESEND_API_KEY);
   const resend = new Resend(env.RESEND_API_KEY);
-  resend.emails.send({
+  const resp = await resend.emails.send({
     // from: 'noreply@adobecommerce.live',
     from: 'onboarding@resend.dev',
     to: recipientEmail,
     subject,
     html: body,
   });
+  if (resp.error) {
+    ctx.log.error('error sending email', recipientEmail, resp.error);
+    throw errorWithResponse(500, 'internal server error');
+  }
 }
