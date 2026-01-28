@@ -20,6 +20,15 @@ import { config } from 'dotenv';
 import { OTP_SUBJECT } from '../src/routes/auth/login.js';
 import { createImapListener } from './fixtures/imap.js';
 
+// required env variables
+// POSTDEPLOY_SERVICE_TOKEN allows catalog APIs
+// IMAP_APP_PASSWORD allows login to IMAP for test users
+// TEST_USER_EMAIL email for test user (customer)
+// TEST_ADMIN_EMAIL email for test user (site admin)
+// CLOUDFLARE_ACCOUNT_ID for R2 storage
+// CLOUDFLARE_ACCESS_KEY_ID for R2 storage, access to helix-commerce-auth-dev R2 bucket
+// CLOUDFLARE_SECRET_ACCESS_KEY for R2 storage, access to helix-commerce-auth-dev R2 bucket
+
 config();
 
 /**
