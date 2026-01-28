@@ -26,7 +26,7 @@ describe('routes/orders create tests', () => {
       saveAddress: false,
     };
     const ctx = DEFAULT_CONTEXT({
-      authInfo: createAuthInfoMock(['orders:write']),
+      authInfo: createAuthInfoMock(['orders:write', 'customers:write'], 'test@example.com'),
       info: { method: 'POST' },
       url: { pathname: '/org/site/orders' },
       data: {

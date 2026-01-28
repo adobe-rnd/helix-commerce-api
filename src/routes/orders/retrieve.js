@@ -25,6 +25,8 @@ export default async function retrieve(ctx) {
   if (!order) {
     return errorResponse(404, 'Not found');
   }
+
+  ctx.authInfo.assertEmail(order.customer.email);
   return new Response(JSON.stringify({ order }), {
     status: 200,
     headers: {

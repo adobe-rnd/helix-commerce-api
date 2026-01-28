@@ -68,6 +68,7 @@ export default async function handler(ctx) {
   const [addressId] = segments;
   switch (method) {
     case 'GET': {
+      ctx.authInfo.assertEmail(email);
       const address = await retrieveAddress(ctx, email, addressId);
       if (!address) {
         return errorResponse(404, 'Not found');
@@ -86,6 +87,8 @@ export default async function handler(ctx) {
       }
 
       // else create
+      ctx.authInfo.assertEmail(email);
+
       assertValidAddress(ctx.data);
       const address = await createAddress(ctx, email, ctx.data);
       return new Response(JSON.stringify({ address }), {

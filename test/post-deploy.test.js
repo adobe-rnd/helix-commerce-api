@@ -234,7 +234,7 @@ describe('Post-Deploy Tests', () => {
     }).timeout(650000);
   });
 
-  describe.only('auth', () => {
+  describe('auth', () => {
     const apiPrefix = '/maxakuru/sites/productbus-test';
     const userEmail = process.env.TEST_USER_EMAIL;
     const adminEmail = process.env.TEST_ADMIN_EMAIL;

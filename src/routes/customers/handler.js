@@ -77,7 +77,7 @@ export default async function handler(ctx, req) {
       }
 
       // delete customer
-      ctx.authInfo.assertPermissions('customers:write');
+      ctx.authInfo.assertRole('admin');
       const storage = StorageClient.fromContext(ctx);
       await storage.deleteCustomer(email);
       return new Response(JSON.stringify({ success: true }), {

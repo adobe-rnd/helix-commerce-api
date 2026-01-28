@@ -109,9 +109,10 @@ export const DEFAULT_CONTEXT = (
  * Create an authInfo mock with specific permissions
  *
  * @param {string[]} permissions
+ * @param {string} [email] - Optional email for the authenticated user
  * @returns {object}
  */
-export const createAuthInfoMock = (permissions = []) => {
+export const createAuthInfoMock = (permissions = [], email = null) => {
   const permissionSet = new Set(permissions);
   return {
     isSuperuser: () => permissions.includes('admins:read') || permissions.includes('admins:write'),
@@ -140,9 +141,14 @@ export const createAuthInfoMock = (permissions = []) => {
         throw errorWithResponse(401, 'unauthorized');
       }
     },
-    assertEmail: (email, allowAdmin = true) => {
-      if (allowAdmin && permissions.includes('catalog:write')) {
-        return; // Admin can access any email
+    assertEmail: (targetEmail, allowAdmin = true) => {
+      // Allow if admin
+      if (allowAdmin && permissions.includes('catalog:write') && permissions.includes('orders:write')) {
+        return;
+      }
+      // Allow if email matches
+      if (email && email === targetEmail) {
+        return;
       }
       throw errorWithResponse(403, 'access denied');
     },
@@ -155,8 +161,8 @@ export const SUPERUSER_CONTEXT = (overrides = {}) => {
     'catalog:write',
     'orders:read',
     'orders:write',
-    'indices:read',
-    'indices:write',
+    'index:read',
+    'index:write',
     'customers:read',
     'customers:write',
     'service_token:read',
