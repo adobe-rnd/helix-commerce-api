@@ -17,6 +17,7 @@ import StorageClient from '../../utils/StorageClient.js';
  */
 export default async function list(ctx) {
   ctx.authInfo.assertPermissions('orders:read');
+  ctx.authInfo.assertRole('admin');
   const storage = StorageClient.fromContext(ctx);
   const orders = await storage.listOrders();
   return new Response(JSON.stringify({ orders }), {

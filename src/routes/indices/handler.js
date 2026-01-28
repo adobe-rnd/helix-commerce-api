@@ -174,10 +174,10 @@ export default async function handler(ctx) {
 
   switch (method) {
     case 'POST':
-      ctx.authInfo.assertPermissions('indices:write');
+      ctx.authInfo.assertPermissions('index:write');
       return create(ctx);
     case 'DELETE':
-      ctx.authInfo.assertPermissions('indices:write');
+      ctx.authInfo.assertPermissions('index:write');
       return remove(ctx);
     default:
       return errorResponse(405, 'method not allowed');

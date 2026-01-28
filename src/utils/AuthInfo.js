@@ -25,8 +25,8 @@ const PERMISSIONS = {
     'catalog:write',
     'orders:read',
     'orders:write',
-    'indices:read',
-    'indices:write',
+    'index:read',
+    'index:write',
     'customers:read',
     'customers:write',
     'service_token:read',
@@ -39,6 +39,10 @@ const PERMISSIONS = {
     'orders:read',
     'orders:write',
     'service_token:read',
+  ],
+  user: [
+    'orders:read',
+    'orders:write',
   ],
 };
 
@@ -114,6 +118,9 @@ export default class AuthInfo {
       if (SUPERUSERS.includes(email)) {
         auth.#roles.add('superuser');
       }
+      if (email) {
+        auth.#roles.add('user');
+      }
       auth.#applyPermissions(...auth.#roles);
       return auth;
     } catch (error) {
@@ -163,7 +170,7 @@ export default class AuthInfo {
   }
 
   isAdmin() {
-    return this.#roles.has('admin');
+    return this.#roles.has('admin') || this.isSuperuser();
   }
 
   /**

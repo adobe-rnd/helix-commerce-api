@@ -13,7 +13,16 @@
 import { errorResponse } from '../../utils/http.js';
 import { normalizeEmail, isValidEmail, sendEmail } from '../../utils/email.js';
 
-export const OTP_EXPIRATION_MS = 5 * 60 * 1000; // 5 minutes
+const OTP_EXPIRATION_MIN = 5;
+export const OTP_EXPIRATION_MS = OTP_EXPIRATION_MIN * 60 * 1000; // 5 minutes
+export const OTP_SUBJECT = 'Your login code';
+
+/**
+ * OTP body template
+ * @param {string} code
+ * @returns {string}
+ */
+const OTP_BODY_TEMPLATE = (code) => `Your login code is: ${code}\n\nThis code will expire in ${OTP_EXPIRATION_MIN} minutes.`;
 
 /**
  * Generate a random 6-digit OTP code, cryptographically secure
@@ -85,7 +94,7 @@ export default async function login(ctx) {
   const hash = await createOTPHash(email, code, exp, secret);
 
   // 3. send email with code (TODO: make the email template, send from the proper sender)
-  await sendEmail(ctx, email, 'Your login code', `Your login code is: ${code}\n\nThis code will expire in 5 minutes.`);
+  await sendEmail(ctx, email, OTP_SUBJECT, OTP_BODY_TEMPLATE(code));
 
   // ctx.log.debug('OTP login request', {
   //   email, code, hash, exp,

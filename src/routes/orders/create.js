@@ -39,6 +39,11 @@ export default async function create(ctx) {
 
   // validate customer, create if needed
   assertValidCustomer(ctx.data.customer);
+
+  // assert user auth'd with customer email (or admin)
+  ctx.authInfo.assertEmail(ctx.data.customer.email);
+
+  // create customer if needed
   await createCustomer(ctx, ctx.data.customer);
 
   // create internal order

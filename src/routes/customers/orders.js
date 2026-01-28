@@ -42,6 +42,7 @@ export default async function handler(ctx, req) {
       // list orders for customer
       // assert authorized
       ctx.authInfo.assertPermissions('orders:read');
+      ctx.authInfo.assertEmail(email);
       const orders = await storage.listOrders(email);
       return new Response(JSON.stringify({ orders }), {
         status: 200,
