@@ -20,8 +20,22 @@ export const OTP_EXPIRATION_MS = 5 * 60 * 1000; // 5 minutes
  * @returns {string}
  */
 function generateOTPCode() {
-  return crypto.getRandomValues(new Uint32Array(1)).toString().slice(-6);
-  // return Math.floor(100000 + Math.random() * 900000).toString();
+  const max = 999999;
+  const min = 100000;
+  const range = max - min + 1; // 900000
+
+  // Find largest multiple of range that fits in Uint32
+  const limit = Math.floor(0xFFFFFFFF / range) * range;
+
+  let value;
+  do {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    // eslint-disable-next-line prefer-destructuring
+    value = array[0];
+  } while (value >= limit); // Reject biased values
+
+  return String(min + (value % range));
 }
 
 /**
