@@ -32,7 +32,10 @@ export function assertValidOrder(order) {
  * @type {RouteHandler}
  */
 export default async function create(ctx) {
+  const { requestInfo } = ctx;
+  const { org, site } = requestInfo;
   ctx.authInfo.assertPermissions('orders:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   // validate payload
   assertValidOrder(ctx.data);

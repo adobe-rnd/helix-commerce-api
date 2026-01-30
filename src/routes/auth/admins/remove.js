@@ -23,6 +23,7 @@ export default async function remove(ctx) {
   } = ctx;
 
   ctx.authInfo.assertPermissions('admins:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const email = ctx.requestInfo.getVariable('email');
   if (!email) {

@@ -51,14 +51,16 @@ function generateOTPCode() {
  * Create HMAC hash for OTP verification
  *
  * @param {string} email
+ * @param {string} org
+ * @param {string} site
  * @param {string} code
  * @param {number} exp - expiration timestamp in milliseconds
  * @param {string} secret
  * @returns {Promise<string>} hex string hash
  */
-async function createOTPHash(email, code, exp, secret) {
+async function createOTPHash(email, org, site, code, exp, secret) {
   const encoder = new TextEncoder();
-  const data = encoder.encode(`${email}:${code}:${exp}`);
+  const data = encoder.encode(`${email}:${org}:${site}:${code}:${exp}`);
   const keyData = encoder.encode(secret);
 
   const key = await crypto.subtle.importKey(
@@ -79,7 +81,8 @@ async function createOTPHash(email, code, exp, secret) {
  * @type {RouteHandler}
  */
 export default async function login(ctx) {
-  const { data, env } = ctx;
+  const { data, env, requestInfo } = ctx;
+  const { org, site } = requestInfo;
 
   // never allow to proceed with undefined secrets
   if (!env.OTP_SECRET) {
@@ -105,7 +108,7 @@ export default async function login(ctx) {
   const code = generateOTPCode();
   const exp = Date.now() + OTP_EXPIRATION_MS;
   const secret = env.OTP_SECRET;
-  const hash = await createOTPHash(email, code, exp, secret);
+  const hash = await createOTPHash(email, org, site, code, exp, secret);
 
   // 3. send email with code (TODO: make the email template, send from the proper sender)
   await sendEmail(ctx, email, OTP_SUBJECT, OTP_BODY_TEMPLATE(code));

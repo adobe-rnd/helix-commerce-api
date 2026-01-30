@@ -19,9 +19,9 @@ import handler from '../../../src/routes/auth/callback.js';
 /**
  * Helper to create HMAC hash (duplicated from login.js for testing)
  */
-async function createOTPHash(email, code, exp, secret) {
+async function createOTPHash(email, org, site, code, exp, secret) {
   const encoder = new TextEncoder();
-  const data = encoder.encode(`${email}:${code}:${exp}`);
+  const data = encoder.encode(`${email}:${org}:${site}:${code}:${exp}`);
   const keyData = encoder.encode(secret);
 
   const key = await crypto.subtle.importKey(
@@ -42,6 +42,8 @@ describe('routes/auth callback tests', () => {
   const secret = 'test-secret';
   const jwtSecret = 'test-jwt-secret';
   const email = 'test@example.com';
+  const org = 'org';
+  const site = 'site';
 
   it('should return 500 if OTP_SECRET is missing', async () => {
     const ctx = DEFAULT_CONTEXT({
@@ -129,7 +131,7 @@ describe('routes/auth callback tests', () => {
   it('should succeed with valid code and hash', async () => {
     const code = '123456';
     const exp = Date.now() + 60000; // 1 minute from now
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     const attemptsPuts = [];
     const revokedPuts = [];
@@ -207,7 +209,7 @@ describe('routes/auth callback tests', () => {
     const code = '123456';
     const wrongCode = '999999';
     const exp = Date.now() + 60000;
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     const attemptsPuts = [];
 
@@ -247,7 +249,7 @@ describe('routes/auth callback tests', () => {
   it('should fail with 401 after exceeding attempts threshold', async () => {
     const code = '123456';
     const exp = Date.now() + 60000;
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     const attemptsPuts = [];
 
@@ -290,7 +292,7 @@ describe('routes/auth callback tests', () => {
   it('should handle parallel requests at threshold correctly', async () => {
     const code = '123456';
     const exp = Date.now() + 60000;
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     let headCalls = 0;
     let putCalls = 0;
@@ -334,7 +336,7 @@ describe('routes/auth callback tests', () => {
   it('should handle concurrent first attempts correctly', async () => {
     const code = '123456';
     const exp = Date.now() + 60000;
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     let headCalls = 0;
     let putCalls = 0;
@@ -409,7 +411,7 @@ describe('routes/auth callback tests', () => {
   it('should reject expired code', async () => {
     const code = '123456';
     const exp = Date.now() - 1000; // Expired 1 second ago
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     const attemptsPuts = [];
 
@@ -442,7 +444,7 @@ describe('routes/auth callback tests', () => {
   it('should reject already used hash', async () => {
     const code = '123456';
     const exp = Date.now() + 60000;
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     const ctx = DEFAULT_CONTEXT({
       data: {
@@ -482,7 +484,7 @@ describe('routes/auth callback tests', () => {
     const exp = Date.now() + 60000;
     const normalizedEmail = 'test@example.com';
     const inputEmail = '  TEST@EXAMPLE.COM  ';
-    const hash = await createOTPHash(normalizedEmail, code, exp, secret);
+    const hash = await createOTPHash(normalizedEmail, org, site, code, exp, secret);
 
     const ctx = DEFAULT_CONTEXT({
       data: {
@@ -508,7 +510,7 @@ describe('routes/auth callback tests', () => {
   it('should assign "user" role when user is not an admin', async () => {
     const code = '123456';
     const exp = Date.now() + 60000;
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     const ctx = DEFAULT_CONTEXT({
       data: {
@@ -558,7 +560,7 @@ describe('routes/auth callback tests', () => {
   it('should assign "admin" role when user is an admin', async () => {
     const code = '123456';
     const exp = Date.now() + 60000;
-    const hash = await createOTPHash(email, code, exp, secret);
+    const hash = await createOTPHash(email, org, site, code, exp, secret);
 
     const ctx = DEFAULT_CONTEXT({
       data: {
@@ -613,14 +615,16 @@ describe('routes/auth callback tests', () => {
   it('should check admin status with correct key format', async () => {
     const code = '123456';
     const exp = Date.now() + 60000;
-    const hash = await createOTPHash(email, code, exp, secret);
+    const testOrg = 'testorg';
+    const testSite = 'testsite';
+    const hash = await createOTPHash(email, testOrg, testSite, code, exp, secret);
 
     let adminKeyChecked;
 
     const ctx = DEFAULT_CONTEXT({
       requestInfo: {
-        org: 'testorg',
-        site: 'testsite',
+        org: testOrg,
+        site: testSite,
       },
       data: {
         email, code, hash, exp,
@@ -650,5 +654,116 @@ describe('routes/auth callback tests', () => {
 
     await handler(ctx);
     assert.equal(adminKeyChecked, 'testorg/testsite/admins/test@example.com');
+  });
+
+  it('should assign "superuser" role when user email is in SUPERUSERS list', async () => {
+    const superuserEmail = 'maxed@adobe.com'; // Email from SUPERUSERS list
+    const code = '123456';
+    const exp = Date.now() + 60000;
+    const hash = await createOTPHash(superuserEmail, org, site, code, exp, secret);
+
+    const ctx = DEFAULT_CONTEXT({
+      data: {
+        email: superuserEmail, code, hash, exp,
+      },
+      env: {
+        OTP_SECRET: secret,
+        JWT_SECRET: jwtSecret,
+        AUTH_BUCKET: {
+          head: async (key) => {
+            if (key.includes('/attempts/')) {
+              return null;
+            }
+            if (key.includes('/revoked-codes/')) {
+              return null;
+            }
+            if (key.includes('/admins/')) {
+              // Not an admin (testing superuser only)
+              return null;
+            }
+            return null;
+          },
+          put: async () => {},
+          delete: async () => {},
+        },
+      },
+    });
+
+    const resp = await handler(ctx);
+    assert.equal(resp.status, 200);
+
+    // Extract and decode the JWT from the cookie
+    const setCookie = resp.headers.get('Set-Cookie');
+    const tokenMatch = setCookie.match(/auth_token=([^;]+)/);
+    assert.ok(tokenMatch, 'should have auth_token in cookie');
+
+    const token = tokenMatch[1];
+    // Decode JWT payload (simple base64 decode of middle part)
+    const parts = token.split('.');
+    const payload = JSON.parse(atob(parts[1]));
+
+    assert.equal(payload.email, superuserEmail);
+    assert.ok(Array.isArray(payload.roles), 'should have roles array');
+    assert.ok(payload.roles.includes('user'), 'should have user role');
+    assert.ok(payload.roles.includes('superuser'), 'should have superuser role');
+    assert.deepEqual(payload.roles, ['user', 'superuser'], 'should have both user and superuser roles');
+  });
+
+  it('should assign both admin and superuser roles when user is both', async () => {
+    const superuserEmail = 'dyland@adobe.com'; // Email from SUPERUSERS list
+    const code = '123456';
+    const exp = Date.now() + 60000;
+    const hash = await createOTPHash(superuserEmail, org, site, code, exp, secret);
+
+    const ctx = DEFAULT_CONTEXT({
+      data: {
+        email: superuserEmail, code, hash, exp,
+      },
+      env: {
+        OTP_SECRET: secret,
+        JWT_SECRET: jwtSecret,
+        AUTH_BUCKET: {
+          head: async (key) => {
+            if (key.includes('/attempts/')) {
+              return null;
+            }
+            if (key.includes('/revoked-codes/')) {
+              return null;
+            }
+            if (key.includes('/admins/')) {
+              // User IS an admin
+              return {
+                customMetadata: {
+                  dateAdded: '2025-01-21T12:00:00Z',
+                  addedBy: '192.168.1.1',
+                },
+              };
+            }
+            return null;
+          },
+          put: async () => {},
+          delete: async () => {},
+        },
+      },
+    });
+
+    const resp = await handler(ctx);
+    assert.equal(resp.status, 200);
+
+    // Extract and decode the JWT from the cookie
+    const setCookie = resp.headers.get('Set-Cookie');
+    const tokenMatch = setCookie.match(/auth_token=([^;]+)/);
+    assert.ok(tokenMatch, 'should have auth_token in cookie');
+
+    const token = tokenMatch[1];
+    // Decode JWT payload (simple base64 decode of middle part)
+    const parts = token.split('.');
+    const payload = JSON.parse(atob(parts[1]));
+
+    assert.equal(payload.email, superuserEmail);
+    assert.ok(Array.isArray(payload.roles), 'should have roles array');
+    assert.ok(payload.roles.includes('admin'), 'should have admin role');
+    assert.ok(payload.roles.includes('superuser'), 'should have superuser role');
+    assert.deepEqual(payload.roles, ['admin', 'superuser'], 'should have both admin and superuser roles');
   });
 });

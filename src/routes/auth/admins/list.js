@@ -21,6 +21,7 @@ export default async function list(ctx) {
   } = ctx;
 
   ctx.authInfo.assertPermissions('admins:read');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const prefix = `${org}/${site}/admins/`;
   const result = await env.AUTH_BUCKET.list({

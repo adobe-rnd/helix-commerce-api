@@ -47,6 +47,7 @@ function createMockContext(authInfoOverrides = {}) {
     assertPermissions: () => { throw errorWithResponse(403, 'access denied'); },
     assertAuthenticated: () => { throw errorWithResponse(401, 'unauthorized'); },
     assertEmail: () => { throw errorWithResponse(403, 'access denied'); },
+    assertOrgSite: () => {}, // By default, allow same org/site
   };
 
   return {
@@ -97,6 +98,7 @@ function createMockContext(authInfoOverrides = {}) {
         saveCustomer: async (c) => c,
         deleteCustomer: async () => {},
         // @ts-ignore
+        // @ts-ignore
         saveAddress: async (id, email, addr) => ({ id, ...addr }),
         getAddress: async () => null,
         queryIndexExists: async () => false,
@@ -132,6 +134,7 @@ describe('Route Authorization Tests', () => {
         assertPermissions: (perm) => {
           if (perm !== 'catalog:write') throw errorWithResponse(403, 'access denied');
         },
+        assertOrgSite: () => {}, // Pass org/site check
       });
       authorizedCtx.data = { sku: 'TEST', name: 'Test', path: '/test' };
       authorizedCtx.requestInfo.path = '/test';
@@ -622,6 +625,186 @@ describe('Route Authorization Tests', () => {
       // @ts-ignore
       const response = await indicesHandler(authorizedCtx);
       assert.ok([204, 404].includes(response.status));
+    });
+  });
+
+  describe('Cross-Site Token Isolation', () => {
+    it('should reject token from different org/site for catalog operations', async () => {
+      // Create context with token for org-a/site-a trying to access org-b/site-b
+      const ctx = createMockContext({
+        assertPermissions: () => {}, // Has permission
+        assertOrgSite: (org, site) => {
+          if (org !== 'test-org' || site !== 'test-site') {
+            throw errorWithResponse(403, 'access denied');
+          }
+        },
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+      ctx.requestInfo.path = '/test-product';
+      ctx.data = { sku: 'TEST', name: 'Test', path: '/test-product' };
+
+      try {
+        // @ts-ignore
+        await catalogUpdate(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403, 'Should reject cross-site token');
+      }
+    });
+
+    it('should reject token from different org/site for order operations', async () => {
+      const ctx = createMockContext({
+        assertPermissions: () => {},
+        assertRole: () => {},
+        assertOrgSite: (org, site) => {
+          if (org !== 'test-org' || site !== 'test-site') {
+            throw errorWithResponse(403, 'access denied');
+          }
+        },
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+
+      try {
+        // @ts-ignore
+        await ordersList(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403, 'Should reject cross-site token');
+      }
+    });
+
+    it('should reject token from different org/site for customer operations', async () => {
+      const ctx = createMockContext({
+        assertPermissions: () => {},
+        assertOrgSite: (org, site) => {
+          if (org !== 'test-org' || site !== 'test-site') {
+            throw errorWithResponse(403, 'access denied');
+          }
+        },
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+      ctx.requestInfo.method = 'GET';
+      ctx.requestInfo.email = null;
+
+      try {
+        // @ts-ignore
+        await customersHandler(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403, 'Should reject cross-site token');
+      }
+    });
+
+    it('should reject token from different org/site for customer orders', async () => {
+      const ctx = createMockContext({
+        assertPermissions: () => {},
+        assertEmail: () => {},
+        assertOrgSite: (org, site) => {
+          if (org !== 'test-org' || site !== 'test-site') {
+            throw errorWithResponse(403, 'access denied');
+          }
+        },
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+      ctx.requestInfo.method = 'GET';
+      ctx.requestInfo.orderId = null;
+      ctx.requestInfo.getVariable = (name) => {
+        if (name === 'email') return 'test@example.com';
+        return null;
+      };
+
+      try {
+        // @ts-ignore
+        await customersOrders(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403, 'Should reject cross-site token');
+      }
+    });
+
+    it('should reject token from different org/site for service token operations', async () => {
+      const ctx = createMockContext({
+        assertPermissions: () => {},
+        assertOrgSite: (org, site) => {
+          if (org !== 'test-org' || site !== 'test-site') {
+            throw errorWithResponse(403, 'access denied');
+          }
+        },
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+
+      try {
+        // @ts-ignore
+        await tokenRetrieve(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403, 'Should reject cross-site token');
+      }
+    });
+
+    it('should reject token from different org/site for admin operations', async () => {
+      const ctx = createMockContext({
+        assertPermissions: () => {},
+        assertOrgSite: (org, site) => {
+          if (org !== 'test-org' || site !== 'test-site') {
+            throw errorWithResponse(403, 'access denied');
+          }
+        },
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+
+      try {
+        // @ts-ignore
+        await adminsList(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403, 'Should reject cross-site token');
+      }
+    });
+
+    it('should reject token from different org/site for index operations', async () => {
+      const ctx = createMockContext({
+        assertPermissions: () => {},
+        assertOrgSite: (org, site) => {
+          if (org !== 'test-org' || site !== 'test-site') {
+            throw errorWithResponse(403, 'access denied');
+          }
+        },
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+      ctx.requestInfo.method = 'POST';
+
+      try {
+        // @ts-ignore
+        await indicesHandler(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403, 'Should reject cross-site token');
+      }
+    });
+
+    it('should allow superuser to access any org/site', async () => {
+      // Superuser should be able to bypass org/site checks
+      const ctx = createMockContext({
+        isSuperuser: () => true,
+        assertPermissions: () => {},
+        assertOrgSite: () => {}, // Superuser passes this check
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+      ctx.requestInfo.path = '/test';
+      ctx.data = { sku: 'TEST', name: 'Test Product', path: '/test' };
+
+      // @ts-ignore
+      const response = await catalogUpdate(ctx);
+      assert.equal(response.status, 201, 'Superuser should access any org/site');
     });
   });
 });

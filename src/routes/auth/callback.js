@@ -17,6 +17,11 @@ import { OTP_EXPIRATION_MS } from './login.js';
 const MAX_ATTEMPTS = 3;
 const MAX_RETRIES = 3;
 const JWT_COOKIE_MAX_AGE = 24 * 60 * 60; // 24 hours
+const SUPERUSERS = {
+  'maxed@adobe.com': true,
+  'dyland@adobe.com': true,
+  'uncled@adobe.com': true,
+};
 
 /**
  * Normalize email address (lowercase, trim)
@@ -32,14 +37,16 @@ function normalizeEmail(email) {
  * Create HMAC hash for OTP verification
  *
  * @param {string} email
+ * @param {string} org
+ * @param {string} site
  * @param {string} code
  * @param {number} exp - expiration timestamp in milliseconds
  * @param {string} secret
  * @returns {Promise<string>} Hex-encoded hash
  */
-async function createOTPHash(email, code, exp, secret) {
+async function createOTPHash(email, org, site, code, exp, secret) {
   const encoder = new TextEncoder();
-  const data = encoder.encode(`${email}:${code}:${exp}`);
+  const data = encoder.encode(`${email}:${org}:${site}:${code}:${exp}`);
   const keyData = encoder.encode(secret);
 
   const key = await crypto.subtle.importKey(
@@ -217,6 +224,7 @@ async function checkAndRevokeHash(ctx, hash) {
  */
 export default async function callback(ctx) {
   const { data, env, requestInfo } = ctx;
+  const { org, site } = requestInfo;
 
   // never allow to proceed with undefined secrets
   if (!env.OTP_SECRET) {
@@ -269,7 +277,7 @@ export default async function callback(ctx) {
   const secret = env.OTP_SECRET;
   let recreatedHash;
   try {
-    recreatedHash = await createOTPHash(email, code, exp, secret);
+    recreatedHash = await createOTPHash(email, org, site, code, exp, secret);
   } catch (error) {
     ctx.log.error('Failed to recreate hash', { email, error: error.message });
     throw errorWithResponse(500, 'internal server error');
@@ -289,12 +297,16 @@ export default async function callback(ctx) {
   }
 
   // 7. get roles (TODO: support other roles)
-  const { org, site } = requestInfo;
   const adminKey = `${org}/${site}/admins/${email}`;
   const isAdmin = await env.AUTH_BUCKET.head(adminKey);
   const roles = isAdmin ? ['admin'] : ['user'];
 
-  ctx.log.debug('User role determined', { email, roles, isAdmin: !!isAdmin });
+  // add superuser role if granted
+  if (SUPERUSERS[email]) {
+    roles.push('superuser');
+  }
+
+  ctx.log.debug('User roles determined', { email, roles });
 
   // 8. generate JWT
   let token;

@@ -137,8 +137,11 @@ async function doUpdate(ctx, products) {
  */
 export default async function update(ctx) {
   const { requestInfo, data } = ctx;
-  const { path, method } = requestInfo;
+  const {
+    path, method, org, site,
+  } = requestInfo;
   ctx.authInfo.assertPermissions('catalog:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   // Handle bulk operations (POST with literal "*")
   if (path === '/*') {

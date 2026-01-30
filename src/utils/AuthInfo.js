@@ -13,8 +13,6 @@
 import { errorWithResponse } from './http.js';
 import { extractToken, verifyToken } from './jwt.js';
 
-const SUPERUSERS = ['maxed@adobe.com', 'dyland@adobe.com', 'uncled@adobe.com'];
-
 /**
  * @type {Record<string, string[]>}
  */
@@ -82,6 +80,16 @@ export default class AuthInfo {
   #exp;
 
   /**
+   * @type {string}
+   */
+  #org;
+
+  /**
+   * @type {string}
+   */
+  #site;
+
+  /**
    * @param {Context} ctx
    */
   constructor(ctx) {
@@ -107,6 +115,8 @@ export default class AuthInfo {
       const {
         email,
         roles,
+        org,
+        site,
         iat,
         exp,
       } = await verifyToken(ctx, token);
@@ -115,9 +125,8 @@ export default class AuthInfo {
       auth.#roles = new Set(roles);
       auth.#iat = iat;
       auth.#exp = exp;
-      if (SUPERUSERS.includes(email)) {
-        auth.#roles.add('superuser');
-      }
+      auth.#org = org;
+      auth.#site = site;
       if (email) {
         auth.#roles.add('user');
       }
@@ -195,6 +204,20 @@ export default class AuthInfo {
    */
   isExpired() {
     return !!(this.#exp && this.#exp < (Date.now() / 1000));
+  }
+
+  /**
+   * Assert that the user's profile is scoped to the given org and site
+   * @param {string} org
+   * @param {string} site
+   */
+  assertOrgSite(org, site) {
+    if (this.isSuperuser()) {
+      return;
+    }
+    if (this.#org !== org || this.#site !== site) {
+      throw errorWithResponse(403, 'access denied');
+    }
   }
 
   /**

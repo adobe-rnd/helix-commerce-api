@@ -17,9 +17,10 @@ import { errorResponse } from '../../../utils/http.js';
  */
 export default async function retrieve(ctx) {
   const { requestInfo } = ctx;
-  const { siteKey } = requestInfo;
+  const { siteKey, org, site } = requestInfo;
 
   ctx.authInfo.assertPermissions('service_token:read');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const token = await ctx.env.KEYS.get(siteKey);
   if (!token) {

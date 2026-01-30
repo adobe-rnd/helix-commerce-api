@@ -16,8 +16,11 @@ import StorageClient from '../../utils/StorageClient.js';
  * @type {RouteHandler}
  */
 export default async function list(ctx) {
+  const { requestInfo } = ctx;
+  const { org, site } = requestInfo;
   ctx.authInfo.assertPermissions('orders:read');
   ctx.authInfo.assertRole('admin');
+  ctx.authInfo.assertOrgSite(org, site);
   const storage = StorageClient.fromContext(ctx);
   const orders = await storage.listOrders();
   return new Response(JSON.stringify({ orders }), {

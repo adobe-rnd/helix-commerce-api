@@ -37,12 +37,14 @@ export async function updateToken(ctx, token = generateToken()) {
  * @type {RouteHandler}
  */
 export default async function update(ctx) {
-  const { data } = ctx;
+  const { data, requestInfo } = ctx;
+  const { org, site } = requestInfo;
   if (!data.token || typeof data.token !== 'string') {
     return errorResponse(400, 'missing or invalid token');
   }
 
   ctx.authInfo.assertPermissions('service_token:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const token = await updateToken(ctx, data.token);
   return new Response(JSON.stringify({ token }), {

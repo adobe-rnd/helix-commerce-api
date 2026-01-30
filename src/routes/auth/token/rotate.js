@@ -17,12 +17,14 @@ import { updateToken } from './update.js';
  * @type {RouteHandler}
  */
 export default async function rotate(ctx) {
-  const { data } = ctx;
+  const { data, requestInfo } = ctx;
+  const { org, site } = requestInfo;
   if (data.token) {
     return errorResponse(400, 'token can not be provided on rotate');
   }
 
   ctx.authInfo.assertPermissions('service_token:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const token = await updateToken(ctx);
   return new Response(JSON.stringify({ token }), {

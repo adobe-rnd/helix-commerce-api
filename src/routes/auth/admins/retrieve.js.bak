@@ -10,25 +10,37 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../../utils/http.js';
-import StorageClient from '../../utils/StorageClient.js';
+import { errorResponse } from '../../../utils/http.js';
 
 /**
+ * Get admin metadata for a specific email
  * @type {RouteHandler}
  */
 export default async function retrieve(ctx) {
-  const { requestInfo } = ctx;
-  const { orderId, org, site } = requestInfo;
-  ctx.authInfo.assertPermissions('orders:read');
-  ctx.authInfo.assertOrgSite(org, site);
-  const storage = StorageClient.fromContext(ctx);
-  const order = await storage.getOrder(orderId);
-  if (!order) {
-    return errorResponse(404, 'Not found');
+  const {
+    env,
+    requestInfo: { org, site },
+  } = ctx;
+
+  ctx.authInfo.assertPermissions('admins:read');
+
+  const email = ctx.requestInfo.getVariable('email');
+  if (!email) {
+    return errorResponse(400, 'missing email');
   }
 
-  ctx.authInfo.assertEmail(order.customer.email);
-  return new Response(JSON.stringify({ order }), {
+  const key = `${org}/${site}/admins/${email}`;
+  const obj = await env.AUTH_BUCKET.head(key);
+
+  if (!obj) {
+    return errorResponse(404, 'admin not found');
+  }
+
+  return new Response(JSON.stringify({
+    email,
+    dateAdded: obj.customMetadata?.dateAdded,
+    addedBy: obj.customMetadata?.addedBy,
+  }), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',

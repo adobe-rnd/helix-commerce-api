@@ -10,25 +10,40 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../../utils/http.js';
-import StorageClient from '../../utils/StorageClient.js';
+import { errorResponse } from '../../../utils/http.js';
 
 /**
+ * Remove an admin from a site
  * @type {RouteHandler}
  */
-export default async function retrieve(ctx) {
-  const { requestInfo } = ctx;
-  const { orderId, org, site } = requestInfo;
-  ctx.authInfo.assertPermissions('orders:read');
-  ctx.authInfo.assertOrgSite(org, site);
-  const storage = StorageClient.fromContext(ctx);
-  const order = await storage.getOrder(orderId);
-  if (!order) {
-    return errorResponse(404, 'Not found');
+export default async function remove(ctx) {
+  const {
+    env,
+    requestInfo: { org, site },
+  } = ctx;
+
+  ctx.authInfo.assertPermissions('admins:write');
+
+  const email = ctx.requestInfo.getVariable('email');
+  if (!email) {
+    return errorResponse(400, 'missing email');
   }
 
-  ctx.authInfo.assertEmail(order.customer.email);
-  return new Response(JSON.stringify({ order }), {
+  const key = `${org}/${site}/admins/${email}`;
+
+  // reject if not exist
+  const existing = await env.AUTH_BUCKET.head(key);
+  if (!existing) {
+    return errorResponse(404, 'admin not found');
+  }
+
+  // delete the admin file
+  await env.AUTH_BUCKET.delete(key);
+
+  return new Response(JSON.stringify({
+    email,
+    removed: true,
+  }), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',

@@ -23,6 +23,7 @@ export default async function retrieve(ctx) {
   } = ctx;
 
   ctx.authInfo.assertPermissions('admins:read');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const email = ctx.requestInfo.getVariable('email');
   if (!email) {

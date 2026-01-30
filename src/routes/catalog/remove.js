@@ -25,6 +25,7 @@ export default async function remove(ctx) {
   }
 
   ctx.authInfo.assertPermissions('catalog:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const storage = StorageClient.fromContext(ctx);
   const deleteResults = await storage.deleteProductsByPath([path]);

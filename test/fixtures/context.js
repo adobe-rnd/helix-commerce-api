@@ -73,6 +73,7 @@ export const DEFAULT_CONTEXT = (
     },
     assertAuthenticated: () => { throw errorWithResponse(401, 'unauthorized'); },
     assertEmail: () => { throw errorWithResponse(403, 'access denied'); },
+    assertOrgSite: () => {}, // Pass org/site check by default
   };
 
   return {
@@ -151,6 +152,10 @@ export const createAuthInfoMock = (permissions = [], email = null) => {
         return;
       }
       throw errorWithResponse(403, 'access denied');
+    },
+    assertOrgSite: (/* org, site */) => {
+      // By default, pass org/site checks in tests
+      // Individual tests can override this to test cross-site isolation
     },
   };
 };

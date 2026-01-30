@@ -100,8 +100,10 @@ describe('AuthInfo', () => {
       assert.equal(authInfo.isSuperuser(), false);
     });
 
-    it('should promote superuser email to superuser role', async () => {
-      const email = 'maxed@adobe.com'; // Hardcoded superuser
+    it('should not promote user based on email alone', async () => {
+      // Superuser promotion now happens in callback.js during login
+      // AuthInfo should only respect the roles in the JWT
+      const email = 'maxed@adobe.com'; // Email that's in SUPERUSERS list in callback.js
       const token = await createTestJWT(email, org, site, ['user'], jwtSecret);
       const req = new Request('https://example.com', {
         headers: { cookie: `auth_token=${token}` },
@@ -112,7 +114,8 @@ describe('AuthInfo', () => {
 
       const authInfo = await AuthInfo.create(ctx, req);
 
-      assert.equal(authInfo.isSuperuser(), true);
+      // Should not be superuser because roles array doesn't include it
+      assert.equal(authInfo.isSuperuser(), false);
     });
 
     it('should handle invalid JWT token gracefully', async () => {
@@ -241,7 +244,8 @@ describe('AuthInfo', () => {
 
     it('should grant superuser role all permissions', async () => {
       const email = 'maxed@adobe.com';
-      const token = await createTestJWT(email, org, site, ['user'], jwtSecret);
+      // Superuser role must be in the JWT (assigned during login by callback.js)
+      const token = await createTestJWT(email, org, site, ['user', 'superuser'], jwtSecret);
       const req = new Request('https://example.com', {
         headers: { cookie: `auth_token=${token}` },
       });

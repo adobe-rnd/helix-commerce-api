@@ -15,7 +15,10 @@
  */
 // eslint-disable-next-line no-unused-vars
 export default async function remove(ctx) {
+  const { requestInfo } = ctx;
+  const { org, site } = requestInfo;
   ctx.authInfo.assertPermissions('orders:write');
+  ctx.authInfo.assertOrgSite(org, site);
   return new Response('Not Implemented', {
     status: 501,
   });
