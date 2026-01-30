@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { normalizeEmail } from '../../utils/email.js';
 import { errorResponse, errorWithResponse } from '../../utils/http.js';
 import { createToken } from '../../utils/jwt.js';
 import { OTP_EXPIRATION_MS } from './login.js';
@@ -22,16 +23,6 @@ const SUPERUSERS = {
   'dyland@adobe.com': true,
   'uncled@adobe.com': true,
 };
-
-/**
- * Normalize email address (lowercase, trim)
- *
- * @param {string} email
- * @returns {string}
- */
-function normalizeEmail(email) {
-  return email.trim().toLowerCase();
-}
 
 /**
  * Create HMAC hash for OTP verification

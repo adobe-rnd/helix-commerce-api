@@ -25,10 +25,10 @@ export default async function logout(ctx, req) {
   // @ts-ignore
   const token = extractToken(req);
 
-  // 2. if it doesn't, still respond 201 and remove cookie
+  // 2. if it doesn't, still respond 204 and remove cookie
   if (!token) {
     return new Response(null, {
-      status: 201,
+      status: 204,
       headers: {
         'Set-Cookie': 'auth_token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict',
       },
@@ -62,7 +62,7 @@ export default async function logout(ctx, req) {
   }
 
   return new Response(null, {
-    status: 201,
+    status: 204,
     headers: {
       'Set-Cookie': 'auth_token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict',
     },
