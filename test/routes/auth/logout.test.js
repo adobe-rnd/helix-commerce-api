@@ -63,7 +63,7 @@ describe('routes/auth logout tests', () => {
     });
 
     const resp = await handler(ctx, req);
-    assert.equal(resp.status, 201);
+    assert.equal(resp.status, 204);
 
     const setCookie = resp.headers.get('Set-Cookie');
     assert.ok(setCookie, 'should set cookie');
@@ -71,7 +71,7 @@ describe('routes/auth logout tests', () => {
     assert.ok(setCookie.includes('Max-Age=0'), 'should expire cookie');
   });
 
-  it('should return 201 and remove cookie when token is present in cookie', async () => {
+  it('should return 204 and remove cookie when token is present in cookie', async () => {
     const token = await createTestJWT(email, org, site, 'user', jwtSecret);
     let revokedKey = null;
 
@@ -96,7 +96,7 @@ describe('routes/auth logout tests', () => {
     });
 
     const resp = await handler(ctx, req);
-    assert.equal(resp.status, 201);
+    assert.equal(resp.status, 204);
 
     // Check cookie was removed
     const setCookie = resp.headers.get('Set-Cookie');
@@ -108,7 +108,7 @@ describe('routes/auth logout tests', () => {
     assert.ok(revokedKey.includes(token));
   });
 
-  it('should return 201 and remove cookie when token is present in Authorization header', async () => {
+  it('should return 204 and remove cookie when token is present in Authorization header', async () => {
     const token = await createTestJWT(email, org, site, 'user', jwtSecret);
     let revokedKey = null;
 
@@ -133,7 +133,7 @@ describe('routes/auth logout tests', () => {
     });
 
     const resp = await handler(ctx, req);
-    assert.equal(resp.status, 201);
+    assert.equal(resp.status, 204);
 
     // Check cookie was removed
     const setCookie = resp.headers.get('Set-Cookie');
@@ -144,7 +144,7 @@ describe('routes/auth logout tests', () => {
     assert.ok(revokedKey.includes('/revoked-tokens/'));
   });
 
-  it('should return 201 and remove cookie when token is invalid', async () => {
+  it('should return 204 and remove cookie when token is invalid', async () => {
     const invalidToken = 'invalid.token.here';
     let putCalled = false;
 
@@ -167,7 +167,7 @@ describe('routes/auth logout tests', () => {
     });
 
     const resp = await handler(ctx, req);
-    assert.equal(resp.status, 201);
+    assert.equal(resp.status, 204);
 
     // Check cookie was removed
     const setCookie = resp.headers.get('Set-Cookie');
@@ -177,7 +177,7 @@ describe('routes/auth logout tests', () => {
     assert.equal(putCalled, false, 'should not revoke invalid token');
   });
 
-  it('should return 201 and remove cookie when token is expired', async () => {
+  it('should return 204 and remove cookie when token is expired', async () => {
     const encoder = new TextEncoder();
     const keyData = encoder.encode(jwtSecret);
     const key = await crypto.subtle.importKey(
@@ -222,7 +222,7 @@ describe('routes/auth logout tests', () => {
     });
 
     const resp = await handler(ctx, req);
-    assert.equal(resp.status, 201);
+    assert.equal(resp.status, 204);
 
     // Check cookie was removed
     const setCookie = resp.headers.get('Set-Cookie');
@@ -284,7 +284,7 @@ describe('routes/auth logout tests', () => {
     });
 
     const resp = await handler(ctx, req);
-    assert.equal(resp.status, 201);
+    assert.equal(resp.status, 204);
 
     // Cookie should still be removed even if revocation fails
     const setCookie = resp.headers.get('Set-Cookie');
