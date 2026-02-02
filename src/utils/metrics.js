@@ -54,7 +54,7 @@ export default function logMetrics(ctx) {
       const alreadyExistsCount = m.imageUploads?.filter((u) => u.alreadyExists).length || 0;
       const productUploads = summarize(m.productUploadsMs || []);
 
-      const { requestInfo } = ctx;
+      const { requestInfo = { route: 'unknown' } } = ctx;
       const { route } = requestInfo;
       const metricsSummary = {
         route,
