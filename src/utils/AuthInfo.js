@@ -163,6 +163,8 @@ export default class AuthInfo {
         if (expected && timingSafeEqual(token, expected)) {
           auth.#roles.add('service');
           auth.#email = 'service';
+          auth.#org = ctx.requestInfo.org;
+          auth.#site = ctx.requestInfo.site;
           auth.#applyPermissions('service');
         }
       }
