@@ -55,7 +55,7 @@ export default function logMetrics(ctx) {
       const productUploads = summarize(m.productUploadsMs || []);
 
       const { requestInfo } = ctx;
-      const { route } = requestInfo;
+      const route = requestInfo?.route;
       const metricsSummary = {
         route,
         elapsedTotalMs,
