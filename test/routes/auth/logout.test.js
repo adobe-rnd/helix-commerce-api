@@ -104,7 +104,7 @@ describe('routes/auth logout tests', () => {
 
     // Check token was revoked
     assert.ok(revokedKey, 'should revoke token');
-    assert.ok(revokedKey.includes('/revoked-tokens/'));
+    assert.ok(revokedKey.includes('/revoked/tokens/'));
     assert.ok(revokedKey.includes(token));
   });
 
@@ -141,7 +141,7 @@ describe('routes/auth logout tests', () => {
 
     // Check token was revoked
     assert.ok(revokedKey, 'should revoke token');
-    assert.ok(revokedKey.includes('/revoked-tokens/'));
+    assert.ok(revokedKey.includes('/revoked/tokens/'));
   });
 
   it('should return 204 and remove cookie when token is invalid', async () => {
@@ -259,7 +259,7 @@ describe('routes/auth logout tests', () => {
 
     await handler(ctx, req);
 
-    assert.equal(capturedKey, `myorg/mysite/revoked-tokens/${token}`);
+    assert.equal(capturedKey, `myorg/mysite/revoked/tokens/${token}`);
   });
 
   it('should handle AUTH_BUCKET.put failure gracefully', async () => {

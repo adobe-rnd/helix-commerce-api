@@ -95,7 +95,7 @@ export function generateOTPCode() {
 export async function isTokenRevoked(ctx, token) {
   const { env, requestInfo } = ctx;
   const { org, site } = requestInfo;
-  const key = `${org}/${site}/revoked-tokens/${token}`;
+  const key = `${org}/${site}/revoked/tokens/${token}`;
   const revoked = await env.AUTH_BUCKET.head(key);
   return !!revoked;
 }
@@ -109,7 +109,7 @@ export async function revokeToken(ctx, token) {
   const { env, requestInfo } = ctx;
   const { org, site } = requestInfo;
 
-  const key = `${org}/${site}/revoked-tokens/${token}`;
+  const key = `${org}/${site}/revoked/tokens/${token}`;
   try {
     await env.AUTH_BUCKET.put(key, '', {
       customMetadata: {

@@ -140,7 +140,7 @@ async function checkAndRevokeHash(ctx, hash) {
     requestInfo: { org, site },
   } = ctx;
 
-  const key = `${org}/${site}/revoked-codes/${hash}`;
+  const key = `${org}/${site}/revoked/codes/${hash}`;
   try {
     await env.AUTH_BUCKET.put(key, '', {
       customMetadata: {
