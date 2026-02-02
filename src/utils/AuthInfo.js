@@ -12,6 +12,7 @@
 
 import { errorWithResponse } from './http.js';
 import { extractToken, verifyToken } from './jwt.js';
+import { isTokenRevoked, timingSafeEqual } from './auth.js';
 
 /**
  * @type {Record<string, string[]>}
@@ -120,6 +121,11 @@ export default class AuthInfo {
         iat,
         exp,
       } = await verifyToken(ctx, token);
+      // check if token is revoked
+      const revoked = await isTokenRevoked(ctx, token);
+      if (revoked) {
+        throw errorWithResponse(401, 'token revoked');
+      }
       const auth = new AuthInfo(ctx);
       auth.#email = email;
       auth.#roles = new Set(roles);
@@ -139,7 +145,7 @@ export default class AuthInfo {
 
       // fallback to service token, check if superuser or org-site scoped
       // TODO: remove this
-      if (ctx.env.SUPERUSER_KEY && token === ctx.env.SUPERUSER_KEY) {
+      if (ctx.env.SUPERUSER_KEY && timingSafeEqual(token, ctx.env.SUPERUSER_KEY)) {
         auth.#roles.add('superuser');
       }
 
@@ -147,7 +153,7 @@ export default class AuthInfo {
       // check if it's the matching org-site scoped token
       if (ctx.requestInfo?.siteKey && token.match(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i)) {
         const expected = await ctx.env.KEYS.get(ctx.requestInfo.siteKey);
-        if (expected && token === expected) {
+        if (expected && timingSafeEqual(token, expected)) {
           auth.#roles.add('service');
           auth.#email = 'service';
           auth.#applyPermissions('service');

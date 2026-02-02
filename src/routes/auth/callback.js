@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { createOTPHash, hashEmail, timingSafeEqual } from '../../utils/auth.js';
 import { normalizeEmail } from '../../utils/email.js';
 import { errorResponse, errorWithResponse } from '../../utils/http.js';
 import { createToken } from '../../utils/jwt.js';
@@ -19,61 +20,10 @@ const MAX_ATTEMPTS = 3;
 const MAX_RETRIES = 3;
 const JWT_COOKIE_MAX_AGE = 24 * 60 * 60; // 24 hours
 const SUPERUSERS = {
-  'maxed@adobe.com': true,
-  'dyland@adobe.com': true,
-  'uncled@adobe.com': true,
+  'c2W3+N2djuh2qGa9D3eDDYBTI+Ipc8fQDDpsJLbHAmI=': true,
+  '8VpnHjBsIcPxD1boSKHYpnXEF1sPFwWE8VTRgqIHJws=': true,
+  'fyLIe7Ajj+m+YJQuIoFqoTPNeJLdpL4d2qRVnKqGaps=': true,
 };
-
-/**
- * Create HMAC hash for OTP verification
- *
- * @param {string} email
- * @param {string} org
- * @param {string} site
- * @param {string} code
- * @param {number} exp - expiration timestamp in milliseconds
- * @param {string} secret
- * @returns {Promise<string>} Hex-encoded hash
- */
-async function createOTPHash(email, org, site, code, exp, secret) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(`${email}:${org}:${site}:${code}:${exp}`);
-  const keyData = encoder.encode(secret);
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-
-  const signature = await crypto.subtle.sign('HMAC', key, data);
-  const hashArray = Array.from(new Uint8Array(signature));
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-}
-
-/**
- * Constant-time string comparison
- *
- * @param {string} a
- * @param {string} b
- * @returns {boolean} true if equal, false otherwise
- */
-function timingSafeEqual(a, b) {
-  const encoder = new TextEncoder();
-
-  const aenc = encoder.encode(a);
-  const benc = encoder.encode(b);
-
-  if (aenc.byteLength !== benc.byteLength) {
-    return false;
-  }
-
-  // @ts-ignore incorrect cloudflare workers types
-  return crypto.subtle.timingSafeEqual(aenc, benc);
-}
 
 /**
  * Increment attempts counter with retry logic for concurrency
@@ -293,7 +243,8 @@ export default async function callback(ctx) {
   const roles = isAdmin ? ['admin'] : ['user'];
 
   // add superuser role if granted
-  if (SUPERUSERS[email]) {
+  const emailHash = await hashEmail(email);
+  if (SUPERUSERS[emailHash]) {
     roles.push('superuser');
   }
 

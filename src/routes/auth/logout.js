@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { revokeToken } from '../../utils/auth.js';
 import { extractToken, verifyToken } from '../../utils/jwt.js';
 
 /**
@@ -18,9 +19,6 @@ import { extractToken, verifyToken } from '../../utils/jwt.js';
  * @type {RouteHandler}
  */
 export default async function logout(ctx, req) {
-  const { requestInfo, env } = ctx;
-  const { org, site } = requestInfo;
-
   // 1. check if auth_token cookie or bearer token exists
   // @ts-ignore
   const token = extractToken(req);
@@ -47,17 +45,11 @@ export default async function logout(ctx, req) {
 
   // 4. if it's valid, revoke the token
   if (isValid) {
-    const key = `${org}/${site}/revoked-tokens/${token}`;
     try {
-      await env.AUTH_BUCKET.put(key, '', {
-        customMetadata: {
-          revokedAt: new Date().toISOString(),
-        },
-      });
-      ctx.log.debug('Token revoked', { token: token.substring(0, 20) });
+      await revokeToken(ctx, token);
     } catch (error) {
-      ctx.log.error('Failed to revoke token', { error: error.message });
-      // continue to remove cookie even if revocation fails
+      // Log revocation failure but still complete logout
+      ctx.log.error('Token revocation failed during logout', { error: error.message });
     }
   }
 

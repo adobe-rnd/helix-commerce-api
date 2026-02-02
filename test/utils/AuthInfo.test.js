@@ -53,7 +53,7 @@ describe('AuthInfo', () => {
     it('should create unauthenticated AuthInfo when no token provided', async () => {
       const req = new Request('https://example.com');
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -72,7 +72,12 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async () => null, // Token not revoked
+          },
+        },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -91,7 +96,12 @@ describe('AuthInfo', () => {
         headers: { authorization: `Bearer ${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async () => null, // Token not revoked
+          },
+        },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -109,7 +119,12 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async () => null, // Token not revoked
+          },
+        },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -123,7 +138,7 @@ describe('AuthInfo', () => {
         headers: { cookie: 'auth_token=invalid.token.here' },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -186,7 +201,12 @@ describe('AuthInfo', () => {
         headers: { authorization: `BEARER ${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async () => null, // Token not revoked
+          },
+        },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -204,7 +224,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -220,7 +240,12 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async () => null, // Token not revoked
+          },
+        },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -250,7 +275,12 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async () => null, // Token not revoked
+          },
+        },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -313,7 +343,12 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async () => null, // Token not revoked
+          },
+        },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -331,7 +366,12 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async () => null, // Token not revoked
+          },
+        },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -343,7 +383,7 @@ describe('AuthInfo', () => {
     it('should reject role check for unauthenticated user', async () => {
       const req = new Request('https://example.com');
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -360,7 +400,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -371,7 +411,7 @@ describe('AuthInfo', () => {
     it('should fail for unauthenticated user', async () => {
       const req = new Request('https://example.com');
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -417,7 +457,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -432,7 +472,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -447,7 +487,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -462,7 +502,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -477,7 +517,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -494,7 +534,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${token}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -505,7 +545,7 @@ describe('AuthInfo', () => {
     it('should return false for unauthenticated user', async () => {
       const req = new Request('https://example.com');
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       const authInfo = await AuthInfo.create(ctx, req);
@@ -542,7 +582,7 @@ describe('AuthInfo', () => {
         headers: { cookie: `auth_token=${expiredToken}` },
       });
       const ctx = DEFAULT_CONTEXT({
-        env: { JWT_SECRET: jwtSecret },
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
       });
 
       // The expired token will be rejected during create,

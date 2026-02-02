@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { generateOTPCode, createOTPHash } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 import { normalizeEmail, isValidEmail, sendEmail } from '../../utils/email.js';
 
@@ -23,59 +24,6 @@ export const OTP_SUBJECT = 'Your login code';
  * @returns {string}
  */
 const OTP_BODY_TEMPLATE = (code) => `Your login code is: ${code}\n\nThis code will expire in ${OTP_EXPIRATION_MIN} minutes.`;
-
-/**
- * Generate a random 6-digit OTP code, cryptographically secure
- * @returns {string}
- */
-function generateOTPCode() {
-  const max = 999999;
-  const min = 100000;
-  const range = max - min + 1; // 900000
-
-  // Find largest multiple of range that fits in Uint32
-  const limit = Math.floor(0xFFFFFFFF / range) * range;
-
-  let value;
-  do {
-    const array = new Uint32Array(1);
-    crypto.getRandomValues(array);
-    // eslint-disable-next-line prefer-destructuring
-    value = array[0];
-  } while (value >= limit); // Reject biased values
-
-  return String(min + (value % range));
-}
-
-/**
- * Create HMAC hash for OTP verification
- *
- * @param {string} email
- * @param {string} org
- * @param {string} site
- * @param {string} code
- * @param {number} exp - expiration timestamp in milliseconds
- * @param {string} secret
- * @returns {Promise<string>} hex string hash
- */
-async function createOTPHash(email, org, site, code, exp, secret) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(`${email}:${org}:${site}:${code}:${exp}`);
-  const keyData = encoder.encode(secret);
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-
-  const signature = await crypto.subtle.sign('HMAC', key, data);
-  const hashArray = Array.from(new Uint8Array(signature));
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-}
 
 /**
  * @type {RouteHandler}
