@@ -98,6 +98,13 @@ export default class AuthInfo {
   }
 
   /**
+   * @returns {string|undefined}
+   */
+  get email() {
+    return this.#email;
+  }
+
+  /**
    * Create a new Authorization instance from a request
    *
    * @param {Context} ctx

@@ -42,6 +42,7 @@ describe('routes/auth login tests', () => {
       env: {
         JWT_SECRET: jwtSecret,
         // OTP_SECRET missing
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     const resp = await handler(ctx);
@@ -55,6 +56,7 @@ describe('routes/auth login tests', () => {
       env: {
         OTP_SECRET: otpSecret,
         // JWT_SECRET missing
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     const resp = await handler(ctx);
@@ -69,6 +71,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         RESEND_API_KEY: resendApiKey,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     const resp = await handler(ctx);
@@ -102,6 +105,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         // RESEND_API_KEY missing
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     let error;
@@ -122,6 +126,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         RESEND_API_KEY: resendApiKey,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     const resp = await handler(ctx);
@@ -136,6 +141,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         RESEND_API_KEY: resendApiKey,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     const resp = await handler(ctx);
@@ -153,6 +159,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         RESEND_API_KEY: resendApiKey,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     const resp = await handler(ctx);
@@ -179,6 +186,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         RESEND_API_KEY: resendApiKey,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     const ctx2 = DEFAULT_CONTEXT({
@@ -187,6 +195,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         RESEND_API_KEY: resendApiKey,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
 
@@ -209,6 +218,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         RESEND_API_KEY: resendApiKey,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
     const resp = await handler(ctx);
@@ -242,6 +252,7 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
         RESEND_API_KEY: resendApiKey,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       },
     });
 

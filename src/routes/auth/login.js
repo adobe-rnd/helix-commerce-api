@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { generateOTPCode, createOTPHash } from '../../utils/auth.js';
+import { generateOTPCode, createOTPHash, siteFileExists } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 import { normalizeEmail, isValidEmail, sendEmail } from '../../utils/email.js';
 
@@ -40,6 +40,12 @@ export default async function login(ctx) {
   if (!env.JWT_SECRET) {
     ctx.log.error('JWT secret is not set');
     return errorResponse(500, 'internal server error');
+  }
+
+  // 0. check if auth enabled for org/site
+  const enabled = await siteFileExists(ctx, org, site);
+  if (!enabled) {
+    return errorResponse(409, 'auth is not enabled for this site');
   }
 
   // 1. validate inputs
