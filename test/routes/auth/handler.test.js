@@ -52,7 +52,7 @@ describe('routes/auth handler tests', () => {
           site: 'testsite',
           method: 'PUT',
           getVariable: (name) => {
-            if (name === 'subRoute') return 'auth';
+            if (name === 'subRoute') return null; // No subRoute for PUT /auth
             return null;
           },
         },
@@ -85,7 +85,7 @@ describe('routes/auth handler tests', () => {
           site: 'testsite',
           method: 'PUT',
           getVariable: (name) => {
-            if (name === 'subRoute') return 'auth';
+            if (name === 'subRoute') return null; // No subRoute for PUT /auth
             return null;
           },
         },
@@ -127,7 +127,7 @@ describe('routes/auth handler tests', () => {
           site: 'testsite',
           method: 'PUT',
           getVariable: (name) => {
-            if (name === 'subRoute') return 'auth';
+            if (name === 'subRoute') return null; // No subRoute for PUT /auth
             return null;
           },
         },
@@ -168,7 +168,7 @@ describe('routes/auth handler tests', () => {
           site: 'testsite',
           method: 'PUT',
           getVariable: (name) => {
-            if (name === 'subRoute') return 'auth';
+            if (name === 'subRoute') return null; // No subRoute for PUT /auth
             return null;
           },
         },

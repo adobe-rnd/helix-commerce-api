@@ -65,7 +65,7 @@ export default async function handler(ctx, req) {
   // create a sitefile in <AUTH_BUCKET/sites/{org}/{site}
   // this is used to track which sites have auth enabled
 
-  if (method === 'PUT' && subRoute === 'auth' && ctx.authInfo.isSuperuser()) {
+  if (method === 'PUT' && !subRoute && ctx.authInfo.isSuperuser()) {
     const { org, site } = requestInfo;
     const key = `sites/${org}/${site}`;
 
