@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.0.0...v2.0.1) (2026-02-02)
+
+
+### Bug Fixes
+
+* tweak logMetrics ([#123](https://github.com/adobe-rnd/helix-commerce-api/issues/123)) ([8509793](https://github.com/adobe-rnd/helix-commerce-api/commit/850979355f234e469a34228063e30f257ea65e84))
+
 # [2.0.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.19.0...v2.0.0) (2026-01-26)
 
 
