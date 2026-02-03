@@ -145,7 +145,7 @@ async function checkAndRevokeHash(ctx, hash) {
     await env.AUTH_BUCKET.put(key, '', {
       customMetadata: {
         revokedAt: new Date().toISOString(),
-        expiresAt: String(Date.now() + OTP_EXPIRATION_MS + 5 * 60 * 1000), // 5 min buffer
+        expiresAt: String(Date.now() + OTP_EXPIRATION_MS + (5 * 60 * 1000)), // 5 min buffer
       },
       onlyIf: {
         etagDoesNotMatch: '*',

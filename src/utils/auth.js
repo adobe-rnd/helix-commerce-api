@@ -12,6 +12,8 @@
 
 import { errorWithResponse } from './http.js';
 
+const REVOKED_TOKEN_EXPIRATION_MS = 86400000; // 1 day
+
 /**
  * Constant-time string comparison
  *
@@ -114,6 +116,7 @@ export async function revokeToken(ctx, token) {
     await env.AUTH_BUCKET.put(key, '', {
       customMetadata: {
         revokedAt: new Date().toISOString(),
+        expiresAt: String(Date.now() + REVOKED_TOKEN_EXPIRATION_MS),
       },
     });
     ctx.log.debug('Token revoked', { token: token.substring(0, 20) });
