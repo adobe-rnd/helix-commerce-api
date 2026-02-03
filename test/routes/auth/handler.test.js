@@ -115,8 +115,8 @@ describe('routes/auth handler tests', () => {
       assert.ok(putMetadata.createdAt, 'Should have createdAt metadata');
       assert.equal(putMetadata.createdBy, 'superuser@example.com', 'Should have createdBy metadata');
 
-      // Response should be 404 as there's no handler for PUT /auth beyond sitefile creation
-      assert.equal(resp.status, 404);
+      // Response should be 201 as sitefile was created
+      assert.equal(resp.status, 201);
     });
 
     it('should return 409 if sitefile already exists', async () => {

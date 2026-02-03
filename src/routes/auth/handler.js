@@ -81,6 +81,9 @@ export default async function handler(ctx, req) {
         createdBy: ctx.authInfo.email || 'unknown',
       },
     });
+    return new Response('', {
+      status: 201,
+    });
   }
 
   const fn = handlers[subRoute]?.[method];
