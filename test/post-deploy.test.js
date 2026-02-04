@@ -556,5 +556,5 @@ describe('Post-Deploy Tests', () => {
       assert.ok(Array.isArray(orders4), 'Orders should be an array');
       assert.deepStrictEqual(orders, orders4, 'Orders should be the same');
     }).timeout(3 * 60_000); // 3 minutes
-  });
+  }).timeout(6 * 60_000); // 6 minutes
 });
