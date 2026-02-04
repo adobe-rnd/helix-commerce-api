@@ -96,7 +96,7 @@ declare global {
     attributes: {
       storageClient?: StorageClient;
       paymentPlatform?: Platform;
-      configs: Record<string, ProductBusSiteConfig | null>;
+      configs: Record<string, ProductBusConfig | null>;
       [key: string]: any;
     }
     authInfo: AuthInfo;
