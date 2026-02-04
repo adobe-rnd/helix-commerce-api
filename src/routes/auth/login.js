@@ -10,20 +10,15 @@
  * governing permissions and limitations under the License.
  */
 
-import { generateOTPCode, createOTPHash, siteFileExists } from '../../utils/auth.js';
+import {
+  generateOTPCode,
+  createOTPHash,
+  sendOTPEmail,
+  OTP_EXPIRATION_MS,
+} from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
-import { normalizeEmail, isValidEmail, sendEmail } from '../../utils/email.js';
-
-const OTP_EXPIRATION_MIN = 5;
-export const OTP_EXPIRATION_MS = OTP_EXPIRATION_MIN * 60 * 1000; // 5 minutes
-export const OTP_SUBJECT = 'Your login code';
-
-/**
- * OTP body template
- * @param {string} code
- * @returns {string}
- */
-const OTP_BODY_TEMPLATE = (code) => `Your login code is: ${code}\n\nThis code will expire in ${OTP_EXPIRATION_MIN} minutes.`;
+import { normalizeEmail, isValidEmail } from '../../utils/email.js';
+import { getProductBusSiteConfig } from '../../utils/config.js';
 
 /**
  * @type {RouteHandler}
@@ -43,8 +38,8 @@ export default async function login(ctx) {
   }
 
   // 0. check if auth enabled for org/site
-  const enabled = await siteFileExists(ctx, org, site);
-  if (!enabled) {
+  const config = await getProductBusSiteConfig(ctx, org, site);
+  if (!config) {
     return errorResponse(409, 'auth is not enabled for this site');
   }
 
@@ -64,8 +59,8 @@ export default async function login(ctx) {
   const secret = env.OTP_SECRET;
   const hash = await createOTPHash(email, org, site, code, exp, secret);
 
-  // 3. send email with code (TODO: make the email template, send from the proper sender)
-  await sendEmail(ctx, email, OTP_SUBJECT, OTP_BODY_TEMPLATE(code));
+  // 3. send email with code
+  await sendOTPEmail(ctx, email, code, config);
 
   // ctx.log.debug('OTP login request', {
   //   email, code, hash, exp,

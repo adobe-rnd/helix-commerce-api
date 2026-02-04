@@ -73,8 +73,8 @@
   "dependencies": {
     "@adobe/helix-admin-support": "3.3.21",
     "@adobe/helix-shared-process-queue": "3.1.1",
+    "@aws-sdk/client-sesv2": "3.982.0",
     "@dylandepass/helix-product-shared": "1.5.1",
-    "jose": "^6.1.3",
-    "resend": "6.8.0"
+    "jose": "^6.1.3"
   }
 }

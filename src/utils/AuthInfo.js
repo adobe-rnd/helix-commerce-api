@@ -154,6 +154,7 @@ export default class AuthInfo {
       // TODO: remove this
       if (ctx.env.SUPERUSER_KEY && timingSafeEqual(token, ctx.env.SUPERUSER_KEY)) {
         auth.#roles.add('superuser');
+        auth.#applyPermissions('superuser');
       }
 
       // if the token looks like a caps uuid, assume it's a service token
@@ -167,11 +168,6 @@ export default class AuthInfo {
           auth.#site = ctx.requestInfo.site;
           auth.#applyPermissions('service');
         }
-      }
-
-      // apply permissions for superuser if added
-      if (auth.#roles.has('superuser')) {
-        auth.#applyPermissions('superuser');
       }
 
       return auth;

@@ -45,3 +45,39 @@ export async function fetchHelixConfig(ctx, org, site /* we ignore ref for now ,
     throw errorWithResponse(502, msg);
   }
 }
+
+/**
+ * Retrieve the ProductBus site config for a given org/site
+ *
+ * @param {Context} ctx
+ * @param {string} org
+ * @param {string} site
+ * @returns {Promise<ProductBusSiteConfig | null>} site config, or null if not exists
+ */
+export async function getProductBusSiteConfig(ctx, org, site) {
+  const { env } = ctx;
+  const key = `sites/${org}/${site}`;
+  if (!ctx.attributes.configs) {
+    ctx.attributes.configs = {};
+  }
+  if (typeof ctx.attributes.configs[key] !== 'undefined') {
+    return ctx.attributes.configs[key];
+  }
+
+  const existing = await env.AUTH_BUCKET.get(key);
+  if (!existing) {
+    ctx.attributes.configs[key] = null;
+    return null;
+  }
+
+  try {
+    const config = (await existing.json()) ?? {};
+    ctx.attributes.configs[key] = config;
+    return config;
+  } catch (e) {
+    // treat existing file with invalid JSON as an empty config
+    ctx.log.error(`failed to parse site config from ${key}: ${e.message}`);
+    ctx.attributes.configs[key] = {};
+    return {};
+  }
+}

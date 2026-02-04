@@ -10,9 +10,20 @@
  * governing permissions and limitations under the License.
  */
 
+import { sendEmail } from './email.js';
 import { errorWithResponse } from './http.js';
 
 const REVOKED_TOKEN_EXPIRATION_MS = 86400000; // 1 day
+const OTP_EXPIRATION_MIN = 5;
+export const OTP_EXPIRATION_MS = OTP_EXPIRATION_MIN * 60 * 1000; // 5 minutes
+export const OTP_SUBJECT = 'Your login code';
+
+/**
+ * OTP body template
+ * @param {string} code
+ * @returns {string}
+ */
+const DEFAULT_OTP_BODY_TEMPLATE = (code) => `Your login code is: ${code}\n\nThis code will expire in ${OTP_EXPIRATION_MIN} minutes.`;
 
 /**
  * Constant-time string comparison
@@ -140,17 +151,56 @@ export async function hashEmail(email) {
 }
 
 /**
- * Check if sitefile exists for some org/site
- * If it doesn't, auth APIs should return 409
- *
+ * Send an OTP email
  * @param {Context} ctx
- * @param {string} org
- * @param {string} site
- * @returns {Promise<boolean>} true if sitefile exists, false otherwise
+ * @param {string} toEmail
+ * @param {string} code
+ * @param {ProductBusSiteConfig} config
  */
-export async function siteFileExists(ctx, org, site) {
-  const { env } = ctx;
-  const key = `sites/${org}/${site}`;
-  const existing = await env.AUTH_BUCKET.head(key);
-  return !!existing;
+export async function sendOTPEmail(ctx, toEmail, code, config) {
+  const { env, requestInfo, log } = ctx;
+  const { org, site } = requestInfo;
+
+  const {
+    otpEmailSender,
+    otpEmailBodyTemplate,
+    otpEmailSubject,
+    otpEmailBodyUrl,
+  } = config;
+
+  // determine sender
+  let fromEmail = otpEmailSender;
+  if (!fromEmail) {
+    log.warn(`fromEmail is not set, using fallback for ${org}/${site}`);
+    fromEmail = env.FROM_EMAIL;
+    if (!fromEmail) {
+      log.error(`fromEmail and fallback not defined for ${org}/${site}`);
+      throw errorWithResponse(500, 'internal server error');
+    }
+  }
+
+  // determine email body
+  let body;
+  // try for template first
+  if (otpEmailBodyUrl) {
+    const templateResp = await fetch(otpEmailBodyUrl);
+    if (!templateResp.ok) {
+      log.error(`failed to fetch OTP email body template from ${otpEmailBodyUrl}`);
+      throw errorWithResponse(404, `template fetch failed (${templateResp.status})`);
+    }
+    const templateText = await templateResp.text();
+    body = templateText.replace('{{code}}', code);
+  } else if (otpEmailBodyTemplate) {
+    body = otpEmailBodyTemplate.replace('{{code}}', code);
+  } else {
+    body = DEFAULT_OTP_BODY_TEMPLATE(code);
+  }
+
+  // determine subject
+  let subject = otpEmailSubject;
+  if (!subject) {
+    subject = OTP_SUBJECT;
+  }
+
+  await sendEmail(ctx, fromEmail, toEmail, subject, body);
 }

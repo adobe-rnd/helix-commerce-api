@@ -62,11 +62,17 @@ declare global {
     AUTH_BUCKET: R2Bucket;
 
     // emails
-    RESEND_API_KEY: string;
-    FROM_EMAIL: string;
+    FROM_EMAIL: string; // fallback email
 
-    // KV namespaces
-    KEYS: KVNamespace<string>;
+    // AWS SES
+    AWS_SES_SECRET_ACCESS_KEY: string;
+    AWS_SES_ACCESS_KEY_ID: string;
+    AWS_SES_ACCOUNT_ID: string;
+    AWS_SES_REGION: string;
+
+    // bindings
+    KEYS: KVNamespace<string>; // TODO: remove this
+    FROM_EMAILS: KVNamespace<string>; // org/site -> email
     CATALOG_BUCKET: R2Bucket;
     ORDERS_BUCKET: R2Bucket;
 
@@ -90,6 +96,7 @@ declare global {
     attributes: {
       storageClient?: StorageClient;
       paymentPlatform?: Platform;
+      configs: Record<string, ProductBusSiteConfig | null>;
       [key: string]: any;
     }
     authInfo: AuthInfo;
@@ -177,6 +184,17 @@ declare global {
 
   export interface AdminData extends AdminMetadata {
     email: string;
+  }
+
+  export interface ProductBusSiteConfig {
+    // OTP from email
+    otpEmailSender?: string;
+    // OTP email subject
+    otpEmailSubject?: string;
+    // OTP email body template, HTML
+    otpEmailBodyTemplate?: string;
+    // OTP email body URL, fetched and used as template if defined
+    otpEmailBodyUrl?: string;
   }
 }
 
