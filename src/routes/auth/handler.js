@@ -61,31 +61,6 @@ export default async function handler(ctx, req) {
   const subRoute = requestInfo.getVariable('subRoute');
   const { method } = requestInfo;
 
-  // for PUT /{org}/sites/{site}/auth with superuser permissions,
-  // create a sitefile in <AUTH_BUCKET/sites/{org}/{site}
-  // this is used to track which sites have auth enabled
-
-  if (method === 'PUT' && !subRoute && ctx.authInfo.isSuperuser()) {
-    const { org, site } = requestInfo;
-    const key = `sites/${org}/${site}`;
-
-    // check if sitefile exists already
-    const existing = await ctx.env.AUTH_BUCKET.head(key);
-    if (existing) {
-      return errorResponse(409, 'sitefile already exists');
-    }
-
-    await ctx.env.AUTH_BUCKET.put(key, '', {
-      customMetadata: {
-        createdAt: new Date().toISOString(),
-        createdBy: ctx.authInfo.email || 'unknown',
-      },
-    });
-    return new Response('', {
-      status: 201,
-    });
-  }
-
   const fn = handlers[subRoute]?.[method];
   if (!fn) {
     return errorResponse(404);

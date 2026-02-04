@@ -10,9 +10,10 @@
  * governing permissions and limitations under the License.
  */
 
-import { generateOTPCode, createOTPHash, siteFileExists } from '../../utils/auth.js';
+import { generateOTPCode, createOTPHash } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 import { normalizeEmail, isValidEmail, sendEmail } from '../../utils/email.js';
+import { fetchProductBusConfig } from '../../utils/config.js';
 
 const OTP_EXPIRATION_MIN = 5;
 export const OTP_EXPIRATION_MS = OTP_EXPIRATION_MIN * 60 * 1000; // 5 minutes
@@ -43,8 +44,8 @@ export default async function login(ctx) {
   }
 
   // 0. check if auth enabled for org/site
-  const enabled = await siteFileExists(ctx, org, site);
-  if (!enabled) {
+  const config = await fetchProductBusConfig(ctx);
+  if (!config || !config.authEnabled) {
     return errorResponse(409, 'auth is not enabled for this site');
   }
 

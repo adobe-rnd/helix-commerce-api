@@ -67,11 +67,8 @@ async function remove(ctx) {
     return errorResponse(500, 'Error removing config');
   }
 
-  return new Response('', {
+  return new Response(null, {
     status: 204,
-    headers: {
-      'Content-Type': 'application/json',
-    },
   });
 }
 
@@ -94,7 +91,7 @@ async function retrieve(ctx) {
     return errorResponse(404, 'Config not found');
   }
 
-  return new Response(await config.json(), {
+  return new Response(JSON.stringify(await config.json()), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
