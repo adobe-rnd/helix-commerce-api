@@ -234,7 +234,9 @@ describe('Post-Deploy Tests', () => {
     }).timeout(650000);
   });
 
-  describe('auth', () => {
+  describe('auth', function authTestSuite() {
+    this.timeout(3 * 60_000); // 3 minutes
+
     const apiPrefix = '/maxakuru/sites/productbus-test';
     const userEmail = process.env.TEST_USER_EMAIL;
     const adminEmail = process.env.TEST_ADMIN_EMAIL;
@@ -418,7 +420,7 @@ describe('Post-Deploy Tests', () => {
       });
       const listOrdersRes4 = await fetch(listOrdersOpts4.url, listOrdersOpts4);
       assert.strictEqual(listOrdersRes4.status, 403, 'List orders request should return 403 for all orders');
-    }).timeout(3 * 60_000); // 3 minutes
+    });
 
     it('can login and logout, make authenticated requests - admin', async () => {
       // first setup the email listener promise
@@ -555,6 +557,6 @@ describe('Post-Deploy Tests', () => {
       const { orders: orders4 } = await listOrdersRes4.json();
       assert.ok(Array.isArray(orders4), 'Orders should be an array');
       assert.deepStrictEqual(orders, orders4, 'Orders should be the same');
-    }).timeout(3 * 60_000); // 3 minutes
+    });
   });
 });

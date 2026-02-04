@@ -11,6 +11,8 @@
  */
 
 import { errorWithResponse, ffetch } from './http.js';
+import { validate } from './validation.js';
+import ConfigSchema from '../schemas/Config.js';
 
 /**
  * Fetch config from the config service.
@@ -44,4 +46,57 @@ export async function fetchHelixConfig(ctx, org, site /* we ignore ref for now ,
     const msg = `Fetching config from ${url} failed: ${e.message}`;
     throw errorWithResponse(502, msg);
   }
+}
+
+/**
+ * @param {Context} ctx
+ * @param {any} config
+ * @returns {asserts config is ProductBusConfig}
+ */
+export function assertValidConfig(ctx, config) {
+  const { log } = ctx;
+  const errors = validate(config, ConfigSchema);
+  if (errors) {
+    log.info('Invalid config', { errors });
+    throw errorWithResponse(400, 'Invalid config', { errors });
+  }
+}
+
+/**
+ * @param {Context} ctx
+ * @returns {Promise<ProductBusConfig|null>}
+ */
+export async function fetchProductBusConfig(ctx) {
+  const {
+    log,
+    requestInfo: {
+      org,
+      site,
+    },
+    env: {
+      CONFIGS_BUCKET: configsBucket,
+    },
+  } = ctx;
+
+  const key = `${org}/${site}/config.json`;
+  if (!ctx.attributes.configs) {
+    ctx.attributes.configs = {};
+  }
+  if (ctx.attributes.configs?.[key]) {
+    return ctx.attributes.configs[key];
+  }
+
+  const body = await configsBucket.get(key);
+  try {
+    if (body) {
+      const config = await body.json();
+      ctx.attributes.configs[key] = config;
+      return config;
+    }
+  } catch (e) {
+    log.error('Error fetching config', { error: e });
+    // treat invalid JSON as empty config
+    return {};
+  }
+  return null;
 }

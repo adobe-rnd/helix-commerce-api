@@ -65,10 +65,11 @@ declare global {
     RESEND_API_KEY: string;
     FROM_EMAIL: string;
 
-    // KV namespaces
+    // bindings
     KEYS: KVNamespace<string>;
     CATALOG_BUCKET: R2Bucket;
     ORDERS_BUCKET: R2Bucket;
+    CONFIGS_BUCKET: R2Bucket;
 
     [key: string]: string | KVNamespace<string> | R2Bucket | Queue<SharedTypes.IndexingJob>;
   }
@@ -177,6 +178,19 @@ declare global {
 
   export interface AdminData extends AdminMetadata {
     email: string;
+  }
+
+  export interface ProductBusConfig {
+    // Whether this site should allow logging in via OTP
+    authEnabled?: boolean;
+    // OTP from email
+    otpEmailSender?: string;
+    // OTP email subject
+    otpEmailSubject?: string;
+    // OTP email body template, HTML
+    otpEmailBodyTemplate?: string;
+    // OTP email body URL, fetched and used as template if defined
+    otpEmailBodyUrl?: string;
   }
 }
 

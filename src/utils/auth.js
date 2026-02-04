@@ -138,19 +138,3 @@ export async function hashEmail(email) {
   const hash = await crypto.subtle.digest('SHA-256', data);
   return btoa(String.fromCharCode(...new Uint8Array(hash)));
 }
-
-/**
- * Check if sitefile exists for some org/site
- * If it doesn't, auth APIs should return 409
- *
- * @param {Context} ctx
- * @param {string} org
- * @param {string} site
- * @returns {Promise<boolean>} true if sitefile exists, false otherwise
- */
-export async function siteFileExists(ctx, org, site) {
-  const { env } = ctx;
-  const key = `sites/${org}/${site}`;
-  const existing = await env.AUTH_BUCKET.head(key);
-  return !!existing;
-}
