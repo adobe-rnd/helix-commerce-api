@@ -10,25 +10,20 @@
  * governing permissions and limitations under the License.
  */
 
-import catalog from './catalog/handler.js';
-import auth from './auth/handler.js';
-import operationsLog from './operations-log/handler.js';
-import orders from './orders/handler.js';
-import customers from './customers/handler.js';
-import cache from './cache/handler.js';
-import indices from './indices/handler.js';
-import config from './config/handler.js';
+import { EmailSchema } from './common.js';
 
-/**
- * @type {Record<string, RouteHandler>}
- */
-export default {
-  catalog,
-  auth,
-  orders,
-  customers,
-  'operations-log': operationsLog,
-  cache,
-  indices,
-  config,
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const Config = {
+  type: 'object',
+  properties: {
+    authEnabled: { type: 'boolean' },
+    otpEmailSender: EmailSchema,
+    otpEmailSubject: { type: 'string', maxLength: 255 },
+    otpEmailBodyTemplate: { type: 'string', maxLength: 1024 * 100 },
+    otpEmailBodyUrl: { type: 'string', maxLength: 1024 },
+  },
+  required: [],
+  additionalProperties: false,
 };
+
+export default Config;

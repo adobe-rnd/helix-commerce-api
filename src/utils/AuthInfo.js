@@ -30,6 +30,8 @@ const PERMISSIONS = {
     'customers:write',
     'service_token:read',
     'service_token:write',
+    'config:read',
+    'config:write',
   ],
   // service (ie. ETL) permissions
   service: [
@@ -50,6 +52,8 @@ PERMISSIONS.superuser = [
   ...PERMISSIONS.admin,
   'admins:read',
   'admins:write',
+  'config:read',
+  'config:write',
 ];
 
 export default class AuthInfo {
