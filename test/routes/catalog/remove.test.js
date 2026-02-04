@@ -14,7 +14,7 @@
 
 import assert from 'node:assert';
 import sinon from 'sinon';
-import { DEFAULT_CONTEXT } from '../../fixtures/context.js';
+import { DEFAULT_CONTEXT, createAuthInfoMock } from '../../fixtures/context.js';
 import handleProductRemoveRequest from '../../../src/routes/catalog/remove.js';
 
 describe('Catalog Remove Tests', () => {
@@ -34,6 +34,7 @@ describe('Catalog Remove Tests', () => {
   describe('handleProductRemoveRequest', () => {
     it('should return 400 if path is "/*" (wildcard)', async () => {
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         requestInfo: {
           org: 'org',
           site: 'site',
@@ -53,6 +54,7 @@ describe('Catalog Remove Tests', () => {
 
     it('should successfully delete a product and return 200 with results', async () => {
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         requestInfo: {
           org: 'org',
           site: 'site',
@@ -93,6 +95,7 @@ describe('Catalog Remove Tests', () => {
 
     it('should propagate error thrown by deleteProductsByPath', async () => {
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         requestInfo: {
           org: 'org',
           site: 'site',
@@ -131,6 +134,7 @@ describe('Catalog Remove Tests', () => {
 
     it('should handle deleteProductsByPath returning unexpected results', async () => {
       const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
         requestInfo: {
           org: 'org',
           site: 'site',

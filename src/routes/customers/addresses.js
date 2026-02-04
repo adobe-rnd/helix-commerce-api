@@ -63,11 +63,15 @@ async function retrieveAddress(ctx, email, addressId) {
  */
 export default async function handler(ctx) {
   const { requestInfo } = ctx;
-  const { email, method } = requestInfo;
+  const {
+    email, method, org, site,
+  } = requestInfo;
   const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route', 'email', 'subroute'].length);
   const [addressId] = segments;
   switch (method) {
     case 'GET': {
+      ctx.authInfo.assertEmail(email);
+      ctx.authInfo.assertOrgSite(org, site);
       const address = await retrieveAddress(ctx, email, addressId);
       if (!address) {
         return errorResponse(404, 'Not found');
@@ -86,6 +90,9 @@ export default async function handler(ctx) {
       }
 
       // else create
+      ctx.authInfo.assertEmail(email);
+      ctx.authInfo.assertOrgSite(org, site);
+
       assertValidAddress(ctx.data);
       const address = await createAddress(ctx, email, ctx.data);
       return new Response(JSON.stringify({ address }), {

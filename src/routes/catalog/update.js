@@ -13,7 +13,6 @@
 import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from '../../utils/StorageClient.js';
-import { assertAuthorization } from '../../utils/auth.js';
 import { fetchHelixConfig } from '../../utils/config.js';
 
 const MAX_PRODUCT_BULK = 50;
@@ -138,8 +137,11 @@ async function doUpdate(ctx, products) {
  */
 export default async function update(ctx) {
   const { requestInfo, data } = ctx;
-  const { path, method } = requestInfo;
-  await assertAuthorization(ctx);
+  const {
+    path, method, org, site,
+  } = requestInfo;
+  ctx.authInfo.assertPermissions('catalog:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   // Handle bulk operations (POST with literal "*")
   if (path === '/*') {

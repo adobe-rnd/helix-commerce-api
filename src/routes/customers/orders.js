@@ -11,7 +11,6 @@
  */
 
 import StorageClient from '../../utils/StorageClient.js';
-import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 
 /**
@@ -20,7 +19,9 @@ import { errorResponse } from '../../utils/http.js';
 // eslint-disable-next-line no-unused-vars
 export default async function handler(ctx, req) {
   const { requestInfo } = ctx;
-  const { email, method } = requestInfo;
+  const {
+    email, method, org, site,
+  } = requestInfo;
   const { orderId } = requestInfo;
   switch (method) {
     case 'GET': {
@@ -42,7 +43,9 @@ export default async function handler(ctx, req) {
 
       // list orders for customer
       // assert authorized
-      await assertAuthorization(ctx);
+      ctx.authInfo.assertPermissions('orders:read');
+      ctx.authInfo.assertEmail(email);
+      ctx.authInfo.assertOrgSite(org, site);
       const orders = await storage.listOrders(email);
       return new Response(JSON.stringify({ orders }), {
         status: 200,

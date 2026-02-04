@@ -10,20 +10,21 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
-import { errorResponse } from '../../utils/http.js';
+import { errorResponse } from '../../../utils/http.js';
 import { updateToken } from './update.js';
 
 /**
  * @type {RouteHandler}
  */
 export default async function rotate(ctx) {
-  const { data } = ctx;
+  const { data, requestInfo } = ctx;
+  const { org, site } = requestInfo;
   if (data.token) {
     return errorResponse(400, 'token can not be provided on rotate');
   }
 
-  await assertAuthorization(ctx);
+  ctx.authInfo.assertPermissions('service_token:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const token = await updateToken(ctx);
   return new Response(JSON.stringify({ token }), {

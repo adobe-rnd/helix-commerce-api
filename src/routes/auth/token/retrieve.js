@@ -10,16 +10,26 @@
  * governing permissions and limitations under the License.
  */
 
+import { errorResponse } from '../../../utils/http.js';
+
 /**
  * @type {RouteHandler}
  */
-// eslint-disable-next-line no-unused-vars
-export default async function remove(ctx) {
+export default async function retrieve(ctx) {
   const { requestInfo } = ctx;
-  const { org, site } = requestInfo;
-  ctx.authInfo.assertPermissions('orders:write');
+  const { siteKey, org, site } = requestInfo;
+
+  ctx.authInfo.assertPermissions('service_token:read');
   ctx.authInfo.assertOrgSite(org, site);
-  return new Response('Not Implemented', {
-    status: 501,
+
+  const token = await ctx.env.KEYS.get(siteKey);
+  if (!token) {
+    return errorResponse(404);
+  }
+
+  return new Response(JSON.stringify({ token }), {
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }

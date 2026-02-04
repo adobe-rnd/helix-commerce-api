@@ -7,6 +7,7 @@ import type {
 import type StorageClient from "./routes/products/StorageClient.js";
 import type Platform from "./routes/orders/payments/Platform.js";
 import * as SharedTypes from '@dylandepass/helix-product-shared/types';
+import type AuthInfo from "./utils/AuthInfo.js";
 
 declare global {
   export * as SharedTypes from '@dylandepass/helix-product-shared/types';
@@ -46,7 +47,7 @@ declare global {
   /**
    * Combined request and path information
    */
-  export interface RequestInfo extends HttpRequest, PathInfo {}
+  export interface RequestInfo extends HttpRequest, PathInfo { }
 
   export interface Env {
     VERSION: string;
@@ -54,6 +55,15 @@ declare global {
     SUPERUSER_KEY: string;
     INDEXER_QUEUE: Queue<SharedTypes.IndexingJob>;
     IMAGE_COLLECTOR_QUEUE: Queue<SharedTypes.ImageCollectorJob>;
+
+    // auth
+    OTP_SECRET: string;
+    JWT_SECRET: string;
+    AUTH_BUCKET: R2Bucket;
+
+    // emails
+    RESEND_API_KEY: string;
+    FROM_EMAIL: string;
 
     // KV namespaces
     KEYS: KVNamespace<string>;
@@ -82,6 +92,7 @@ declare global {
       paymentPlatform?: Platform;
       [key: string]: any;
     }
+    authInfo: AuthInfo;
     executionContext: ExecutionContext;
   }
 
@@ -147,6 +158,24 @@ declare global {
     zip: string;
     country: string;
     phone: string;
+    email: string;
+  }
+
+  export interface DecodedJWT {
+    email: string;
+    roles: string[];
+    org: string;
+    site: string;
+    iat: number; // issued at
+    exp: number; // expires at
+  }
+
+  export interface AdminMetadata extends Record<string, string> {
+    dateAdded: string; // ISO 8601
+    addedBy: string; // IP address, TODO: use email once superuser is auth'd by email
+  }
+
+  export interface AdminData extends AdminMetadata {
     email: string;
   }
 }

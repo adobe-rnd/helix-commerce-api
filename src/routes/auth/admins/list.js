@@ -10,25 +10,38 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../../utils/http.js';
-import StorageClient from '../../utils/StorageClient.js';
-
 /**
+ * List all admins for a site
  * @type {RouteHandler}
  */
-export default async function retrieve(ctx) {
-  const { requestInfo } = ctx;
-  const { orderId, org, site } = requestInfo;
-  ctx.authInfo.assertPermissions('orders:read');
-  ctx.authInfo.assertOrgSite(org, site);
-  const storage = StorageClient.fromContext(ctx);
-  const order = await storage.getOrder(orderId);
-  if (!order) {
-    return errorResponse(404, 'Not found');
-  }
+export default async function list(ctx) {
+  const {
+    env,
+    requestInfo: { org, site },
+  } = ctx;
 
-  ctx.authInfo.assertEmail(order.customer.email);
-  return new Response(JSON.stringify({ order }), {
+  ctx.authInfo.assertPermissions('admins:read');
+  ctx.authInfo.assertOrgSite(org, site);
+
+  const prefix = `${org}/${site}/admins/`;
+  const result = await env.AUTH_BUCKET.list({
+    prefix,
+    limit: 1000,
+    // @ts-ignore not defined in types for some reason
+    include: ['customMetadata'],
+  });
+
+  const admins = result.objects.map((obj) => {
+    const email = obj.key.substring(prefix.length);
+    /** @type {AdminData} */
+    return {
+      email,
+      dateAdded: obj.customMetadata?.dateAdded,
+      addedBy: obj.customMetadata?.addedBy,
+    };
+  });
+
+  return new Response(JSON.stringify({ admins }), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',

@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
 import handleAddresses from './addresses.js';
 import handleOrders from './orders.js';
 import { errorResponse } from '../../utils/http.js';
@@ -22,7 +21,7 @@ import StorageClient from '../../utils/StorageClient.js';
  */
 export default async function handler(ctx, req) {
   const { requestInfo } = ctx;
-  const { email } = requestInfo;
+  const { email, org, site } = requestInfo;
   const subroute = requestInfo.getVariable('subroute');
 
   if (subroute) {
@@ -37,7 +36,8 @@ export default async function handler(ctx, req) {
 
   switch (ctx.requestInfo.method) {
     case 'POST': {
-      await assertAuthorization(ctx);
+      ctx.authInfo.assertPermissions('customers:write');
+      ctx.authInfo.assertOrgSite(org, site);
       if (!email) {
         // create customer
         return create(ctx, req);
@@ -45,9 +45,10 @@ export default async function handler(ctx, req) {
       return errorResponse(404, 'Not found');
     }
     case 'GET': {
-      await assertAuthorization(ctx);
       const storage = StorageClient.fromContext(ctx);
       if (!email) {
+        ctx.authInfo.assertPermissions('customers:read');
+        ctx.authInfo.assertOrgSite(org, site);
         // list customers
         const customers = await storage.listCustomers();
         return new Response(JSON.stringify({ customers }), {
@@ -59,6 +60,9 @@ export default async function handler(ctx, req) {
       }
 
       // get a customer
+      ctx.authInfo.assertPermissions('customers:read');
+      ctx.authInfo.assertEmail(email);
+      ctx.authInfo.assertOrgSite(org, site);
       const customer = await storage.getCustomer(email);
       if (!customer) {
         return errorResponse(404, 'Not found');
@@ -76,8 +80,8 @@ export default async function handler(ctx, req) {
       }
 
       // delete customer
-      // assert authorized
-      await assertAuthorization(ctx);
+      ctx.authInfo.assertRole('admin');
+      ctx.authInfo.assertOrgSite(org, site);
       const storage = StorageClient.fromContext(ctx);
       await storage.deleteCustomer(email);
       return new Response(JSON.stringify({ success: true }), {

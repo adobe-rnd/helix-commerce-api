@@ -54,6 +54,8 @@ module.exports = {
       },
     ],
 
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+
     // Allow while (true) infinite loops
     // 'no-constant-condition': ['error', { checkLoops: false }],
 

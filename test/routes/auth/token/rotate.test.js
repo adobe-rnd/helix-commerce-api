@@ -14,8 +14,8 @@
 
 import assert from 'node:assert';
 import esmock from 'esmock';
-import { DEFAULT_CONTEXT, SUPERUSER_CONTEXT } from '../../fixtures/context.js';
-import handler from '../../../src/routes/auth/rotate.js';
+import { DEFAULT_CONTEXT, SUPERUSER_CONTEXT } from '../../../fixtures/context.js';
+import handler from '../../../../src/routes/auth/token/rotate.js';
 
 describe('routes/auth rotate tests', () => {
   let ogUUID;
@@ -37,8 +37,8 @@ describe('routes/auth rotate tests', () => {
   });
 
   it('rotates token', async () => {
-    const mocked = await esmock('../../../src/routes/auth/rotate.js', {
-      '../../../src/routes/auth/update.js': { updateToken: async () => 'foo' },
+    const mocked = await esmock('../../../../src/routes/auth/token/rotate.js', {
+      '../../../../src/routes/auth/token/update.js': { updateToken: async () => 'foo' },
     });
     const ctx = SUPERUSER_CONTEXT({
       env: {

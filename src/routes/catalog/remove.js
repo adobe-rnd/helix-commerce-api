@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { assertAuthorization } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from '../../utils/StorageClient.js';
 
@@ -25,7 +24,8 @@ export default async function remove(ctx) {
     return errorResponse(400, 'Wildcard path deletions not supported');
   }
 
-  await assertAuthorization(ctx);
+  ctx.authInfo.assertPermissions('catalog:write');
+  ctx.authInfo.assertOrgSite(org, site);
 
   const storage = StorageClient.fromContext(ctx);
   const deleteResults = await storage.deleteProductsByPath([path]);
