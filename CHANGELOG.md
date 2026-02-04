@@ -1,3 +1,16 @@
+# [2.2.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.1.0...v2.2.0) (2026-02-04)
+
+
+### Bug Fixes
+
+* 401 instead of 409 ([100b7cd](https://github.com/adobe-rnd/helix-commerce-api/commit/100b7cd2bca7b206f814bf31da5210fd38ca22ca))
+* remove sitefile handling, update tests ([8a5bdf0](https://github.com/adobe-rnd/helix-commerce-api/commit/8a5bdf00667bd3ff3e4271885b4181b4c3cd9aab))
+
+
+### Features
+
+* config api ([f6b0594](https://github.com/adobe-rnd/helix-commerce-api/commit/f6b0594658e3fa799f821b907fe12f76d0fe084f))
+
 # [2.1.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.0.1...v2.1.0) (2026-02-04)
 
 
