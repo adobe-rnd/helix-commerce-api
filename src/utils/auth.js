@@ -13,6 +13,7 @@
 import { sendEmail } from './email.js';
 import { errorWithResponse } from './http.js';
 
+const DEFAULT_FROM_EMAIL = 'noreply@adobecommerce.live';
 const REVOKED_TOKEN_EXPIRATION_MS = 86400000; // 1 day
 const OTP_EXPIRATION_MIN = 5;
 export const OTP_EXPIRATION_MS = OTP_EXPIRATION_MIN * 60 * 1000; // 5 minutes
@@ -172,7 +173,7 @@ export async function sendOTPEmail(ctx, toEmail, code, config) {
   let fromEmail = otpEmailSender;
   if (!fromEmail) {
     log.warn(`fromEmail is not set, using fallback for ${org}/${site}`);
-    fromEmail = env.FROM_EMAIL;
+    fromEmail = env.FROM_EMAIL || DEFAULT_FROM_EMAIL;
     if (!fromEmail) {
       log.error(`fromEmail and fallback not defined for ${org}/${site}`);
       throw errorWithResponse(500, 'internal server error');
