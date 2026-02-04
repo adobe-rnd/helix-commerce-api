@@ -1,3 +1,79 @@
+# [2.2.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.1.0...v2.2.0) (2026-02-04)
+
+
+### Bug Fixes
+
+* 401 instead of 409 ([100b7cd](https://github.com/adobe-rnd/helix-commerce-api/commit/100b7cd2bca7b206f814bf31da5210fd38ca22ca))
+* remove sitefile handling, update tests ([8a5bdf0](https://github.com/adobe-rnd/helix-commerce-api/commit/8a5bdf00667bd3ff3e4271885b4181b4c3cd9aab))
+
+
+### Features
+
+* config api ([f6b0594](https://github.com/adobe-rnd/helix-commerce-api/commit/f6b0594658e3fa799f821b907fe12f76d0fe084f))
+
+# [2.1.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.0.1...v2.1.0) (2026-02-04)
+
+
+### Bug Fixes
+
+* 201 response on created sitefile ([03fafed](https://github.com/adobe-rnd/helix-commerce-api/commit/03fafed0840d9daf9eaca5d8b11ec160e2efede5))
+* add expiresAt to revoked tokens ([1f8577f](https://github.com/adobe-rnd/helix-commerce-api/commit/1f8577f1d85d6f4f09ef46f7becd9120fe0c473c))
+* add from email env var ([b477728](https://github.com/adobe-rnd/helix-commerce-api/commit/b477728b838a0aa03a7dec3fce445843f9437091))
+* add missing route ([1f1c83b](https://github.com/adobe-rnd/helix-commerce-api/commit/1f1c83bbd6498ebb5031a383e9ae60be447d21c9))
+* add org/site to service auth ([140fb04](https://github.com/adobe-rnd/helix-commerce-api/commit/140fb04027d248be8903e603f67c3db7c129b9fd))
+* address comment ([fde2dce](https://github.com/adobe-rnd/helix-commerce-api/commit/fde2dce83d6a30fede476d31dba27052b10a5a7d))
+* address comments ([418913d](https://github.com/adobe-rnd/helix-commerce-api/commit/418913d3408565f67dee1b020a63c91b0e104261))
+* assert org and site ([a45471c](https://github.com/adobe-rnd/helix-commerce-api/commit/a45471c38f7ed4a277c752b07fdd3c49b8149d5d))
+* change to revoked path prefix ([0dcd304](https://github.com/adobe-rnd/helix-commerce-api/commit/0dcd304f048ca10bb0b87a498ea4b5099fadbebf))
+* check if auth is enabled for site during login ([56175a9](https://github.com/adobe-rnd/helix-commerce-api/commit/56175a9c8270c027116687d07a08fd24ba4c8f38))
+* tweak emailing ([b06fece](https://github.com/adobe-rnd/helix-commerce-api/commit/b06fece15129567e1e7821f5568aa5a74fd17ba2))
+* tweaks ([2bcf27c](https://github.com/adobe-rnd/helix-commerce-api/commit/2bcf27c43704ff456ff719504c056cff2f353fcd))
+* tweaks and post-deploy tests ([9baea23](https://github.com/adobe-rnd/helix-commerce-api/commit/9baea2308f111c0fc86ea27539360e3c7264019a))
+* update auth checks, tests ([28af257](https://github.com/adobe-rnd/helix-commerce-api/commit/28af25740215ac108e360f70b70de422fd5a68a5))
+* use authinfo, retain service tokens and superuser token fallback ([05b8fd0](https://github.com/adobe-rnd/helix-commerce-api/commit/05b8fd0bfb114f7e775aa73689054a3256d8abc0))
+
+
+### Features
+
+* auth api ([282a84e](https://github.com/adobe-rnd/helix-commerce-api/commit/282a84e6528ce83083f6e7feeecdcb6bbe1e3987))
+
+## [2.0.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.0.0...v2.0.1) (2026-02-02)
+
+
+### Bug Fixes
+
+* tweak logMetrics ([#123](https://github.com/adobe-rnd/helix-commerce-api/issues/123)) ([8509793](https://github.com/adobe-rnd/helix-commerce-api/commit/850979355f234e469a34228063e30f257ea65e84))
+
+# [2.0.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.19.0...v2.0.0) (2026-01-26)
+
+
+* Merge pull request [#131](https://github.com/adobe-rnd/helix-commerce-api/issues/131) from adobe-rnd/fix-ver ([35e6fc9](https://github.com/adobe-rnd/helix-commerce-api/commit/35e6fc9b2190e7150f4bacb150485bd90fdb06fd))
+
+
+### BREAKING CHANGES
+
+* fix version
+
+# [1.19.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.18.0...v1.19.0) (2026-01-26)
+
+
+### Bug Fixes
+
+* allow underscores in path for indexing ([#125](https://github.com/adobe-rnd/helix-commerce-api/issues/125)) ([9f1ba17](https://github.com/adobe-rnd/helix-commerce-api/commit/9f1ba173621377c271b189e58af4c1a30c4b150a))
+* allow underscores in path segments ([#124](https://github.com/adobe-rnd/helix-commerce-api/issues/124)) ([c8498d3](https://github.com/adobe-rnd/helix-commerce-api/commit/c8498d300ab8b9f39f517da24170b948db9ab8e8))
+* move to shared media handling ([e9bd899](https://github.com/adobe-rnd/helix-commerce-api/commit/e9bd899b45bfad60e58bc8dee28bef8dc8ae9381))
+* respond with validation errors in body ([884806e](https://github.com/adobe-rnd/helix-commerce-api/commit/884806e86d2c090c1fd6c0dc9db2907df99e2d90))
+* upgrade dep ([adcb28a](https://github.com/adobe-rnd/helix-commerce-api/commit/adcb28ab25c06ebf03735d6f1799634208d34613))
+* upgrade shared ([3e5eab1](https://github.com/adobe-rnd/helix-commerce-api/commit/3e5eab18896d7362df5c0eb6e00b19a52f5fdbb3))
+* use index registry ([a2fdb5a](https://github.com/adobe-rnd/helix-commerce-api/commit/a2fdb5a945a006b306d8bca872cd471ee8c4410b))
+* validation, tests ([e754efb](https://github.com/adobe-rnd/helix-commerce-api/commit/e754efb3f63156ba65924303f0918b229c45bdb2))
+
+
+### Features
+
+* create/delete index route ([bd11d39](https://github.com/adobe-rnd/helix-commerce-api/commit/bd11d396359821fcd50884c5151e30f6cee8080f))
+* Path-Based Product Storage ([#120](https://github.com/adobe-rnd/helix-commerce-api/issues/120)) ([5b5cd1a](https://github.com/adobe-rnd/helix-commerce-api/commit/5b5cd1a643bb9d0fbea4983e0f834e30f4db5036))
+
 # [1.18.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v1.17.0...v1.18.0) (2025-12-04)
 
 

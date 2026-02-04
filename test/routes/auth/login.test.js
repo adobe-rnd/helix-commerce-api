@@ -24,6 +24,31 @@ describe('routes/auth login tests', () => {
   let handler;
   let sendEmailStub;
 
+  /**
+   * Helper to create context with authEnabled config
+   */
+  const createLoginContext = (overrides = {}) => {
+    const defaultEnv = {
+      OTP_SECRET: otpSecret,
+      JWT_SECRET: jwtSecret,
+      RESEND_API_KEY: resendApiKey,
+      AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
+      CONFIGS_BUCKET: {
+        get: async () => ({
+          json: async () => ({ authEnabled: true }),
+        }),
+      },
+    };
+
+    return DEFAULT_CONTEXT({
+      ...overrides,
+      env: {
+        ...defaultEnv,
+        ...(overrides.env || {}),
+      },
+    });
+  };
+
   beforeEach(async () => {
     // Mock the resend library
     sendEmailStub = async () => ({ data: { id: 'mock-email-id' }, error: null });
@@ -43,6 +68,11 @@ describe('routes/auth login tests', () => {
         JWT_SECRET: jwtSecret,
         // OTP_SECRET missing
         AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
+        CONFIGS_BUCKET: {
+          get: async () => ({
+            json: async () => ({ authEnabled: true }),
+          }),
+        },
       },
     });
     const resp = await handler(ctx);
@@ -57,6 +87,11 @@ describe('routes/auth login tests', () => {
         OTP_SECRET: otpSecret,
         // JWT_SECRET missing
         AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
+        CONFIGS_BUCKET: {
+          get: async () => ({
+            json: async () => ({ authEnabled: true }),
+          }),
+        },
       },
     });
     const resp = await handler(ctx);
@@ -64,15 +99,45 @@ describe('routes/auth login tests', () => {
     assert.equal(resp.headers.get('x-error'), 'internal server error');
   });
 
-  it('should reject missing email', async () => {
-    const ctx = DEFAULT_CONTEXT({
-      data: {},
+  it('should return 401 if auth is not enabled', async () => {
+    const ctx = createLoginContext({
+      data: { email: 'test@example.com' },
       env: {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
-        RESEND_API_KEY: resendApiKey,
         AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
+        CONFIGS_BUCKET: {
+          get: async () => ({
+            json: async () => ({ authEnabled: false }),
+          }),
+        },
       },
+    });
+    const resp = await handler(ctx);
+    assert.equal(resp.status, 401);
+    assert.equal(resp.headers.get('x-error'), 'auth is not enabled');
+  });
+
+  it('should return 401 if config does not exist', async () => {
+    const ctx = createLoginContext({
+      data: { email: 'test@example.com' },
+      env: {
+        OTP_SECRET: otpSecret,
+        JWT_SECRET: jwtSecret,
+        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
+        CONFIGS_BUCKET: {
+          get: async () => null, // No config
+        },
+      },
+    });
+    const resp = await handler(ctx);
+    assert.equal(resp.status, 401);
+    assert.equal(resp.headers.get('x-error'), 'auth is not enabled');
+  });
+
+  it('should reject missing email', async () => {
+    const ctx = createLoginContext({
+      data: {},
     });
     const resp = await handler(ctx);
     assert.equal(resp.status, 400);
@@ -106,6 +171,11 @@ describe('routes/auth login tests', () => {
         JWT_SECRET: jwtSecret,
         // RESEND_API_KEY missing
         AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
+        CONFIGS_BUCKET: {
+          get: async () => ({
+            json: async () => ({ authEnabled: true }),
+          }),
+        },
       },
     });
     let error;
@@ -120,14 +190,8 @@ describe('routes/auth login tests', () => {
   });
 
   it('should reject invalid email format', async () => {
-    const ctx = DEFAULT_CONTEXT({
+    const ctx = createLoginContext({
       data: { email: 'not-an-email' },
-      env: {
-        OTP_SECRET: otpSecret,
-        JWT_SECRET: jwtSecret,
-        RESEND_API_KEY: resendApiKey,
-        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
-      },
     });
     const resp = await handler(ctx);
     assert.equal(resp.status, 400);
@@ -135,14 +199,8 @@ describe('routes/auth login tests', () => {
   });
 
   it('should normalize email (trim and lowercase)', async () => {
-    const ctx = DEFAULT_CONTEXT({
+    const ctx = createLoginContext({
       data: { email: '  TEST@EXAMPLE.COM  ' },
-      env: {
-        OTP_SECRET: otpSecret,
-        JWT_SECRET: jwtSecret,
-        RESEND_API_KEY: resendApiKey,
-        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
-      },
     });
     const resp = await handler(ctx);
     assert.equal(resp.status, 200);
@@ -153,14 +211,8 @@ describe('routes/auth login tests', () => {
   });
 
   it('should generate hash and expiration for valid email', async () => {
-    const ctx = DEFAULT_CONTEXT({
+    const ctx = createLoginContext({
       data: { email: 'test@example.com' },
-      env: {
-        OTP_SECRET: otpSecret,
-        JWT_SECRET: jwtSecret,
-        RESEND_API_KEY: resendApiKey,
-        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
-      },
     });
     const resp = await handler(ctx);
     assert.equal(resp.status, 200);
@@ -180,23 +232,11 @@ describe('routes/auth login tests', () => {
   });
 
   it('should return different hashes for different emails', async () => {
-    const ctx1 = DEFAULT_CONTEXT({
+    const ctx1 = createLoginContext({
       data: { email: 'test1@example.com' },
-      env: {
-        OTP_SECRET: otpSecret,
-        JWT_SECRET: jwtSecret,
-        RESEND_API_KEY: resendApiKey,
-        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
-      },
     });
-    const ctx2 = DEFAULT_CONTEXT({
+    const ctx2 = createLoginContext({
       data: { email: 'test2@example.com' },
-      env: {
-        OTP_SECRET: otpSecret,
-        JWT_SECRET: jwtSecret,
-        RESEND_API_KEY: resendApiKey,
-        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
-      },
     });
 
     const resp1 = await handler(ctx1);
@@ -212,14 +252,8 @@ describe('routes/auth login tests', () => {
 
   it('should always return 200 to prevent email enumeration', async () => {
     // Even for non-existent users, should return success
-    const ctx = DEFAULT_CONTEXT({
+    const ctx = createLoginContext({
       data: { email: 'nonexistent@example.com' },
-      env: {
-        OTP_SECRET: otpSecret,
-        JWT_SECRET: jwtSecret,
-        RESEND_API_KEY: resendApiKey,
-        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
-      },
     });
     const resp = await handler(ctx);
     assert.equal(resp.status, 200);
@@ -246,14 +280,8 @@ describe('routes/auth login tests', () => {
       },
     });
 
-    const ctx = DEFAULT_CONTEXT({
+    const ctx = createLoginContext({
       data: { email: 'test@example.com' },
-      env: {
-        OTP_SECRET: otpSecret,
-        JWT_SECRET: jwtSecret,
-        RESEND_API_KEY: resendApiKey,
-        AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
-      },
     });
 
     let error;

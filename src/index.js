@@ -21,7 +21,6 @@ const router = new Router(nameSelector)
   .add('/:org/sites/:site/catalog/*', handlers.catalog)
   .add('/:org/sites/:site/auth/:subRoute', handlers.auth)
   .add('/:org/sites/:site/auth/:subRoute/:email', handlers.auth)
-  .add('/:org/sites/:site/auth', handlers.auth)
   .add('/:org/sites/:site/orders/:orderId', handlers.orders)
   .add('/:org/sites/:site/orders', handlers.orders)
   .add('/:org/sites/:site/customers/:email/:subroute', handlers.customers)
@@ -29,6 +28,7 @@ const router = new Router(nameSelector)
   .add('/:org/sites/:site/customers', handlers.customers)
   .add('/:org/sites/:site/cache', handlers.cache)
   .add('/:org/sites/:site/index/*', handlers.indices)
+  .add('/:org/sites/:site/config', handlers.config)
   .add('/:org/sites/:site/operations-log', handlers['operations-log']);
 
 /**

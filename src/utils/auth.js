@@ -155,7 +155,7 @@ export async function hashEmail(email) {
  * @param {Context} ctx
  * @param {string} toEmail
  * @param {string} code
- * @param {ProductBusSiteConfig} config
+ * @param {ProductBusConfig} config
  */
 export async function sendOTPEmail(ctx, toEmail, code, config) {
   const { env, requestInfo, log } = ctx;

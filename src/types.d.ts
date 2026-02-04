@@ -64,6 +64,7 @@ declare global {
     // emails
     FROM_EMAIL: string; // fallback email
 
+<<<<<<< HEAD
     // AWS SES
     AWS_SES_SECRET_ACCESS_KEY: string;
     AWS_SES_ACCESS_KEY_ID: string;
@@ -73,8 +74,13 @@ declare global {
     // bindings
     KEYS: KVNamespace<string>; // TODO: remove this
     FROM_EMAILS: KVNamespace<string>; // org/site -> email
+=======
+    // bindings
+    KEYS: KVNamespace<string>;
+>>>>>>> main
     CATALOG_BUCKET: R2Bucket;
     ORDERS_BUCKET: R2Bucket;
+    CONFIGS_BUCKET: R2Bucket;
 
     [key: string]: string | KVNamespace<string> | R2Bucket | Queue<SharedTypes.IndexingJob>;
   }
@@ -186,7 +192,9 @@ declare global {
     email: string;
   }
 
-  export interface ProductBusSiteConfig {
+  export interface ProductBusConfig {
+    // Whether this site should allow logging in via OTP
+    authEnabled?: boolean;
     // OTP from email
     otpEmailSender?: string;
     // OTP email subject

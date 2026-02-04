@@ -18,7 +18,7 @@ import {
 } from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
 import { normalizeEmail, isValidEmail } from '../../utils/email.js';
-import { getProductBusSiteConfig } from '../../utils/config.js';
+import { fetchProductBusConfig } from '../../utils/config.js';
 
 /**
  * @type {RouteHandler}
@@ -38,9 +38,9 @@ export default async function login(ctx) {
   }
 
   // 0. check if auth enabled for org/site
-  const config = await getProductBusSiteConfig(ctx, org, site);
-  if (!config) {
-    return errorResponse(409, 'auth is not enabled for this site');
+  const config = await fetchProductBusConfig(ctx);
+  if (!config || !config.authEnabled) {
+    return errorResponse(401, 'auth is not enabled');
   }
 
   // 1. validate inputs

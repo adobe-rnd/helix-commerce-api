@@ -35,6 +35,7 @@ import adminsRetrieve from '../src/routes/auth/admins/retrieve.js';
 import adminsCreate from '../src/routes/auth/admins/create.js';
 import adminsRemove from '../src/routes/auth/admins/remove.js';
 import indicesHandler from '../src/routes/indices/handler.js';
+import configHandler from '../src/routes/config/handler.js';
 
 /**
  * Create mock context with specified authInfo
@@ -82,6 +83,11 @@ function createMockContext(authInfoOverrides = {}) {
       },
       KEYS: { get: async () => 'test-key', put: async () => {} },
       INDEXER_QUEUE: { send: async () => {}, sendBatch: async () => {} },
+      CONFIGS_BUCKET: {
+        get: async () => null,
+        put: async () => {},
+        delete: async () => {},
+      },
     },
     attributes: {
       storageClient: {
@@ -805,6 +811,104 @@ describe('Route Authorization Tests', () => {
       // @ts-ignore
       const response = await catalogUpdate(ctx);
       assert.equal(response.status, 201, 'Superuser should access any org/site');
+    });
+  });
+
+  describe('Config Routes', () => {
+    it('GET /config - should require config:read permission', async () => {
+      const ctx = createMockContext();
+      ctx.requestInfo.method = 'GET';
+
+      try {
+        // @ts-ignore
+        await configHandler(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403);
+      }
+
+      // With permission
+      const authorizedCtx = createMockContext({
+        assertPermissions: () => {},
+      });
+      authorizedCtx.requestInfo.method = 'GET';
+      authorizedCtx.env.CONFIGS_BUCKET.get = async () => ({
+        json: async () => ({ authEnabled: true }),
+      });
+
+      // @ts-ignore
+      const response = await configHandler(authorizedCtx);
+      assert.equal(response.status, 200);
+    });
+
+    it('POST /config - should require config:write permission', async () => {
+      const ctx = createMockContext();
+      ctx.requestInfo.method = 'POST';
+      ctx.data = { authEnabled: true };
+
+      try {
+        // @ts-ignore
+        await configHandler(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403);
+      }
+
+      // With permission
+      const authorizedCtx = createMockContext({
+        assertPermissions: () => {},
+      });
+      authorizedCtx.requestInfo.method = 'POST';
+      authorizedCtx.data = { authEnabled: true };
+
+      // @ts-ignore
+      const response = await configHandler(authorizedCtx);
+      assert.equal(response.status, 200);
+    });
+
+    it('DELETE /config - should require config:write permission', async () => {
+      const ctx = createMockContext();
+      ctx.requestInfo.method = 'DELETE';
+
+      try {
+        // @ts-ignore
+        await configHandler(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403);
+      }
+
+      // With permission
+      const authorizedCtx = createMockContext({
+        assertPermissions: () => {},
+      });
+      authorizedCtx.requestInfo.method = 'DELETE';
+
+      // @ts-ignore
+      const response = await configHandler(authorizedCtx);
+      assert.equal(response.status, 204);
+    });
+
+    it('should reject token from different org/site for config operations', async () => {
+      const ctx = createMockContext({
+        assertPermissions: () => {},
+        assertOrgSite: (org, site) => {
+          if (org !== 'test-org' || site !== 'test-site') {
+            throw errorWithResponse(403, 'access denied');
+          }
+        },
+      });
+      ctx.requestInfo.org = 'different-org';
+      ctx.requestInfo.site = 'different-site';
+      ctx.requestInfo.method = 'GET';
+
+      try {
+        // @ts-ignore
+        await configHandler(ctx);
+        assert.fail('Should have thrown authorization error');
+      } catch (error) {
+        assert.equal(error.response.status, 403, 'Should reject cross-site token');
+      }
     });
   });
 });

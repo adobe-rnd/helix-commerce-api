@@ -11,6 +11,8 @@
  */
 
 import { errorWithResponse, ffetch } from './http.js';
+import { validate } from './validation.js';
+import ConfigSchema from '../schemas/Config.js';
 
 /**
  * Fetch config from the config service.
@@ -47,37 +49,54 @@ export async function fetchHelixConfig(ctx, org, site /* we ignore ref for now ,
 }
 
 /**
- * Retrieve the ProductBus site config for a given org/site
- *
  * @param {Context} ctx
- * @param {string} org
- * @param {string} site
- * @returns {Promise<ProductBusSiteConfig | null>} site config, or null if not exists
+ * @param {any} config
+ * @returns {asserts config is ProductBusConfig}
  */
-export async function getProductBusSiteConfig(ctx, org, site) {
-  const { env } = ctx;
-  const key = `sites/${org}/${site}`;
+export function assertValidConfig(ctx, config) {
+  const { log } = ctx;
+  const errors = validate(config, ConfigSchema);
+  if (errors) {
+    log.info('Invalid config', { errors });
+    throw errorWithResponse(400, 'Invalid config', { errors });
+  }
+}
+
+/**
+ * @param {Context} ctx
+ * @returns {Promise<ProductBusConfig|null>}
+ */
+export async function fetchProductBusConfig(ctx) {
+  const {
+    log,
+    requestInfo: {
+      org,
+      site,
+    },
+    env: {
+      CONFIGS_BUCKET: configsBucket,
+    },
+  } = ctx;
+
+  const key = `${org}/${site}/config.json`;
   if (!ctx.attributes.configs) {
     ctx.attributes.configs = {};
   }
-  if (typeof ctx.attributes.configs[key] !== 'undefined') {
+  if (ctx.attributes.configs?.[key]) {
     return ctx.attributes.configs[key];
   }
 
-  const existing = await env.AUTH_BUCKET.get(key);
-  if (!existing) {
-    ctx.attributes.configs[key] = null;
-    return null;
-  }
-
+  const body = await configsBucket.get(key);
   try {
-    const config = (await existing.json()) ?? {};
-    ctx.attributes.configs[key] = config;
-    return config;
+    if (body) {
+      const config = await body.json();
+      ctx.attributes.configs[key] = config;
+      return config;
+    }
   } catch (e) {
-    // treat existing file with invalid JSON as an empty config
-    ctx.log.error(`failed to parse site config from ${key}: ${e.message}`);
-    ctx.attributes.configs[key] = {};
+    log.error('Error fetching config', { error: e });
+    // treat invalid JSON as empty config
     return {};
   }
+  return null;
 }
