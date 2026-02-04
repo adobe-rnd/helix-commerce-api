@@ -26,7 +26,7 @@ describe('routes/index', () => {
 
   it('should export correct number of handlers', () => {
     const handlerKeys = Object.keys(handlers);
-    assert.strictEqual(handlerKeys.length, 7);
+    assert.strictEqual(handlerKeys.length, 8);
   });
 
   it('should have handlers as functions', () => {
