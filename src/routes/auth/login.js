@@ -46,7 +46,7 @@ export default async function login(ctx) {
   // 0. check if auth enabled for org/site
   const config = await fetchProductBusConfig(ctx);
   if (!config || !config.authEnabled) {
-    return errorResponse(409, 'auth is not enabled for this site');
+    return errorResponse(401, 'auth is not enabled');
   }
 
   // 1. validate inputs

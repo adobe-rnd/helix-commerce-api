@@ -99,7 +99,7 @@ describe('routes/auth login tests', () => {
     assert.equal(resp.headers.get('x-error'), 'internal server error');
   });
 
-  it('should return 409 if auth is not enabled for site', async () => {
+  it('should return 401 if auth is not enabled', async () => {
     const ctx = createLoginContext({
       data: { email: 'test@example.com' },
       env: {
@@ -114,11 +114,11 @@ describe('routes/auth login tests', () => {
       },
     });
     const resp = await handler(ctx);
-    assert.equal(resp.status, 409);
-    assert.equal(resp.headers.get('x-error'), 'auth is not enabled for this site');
+    assert.equal(resp.status, 401);
+    assert.equal(resp.headers.get('x-error'), 'auth is not enabled');
   });
 
-  it('should return 409 if config does not exist', async () => {
+  it('should return 401 if config does not exist', async () => {
     const ctx = createLoginContext({
       data: { email: 'test@example.com' },
       env: {
@@ -131,8 +131,8 @@ describe('routes/auth login tests', () => {
       },
     });
     const resp = await handler(ctx);
-    assert.equal(resp.status, 409);
-    assert.equal(resp.headers.get('x-error'), 'auth is not enabled for this site');
+    assert.equal(resp.status, 401);
+    assert.equal(resp.headers.get('x-error'), 'auth is not enabled');
   });
 
   it('should reject missing email', async () => {
