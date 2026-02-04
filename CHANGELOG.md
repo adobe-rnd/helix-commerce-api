@@ -1,3 +1,29 @@
+# [2.1.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.0.1...v2.1.0) (2026-02-04)
+
+
+### Bug Fixes
+
+* 201 response on created sitefile ([03fafed](https://github.com/adobe-rnd/helix-commerce-api/commit/03fafed0840d9daf9eaca5d8b11ec160e2efede5))
+* add expiresAt to revoked tokens ([1f8577f](https://github.com/adobe-rnd/helix-commerce-api/commit/1f8577f1d85d6f4f09ef46f7becd9120fe0c473c))
+* add from email env var ([b477728](https://github.com/adobe-rnd/helix-commerce-api/commit/b477728b838a0aa03a7dec3fce445843f9437091))
+* add missing route ([1f1c83b](https://github.com/adobe-rnd/helix-commerce-api/commit/1f1c83bbd6498ebb5031a383e9ae60be447d21c9))
+* add org/site to service auth ([140fb04](https://github.com/adobe-rnd/helix-commerce-api/commit/140fb04027d248be8903e603f67c3db7c129b9fd))
+* address comment ([fde2dce](https://github.com/adobe-rnd/helix-commerce-api/commit/fde2dce83d6a30fede476d31dba27052b10a5a7d))
+* address comments ([418913d](https://github.com/adobe-rnd/helix-commerce-api/commit/418913d3408565f67dee1b020a63c91b0e104261))
+* assert org and site ([a45471c](https://github.com/adobe-rnd/helix-commerce-api/commit/a45471c38f7ed4a277c752b07fdd3c49b8149d5d))
+* change to revoked path prefix ([0dcd304](https://github.com/adobe-rnd/helix-commerce-api/commit/0dcd304f048ca10bb0b87a498ea4b5099fadbebf))
+* check if auth is enabled for site during login ([56175a9](https://github.com/adobe-rnd/helix-commerce-api/commit/56175a9c8270c027116687d07a08fd24ba4c8f38))
+* tweak emailing ([b06fece](https://github.com/adobe-rnd/helix-commerce-api/commit/b06fece15129567e1e7821f5568aa5a74fd17ba2))
+* tweaks ([2bcf27c](https://github.com/adobe-rnd/helix-commerce-api/commit/2bcf27c43704ff456ff719504c056cff2f353fcd))
+* tweaks and post-deploy tests ([9baea23](https://github.com/adobe-rnd/helix-commerce-api/commit/9baea2308f111c0fc86ea27539360e3c7264019a))
+* update auth checks, tests ([28af257](https://github.com/adobe-rnd/helix-commerce-api/commit/28af25740215ac108e360f70b70de422fd5a68a5))
+* use authinfo, retain service tokens and superuser token fallback ([05b8fd0](https://github.com/adobe-rnd/helix-commerce-api/commit/05b8fd0bfb114f7e775aa73689054a3256d8abc0))
+
+
+### Features
+
+* auth api ([282a84e](https://github.com/adobe-rnd/helix-commerce-api/commit/282a84e6528ce83083f6e7feeecdcb6bbe1e3987))
+
 ## [2.0.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.0.0...v2.0.1) (2026-02-02)
 
 
