@@ -62,11 +62,16 @@ declare global {
     AUTH_BUCKET: R2Bucket;
 
     // emails
-    RESEND_API_KEY: string;
-    FROM_EMAIL: string;
+    FROM_EMAIL: string; // fallback email
+
+    // AWS SES
+    AWS_SES_SECRET_ACCESS_KEY: string;
+    AWS_SES_ACCESS_KEY_ID: string;
+    AWS_SES_ACCOUNT_ID: string;
+    AWS_SES_REGION: string;
 
     // bindings
-    KEYS: KVNamespace<string>;
+    KEYS: KVNamespace<string>; // TODO: remove this
     CATALOG_BUCKET: R2Bucket;
     ORDERS_BUCKET: R2Bucket;
     CONFIGS_BUCKET: R2Bucket;
@@ -91,6 +96,7 @@ declare global {
     attributes: {
       storageClient?: StorageClient;
       paymentPlatform?: Platform;
+      configs: Record<string, ProductBusConfig | null>;
       [key: string]: any;
     }
     authInfo: AuthInfo;

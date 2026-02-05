@@ -69,7 +69,9 @@ export async function makeContext(eCtx, req, env) {
     executionContext: eCtx,
   };
   // @ts-ignore
-  ctx.attributes = {};
+  ctx.attributes = {
+    configs: {},
+  };
   ctx.env = env;
   ctx.url = new URL(req.url);
   ctx.log = console;

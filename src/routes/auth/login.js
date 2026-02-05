@@ -10,21 +10,15 @@
  * governing permissions and limitations under the License.
  */
 
-import { generateOTPCode, createOTPHash } from '../../utils/auth.js';
+import {
+  generateOTPCode,
+  createOTPHash,
+  sendOTPEmail,
+  OTP_EXPIRATION_MS,
+} from '../../utils/auth.js';
 import { errorResponse } from '../../utils/http.js';
-import { normalizeEmail, isValidEmail, sendEmail } from '../../utils/email.js';
+import { normalizeEmail, isValidEmail } from '../../utils/email.js';
 import { fetchProductBusConfig } from '../../utils/config.js';
-
-const OTP_EXPIRATION_MIN = 5;
-export const OTP_EXPIRATION_MS = OTP_EXPIRATION_MIN * 60 * 1000; // 5 minutes
-export const OTP_SUBJECT = 'Your login code';
-
-/**
- * OTP body template
- * @param {string} code
- * @returns {string}
- */
-const OTP_BODY_TEMPLATE = (code) => `Your login code is: ${code}\n\nThis code will expire in ${OTP_EXPIRATION_MIN} minutes.`;
 
 /**
  * @type {RouteHandler}
@@ -65,8 +59,8 @@ export default async function login(ctx) {
   const secret = env.OTP_SECRET;
   const hash = await createOTPHash(email, org, site, code, exp, secret);
 
-  // 3. send email with code (TODO: make the email template, send from the proper sender)
-  await sendEmail(ctx, email, OTP_SUBJECT, OTP_BODY_TEMPLATE(code));
+  // 3. send email with code
+  await sendOTPEmail(ctx, email, code, config);
 
   // ctx.log.debug('OTP login request', {
   //   email, code, hash, exp,

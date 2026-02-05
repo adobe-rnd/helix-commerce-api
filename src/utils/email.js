@@ -10,7 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
-import { Resend } from 'resend';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { errorWithResponse } from './http.js';
 
 /**
@@ -35,31 +36,56 @@ export function isValidEmail(email) {
 }
 
 /**
- * Send an email using Resend
+ * Send an email
  *
  * @param {Context} ctx
- * @param {string} recipientEmail
+ * @param {string} fromEmail
+ * @param {string} toEmail
  * @param {string} subject
  * @param {string} body html
  */
-export async function sendEmail(ctx, recipientEmail, subject, body) {
-  const { env } = ctx;
-  if (!env.RESEND_API_KEY) {
-    ctx.log.error('RESEND_API_KEY is not set');
+export async function sendEmail(ctx, fromEmail, toEmail, subject, body) {
+  const { env, log, requestInfo } = ctx;
+  const { org, site } = requestInfo;
+
+  if (!env.AWS_SES_SECRET_ACCESS_KEY
+    || !env.AWS_SES_ACCESS_KEY_ID
+    || !env.AWS_SES_ACCOUNT_ID) {
+    log.error('AWS_SES_SECRET_ACCESS_KEY, AWS_SES_ACCESS_KEY_ID, or AWS_SES_ACCOUNT_ID is not set');
     throw errorWithResponse(500, 'internal server error');
   }
 
-  // ctx.log.debug('sending email to', recipientEmail, env.RESEND_API_KEY);
-  const resend = new Resend(env.RESEND_API_KEY);
-  const resp = await resend.emails.send({
-    // from: 'noreply@adobecommerce.live',
-    from: env.FROM_EMAIL || 'onboarding@resend.dev',
-    to: recipientEmail,
-    subject,
-    html: body,
+  const client = new SESv2Client({
+    region: env.AWS_SES_REGION || 'us-east-1',
+    credentials: {
+      secretAccessKey: env.AWS_SES_SECRET_ACCESS_KEY,
+      accessKeyId: env.AWS_SES_ACCESS_KEY_ID,
+      accountId: env.AWS_SES_ACCOUNT_ID,
+    },
   });
-  if (resp.error) {
-    ctx.log.error('error sending email', recipientEmail, resp.error);
+
+  try {
+    const resp = await client.send(new SendEmailCommand({
+      FromEmailAddress: fromEmail,
+      Destination: {
+        ToAddresses: [toEmail],
+      },
+      Content: {
+        Simple: {
+          Subject: {
+            Data: subject,
+          },
+          Body: {
+            Html: {
+              Data: body,
+            },
+          },
+        },
+      },
+    }));
+    log.info(`[SES] email sent for ${org}/${site}`, resp.MessageId);
+  } catch (error) {
+    log.error(`[SES] error sending email for ${org}/${site}`, error);
     throw errorWithResponse(500, 'internal server error');
   }
 }

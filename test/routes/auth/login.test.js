@@ -22,7 +22,7 @@ describe('routes/auth login tests', () => {
   const resendApiKey = 'test-resend-api-key';
 
   let handler;
-  let sendEmailStub;
+  let sendOTPEmailStub;
 
   /**
    * Helper to create context with authEnabled config
@@ -32,10 +32,14 @@ describe('routes/auth login tests', () => {
       OTP_SECRET: otpSecret,
       JWT_SECRET: jwtSecret,
       RESEND_API_KEY: resendApiKey,
+      FROM_EMAIL: 'test@example.com',
       AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
       CONFIGS_BUCKET: {
         get: async () => ({
-          json: async () => ({ authEnabled: true }),
+          json: async () => ({
+            authEnabled: true,
+            otpEmailSender: 'noreply@example.com',
+          }),
         }),
       },
     };
@@ -50,11 +54,16 @@ describe('routes/auth login tests', () => {
   };
 
   beforeEach(async () => {
-    // Mock the resend library
-    sendEmailStub = async () => ({ data: { id: 'mock-email-id' }, error: null });
+    // Mock sendOTPEmail from auth.js instead of sendEmail from email.js
+    sendOTPEmailStub = async () => {}; // No-op stub
     handler = await esmock('../../../src/routes/auth/login.js', {
+      '../../../src/utils/auth.js': {
+        sendOTPEmail: sendOTPEmailStub,
+        generateOTPCode: () => '123456',
+        createOTPHash: async (email, org, site, code, exp) => `hash-${email}-${code}-${exp}`,
+        OTP_EXPIRATION_MS: 5 * 60 * 1000,
+      },
       '../../../src/utils/email.js': {
-        sendEmail: sendEmailStub,
         normalizeEmail: (email) => email.trim().toLowerCase(),
         isValidEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
       },
@@ -144,13 +153,15 @@ describe('routes/auth login tests', () => {
     assert.equal(resp.headers.get('x-error'), 'missing or invalid email');
   });
 
-  it('should throw 500 response error if RESEND_API_KEY is missing', async () => {
-    // Mock sendEmail to throw when RESEND_API_KEY is missing
-    const noKeyHandler = await esmock('../../../src/routes/auth/login.js', {
-      '../../../src/utils/email.js': {
-        sendEmail: async (ctx) => {
-          // This mimics the real sendEmail behavior when RESEND_API_KEY is missing
-          if (!ctx.env.RESEND_API_KEY) {
+  it('should throw 500 response error if FROM_EMAIL is missing and no otpEmailSender in config', async () => {
+    // Mock sendOTPEmail to throw when neither FROM_EMAIL nor otpEmailSender is available
+    const noEmailHandler = await esmock('../../../src/routes/auth/login.js', {
+      '../../../src/utils/auth.js': {
+        sendOTPEmail: async (ctx) => {
+          // This mimics the real sendOTPEmail behavior
+          const { env, log } = ctx;
+          if (!env.FROM_EMAIL) {
+            log.error('fromEmail and fallback not defined');
             const error = new Error('internal server error');
             error.response = {
               status: 500,
@@ -159,6 +170,11 @@ describe('routes/auth login tests', () => {
             throw error;
           }
         },
+        generateOTPCode: () => '123456',
+        createOTPHash: async () => 'mock-hash',
+        OTP_EXPIRATION_MS: 5 * 60 * 1000,
+      },
+      '../../../src/utils/email.js': {
         normalizeEmail: (email) => email.trim().toLowerCase(),
         isValidEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
       },
@@ -169,18 +185,27 @@ describe('routes/auth login tests', () => {
       env: {
         OTP_SECRET: otpSecret,
         JWT_SECRET: jwtSecret,
-        // RESEND_API_KEY missing
+        // FROM_EMAIL missing
         AUTH_BUCKET: { head: async () => ({ customMetadata: {} }) },
         CONFIGS_BUCKET: {
           get: async () => ({
-            json: async () => ({ authEnabled: true }),
+            json: async () => ({
+              authEnabled: true,
+              // otpEmailSender not set
+            }),
           }),
         },
+      },
+      log: {
+        error: () => {},
+        warn: () => {},
+        info: () => {},
+        debug: () => {},
       },
     });
     let error;
     try {
-      await noKeyHandler(ctx);
+      await noEmailHandler(ctx);
     } catch (err) {
       error = err;
     }
@@ -263,11 +288,11 @@ describe('routes/auth login tests', () => {
     assert.ok(data.exp);
   });
 
-  it('should throw 500 error when sendEmail fails', async () => {
-    // Mock sendEmail to throw an error
+  it('should throw 500 error when sendOTPEmail fails', async () => {
+    // Mock sendOTPEmail to throw an error
     const errorHandler = await esmock('../../../src/routes/auth/login.js', {
-      '../../../src/utils/email.js': {
-        sendEmail: async () => {
+      '../../../src/utils/auth.js': {
+        sendOTPEmail: async () => {
           const error = new Error('internal server error');
           error.response = {
             status: 500,
@@ -275,6 +300,11 @@ describe('routes/auth login tests', () => {
           };
           throw error;
         },
+        generateOTPCode: () => '123456',
+        createOTPHash: async () => 'mock-hash',
+        OTP_EXPIRATION_MS: 5 * 60 * 1000,
+      },
+      '../../../src/utils/email.js': {
         normalizeEmail: (email) => email.trim().toLowerCase(),
         isValidEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
       },

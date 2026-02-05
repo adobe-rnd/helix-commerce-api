@@ -10,11 +10,15 @@
  * governing permissions and limitations under the License.
  */
 
-import { createOTPHash, hashEmail, timingSafeEqual } from '../../utils/auth.js';
+import {
+  createOTPHash,
+  hashEmail,
+  timingSafeEqual,
+  OTP_EXPIRATION_MS,
+} from '../../utils/auth.js';
 import { normalizeEmail } from '../../utils/email.js';
 import { errorResponse, errorWithResponse } from '../../utils/http.js';
 import { createToken } from '../../utils/jwt.js';
-import { OTP_EXPIRATION_MS } from './login.js';
 
 const MAX_ATTEMPTS = 3;
 const MAX_RETRIES = 3;

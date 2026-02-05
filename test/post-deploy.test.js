@@ -17,7 +17,7 @@ import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
 import assert from 'assert';
 import { h1NoCache } from '@adobe/fetch';
 import { config } from 'dotenv';
-import { OTP_SUBJECT } from '../src/routes/auth/login.js';
+import { OTP_SUBJECT } from '../src/utils/auth.js';
 import { createImapListener } from './fixtures/imap.js';
 
 // required env variables
