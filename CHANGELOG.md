@@ -1,3 +1,17 @@
+# [2.3.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.2.0...v2.3.0) (2026-02-05)
+
+
+### Bug Fixes
+
+* from email fallback ([0c07dcd](https://github.com/adobe-rnd/helix-commerce-api/commit/0c07dcde3f7edc7e3aa7e7c29ecccf00957d17df))
+* helix to email for templates ([16645be](https://github.com/adobe-rnd/helix-commerce-api/commit/16645be9b0471effc6de5b5dc2ea3545a43769c1))
+* regex replace ([ac0ad65](https://github.com/adobe-rnd/helix-commerce-api/commit/ac0ad6597c161b9eb664d91c17e83bb49f9da88d))
+
+
+### Features
+
+* SES, OTP email templateS ([5bcc6f5](https://github.com/adobe-rnd/helix-commerce-api/commit/5bcc6f5bc10df316b6d3faa9a8c80c1577e10d28))
+
 # [2.2.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.1.0...v2.2.0) (2026-02-04)
 
 
