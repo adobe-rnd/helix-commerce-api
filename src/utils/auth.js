@@ -184,7 +184,8 @@ export async function sendOTPEmail(ctx, toEmail, code, config) {
   let body;
   // try for template first
   if (otpEmailBodyUrl) {
-    const templateResp = await fetch(otpEmailBodyUrl);
+    const templateUrl = `https://helix-to-email.adobeaem.workers.dev?url=${encodeURIComponent(otpEmailBodyUrl)}`;
+    const templateResp = await fetch(templateUrl);
     if (!templateResp.ok) {
       log.error(`failed to fetch OTP email body template from ${otpEmailBodyUrl}`);
       throw errorWithResponse(404, `template fetch failed (${templateResp.status})`);
