@@ -191,9 +191,9 @@ export async function sendOTPEmail(ctx, toEmail, code, config) {
       throw errorWithResponse(404, `template fetch failed (${templateResp.status})`);
     }
     const templateText = await templateResp.text();
-    body = templateText.replace('{{code}}', code);
+    body = templateText.replace(/{{code}}/g, code);
   } else if (otpEmailBodyTemplate) {
-    body = otpEmailBodyTemplate.replace('{{code}}', code);
+    body = otpEmailBodyTemplate.replace(/{{code}}/g, code);
   } else {
     body = DEFAULT_OTP_BODY_TEMPLATE(code);
   }
