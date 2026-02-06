@@ -11,7 +11,7 @@
  */
 
 import StorageClient from '../../utils/StorageClient.js';
-import { errorResponse } from '../../utils/http.js';
+import { errorResponse, optionsHandler } from '../../utils/http.js';
 import { DIRECTORY_PATH_PATTERN } from '../../utils/validation.js';
 
 /**
@@ -183,6 +183,8 @@ export default async function handler(ctx) {
       ctx.authInfo.assertPermissions('index:write');
       ctx.authInfo.assertOrgSite(org, site);
       return remove(ctx);
+    case 'OPTIONS':
+      return optionsHandler(['POST', 'DELETE'])(ctx);
     default:
       return errorResponse(405, 'method not allowed');
   }

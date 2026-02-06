@@ -13,7 +13,7 @@
 import { validate } from '../../utils/validation.js';
 import StorageClient from '../../utils/StorageClient.js';
 import AddressSchema from '../../schemas/Address.js';
-import { errorWithResponse, errorResponse } from '../../utils/http.js';
+import { errorWithResponse, errorResponse, optionsHandler } from '../../utils/http.js';
 
 /**
  * @param {Address} address
@@ -102,6 +102,8 @@ export default async function handler(ctx) {
         },
       });
     }
+    case 'OPTIONS':
+      return optionsHandler(['GET', 'POST'])(ctx);
     default:
       return errorResponse(405, 'Method not allowed');
   }
