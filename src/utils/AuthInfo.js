@@ -40,6 +40,8 @@ const PERMISSIONS = {
     'orders:read',
     'orders:write',
     'service_token:read',
+    'index:read',
+    'index:write',
   ],
   user: [
     'orders:read',
