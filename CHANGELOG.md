@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.0...v2.3.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* add index perms to service role ([#137](https://github.com/adobe-rnd/helix-commerce-api/issues/137)) ([226db78](https://github.com/adobe-rnd/helix-commerce-api/commit/226db7827298094bfa8decbea2626561bfd238fd))
+
 # [2.3.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.2.0...v2.3.0) (2026-02-05)
 
 
