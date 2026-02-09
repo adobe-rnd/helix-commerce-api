@@ -189,6 +189,8 @@ declare global {
   export interface ProductBusConfig {
     // Whether this site should allow logging in via OTP
     authEnabled?: boolean;
+    // Origin to allow CORS requests from
+    authOrigins?: string[];
     // OTP from email
     otpEmailSender?: string;
     // OTP email subject
