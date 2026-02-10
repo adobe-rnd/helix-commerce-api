@@ -165,7 +165,7 @@ export default class AuthInfo {
 
       // if the token looks like a caps uuid, assume it's a service token
       // check if it's the matching org-site scoped token
-      if (ctx.requestInfo?.siteKey && token.match(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i)) {
+      if (ctx.requestInfo?.siteKey && /^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$/.test(token)) {
         const expected = await ctx.env.KEYS.get(ctx.requestInfo.siteKey);
         if (expected && timingSafeEqual(token, expected)) {
           auth.#roles.add('service');
