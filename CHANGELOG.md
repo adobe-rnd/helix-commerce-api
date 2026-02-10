@@ -1,3 +1,11 @@
+## [2.3.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.1...v2.3.2) (2026-02-10)
+
+
+### Bug Fixes
+
+* allow lowercase service tokens ([47938d4](https://github.com/adobe-rnd/helix-commerce-api/commit/47938d4d444be46f1999959285b0425cb0494d77))
+* regex test instead of string match ([ef8defd](https://github.com/adobe-rnd/helix-commerce-api/commit/ef8defd464e7136c28327e3d4985be8d32803f15))
+
 ## [2.3.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.0...v2.3.1) (2026-02-09)
 
 
