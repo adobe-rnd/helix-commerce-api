@@ -125,6 +125,39 @@ const ProductBusVariant = {
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusMerchant = {
+  type: 'object',
+  properties: {
+    name: { type: 'string', maxLength: 70 },
+    url: { type: 'string' },
+    privacyPolicy: { type: 'string' },
+    termsOfService: { type: 'string' },
+  },
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusFeed = {
+  type: 'object',
+  properties: {
+    isEligibleForSearch: { type: 'boolean' },
+    isEligibleForCheckout: { type: 'boolean' },
+  },
+  required: ['isEligibleForSearch', 'isEligibleForCheckout'],
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusGeo = {
+  type: 'object',
+  properties: {
+    targetCountries: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    storeCountry: { type: 'string' },
+  },
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
 const MerchantFeedShipping = {
   type: 'object',
   properties: {
@@ -159,8 +192,12 @@ const ProductBusEntry = {
     brand: { type: 'string' },
     type: { type: 'string' },
     availability: SchemaOrgAvailability,
+    availabilityDate: { type: 'string' },
     price: ProductBusPrice,
+    merchant: ProductBusMerchant,
     itemCondition: SchemaOrgItemCondition,
+    feed: ProductBusFeed,
+    geo: ProductBusGeo,
     metadata: {
       type: 'object',
       properties: {},
