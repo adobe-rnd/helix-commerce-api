@@ -125,9 +125,11 @@ describe('schemas/ProductBus', () => {
         sku: '123',
         name: 'Product 1',
         path: '/products/test',
-        feed: {
-          isEligibleForSearch: true,
-          isEligibleForCheckout: true,
+        feeds: {
+          openai: {
+            isEligibleForSearch: true,
+            isEligibleForCheckout: true,
+          },
         },
       };
       assertValidProduct(DEFAULT_CONTEXT(), product);
@@ -138,9 +140,11 @@ describe('schemas/ProductBus', () => {
         sku: '123',
         name: 'Product 1',
         path: '/products/test',
-        feed: {
-          isEligibleForSearch: true,
-          // missing isEligibleForCheckout
+        feeds: {
+          openai: {
+            isEligibleForSearch: true,
+            // missing isEligibleForCheckout
+          },
         },
       };
       try {
@@ -155,7 +159,7 @@ describe('schemas/ProductBus', () => {
 
         const json = await response.json();
         assert.ok(json.errors);
-        assert.ok(json.errors.some((err) => err.path === '$.feed'));
+        assert.ok(json.errors.some((err) => err.path === '$.feeds.openai'));
       }
     });
 
@@ -164,9 +168,11 @@ describe('schemas/ProductBus', () => {
         sku: '123',
         name: 'Product 1',
         path: '/products/test',
-        geo: {
-          targetCountries: ['US', 'CA', 'MX'],
-          storeCountry: 'US',
+        feeds: {
+          common: {
+            geoTargetCountries: ['US', 'CA', 'MX'],
+            geoStoreCountry: 'US',
+          },
         },
       };
       assertValidProduct(DEFAULT_CONTEXT(), product);
@@ -211,13 +217,15 @@ describe('schemas/ProductBus', () => {
           privacyPolicy: 'https://seller.com/privacy',
           termsOfService: 'https://seller.com/tos',
         },
-        feed: {
-          isEligibleForSearch: true,
-          isEligibleForCheckout: true,
-        },
-        geo: {
-          targetCountries: ['US', 'CA'],
-          storeCountry: 'US',
+        feeds: {
+          common: {
+            geoTargetCountries: ['US', 'CA'],
+            geoStoreCountry: 'US',
+          },
+          openai: {
+            isEligibleForSearch: true,
+            isEligibleForCheckout: true,
+          },
         },
       };
       assertValidProduct(DEFAULT_CONTEXT(), product);

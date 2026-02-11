@@ -136,7 +136,19 @@ const ProductBusMerchant = {
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
-const ProductBusFeed = {
+const ProductBusFeedCommon = {
+  type: 'object',
+  properties: {
+    geoTargetCountries: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    geoStoreCountry: { type: 'string' },
+  },
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusFeedOpenAI = {
   type: 'object',
   properties: {
     isEligibleForSearch: { type: 'boolean' },
@@ -146,14 +158,11 @@ const ProductBusFeed = {
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
-const ProductBusGeo = {
+const ProductBusFeeds = {
   type: 'object',
   properties: {
-    targetCountries: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    storeCountry: { type: 'string' },
+    common: ProductBusFeedCommon,
+    openai: ProductBusFeedOpenAI,
   },
 };
 
@@ -196,8 +205,7 @@ const ProductBusEntry = {
     price: ProductBusPrice,
     merchant: ProductBusMerchant,
     itemCondition: SchemaOrgItemCondition,
-    feed: ProductBusFeed,
-    geo: ProductBusGeo,
+    feeds: ProductBusFeeds,
     metadata: {
       type: 'object',
       properties: {},
