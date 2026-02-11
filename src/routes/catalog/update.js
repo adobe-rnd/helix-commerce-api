@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import processQueue from '@adobe/helix-shared-process-queue';
+import { isRelativePath } from '@dylandepass/helix-product-shared';
 import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from '../../utils/StorageClient.js';
@@ -21,17 +23,32 @@ const MAX_IMAGES_PER_JOB = 500;
 /**
  * Whether to process images asynchronously.
  * @param {Context} ctx
- * @param {SharedTypes.ProductBusEntry[]} products
+ * @returns {boolean}
  */
-function shouldProcessImagesAsync(ctx, products) {
+function forcedAsyncImages(ctx) {
   if (ctx.env.ENVIRONMENT === 'ci') {
     // allow selecting async behavior for post-deploy tests
     if (ctx.url.searchParams.get('asyncImages') === 'true') {
       return true;
     }
   }
-  return (products.length > 10
-    || products.reduce((acc, product) => acc + (product.images?.length ?? 0), 0) > 10);
+  return false;
+}
+
+/**
+ * Whether to process images asynchronously.
+ * @param {SharedTypes.ProductBusEntry[]} products
+ */
+function shouldProcessImagesAsync(products) {
+  const totalImages = products.reduce((acc, product) => {
+    const productImages = product.images?.length ?? 0;
+    const variantImages = product.variants?.reduce(
+      (tally, variant) => tally + (variant.images?.length ?? 0),
+      0,
+    ) ?? 0;
+    return acc + productImages + variantImages;
+  }, 0);
+  return products.length > 10 || totalImages > 10;
 }
 
 /**
@@ -68,6 +85,64 @@ export async function publishImageCollectorJobs(ctx, products, payload) {
 }
 
 /**
+ * Replace already processed images with hashed paths
+ * Limited by the number of requests per invocation
+ * Products returned are mutated in place, and may or may not have their images replaced
+ *
+ * @param {Context} ctx
+ * @param {SharedTypes.ProductBusEntry[]} products
+ * @returns {Promise<SharedTypes.ProductBusEntry[]>}
+ */
+async function replaceProcessedImages(ctx, products) {
+  const { org, site } = ctx.requestInfo;
+  const storage = StorageClient.fromContext(ctx);
+
+  // each product needs a PUT to save
+  // plus some reserved overhead (100 requests) for retries and pushing events to queue
+  let requestLimit = 1000 - products.length - 100;
+
+  // process each product
+  await processQueue([...products], async (product) => {
+    // immediately subtract the number of HEADs used for this product
+    requestLimit -= (
+      product.images.length
+      + product.variants.flatMap((variant) => variant.images.length).length
+    );
+    if (requestLimit <= 0) {
+      return;
+    }
+
+    /**
+     * Lookup, and replace if existing image location is found
+     * @param {SharedTypes.ProductBusImage} image
+     * @returns {Promise<boolean>} true if the image was replaced
+     */
+    const replaceImage = async (image) => {
+      if (isRelativePath(image.url)) {
+        return false;
+      }
+      const location = await storage.lookupImageLocation(ctx, org, site, image.url);
+      if (location) {
+        image.url = location;
+        return true;
+      }
+      return false;
+    };
+
+    const images = [
+      ...product.images,
+      ...(product.variants?.flatMap((variant) => variant.images) ?? []),
+    ];
+    await Promise.all(
+      images.map(async (image) => {
+        await replaceImage(image);
+      }),
+    );
+  });
+  return products;
+}
+
+/**
  * Do update for a set of products.
  *
  * @param {Context} ctx
@@ -88,7 +163,13 @@ async function doUpdate(ctx, products) {
     const storage = StorageClient.fromContext(ctx);
     // images are fetched asynchronously if there are more than 10 products,
     // of it there are more than 10 images total across all products
-    const asyncImages = shouldProcessImagesAsync(ctx, products);
+    const forceAsyncImages = forcedAsyncImages(ctx);
+    const asyncImages = forceAsyncImages || shouldProcessImagesAsync(products);
+    if (asyncImages && !forceAsyncImages) {
+      // if we're going to process images asynchronously
+      // try to replace already processed images to avoid processing them asynchronously
+      products = await replaceProcessedImages(ctx, products);
+    }
     results = await storage.saveProductsByPath(products, asyncImages);
 
     const payload = {
