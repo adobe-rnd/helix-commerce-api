@@ -39,7 +39,9 @@ function createValidProduct(overrides = {}) {
   if (product.options) {
     product.options = product.options.map((option) => {
       const {
-        items, ...validOption
+        // unused vars are invalid options, purposefully removed from spread
+        // eslint-disable-next-line no-unused-vars
+        typename: _typename, required: _required, multiple: _multiple, items, ...validOption
       } = option;
       return {
         ...validOption,
