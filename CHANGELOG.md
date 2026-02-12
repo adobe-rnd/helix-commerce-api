@@ -1,3 +1,12 @@
+## [2.3.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.2...v2.3.3) (2026-02-12)
+
+
+### Bug Fixes
+
+* implement OpenAI product feed fields ([4e2b76c](https://github.com/adobe-rnd/helix-commerce-api/commit/4e2b76cf84a9ceb85986fded8fa832385624aea6))
+* namespace feed fields with common and openai structure ([9572e5a](https://github.com/adobe-rnd/helix-commerce-api/commit/9572e5ade431ce7ad997a02d1636fbaf56e25bcd))
+* remove merchant ([f0752f4](https://github.com/adobe-rnd/helix-commerce-api/commit/f0752f4ae106e223a3988c5181100c396f5e8a9c))
+
 ## [2.3.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.1...v2.3.2) (2026-02-10)
 
 
