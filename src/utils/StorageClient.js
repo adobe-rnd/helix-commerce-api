@@ -105,8 +105,22 @@ export default class StorageClient extends SharedStorageClient {
     const successfullySavedProducts = [];
 
     const storePromises = batch.map(async (product) => {
+      let imageLookup = {};
+
       if (!asyncImages) {
-        product = await extractAndReplaceImages(this.ctx, org, site, product);
+        // Fetch existing imageLookup if available
+        const existing = await this.fetchProductByPath(org, site, product.path, true);
+        if (existing?.metadata?.imageLookup) {
+          try {
+            imageLookup = JSON.parse(existing.metadata.imageLookup);
+          } catch (e) {
+            log.warn(`Failed to parse imageLookup for ${product.path}:`, e);
+          }
+        }
+
+        const result = await extractAndReplaceImages(this.ctx, org, site, product, imageLookup);
+        product = result.product;
+        imageLookup = result.imageLookup;
       }
 
       const { sku, name, path } = product;
@@ -134,7 +148,12 @@ export default class StorageClient extends SharedStorageClient {
 
       try {
         const t0 = Date.now();
-        const customMetadata = { sku, name, path };
+        const customMetadata = {
+          sku,
+          name,
+          path,
+          imageLookup: JSON.stringify(imageLookup),
+        };
 
         // Save the product at its path location
         await env.CATALOG_BUCKET.put(key, body, {

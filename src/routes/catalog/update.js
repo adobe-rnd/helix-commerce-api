@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+import { applyImageLookup, hasNewImages } from '@dylandepass/helix-product-shared';
 import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from '../../utils/StorageClient.js';
@@ -17,6 +18,30 @@ import { fetchHelixConfig } from '../../utils/config.js';
 
 const MAX_PRODUCT_BULK = 50;
 const MAX_IMAGES_PER_JOB = 500;
+
+/**
+ * Deep comparison of two objects
+ * @param {any} obj1
+ * @param {any} obj2
+ * @returns {boolean}
+ */
+function deepEqual(obj1, obj2) {
+  if (obj1 === obj2) return true;
+  if (obj1 == null || obj2 == null) return false;
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false;
+
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) return false;
+
+  for (const key of keys1) {
+    if (!keys2.includes(key)) return false;
+    if (!deepEqual(obj1[key], obj2[key])) return false;
+  }
+
+  return true;
+}
 
 /**
  * Whether to process images asynchronously.
@@ -86,23 +111,92 @@ async function doUpdate(ctx, products) {
     ctx.attributes.helixConfigCache = helixConfig;
 
     const storage = StorageClient.fromContext(ctx);
+
+    // Fetch existing products and check for changes
+    const productsToUpdate = [];
+    const skippedProducts = [];
+
+    for (const product of products) {
+      const { path } = product;
+      // eslint-disable-next-line no-await-in-loop
+      const existing = await storage.fetchProductByPath(org, site, path, true);
+
+      if (existing && typeof existing === 'object' && 'product' in existing) {
+        const { product: existingProduct, metadata } = existing;
+        // Parse imageLookup from metadata
+        const imageLookup = metadata.imageLookup ? JSON.parse(metadata.imageLookup) : {};
+
+        // Create a copy of the incoming product with imageLookup applied
+        const productWithLookup = JSON.parse(JSON.stringify(product));
+        applyImageLookup(productWithLookup, imageLookup);
+
+        // Check if there are new images
+        const hasNewImageUrls = hasNewImages(product, imageLookup);
+
+        // If no new images, compare the products
+        if (!hasNewImageUrls && deepEqual(productWithLookup, existingProduct)) {
+          log.info(`No changes detected for product at path: ${path}, skipping update`);
+          skippedProducts.push({
+            sku: product.sku,
+            path: product.path,
+            status: 200,
+            message: 'No changes detected',
+          });
+          // Skip to next product
+          productsToUpdate.push(null);
+        } else {
+          // If there are changes or new images, apply lookup to replace existing images
+          applyImageLookup(product, imageLookup);
+          productsToUpdate.push(product);
+        }
+      } else {
+        productsToUpdate.push(product);
+      }
+    }
+
+    // Filter out null entries from skipped products
+    const filteredProductsToUpdate = productsToUpdate.filter((p) => p !== null);
+
+    // If all products were skipped, return early
+    if (filteredProductsToUpdate.length === 0) {
+      return new Response(
+        JSON.stringify({
+          product: skippedProducts.length === 1 ? skippedProducts[0] : undefined,
+          products: skippedProducts.length > 1 ? skippedProducts : undefined,
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    }
+
     // images are fetched asynchronously if there are more than 10 products,
     // of it there are more than 10 images total across all products
-    const asyncImages = shouldProcessImagesAsync(ctx, products);
-    results = await storage.saveProductsByPath(products, asyncImages);
+    const asyncImages = shouldProcessImagesAsync(ctx, filteredProductsToUpdate);
+    results = await storage.saveProductsByPath(filteredProductsToUpdate, asyncImages);
+
+    // Merge skipped products into results
+    results = [...results, ...skippedProducts];
 
     const payload = {
       org,
       site,
       // @ts-ignore
-      products: results.map((r) => ({ path: r.path, action: 'update' })),
+      products: results
+        .filter((r) => r.status === 200 || r.status === 201)
+        .map((r) => ({ path: r.path, action: 'update' })),
       timestamp: Date.now(),
     };
 
-    await ctx.env.INDEXER_QUEUE.send(payload);
+    if (payload.products.length > 0) {
+      await ctx.env.INDEXER_QUEUE.send(payload);
 
-    if (asyncImages) {
-      await publishImageCollectorJobs(ctx, products, payload);
+      if (asyncImages) {
+        await publishImageCollectorJobs(ctx, filteredProductsToUpdate, payload);
+      }
     }
 
     log.info({
