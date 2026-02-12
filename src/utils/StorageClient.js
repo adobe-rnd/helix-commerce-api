@@ -105,22 +105,16 @@ export default class StorageClient extends SharedStorageClient {
     const successfullySavedProducts = [];
 
     const storePromises = batch.map(async (product) => {
-      let imageLookup = {};
-
       if (!asyncImages) {
-        // Fetch existing imageLookup if available
+        // Fetch existing product with internal data if available
         const existing = await this.fetchProductByPath(org, site, product.path, true);
-        if (existing?.metadata?.imageLookup) {
-          try {
-            imageLookup = JSON.parse(existing.metadata.imageLookup);
-          } catch (e) {
-            log.warn(`Failed to parse imageLookup for ${product.path}:`, e);
-          }
+        if (existing?.internal) {
+          // Transfer internal property to current product
+          product.internal = existing.internal;
         }
 
-        const result = await extractAndReplaceImages(this.ctx, org, site, product, imageLookup);
-        product = result.product;
-        imageLookup = result.imageLookup;
+        // Process images (mutates product and updates product.internal)
+        product = await extractAndReplaceImages(this.ctx, org, site, product);
       }
 
       const { sku, name, path } = product;
@@ -144,7 +138,10 @@ export default class StorageClient extends SharedStorageClient {
       }
 
       const key = `${org}/${site}/catalog${path}.json`;
-      const body = JSON.stringify(product);
+
+      // Create a copy of the product for storage (includes internal property)
+      const productToStore = JSON.parse(JSON.stringify(product));
+      const body = JSON.stringify(productToStore);
 
       try {
         const t0 = Date.now();
@@ -152,7 +149,6 @@ export default class StorageClient extends SharedStorageClient {
           sku,
           name,
           path,
-          imageLookup: JSON.stringify(imageLookup),
         };
 
         // Save the product at its path location

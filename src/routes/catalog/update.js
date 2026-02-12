@@ -101,7 +101,7 @@ export async function publishImageCollectorJobs(ctx, products, payload) {
  */
 async function doUpdate(ctx, products) {
   /** @type {Partial<BatchResult>[]} */
-  let results;
+  let results = [];
 
   try {
     const { log, requestInfo } = ctx;
@@ -119,22 +119,28 @@ async function doUpdate(ctx, products) {
     for (const product of products) {
       const { path } = product;
       // eslint-disable-next-line no-await-in-loop
-      const existing = await storage.fetchProductByPath(org, site, path, true);
+      const existingProduct = await storage.fetchProductByPath(org, site, path, true);
 
-      if (existing && typeof existing === 'object' && 'product' in existing) {
-        const { product: existingProduct, metadata } = existing;
-        // Parse imageLookup from metadata
-        const imageLookup = metadata.imageLookup ? JSON.parse(metadata.imageLookup) : {};
+      if (existingProduct) {
+        // Transfer internal property to incoming product for comparison
+        if (existingProduct.internal) {
+          product.internal = existingProduct.internal;
+        }
 
         // Create a copy of the incoming product with imageLookup applied
         const productWithLookup = JSON.parse(JSON.stringify(product));
-        applyImageLookup(productWithLookup, imageLookup);
+        applyImageLookup(productWithLookup);
 
         // Check if there are new images
-        const hasNewImageUrls = hasNewImages(product, imageLookup);
+        const hasNewImageUrls = hasNewImages(product);
+
+        // Remove internal property for comparison
+        const existingForComparison = JSON.parse(JSON.stringify(existingProduct));
+        delete existingForComparison.internal;
+        delete productWithLookup.internal;
 
         // If no new images, compare the products
-        if (!hasNewImageUrls && deepEqual(productWithLookup, existingProduct)) {
+        if (!hasNewImageUrls && deepEqual(productWithLookup, existingForComparison)) {
           log.info(`No changes detected for product at path: ${path}, skipping update`);
           skippedProducts.push({
             sku: product.sku,
@@ -146,7 +152,7 @@ async function doUpdate(ctx, products) {
           productsToUpdate.push(null);
         } else {
           // If there are changes or new images, apply lookup to replace existing images
-          applyImageLookup(product, imageLookup);
+          applyImageLookup(product);
           productsToUpdate.push(product);
         }
       } else {
