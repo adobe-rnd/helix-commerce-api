@@ -125,17 +125,6 @@ const ProductBusVariant = {
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
-const ProductBusMerchant = {
-  type: 'object',
-  properties: {
-    name: { type: 'string', maxLength: 70 },
-    url: { type: 'string' },
-    privacyPolicy: { type: 'string' },
-    termsOfService: { type: 'string' },
-  },
-};
-
-/** @type {import("../utils/validation.js").ObjectSchema} */
 const ProductBusFeedCommon = {
   type: 'object',
   properties: {
@@ -162,7 +151,7 @@ const ProductBusFeeds = {
   type: 'object',
   properties: {
     common: ProductBusFeedCommon,
-    openai: ProductBusFeedOpenAI,
+    oai: ProductBusFeedOpenAI,
   },
 };
 
@@ -203,9 +192,7 @@ const ProductBusEntry = {
     availability: SchemaOrgAvailability,
     availabilityDate: { type: 'string' },
     price: ProductBusPrice,
-    merchant: ProductBusMerchant,
     itemCondition: SchemaOrgItemCondition,
-    feeds: ProductBusFeeds,
     metadata: {
       type: 'object',
       properties: {},
@@ -243,6 +230,7 @@ const ProductBusEntry = {
       MerchantFeedShipping,
       { type: 'array', items: MerchantFeedShipping },
     ],
+    feeds: ProductBusFeeds,
   },
   required: ['sku', 'name', 'path'],
 };

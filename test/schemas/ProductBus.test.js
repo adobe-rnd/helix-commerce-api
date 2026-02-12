@@ -105,28 +105,13 @@ describe('schemas/ProductBus', () => {
   });
 
   describe('OpenAI Commerce Feed fields', () => {
-    it('should accept products with merchant information', () => {
-      const product = {
-        sku: '123',
-        name: 'Product 1',
-        path: '/products/test',
-        merchant: {
-          name: 'Test Seller',
-          url: 'https://seller.com',
-          privacyPolicy: 'https://seller.com/privacy',
-          termsOfService: 'https://seller.com/tos',
-        },
-      };
-      assertValidProduct(DEFAULT_CONTEXT(), product);
-    });
-
     it('should accept products with feed eligibility flags', () => {
       const product = {
         sku: '123',
         name: 'Product 1',
         path: '/products/test',
         feeds: {
-          openai: {
+          oai: {
             isEligibleForSearch: true,
             isEligibleForCheckout: true,
           },
@@ -141,7 +126,7 @@ describe('schemas/ProductBus', () => {
         name: 'Product 1',
         path: '/products/test',
         feeds: {
-          openai: {
+          oai: {
             isEligibleForSearch: true,
             // missing isEligibleForCheckout
           },
@@ -159,7 +144,7 @@ describe('schemas/ProductBus', () => {
 
         const json = await response.json();
         assert.ok(json.errors);
-        assert.ok(json.errors.some((err) => err.path === '$.feeds.openai'));
+        assert.ok(json.errors.some((err) => err.path === '$.feeds.oai'));
       }
     });
 
@@ -211,18 +196,12 @@ describe('schemas/ProductBus', () => {
           regular: '10.00',
           final: '9.99',
         },
-        merchant: {
-          name: 'Test Seller',
-          url: 'https://seller.com',
-          privacyPolicy: 'https://seller.com/privacy',
-          termsOfService: 'https://seller.com/tos',
-        },
         feeds: {
           common: {
             geoTargetCountries: ['US', 'CA'],
             geoStoreCountry: 'US',
           },
-          openai: {
+          oai: {
             isEligibleForSearch: true,
             isEligibleForCheckout: true,
           },
