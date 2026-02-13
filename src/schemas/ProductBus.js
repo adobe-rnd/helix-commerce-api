@@ -125,6 +125,37 @@ const ProductBusVariant = {
 };
 
 /** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusFeedCommon = {
+  type: 'object',
+  properties: {
+    geoTargetCountries: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    geoStoreCountry: { type: 'string' },
+  },
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusFeedOpenAI = {
+  type: 'object',
+  properties: {
+    isEligibleForSearch: { type: 'boolean' },
+    isEligibleForCheckout: { type: 'boolean' },
+  },
+  required: ['isEligibleForSearch', 'isEligibleForCheckout'],
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
+const ProductBusFeeds = {
+  type: 'object',
+  properties: {
+    common: ProductBusFeedCommon,
+    oai: ProductBusFeedOpenAI,
+  },
+};
+
+/** @type {import("../utils/validation.js").ObjectSchema} */
 const MerchantFeedShipping = {
   type: 'object',
   properties: {
@@ -159,6 +190,7 @@ const ProductBusEntry = {
     brand: { type: 'string' },
     type: { type: 'string' },
     availability: SchemaOrgAvailability,
+    availabilityDate: { type: 'string' },
     price: ProductBusPrice,
     itemCondition: SchemaOrgItemCondition,
     metadata: {
@@ -198,6 +230,7 @@ const ProductBusEntry = {
       MerchantFeedShipping,
       { type: 'array', items: MerchantFeedShipping },
     ],
+    feeds: ProductBusFeeds,
   },
   required: ['sku', 'name', 'path'],
 };

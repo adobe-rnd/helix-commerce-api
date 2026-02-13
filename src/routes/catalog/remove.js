@@ -12,6 +12,7 @@
 
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from '../../utils/StorageClient.js';
+import { publishIndexingJobs } from '../../utils/indexer.js';
 
 /**
  * @type {RouteHandler}
@@ -35,10 +36,9 @@ export default async function remove(ctx) {
     action: 'delete',
   }));
 
-  await ctx.env.INDEXER_QUEUE.send({
+  await publishIndexingJobs(ctx, {
     org,
     site,
-    // @ts-ignore
     products,
     timestamp: Date.now(),
   });

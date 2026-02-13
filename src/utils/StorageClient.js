@@ -128,17 +128,18 @@ export default class StorageClient extends SharedStorageClient {
         };
       }
 
-      // Path should NOT have .json extension (we add it)
-      if (path.endsWith('.json')) {
-        return {
-          sku,
-          path,
-          status: 400,
-          message: 'path must not include .json extension',
-        };
-      }
+      // Path should have .json extension, but for now we accept either way
+      // TODO: return this error
+      // if (!path.endsWith('.json')) {
+      // return {
+      //   sku,
+      //   path,
+      //   status: 400,
+      //   message: 'path must include .json extension',
+      // };
+      // }
 
-      const key = `${org}/${site}/catalog${path}.json`;
+      const key = `${org}/${site}/catalog${path}${path.endsWith('.json') ? '' : '.json'}`;
 
       // Create a copy of the product for storage (includes internal property)
       const productToStore = JSON.parse(JSON.stringify(product));

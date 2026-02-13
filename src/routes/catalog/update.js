@@ -16,6 +16,7 @@ import { errorResponse } from '../../utils/http.js';
 import StorageClient from '../../utils/StorageClient.js';
 import { fetchHelixConfig } from '../../utils/config.js';
 import { deepEqual } from '../../utils/object.js';
+import { publishIndexingJobs } from '../../utils/indexer.js';
 
 const MAX_PRODUCT_BULK = 50;
 const MAX_IMAGES_PER_JOB = 500;
@@ -173,7 +174,7 @@ async function doUpdate(ctx, products) {
     };
 
     if (payload.products.length > 0) {
-      await ctx.env.INDEXER_QUEUE.send(payload);
+      await publishIndexingJobs(ctx, payload);
 
       if (asyncImages) {
         await publishImageCollectorJobs(ctx, filteredProductsToUpdate, payload);
