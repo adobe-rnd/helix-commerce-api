@@ -106,11 +106,12 @@ export default class StorageClient extends SharedStorageClient {
 
     const storePromises = batch.map(async (product) => {
       if (!asyncImages) {
-        // Fetch existing product with internal data if available
-        const existing = await this.fetchProductByPath(org, site, product.path, true);
-        if (existing?.internal) {
-          // Transfer internal property to current product
-          product.internal = existing.internal;
+        // Fetch existing product with internal data if not already set
+        if (!product.internal) {
+          const existing = await this.fetchProductByPath(org, site, product.path, true);
+          if (existing?.internal) {
+            product.internal = existing.internal;
+          }
         }
 
         // Process images (mutates product and updates product.internal)

@@ -284,6 +284,66 @@ describe('Product Save Tests', () => {
       assert.equal(body.product.message, 'No changes detected');
       // saveProductsByPath should not be called for unchanged products
       assert(storageStub.saveProductsByPath.notCalled);
+      // applyImageLookup is called once (on the comparison clone only)
+      assert(applyImageLookupStub.calledOnce);
+    });
+
+    it('should skip update when product with identical arrays in custom data has not changed', async () => {
+      const customData = { foo: [{}, 'bar', null, 123] };
+
+      const existingProduct = {
+        sku: '1234',
+        path: '/products/test-product',
+        name: 'product-name',
+        images: [{ url: './media_hash123.jpg' }],
+        custom: customData,
+        internal: {
+          images: {
+            'https://example.com/image.jpg': {
+              sourceUrl: './media_hash123.jpg',
+              size: 1000,
+              mimeType: 'image/jpeg',
+            },
+          },
+        },
+      };
+
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: {
+          sku: '1234',
+          path: '/products/test-product',
+          name: 'product-name',
+          images: [{ url: 'https://example.com/image.jpg' }],
+          custom: { foo: [{}, 'bar', null, 123] },
+        },
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+
+      storageStub.fetchProductByPath = sinon.stub().resolves(existingProduct);
+      storageStub.saveProductsByPath.resolves([]);
+
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(body.product.status, 200);
+      assert.equal(body.product.message, 'No changes detected');
+      assert(storageStub.saveProductsByPath.notCalled);
     });
 
     it('should proceed with update when product content has changed', async () => {
@@ -339,6 +399,8 @@ describe('Product Save Tests', () => {
       assert.equal(response.status, 201);
       // saveProductsByPath should be called for changed products
       assert(storageStub.saveProductsByPath.calledOnce);
+      // applyImageLookup is called once (on the comparison clone only)
+      assert(applyImageLookupStub.calledOnce);
     });
 
     it('should proceed with update when product has new images', async () => {
@@ -397,10 +459,15 @@ describe('Product Save Tests', () => {
       assert.equal(response.status, 201);
       // saveProductsByPath should be called for products with new images
       assert(storageStub.saveProductsByPath.calledOnce);
-      // Verify that internal property was transferred to the incoming product
+      // applyImageLookup is only called once (on the comparison clone, not the actual product)
+      assert(applyImageLookupStub.calledOnce);
+      // The actual product retains external URLs (extractAndReplaceImages handles replacement)
       const savedProduct = storageStub.saveProductsByPath.getCall(0).args[0][0];
-      assert.equal(savedProduct.images[0].url, './media_hash123.jpg');
+      assert.equal(savedProduct.images[0].url, 'https://example.com/image.jpg');
       assert.equal(savedProduct.images[1].url, 'https://example.com/new-image.jpg');
+      // Verify that internal property was transferred to the incoming product
+      assert.ok(savedProduct.internal);
+      assert.ok(savedProduct.internal.images['https://example.com/image.jpg']);
     });
 
     it('should proceed with update when product does not exist yet', async () => {
