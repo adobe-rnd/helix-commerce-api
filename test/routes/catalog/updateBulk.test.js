@@ -117,6 +117,7 @@ describe('Product Bulk Save Tests', () => {
       ctx.data = products;
       const request = {};
 
+      storageStub.fetchProductByPath = sinon.stub().resolves(null);
       storageStub.saveProductsByPath.resolves(products.map((p) => ({ sku: p.sku, path: p.path })));
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
@@ -148,6 +149,7 @@ describe('Product Bulk Save Tests', () => {
       ctx.data = products;
       const request = {};
 
+      storageStub.fetchProductByPath = sinon.stub().resolves(null);
       storageStub.saveProductsByPath.resolves(products.map((p) => ({ sku: p.sku, path: p.path })));
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
@@ -205,7 +207,12 @@ describe('Product Bulk Save Tests', () => {
       ctx.data = products;
       const request = {};
 
-      storageStub.saveProductsByPath.resolves(products.map((p) => ({ sku: p.sku, path: p.path })));
+      storageStub.fetchProductByPath = sinon.stub().resolves(null);
+      storageStub.saveProductsByPath.resolves([{
+        sku: '1234',
+        path: '/products/product-1',
+        status: 200,
+      }]);
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
       // Should still return 201 even though there was an error

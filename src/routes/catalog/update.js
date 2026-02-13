@@ -10,10 +10,12 @@
  * governing permissions and limitations under the License.
  */
 
+import { applyImageLookup, hasNewImages } from '@dylandepass/helix-product-shared';
 import { assertValidProduct } from '../../utils/product.js';
 import { errorResponse } from '../../utils/http.js';
 import StorageClient from '../../utils/StorageClient.js';
 import { fetchHelixConfig } from '../../utils/config.js';
+import { deepEqual } from '../../utils/object.js';
 import { publishIndexingJobs } from '../../utils/indexer.js';
 
 const MAX_PRODUCT_BULK = 50;
@@ -77,7 +79,7 @@ export async function publishImageCollectorJobs(ctx, products, payload) {
  */
 async function doUpdate(ctx, products) {
   /** @type {Partial<BatchResult>[]} */
-  let results;
+  let results = [];
 
   try {
     const { log, requestInfo } = ctx;
@@ -87,23 +89,96 @@ async function doUpdate(ctx, products) {
     ctx.attributes.helixConfigCache = helixConfig;
 
     const storage = StorageClient.fromContext(ctx);
+
+    // Fetch existing products and check for changes
+    const productsToUpdate = [];
+    const skippedProducts = [];
+
+    for (const product of products) {
+      const { path } = product;
+      // eslint-disable-next-line no-await-in-loop
+      const existingProduct = await storage.fetchProductByPath(org, site, path, true);
+
+      if (existingProduct) {
+        // Transfer internal property to incoming product for comparison
+        if (existingProduct.internal) {
+          product.internal = existingProduct.internal;
+        }
+
+        // Create a copy of the incoming product with imageLookup applied
+        const productWithLookup = JSON.parse(JSON.stringify(product));
+        applyImageLookup(productWithLookup);
+
+        // Check if there are new images
+        const hasNewImageUrls = hasNewImages(product);
+
+        // Remove internal property for comparison
+        const existingForComparison = JSON.parse(JSON.stringify(existingProduct));
+        delete existingForComparison.internal;
+        delete productWithLookup.internal;
+
+        // If no new images, compare the products
+        if (!hasNewImageUrls && deepEqual(productWithLookup, existingForComparison)) {
+          log.info(`No changes detected for product at path: ${path}, skipping update`);
+          skippedProducts.push({
+            sku: product.sku,
+            path: product.path,
+            status: 200,
+            message: 'No changes detected',
+          });
+          // Skip to next product
+          productsToUpdate.push(null);
+        } else {
+          productsToUpdate.push(product);
+        }
+      } else {
+        productsToUpdate.push(product);
+      }
+    }
+
+    // Filter out null entries from skipped products
+    const filteredProductsToUpdate = productsToUpdate.filter((p) => p !== null);
+
+    // If all products were skipped, return early
+    if (filteredProductsToUpdate.length === 0) {
+      return new Response(
+        JSON.stringify({
+          product: skippedProducts.length === 1 ? skippedProducts[0] : undefined,
+          products: skippedProducts.length > 1 ? skippedProducts : undefined,
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    }
+
     // images are fetched asynchronously if there are more than 10 products,
     // of it there are more than 10 images total across all products
-    const asyncImages = shouldProcessImagesAsync(ctx, products);
-    results = await storage.saveProductsByPath(products, asyncImages);
+    const asyncImages = shouldProcessImagesAsync(ctx, filteredProductsToUpdate);
+    results = await storage.saveProductsByPath(filteredProductsToUpdate, asyncImages);
+
+    // Merge skipped products into results
+    results = [...results, ...skippedProducts];
 
     const payload = {
       org,
       site,
       // @ts-ignore
-      products: results.map((r) => ({ path: r.path, action: 'update' })),
+      products: results
+        .filter((r) => r.status === 200 || r.status === 201)
+        .map((r) => ({ path: r.path, action: 'update' })),
       timestamp: Date.now(),
     };
 
-    await publishIndexingJobs(ctx, payload);
+    if (payload.products.length > 0) {
+      await publishIndexingJobs(ctx, payload);
 
-    if (asyncImages) {
-      await publishImageCollectorJobs(ctx, products, payload);
+      if (asyncImages) {
+        await publishImageCollectorJobs(ctx, filteredProductsToUpdate, payload);
+      }
     }
 
     log.info({
