@@ -1,3 +1,10 @@
+## [2.3.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.4...v2.3.5) (2026-02-13)
+
+
+### Bug Fixes
+
+* ignore unchanged products, use internal images lookup ([#142](https://github.com/adobe-rnd/helix-commerce-api/issues/142)) ([e593390](https://github.com/adobe-rnd/helix-commerce-api/commit/e5933903b330b0ac4cc328c6e56f8dcc658c60b3))
+
 ## [2.3.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.3...v2.3.4) (2026-02-13)
 
 
