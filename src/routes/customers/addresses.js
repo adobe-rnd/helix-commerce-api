@@ -72,15 +72,25 @@ export default async function handler(ctx) {
     case 'GET': {
       ctx.authInfo.assertEmail(email);
       ctx.authInfo.assertOrgSite(org, site);
-      const address = await retrieveAddress(ctx, email, addressId);
-      if (!address) {
-        return errorResponse(404, 'Not found');
+
+      if (addressId) {
+        // retrieve single address
+        const address = await retrieveAddress(ctx, email, addressId);
+        if (!address) {
+          return errorResponse(404, 'Not found');
+        }
+        return new Response(JSON.stringify({ address }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
-      return new Response(JSON.stringify({ address }), {
+
+      // list all addresses
+      const storage = StorageClient.fromContext(ctx);
+      const addresses = await storage.listAddresses(email);
+      return new Response(JSON.stringify({ addresses }), {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
     }
     case 'POST': {
@@ -97,9 +107,25 @@ export default async function handler(ctx) {
       const address = await createAddress(ctx, email, ctx.data);
       return new Response(JSON.stringify({ address }), {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    case 'DELETE': {
+      ctx.authInfo.assertEmail(email);
+      ctx.authInfo.assertOrgSite(org, site);
+
+      if (!addressId) {
+        return errorResponse(400, 'Missing address ID');
+      }
+
+      const storage = StorageClient.fromContext(ctx);
+      const deleted = await storage.deleteAddress(email, addressId);
+      if (!deleted) {
+        return errorResponse(404, 'Not found');
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
       });
     }
     default:
