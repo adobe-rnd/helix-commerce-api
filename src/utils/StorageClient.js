@@ -581,7 +581,7 @@ export default class StorageClient extends SharedStorageClient {
       // @ts-ignore not defined in types for some reason
       include: ['customMetadata'],
     });
-    return res.objects
+    const objects = res.objects
       .filter((obj) => !obj.key.endsWith('.hashtable.json'))
       .map((obj) => {
         const id = obj.key.substring(prefix.length).replace(/\.json$/, '');
@@ -590,6 +590,7 @@ export default class StorageClient extends SharedStorageClient {
           ...obj.customMetadata,
         };
       });
+    return /** @type {Address[]} */ (objects);
   }
 
   /**
@@ -616,6 +617,7 @@ export default class StorageClient extends SharedStorageClient {
 
     // Remove from hash table
     const hashTable = await this.getAddressHashTable(email);
+    /** @type {Record<string, string>} */
     const updated = {};
     for (const [hash, id] of Object.entries(hashTable)) {
       if (id !== addressId) {
