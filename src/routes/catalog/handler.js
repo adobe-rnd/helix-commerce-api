@@ -10,11 +10,26 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../../utils/http.js';
+import { errorResponse, optionsHandler } from '../../utils/http.js';
 import { PATH_PATTERN_WITH_JSON } from '../../utils/validation.js';
+import StorageClient from '../../utils/StorageClient.js';
 import retrieve from './retrieve.js';
 import update from './update.js';
 import remove from './remove.js';
+
+/**
+ * List all products in the catalog.
+ * @param {Context} ctx
+ * @returns {Promise<Response>}
+ */
+async function list(ctx) {
+  const storage = StorageClient.fromContext(ctx);
+  const result = await storage.listProducts();
+  return new Response(JSON.stringify(result), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
 /**
  * @type {RouteHandler}
@@ -23,7 +38,16 @@ export default async function handler(ctx, request) {
   const { requestInfo } = ctx;
   const { path, method } = requestInfo;
 
+  if (method === 'OPTIONS') {
+    return optionsHandler(['GET', 'PUT', 'POST', 'DELETE'])(ctx);
+  }
+
   if (!path) {
+    if (method === 'GET') {
+      ctx.authInfo.assertPermissions('catalog:read');
+      ctx.authInfo.assertOrgSite(requestInfo.org, requestInfo.site);
+      return list(ctx);
+    }
     return errorResponse(404, 'path is required');
   }
 
