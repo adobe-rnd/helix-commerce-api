@@ -18,6 +18,8 @@ import handler from '../../../src/routes/indices/handler.js';
 describe('routes/indices/handler', () => {
   let ctx;
   let storageClient;
+  let catalogListStub;
+  let indexerSendStub;
 
   beforeEach(() => {
     storageClient = {
@@ -28,6 +30,9 @@ describe('routes/indices/handler', () => {
       saveIndexRegistry: sinon.stub(),
     };
 
+    catalogListStub = sinon.stub().resolves({ objects: [], truncated: false });
+    indexerSendStub = sinon.stub().resolves();
+
     ctx = SUPERUSER_CONTEXT({
       requestInfo: {
         org: 'test-org',
@@ -37,6 +42,14 @@ describe('routes/indices/handler', () => {
       },
       attributes: {
         storageClient,
+      },
+      env: {
+        CATALOG_BUCKET: {
+          list: catalogListStub,
+        },
+        INDEXER_QUEUE: {
+          send: indexerSendStub,
+        },
       },
       log: {
         debug: sinon.stub(),
@@ -211,6 +224,64 @@ describe('routes/indices/handler', () => {
       // Registry should have the normalized path
       const [, , registry] = storageClient.saveIndexRegistry.firstCall.args;
       assert(registry['/products/index.json']);
+    });
+
+    it('should queue existing products for indexing after creation', async () => {
+      storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
+      storageClient.saveIndexRegistry.resolves();
+      storageClient.saveQueryIndexByPath.resolves();
+
+      catalogListStub.resolves({
+        objects: [
+          { key: 'test-org/test-site/catalog/products/product-1.json' },
+          { key: 'test-org/test-site/catalog/products/product-2.json' },
+        ],
+        truncated: false,
+      });
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 201);
+      assert(catalogListStub.calledOnce);
+      assert.deepStrictEqual(catalogListStub.firstCall.args[0], {
+        prefix: 'test-org/test-site/catalog/products/',
+      });
+
+      assert(indexerSendStub.calledOnce);
+      const sent = indexerSendStub.firstCall.args[0];
+      assert.strictEqual(sent.org, 'test-org');
+      assert.strictEqual(sent.site, 'test-site');
+      assert.deepStrictEqual(sent.products, [
+        { path: '/products/product-1', action: 'update' },
+        { path: '/products/product-2', action: 'update' },
+      ]);
+    });
+
+    it('should not publish indexing jobs if no products exist under the path', async () => {
+      storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
+      storageClient.saveIndexRegistry.resolves();
+      storageClient.saveQueryIndexByPath.resolves();
+
+      catalogListStub.resolves({ objects: [], truncated: false });
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 201);
+      assert(catalogListStub.calledOnce);
+      assert(indexerSendStub.notCalled);
+    });
+
+    it('should still return 201 if product queueing fails', async () => {
+      storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
+      storageClient.saveIndexRegistry.resolves();
+      storageClient.saveQueryIndexByPath.resolves();
+
+      catalogListStub.rejects(new Error('R2 list failed'));
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 201);
+      assert(ctx.log.error.called);
     });
   });
 

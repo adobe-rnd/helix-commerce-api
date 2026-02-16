@@ -34,3 +34,51 @@ export async function publishIndexingJobs(ctx, payload) {
 
   await indexerQueue.send(normalized);
 }
+
+/**
+ * List all products stored under a given path prefix and publish
+ * indexing jobs so they get indexed without re-ingestion.
+ *
+ * @param {Context} ctx
+ * @param {string} org
+ * @param {string} site
+ * @param {string} path - The index path (e.g. '/products')
+ */
+export async function queueExistingProductsForIndexing(ctx, org, site, path) {
+  const { env: { CATALOG_BUCKET } } = ctx;
+  const prefix = `${org}/${site}/catalog${path}/`;
+  const catalogPrefix = `${org}/${site}/catalog`;
+  const products = [];
+
+  let truncated = true;
+  let cursor;
+
+  while (truncated) {
+    const listOptions = { prefix };
+    if (cursor) {
+      listOptions.cursor = cursor;
+    }
+
+    // eslint-disable-next-line no-await-in-loop
+    const result = await CATALOG_BUCKET.list(listOptions);
+
+    for (const obj of result.objects) {
+      const productPath = obj.key.substring(catalogPrefix.length);
+      products.push({ path: productPath, action: 'update' });
+    }
+
+    truncated = result.truncated;
+    if (result.truncated) {
+      cursor = result.cursor;
+    }
+  }
+
+  if (products.length > 0) {
+    await publishIndexingJobs(ctx, {
+      org,
+      site,
+      products,
+      timestamp: Date.now(),
+    });
+  }
+}

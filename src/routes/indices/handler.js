@@ -13,6 +13,7 @@
 import StorageClient from '../../utils/StorageClient.js';
 import { errorResponse } from '../../utils/http.js';
 import { DIRECTORY_PATH_PATTERN } from '../../utils/validation.js';
+import { queueExistingProductsForIndexing } from '../../utils/indexer.js';
 
 /**
  * Update the index registry with retry logic for concurrent modifications
@@ -126,6 +127,14 @@ async function create(ctx) {
       ctx.log.error('Failed to rollback registry', rollbackError);
     }
     return errorResponse(502, 'failed to create index');
+  }
+
+  // Queue existing products under this path for indexing
+  try {
+    await queueExistingProductsForIndexing(ctx, org, site, path);
+  } catch (e) {
+    ctx.log.error('Failed to queue existing products for indexing', e);
+    // Don't fail the request — the index was created successfully
   }
 
   return new Response('', { status: 201 });
