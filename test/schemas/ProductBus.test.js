@@ -103,4 +103,111 @@ describe('schemas/ProductBus', () => {
       }
     });
   });
+
+  describe('OpenAI Commerce Feed fields', () => {
+    it('should accept products with feed eligibility flags', () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        feeds: {
+          oai: {
+            isEligibleForSearch: true,
+            isEligibleForCheckout: true,
+          },
+        },
+      };
+      assertValidProduct(DEFAULT_CONTEXT(), product);
+    });
+
+    it('should reject feed object missing required fields', async () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        feeds: {
+          oai: {
+            isEligibleForSearch: true,
+            // missing isEligibleForCheckout
+          },
+        },
+      };
+      try {
+        assertValidProduct(DEFAULT_CONTEXT(), product);
+        assert.ok(false, 'should have thrown');
+      } catch (e) {
+        assert.ok(e instanceof ResponseError);
+        const { response } = e;
+        assert.ok(response);
+        assert.strictEqual(response.status, 400);
+        assert.strictEqual(response.headers.get('x-error'), 'Invalid product');
+
+        const json = await response.json();
+        assert.ok(json.errors);
+        assert.ok(json.errors.some((err) => err.path === '$.feeds.oai'));
+      }
+    });
+
+    it('should accept products with geographic fields', () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        feeds: {
+          common: {
+            geoTargetCountries: ['US', 'CA', 'MX'],
+            geoStoreCountry: 'US',
+          },
+        },
+      };
+      assertValidProduct(DEFAULT_CONTEXT(), product);
+    });
+
+    it('should accept products with availability date', () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        availability: 'PreOrder',
+        availabilityDate: '2026-03-01T00:00:00Z',
+      };
+      assertValidProduct(DEFAULT_CONTEXT(), product);
+    });
+
+    it('should accept products without OpenAI fields (backwards compatibility)', () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+      };
+      assertValidProduct(DEFAULT_CONTEXT(), product);
+    });
+
+    it('should accept products with all OpenAI fields combined', () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        description: 'Test product description',
+        brand: 'Test Brand',
+        availability: 'InStock',
+        price: {
+          currency: 'USD',
+          regular: '10.00',
+          final: '9.99',
+        },
+        feeds: {
+          common: {
+            geoTargetCountries: ['US', 'CA'],
+            geoStoreCountry: 'US',
+          },
+          oai: {
+            isEligibleForSearch: true,
+            isEligibleForCheckout: true,
+          },
+        },
+      };
+      assertValidProduct(DEFAULT_CONTEXT(), product);
+    });
+  });
 });

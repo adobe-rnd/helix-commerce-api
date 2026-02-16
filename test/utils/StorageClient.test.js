@@ -2113,6 +2113,73 @@ describe('StorageClient Class Tests', () => {
       assert.deepStrictEqual(res2, { id: 'a1' });
     });
 
+    it('listAddresses returns addresses, filtering out .hashtable.json', async () => {
+      const listStub = sinon.stub().resolves({
+        objects: [
+          { key: 'org/site/customers/e/addresses/.hashtable.json', customMetadata: {} },
+          { key: 'org/site/customers/e/addresses/id1.json', customMetadata: { email: 'e' } },
+          { key: 'org/site/customers/e/addresses/id2.json', customMetadata: { email: 'e' } },
+        ],
+        truncated: false,
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { list: listStub } },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      const res = await client.listAddresses('e');
+      assert.strictEqual(res.length, 2);
+      assert.strictEqual(res[0].id, 'id1');
+      assert.strictEqual(res[1].id, 'id2');
+      assert(listStub.calledOnce);
+      const callArgs = listStub.firstCall.args[0];
+      assert.strictEqual(callArgs.prefix, 'org/site/customers/e/addresses/');
+    });
+
+    it('listAddresses returns empty array when no addresses', async () => {
+      const listStub = sinon.stub().resolves({
+        objects: [],
+        truncated: false,
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { list: listStub } },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      const res = await client.listAddresses('e');
+      assert.deepStrictEqual(res, []);
+    });
+
+    it('deleteAddress deletes key and updates hash table', async () => {
+      const headStub = sinon.stub().resolves({ customMetadata: { id: 'addr1' } });
+      const deleteStub = sinon.stub().resolves();
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { head: headStub, delete: deleteStub } },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'getAddressHashTable').resolves({ hash1: 'addr1', hash2: 'addr2' });
+      const saveHashStub = sinon.stub().resolves();
+      sinon.stub(client, 'saveAddressHashTable').callsFake(saveHashStub);
+
+      const res = await client.deleteAddress('e', 'addr1');
+      assert.strictEqual(res, true);
+      assert.strictEqual(deleteStub.firstCall.args[0], 'org/site/customers/e/addresses/addr1.json');
+      // Hash table should have hash1 removed
+      assert.deepStrictEqual(saveHashStub.firstCall.args[1], { hash2: 'addr2' });
+    });
+
+    it('deleteAddress returns false when address does not exist', async () => {
+      const headStub = sinon.stub().resolves(null);
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { head: headStub } },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      const res = await client.deleteAddress('e', 'nonexistent');
+      assert.strictEqual(res, false);
+    });
+
     it('linkOrderToCustomer writes link when new and throws when exists', async () => {
       const ctx = DEFAULT_CONTEXT({
         env: { ORDERS_BUCKET: {} },

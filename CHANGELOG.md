@@ -1,3 +1,77 @@
+## [2.4.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.2...v2.4.3) (2026-02-16)
+
+
+### Bug Fixes
+
+* tweak call to storageclient ([#147](https://github.com/adobe-rnd/helix-commerce-api/issues/147)) ([786caf4](https://github.com/adobe-rnd/helix-commerce-api/commit/786caf49e54c3e1b1cdd95394b3d962160e4fe45))
+
+## [2.4.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.1...v2.4.2) (2026-02-16)
+
+
+### Bug Fixes
+
+* require index.json suffix for indices apis ([#145](https://github.com/adobe-rnd/helix-commerce-api/issues/145)) ([b88e74d](https://github.com/adobe-rnd/helix-commerce-api/commit/b88e74d27551d37e62960b2435ee81b87593f01e))
+
+## [2.4.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.0...v2.4.1) (2026-02-16)
+
+
+### Bug Fixes
+
+* index products on index.json creation ([#146](https://github.com/adobe-rnd/helix-commerce-api/issues/146)) ([766337e](https://github.com/adobe-rnd/helix-commerce-api/commit/766337e7632d41a5626645cad0081a8b48d92422))
+
+# [2.4.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.5...v2.4.0) (2026-02-16)
+
+
+### Features
+
+* list addressed and delete address ([#144](https://github.com/adobe-rnd/helix-commerce-api/issues/144)) ([5939bcb](https://github.com/adobe-rnd/helix-commerce-api/commit/5939bcb6aadb054a679c9c72ec65ef62e7942f94))
+
+## [2.3.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.4...v2.3.5) (2026-02-13)
+
+
+### Bug Fixes
+
+* ignore unchanged products, use internal images lookup ([#142](https://github.com/adobe-rnd/helix-commerce-api/issues/142)) ([e593390](https://github.com/adobe-rnd/helix-commerce-api/commit/e5933903b330b0ac4cc328c6e56f8dcc658c60b3))
+
+## [2.3.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.3...v2.3.4) (2026-02-13)
+
+
+### Bug Fixes
+
+* normalize indexer paths, accept .json extension for PUT ([#143](https://github.com/adobe-rnd/helix-commerce-api/issues/143)) ([01efee4](https://github.com/adobe-rnd/helix-commerce-api/commit/01efee48ec0c1709db07de7e09c87daa41ca83b0))
+
+## [2.3.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.2...v2.3.3) (2026-02-12)
+
+
+### Bug Fixes
+
+* implement OpenAI product feed fields ([4e2b76c](https://github.com/adobe-rnd/helix-commerce-api/commit/4e2b76cf84a9ceb85986fded8fa832385624aea6))
+* namespace feed fields with common and openai structure ([9572e5a](https://github.com/adobe-rnd/helix-commerce-api/commit/9572e5ade431ce7ad997a02d1636fbaf56e25bcd))
+* remove merchant ([f0752f4](https://github.com/adobe-rnd/helix-commerce-api/commit/f0752f4ae106e223a3988c5181100c396f5e8a9c))
+
+## [2.3.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.1...v2.3.2) (2026-02-10)
+
+
+### Bug Fixes
+
+* allow lowercase service tokens ([47938d4](https://github.com/adobe-rnd/helix-commerce-api/commit/47938d4d444be46f1999959285b0425cb0494d77))
+* regex test instead of string match ([ef8defd](https://github.com/adobe-rnd/helix-commerce-api/commit/ef8defd464e7136c28327e3d4985be8d32803f15))
+
+## [2.3.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.0...v2.3.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* add index perms to service role ([#137](https://github.com/adobe-rnd/helix-commerce-api/issues/137)) ([226db78](https://github.com/adobe-rnd/helix-commerce-api/commit/226db7827298094bfa8decbea2626561bfd238fd))
+* force deploy ([#138](https://github.com/adobe-rnd/helix-commerce-api/issues/138)) ([8a40b47](https://github.com/adobe-rnd/helix-commerce-api/commit/8a40b47781507bd09506d88f297833feb2ff85c4))
+
+## [2.3.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.0...v2.3.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* add index perms to service role ([#137](https://github.com/adobe-rnd/helix-commerce-api/issues/137)) ([226db78](https://github.com/adobe-rnd/helix-commerce-api/commit/226db7827298094bfa8decbea2626561bfd238fd))
+
 # [2.3.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.2.0...v2.3.0) (2026-02-05)
 
 

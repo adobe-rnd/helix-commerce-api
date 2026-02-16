@@ -21,17 +21,62 @@ describe('Product Save Tests', () => {
   /** @type {sinon.SinonStub} */
   let storageStub;
   let fetchHelixConfigStub;
+  let applyImageLookupStub;
+  let hasNewImagesStub;
   let handleProductSaveRequest;
 
   beforeEach(async () => {
     storageStub = sinon.stub();
     storageStub.saveProductsByPath = sinon.stub();
     fetchHelixConfigStub = sinon.stub().resolves({});
+    applyImageLookupStub = sinon.stub().callsFake((product) => {
+      // Read lookup from product.internal.images
+      const lookup = product.internal?.images || {};
+      if (product.images) {
+        product.images.forEach((img) => {
+          const imageData = lookup[img.url];
+          if (imageData?.sourceUrl) {
+            img.url = imageData.sourceUrl;
+          }
+        });
+      }
+      if (product.variants) {
+        product.variants.forEach((variant) => {
+          if (variant.images) {
+            variant.images.forEach((img) => {
+              const imageData = lookup[img.url];
+              if (imageData?.sourceUrl) {
+                img.url = imageData.sourceUrl;
+              }
+            });
+          }
+        });
+      }
+    });
+    hasNewImagesStub = sinon.stub().callsFake((product) => {
+      // Check if any external URL is not in internal.images
+      const lookup = product.internal?.images || {};
+      const images = [
+        ...(product.images || []),
+        ...(product.variants || []).flatMap((v) => v.images || []),
+      ];
+      for (const img of images) {
+        const { url } = img;
+        if (!url.startsWith('./') && !url.startsWith('/') && !lookup[url]) {
+          return true;
+        }
+      }
+      return false;
+    });
 
-    // Mock the module with fetchHelixConfig stub
+    // Mock the module with stubs
     handleProductSaveRequest = await esmock('../../../src/routes/catalog/update.js', {
       '../../../src/utils/config.js': {
         fetchHelixConfig: fetchHelixConfigStub,
+      },
+      '@dylandepass/helix-product-shared': {
+        applyImageLookup: applyImageLookupStub,
+        hasNewImages: hasNewImagesStub,
       },
     });
   });
@@ -77,6 +122,7 @@ describe('Product Save Tests', () => {
       }, { path: '/products/test-product.json' });
       const request = { };
 
+      storageStub.fetchProductByPath = sinon.stub().resolves(null);
       storageStub.saveProductsByPath.resolves([{ sku: '1234', path: '/products/test-product' }]);
       const response = await handleProductSaveRequest(ctx, request, storageStub);
 
@@ -120,6 +166,7 @@ describe('Product Save Tests', () => {
         },
       }, { path: '/products/test-product.json' });
 
+      storageStub.fetchProductByPath = sinon.stub().resolves(null);
       storageStub.saveProductsByPath.resolves([{ sku: '1234', path: '/products/test-product' }]);
       const response = await handleProductSaveRequest(ctx);
 
@@ -173,12 +220,296 @@ describe('Product Save Tests', () => {
         },
       }, { path: '/products/test-product.json' });
 
+      storageStub.fetchProductByPath = sinon.stub().resolves(null);
       storageStub.saveProductsByPath.resolves([{ sku: '1234', path: '/products/test-product' }]);
       const response = await handleProductSaveRequest(ctx);
 
       assert.equal(response.status, 201);
       // Verify path was added from URL (without .json)
       assert.equal(ctx.data.path, '/products/test-product');
+    });
+
+    it('should skip update when product has not changed', async () => {
+      const existingProduct = {
+        sku: '1234',
+        path: '/products/test-product',
+        name: 'product-name',
+        images: [{ url: './media_hash123.jpg' }],
+        internal: {
+          images: {
+            'https://example.com/image.jpg': {
+              sourceUrl: './media_hash123.jpg',
+              size: 1000,
+              mimeType: 'image/jpeg',
+            },
+          },
+        },
+      };
+
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: {
+          sku: '1234',
+          path: '/products/test-product',
+          name: 'product-name',
+          images: [{ url: 'https://example.com/image.jpg' }],
+        },
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+
+      // Mock fetchProductByPath to return existing product with internal data
+      storageStub.fetchProductByPath = sinon.stub().resolves(existingProduct);
+
+      storageStub.saveProductsByPath.resolves([]);
+
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(body.product.status, 200);
+      assert.equal(body.product.message, 'No changes detected');
+      // saveProductsByPath should not be called for unchanged products
+      assert(storageStub.saveProductsByPath.notCalled);
+      // applyImageLookup is called once (on the comparison clone only)
+      assert(applyImageLookupStub.calledOnce);
+    });
+
+    it('should skip update when product with identical arrays in custom data has not changed', async () => {
+      const customData = { foo: [{}, 'bar', null, 123] };
+
+      const existingProduct = {
+        sku: '1234',
+        path: '/products/test-product',
+        name: 'product-name',
+        images: [{ url: './media_hash123.jpg' }],
+        custom: customData,
+        internal: {
+          images: {
+            'https://example.com/image.jpg': {
+              sourceUrl: './media_hash123.jpg',
+              size: 1000,
+              mimeType: 'image/jpeg',
+            },
+          },
+        },
+      };
+
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: {
+          sku: '1234',
+          path: '/products/test-product',
+          name: 'product-name',
+          images: [{ url: 'https://example.com/image.jpg' }],
+          custom: { foo: [{}, 'bar', null, 123] },
+        },
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+
+      storageStub.fetchProductByPath = sinon.stub().resolves(existingProduct);
+      storageStub.saveProductsByPath.resolves([]);
+
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(body.product.status, 200);
+      assert.equal(body.product.message, 'No changes detected');
+      assert(storageStub.saveProductsByPath.notCalled);
+    });
+
+    it('should proceed with update when product content has changed', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: {
+          sku: '1234',
+          path: '/products/test-product',
+          name: 'new-product-name', // Changed name
+          images: [{ url: 'https://example.com/image.jpg' }],
+        },
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+
+      storageStub.fetchProductByPath = sinon.stub().resolves({
+        sku: '1234',
+        path: '/products/test-product',
+        name: 'old-product-name',
+        images: [{ url: './media_hash123.jpg' }],
+        internal: {
+          images: {
+            'https://example.com/image.jpg': {
+              sourceUrl: './media_hash123.jpg',
+              size: 1000,
+              mimeType: 'image/jpeg',
+            },
+          },
+        },
+      });
+
+      storageStub.saveProductsByPath.resolves([{
+        sku: '1234',
+        path: '/products/test-product',
+        status: 200,
+      }]);
+
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 201);
+      // saveProductsByPath should be called for changed products
+      assert(storageStub.saveProductsByPath.calledOnce);
+      // applyImageLookup is called once (on the comparison clone only)
+      assert(applyImageLookupStub.calledOnce);
+    });
+
+    it('should proceed with update when product has new images', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: {
+          sku: '1234',
+          path: '/products/test-product',
+          name: 'product-name',
+          images: [
+            { url: 'https://example.com/image.jpg' },
+            { url: 'https://example.com/new-image.jpg' }, // New image
+          ],
+        },
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/test-product.json',
+          method: 'PUT',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/test-product.json' });
+
+      storageStub.fetchProductByPath = sinon.stub().resolves({
+        sku: '1234',
+        path: '/products/test-product',
+        name: 'product-name',
+        images: [{ url: './media_hash123.jpg' }],
+        internal: {
+          images: {
+            'https://example.com/image.jpg': {
+              sourceUrl: './media_hash123.jpg',
+              size: 1000,
+              mimeType: 'image/jpeg',
+            },
+          },
+        },
+      });
+
+      storageStub.saveProductsByPath.resolves([{
+        sku: '1234',
+        path: '/products/test-product',
+        status: 200,
+      }]);
+
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 201);
+      // saveProductsByPath should be called for products with new images
+      assert(storageStub.saveProductsByPath.calledOnce);
+      // applyImageLookup is only called once (on the comparison clone, not the actual product)
+      assert(applyImageLookupStub.calledOnce);
+      // The actual product retains external URLs (extractAndReplaceImages handles replacement)
+      const savedProduct = storageStub.saveProductsByPath.getCall(0).args[0][0];
+      assert.equal(savedProduct.images[0].url, 'https://example.com/image.jpg');
+      assert.equal(savedProduct.images[1].url, 'https://example.com/new-image.jpg');
+      // Verify that internal property was transferred to the incoming product
+      assert.ok(savedProduct.internal);
+      assert.ok(savedProduct.internal.images['https://example.com/image.jpg']);
+    });
+
+    it('should proceed with update when product does not exist yet', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['catalog:write']),
+        log: { error: sinon.stub(), info: sinon.stub() },
+        data: {
+          sku: '1234',
+          path: '/products/new-product',
+          name: 'new-product-name',
+          images: [{ url: 'https://example.com/image.jpg' }],
+        },
+        requestInfo: {
+          org: 'myorg',
+          site: 'mysite',
+          path: '/products/new-product.json',
+          method: 'PUT',
+        },
+        attributes: {
+          storageClient: storageStub,
+        },
+        env: {
+          INDEXER_QUEUE: {
+            send: sinon.stub().resolves(),
+          },
+        },
+      }, { path: '/products/new-product.json' });
+
+      // Product does not exist
+      storageStub.fetchProductByPath = sinon.stub().resolves(null);
+
+      storageStub.saveProductsByPath.resolves([{
+        sku: '1234',
+        path: '/products/new-product',
+        status: 200,
+      }]);
+
+      const response = await handleProductSaveRequest(ctx);
+
+      assert.equal(response.status, 201);
+      // saveProductsByPath should be called for new products
+      assert(storageStub.saveProductsByPath.calledOnce);
     });
   });
 });

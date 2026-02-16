@@ -106,6 +106,15 @@ export default class StorageClient extends SharedStorageClient {
 
     const storePromises = batch.map(async (product) => {
       if (!asyncImages) {
+        // Fetch existing product with internal data if not already set
+        if (!product.internal) {
+          const existing = await this.fetchProductByPath(org, site, product.path, true);
+          if (existing?.internal) {
+            product.internal = existing.internal;
+          }
+        }
+
+        // Process images (mutates product and updates product.internal)
         product = await extractAndReplaceImages(this.ctx, org, site, product);
       }
 
@@ -119,22 +128,30 @@ export default class StorageClient extends SharedStorageClient {
         };
       }
 
-      // Path should NOT have .json extension (we add it)
-      if (path.endsWith('.json')) {
-        return {
-          sku,
-          path,
-          status: 400,
-          message: 'path must not include .json extension',
-        };
-      }
+      // Path should have .json extension, but for now we accept either way
+      // TODO: return this error
+      // if (!path.endsWith('.json')) {
+      // return {
+      //   sku,
+      //   path,
+      //   status: 400,
+      //   message: 'path must include .json extension',
+      // };
+      // }
 
-      const key = `${org}/${site}/catalog${path}.json`;
-      const body = JSON.stringify(product);
+      const key = `${org}/${site}/catalog${path}${path.endsWith('.json') ? '' : '.json'}`;
+
+      // Create a copy of the product for storage (includes internal property)
+      const productToStore = JSON.parse(JSON.stringify(product));
+      const body = JSON.stringify(productToStore);
 
       try {
         const t0 = Date.now();
-        const customMetadata = { sku, name, path };
+        const customMetadata = {
+          sku,
+          name,
+          path,
+        };
 
         // Save the product at its path location
         await env.CATALOG_BUCKET.put(key, body, {
@@ -542,6 +559,74 @@ export default class StorageClient extends SharedStorageClient {
       return null;
     }
     return resp.json();
+  }
+
+  /**
+   * List all addresses for a customer.
+   * @param {string} email
+   * @returns {Promise<Address[]>}
+   */
+  async listAddresses(email) {
+    const {
+      env,
+      requestInfo: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const prefix = `${org}/${site}/customers/${email}/addresses/`;
+    const res = await env.ORDERS_BUCKET.list({
+      prefix,
+      limit: 100,
+      // @ts-ignore not defined in types for some reason
+      include: ['customMetadata'],
+    });
+    const objects = res.objects
+      .filter((obj) => !obj.key.endsWith('.hashtable.json'))
+      .map((obj) => {
+        const id = obj.key.substring(prefix.length).replace(/\.json$/, '');
+        return {
+          id,
+          ...obj.customMetadata,
+        };
+      });
+    return /** @type {Address[]} */ (objects);
+  }
+
+  /**
+   * Delete an address and update the hash table.
+   * @param {string} email
+   * @param {string} addressId
+   * @returns {Promise<boolean>} true if deleted, false if not found
+   */
+  async deleteAddress(email, addressId) {
+    const {
+      env,
+      requestInfo: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/addresses/${addressId}.json`;
+    const existing = await env.ORDERS_BUCKET.head(key);
+    if (!existing) {
+      return false;
+    }
+
+    await env.ORDERS_BUCKET.delete(key);
+
+    // Remove from hash table
+    const hashTable = await this.getAddressHashTable(email);
+    /** @type {Record<string, string>} */
+    const updated = {};
+    for (const [hash, id] of Object.entries(hashTable)) {
+      if (id !== addressId) {
+        updated[hash] = id;
+      }
+    }
+    await this.saveAddressHashTable(email, updated);
+
+    return true;
   }
 
   /**
