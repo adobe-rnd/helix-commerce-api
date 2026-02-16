@@ -19,14 +19,12 @@ import { DIRECTORY_PATH_PATTERN } from '../../utils/validation.js';
  * @param {StorageClient} storage
  * @param {string} org
  * @param {string} site
- * @param {string} path
+ * @param {string} path - including the index.json suffix
  * @param {boolean} adding - true to add, false to remove
  * @param {number} [retries=3] - number of retries on conflict
  * @returns {Promise<void>}
  */
 async function updateRegistry(storage, org, site, path, adding, retries = 3) {
-  const indexPath = `${path}/index.json`;
-
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
       // Fetch current registry with etag
@@ -35,9 +33,9 @@ async function updateRegistry(storage, org, site, path, adding, retries = 3) {
 
       // Update registry
       if (adding) {
-        registry[indexPath] = { lastmod: new Date().toISOString() };
+        registry[path] = { lastmod: new Date().toISOString() };
       } else {
-        delete registry[indexPath];
+        delete registry[path];
       }
 
       // Save with etag for conditional write
@@ -142,12 +140,13 @@ async function create(ctx) {
  */
 async function remove(ctx) {
   const { org, site, path } = ctx.requestInfo;
+  const rootPath = path.endsWith('/index.json') ? path.slice(0, -('/index.json'.length)) : path;
   const storage = StorageClient.fromContext(ctx);
   const exists = await storage.queryIndexExists(org, site, path);
   if (!exists) {
     return errorResponse(404, 'index does not exist');
   }
-  await storage.deleteQueryIndex(org, site, path);
+  await storage.deleteQueryIndex(org, site, rootPath);
 
   // Update registry
   try {
@@ -172,6 +171,10 @@ export default async function handler(ctx) {
 
   if (!path) {
     return errorResponse(404, 'path is required');
+  }
+
+  if (!path.endsWith('/index.json')) {
+    return errorResponse(400, 'path must end with /index.json');
   }
 
   switch (method) {
