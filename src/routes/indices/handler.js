@@ -151,7 +151,7 @@ async function remove(ctx) {
   const { org, site, path } = ctx.requestInfo;
   const rootPath = path.endsWith('/index.json') ? path.slice(0, -('/index.json'.length)) : path;
   const storage = StorageClient.fromContext(ctx);
-  const exists = await storage.queryIndexExists(org, site, path);
+  const exists = await storage.queryIndexExists(org, site, rootPath);
   if (!exists) {
     return errorResponse(404, 'index does not exist');
   }
