@@ -562,6 +562,74 @@ export default class StorageClient extends SharedStorageClient {
   }
 
   /**
+   * List all addresses for a customer.
+   * @param {string} email
+   * @returns {Promise<Address[]>}
+   */
+  async listAddresses(email) {
+    const {
+      env,
+      requestInfo: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const prefix = `${org}/${site}/customers/${email}/addresses/`;
+    const res = await env.ORDERS_BUCKET.list({
+      prefix,
+      limit: 100,
+      // @ts-ignore not defined in types for some reason
+      include: ['customMetadata'],
+    });
+    const objects = res.objects
+      .filter((obj) => !obj.key.endsWith('.hashtable.json'))
+      .map((obj) => {
+        const id = obj.key.substring(prefix.length).replace(/\.json$/, '');
+        return {
+          id,
+          ...obj.customMetadata,
+        };
+      });
+    return /** @type {Address[]} */ (objects);
+  }
+
+  /**
+   * Delete an address and update the hash table.
+   * @param {string} email
+   * @param {string} addressId
+   * @returns {Promise<boolean>} true if deleted, false if not found
+   */
+  async deleteAddress(email, addressId) {
+    const {
+      env,
+      requestInfo: {
+        org,
+        site,
+      },
+    } = this.ctx;
+    const key = `${org}/${site}/customers/${email}/addresses/${addressId}.json`;
+    const existing = await env.ORDERS_BUCKET.head(key);
+    if (!existing) {
+      return false;
+    }
+
+    await env.ORDERS_BUCKET.delete(key);
+
+    // Remove from hash table
+    const hashTable = await this.getAddressHashTable(email);
+    /** @type {Record<string, string>} */
+    const updated = {};
+    for (const [hash, id] of Object.entries(hashTable)) {
+      if (id !== addressId) {
+        updated[hash] = id;
+      }
+    }
+    await this.saveAddressHashTable(email, updated);
+
+    return true;
+  }
+
+  /**
    * @param {string} email
    * @param {string} orderId
    * @param {Order} order
