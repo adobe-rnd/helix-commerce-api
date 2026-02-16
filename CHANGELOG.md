@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.1...v2.4.2) (2026-02-16)
+
+
+### Bug Fixes
+
+* require index.json suffix for indices apis ([#145](https://github.com/adobe-rnd/helix-commerce-api/issues/145)) ([b88e74d](https://github.com/adobe-rnd/helix-commerce-api/commit/b88e74d27551d37e62960b2435ee81b87593f01e))
+
 ## [2.4.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.0...v2.4.1) (2026-02-16)
 
 
