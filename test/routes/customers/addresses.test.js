@@ -37,7 +37,7 @@ describe('routes/customers/addresses tests', () => {
           org: 'org',
           site: 'site',
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
         attributes: {
           storageClient: {
             listAddresses: async (email) => {
@@ -68,7 +68,7 @@ describe('routes/customers/addresses tests', () => {
           org: 'org',
           site: 'site',
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
         attributes: {
           storageClient: {
             listAddresses: async () => [],
@@ -92,8 +92,9 @@ describe('routes/customers/addresses tests', () => {
           method: 'GET',
           org: 'org',
           site: 'site',
+          variables: { resourceId: 'addr1' },
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses/addr1'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses/addr1'),
         attributes: {
           storageClient: {
             getAddress: async (email, addressId) => {
@@ -120,8 +121,9 @@ describe('routes/customers/addresses tests', () => {
           method: 'GET',
           org: 'org',
           site: 'site',
+          variables: { resourceId: 'nonexistent' },
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses/nonexistent'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses/nonexistent'),
         attributes: {
           storageClient: {
             getAddress: async () => null,
@@ -144,7 +146,7 @@ describe('routes/customers/addresses tests', () => {
           org: 'org',
           site: 'site',
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
         data: { ...VALID_ADDRESS },
         attributes: {
           storageClient: {
@@ -175,7 +177,7 @@ describe('routes/customers/addresses tests', () => {
           org: 'org',
           site: 'site',
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
         data: { name: 'John' }, // missing required fields
       });
 
@@ -195,8 +197,9 @@ describe('routes/customers/addresses tests', () => {
           method: 'POST',
           org: 'org',
           site: 'site',
+          variables: { resourceId: 'addr1' },
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses/addr1'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses/addr1'),
       });
 
       const resp = await handler(ctx);
@@ -213,8 +216,9 @@ describe('routes/customers/addresses tests', () => {
           method: 'DELETE',
           org: 'org',
           site: 'site',
+          variables: { resourceId: 'addr1' },
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses/addr1'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses/addr1'),
         attributes: {
           storageClient: {
             deleteAddress: async (email, addressId) => {
@@ -240,8 +244,9 @@ describe('routes/customers/addresses tests', () => {
           method: 'DELETE',
           org: 'org',
           site: 'site',
+          variables: { resourceId: 'nonexistent' },
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses/nonexistent'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses/nonexistent'),
         attributes: {
           storageClient: {
             deleteAddress: async () => false,
@@ -262,7 +267,7 @@ describe('routes/customers/addresses tests', () => {
           org: 'org',
           site: 'site',
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
       });
 
       const resp = await handler(ctx);
@@ -279,7 +284,7 @@ describe('routes/customers/addresses tests', () => {
           org: 'org',
           site: 'site',
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
       });
 
       const resp = await handler(ctx);
@@ -294,7 +299,7 @@ describe('routes/customers/addresses tests', () => {
           org: 'org',
           site: 'site',
         },
-        url: new URL('https://example.com/org/site/customers/user@example.com/addresses'),
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
       });
 
       const resp = await handler(ctx);
