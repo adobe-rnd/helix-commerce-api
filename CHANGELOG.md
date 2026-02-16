@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.5...v2.4.0) (2026-02-16)
+
+
+### Features
+
+* list addressed and delete address ([#144](https://github.com/adobe-rnd/helix-commerce-api/issues/144)) ([5939bcb](https://github.com/adobe-rnd/helix-commerce-api/commit/5939bcb6aadb054a679c9c72ec65ef62e7942f94))
+
 ## [2.3.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.4...v2.3.5) (2026-02-13)
 
 
