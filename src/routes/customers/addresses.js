@@ -66,8 +66,7 @@ export default async function handler(ctx) {
   const {
     email, method, org, site,
   } = requestInfo;
-  const segments = ctx.url.pathname.split('/').filter(Boolean).slice(['org', 'site', 'route', 'email', 'subroute'].length);
-  const [addressId] = segments;
+  const addressId = requestInfo.getVariable('resourceId');
   switch (method) {
     case 'GET': {
       ctx.authInfo.assertEmail(email);
