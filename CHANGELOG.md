@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.0...v2.4.1) (2026-02-16)
+
+
+### Bug Fixes
+
+* index products on index.json creation ([#146](https://github.com/adobe-rnd/helix-commerce-api/issues/146)) ([766337e](https://github.com/adobe-rnd/helix-commerce-api/commit/766337e7632d41a5626645cad0081a8b48d92422))
+
 # [2.4.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.3.5...v2.4.0) (2026-02-16)
 
 
