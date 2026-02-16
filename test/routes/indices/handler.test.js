@@ -37,7 +37,7 @@ describe('routes/indices/handler', () => {
       requestInfo: {
         org: 'test-org',
         site: 'test-site',
-        path: '/products',
+        path: '/products/index.json',
         method: 'POST',
       },
       attributes: {
@@ -171,7 +171,7 @@ describe('routes/indices/handler', () => {
     });
 
     it('should return 400 for invalid path', async () => {
-      ctx.requestInfo.path = '/invalid path with spaces';
+      ctx.requestInfo.path = '/invalid path with spaces/index.json';
 
       const response = await handler(ctx, null);
 
@@ -180,24 +180,18 @@ describe('routes/indices/handler', () => {
       assert(storageClient.fetchIndexRegistry.notCalled);
     });
 
-    it('should handle path with trailing slash normally', async () => {
+    it('should return 400 if path does not end with /index.json', async () => {
       ctx.requestInfo.path = '/products/';
-      storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
-      storageClient.saveIndexRegistry.resolves();
-      storageClient.saveQueryIndexByPath.resolves();
 
       const response = await handler(ctx, null);
 
-      assert.strictEqual(response.status, 201);
-      // Should call saveQueryIndexByPath with path without trailing slash
-      assert(storageClient.saveQueryIndexByPath.calledWith('test-org', 'test-site', '/products', {}));
-      // Registry should have the normalized path
-      const [, , registry] = storageClient.saveIndexRegistry.firstCall.args;
-      assert(registry['/products/index.json']);
+      assert.strictEqual(response.status, 400);
+      assert.strictEqual(response.headers.get('x-error'), 'path must end with /index.json');
+      assert(storageClient.fetchIndexRegistry.notCalled);
     });
 
     it('should accept path with underscores (locale paths)', async () => {
-      ctx.requestInfo.path = '/ca/en_us';
+      ctx.requestInfo.path = '/ca/en_us/index.json';
       storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
       storageClient.saveIndexRegistry.resolves();
       storageClient.saveQueryIndexByPath.resolves();

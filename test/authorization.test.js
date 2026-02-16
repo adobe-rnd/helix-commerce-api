@@ -590,6 +590,7 @@ describe('Route Authorization Tests', () => {
     it('POST /index/* - should require index:write permission', async () => {
       const ctx = createMockContext();
       ctx.requestInfo.method = 'POST';
+      ctx.requestInfo.path = '/test-path/index.json';
 
       try {
         // @ts-ignore
@@ -604,6 +605,7 @@ describe('Route Authorization Tests', () => {
         assertPermissions: () => {},
       });
       authorizedCtx.requestInfo.method = 'POST';
+      authorizedCtx.requestInfo.path = '/test-path/index.json';
 
       // @ts-ignore
       const response = await indicesHandler(authorizedCtx);
@@ -613,6 +615,7 @@ describe('Route Authorization Tests', () => {
     it('DELETE /index/* - should require index:write permission', async () => {
       const ctx = createMockContext();
       ctx.requestInfo.method = 'DELETE';
+      ctx.requestInfo.path = '/test-path/index.json';
 
       try {
         // @ts-ignore
@@ -627,6 +630,7 @@ describe('Route Authorization Tests', () => {
         assertPermissions: () => {},
       });
       authorizedCtx.requestInfo.method = 'DELETE';
+      authorizedCtx.requestInfo.path = '/test-path/index.json';
 
       // @ts-ignore
       const response = await indicesHandler(authorizedCtx);
@@ -786,6 +790,7 @@ describe('Route Authorization Tests', () => {
       ctx.requestInfo.org = 'different-org';
       ctx.requestInfo.site = 'different-site';
       ctx.requestInfo.method = 'POST';
+      ctx.requestInfo.path = '/test-path/index.json';
 
       try {
         // @ts-ignore
