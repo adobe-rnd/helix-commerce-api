@@ -1,3 +1,10 @@
+## [2.4.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.2...v2.4.3) (2026-02-16)
+
+
+### Bug Fixes
+
+* tweak call to storageclient ([#147](https://github.com/adobe-rnd/helix-commerce-api/issues/147)) ([786caf4](https://github.com/adobe-rnd/helix-commerce-api/commit/786caf49e54c3e1b1cdd95394b3d962160e4fe45))
+
 ## [2.4.2](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.1...v2.4.2) (2026-02-16)
 
 
