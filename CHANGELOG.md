@@ -1,3 +1,10 @@
+## [2.4.4](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.3...v2.4.4) (2026-02-16)
+
+
+### Bug Fixes
+
+* addresses route ([#148](https://github.com/adobe-rnd/helix-commerce-api/issues/148)) ([e11d002](https://github.com/adobe-rnd/helix-commerce-api/commit/e11d0021ae252e28507427bcec0840eae4854b7d))
+
 ## [2.4.3](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.2...v2.4.3) (2026-02-16)
 
 
