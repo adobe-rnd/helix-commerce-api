@@ -2028,19 +2028,50 @@ describe('StorageClient Class Tests', () => {
       ]));
     });
 
-    it('getAddressHashTable returns empty object when missing, else parsed JSON', async () => {
-      const getStub = sinon.stub();
-      getStub.onCall(0).resolves(null);
-      getStub.onCall(1).resolves({ json: sinon.stub().resolves({ hash: 'id' }) });
+    it('getAddressHashTable returns empty object when missing', async () => {
+      const getStub = sinon.stub().resolves(null);
       const ctx = DEFAULT_CONTEXT({
         env: { ORDERS_BUCKET: { get: getStub } },
         requestInfo: config,
       });
       const client = new StorageClient(ctx);
-      const res1 = await client.getAddressHashTable('e');
-      const res2 = await client.getAddressHashTable('e');
-      assert.deepStrictEqual(res1, {});
-      assert.deepStrictEqual(res2, { hash: 'id' });
+      const res = await client.getAddressHashTable('e');
+      assert.deepStrictEqual(res, {});
+    });
+
+    it('getAddressHashTable normalizes new-format entries', async () => {
+      const getStub = sinon.stub().resolves({
+        json: sinon.stub().resolves({
+          hash1: { id: 'id1', isDefault: true },
+          hash2: { id: 'id2', isDefault: false },
+        }),
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { get: getStub } },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      const res = await client.getAddressHashTable('e');
+      assert.deepStrictEqual(res, {
+        hash1: { id: 'id1', isDefault: true },
+        hash2: { id: 'id2', isDefault: false },
+      });
+    });
+
+    it('getAddressHashTable converts old-format (string id) to new format', async () => {
+      const getStub = sinon.stub().resolves({
+        json: sinon.stub().resolves({ hash1: 'id1', hash2: 'id2' }),
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { get: getStub } },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      const res = await client.getAddressHashTable('e');
+      assert.deepStrictEqual(res, {
+        hash1: { id: 'id1', isDefault: false },
+        hash2: { id: 'id2', isDefault: false },
+      });
     });
 
     it('saveAddressHashTable persists via putTo', async () => {
@@ -2051,12 +2082,28 @@ describe('StorageClient Class Tests', () => {
       });
       const client = new StorageClient(ctx);
       sinon.stub(client, 'putTo').callsFake(putToStub);
-      await client.saveAddressHashTable('e', { a: '1' });
+      const ht = { a: { id: '1', isDefault: false } };
+      await client.saveAddressHashTable('e', ht);
       const [bucket, key, body, opts] = putToStub.firstCall.args;
       assert.strictEqual(bucket, ctx.env.ORDERS_BUCKET);
       assert.strictEqual(key, 'org/site/customers/e/addresses/.hashtable.json');
-      assert.strictEqual(body, JSON.stringify({ a: '1' }));
+      assert.strictEqual(body, JSON.stringify(ht));
       assert.deepStrictEqual(opts.httpMetadata, { contentType: 'application/json' });
+    });
+
+    it('unsetDefaultInHashTable clears isDefault on the current default entry', () => {
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      const ht = {
+        h1: { id: 'id1', isDefault: true },
+        h2: { id: 'id2', isDefault: false },
+      };
+      client.unsetDefaultInHashTable(ht);
+      assert.strictEqual(ht.h1.isDefault, false);
+      assert.strictEqual(ht.h2.isDefault, false);
     });
 
     it('saveAddress creates new address and updates hash table when hash absent', async () => {
@@ -2075,24 +2122,128 @@ describe('StorageClient Class Tests', () => {
       const addr = { line1: '123 Main' };
       const res = await client.saveAddress('hash1', 'user@example.com', addr);
       assert.deepStrictEqual(res, { ...addr, id: 'id-123' });
+      assert.strictEqual(addr.isDefault, true, 'first address should be auto-set as default');
       // put address
       const [bucket, key, body, opts] = putToStub.firstCall.args;
       assert.strictEqual(bucket, ctx.env.ORDERS_BUCKET);
       assert.strictEqual(key, 'org/site/customers/user@example.com/addresses/id-123.json');
       assert.strictEqual(body, JSON.stringify(addr));
       assert.deepStrictEqual(opts.httpMetadata, { contentType: 'application/json' });
-      assert.deepStrictEqual(opts.customMetadata, { email: 'user@example.com', id: 'id-123' });
-      // saved hashtable updated
-      assert(saveHashStub.calledWithExactly('user@example.com', { hash1: 'id-123' }));
+      assert.deepStrictEqual(opts.customMetadata, { email: 'user@example.com', id: 'id-123', isDefault: 'true' });
+      // saved hashtable in new format
+      assert(saveHashStub.calledOnce);
+      assert.deepStrictEqual(saveHashStub.firstCall.args, [
+        'user@example.com',
+        { hash1: { id: 'id-123', isDefault: true } },
+      ]);
     });
 
-    it('saveAddress returns existing address when hash exists', async () => {
+    it('saveAddress does not auto-set default when other addresses exist', async () => {
+      sinon.stub(globalThis.crypto, 'randomUUID').returns('id-456');
+      const putToStub = sinon.stub().resolves(false);
+      const existingHt = { existingHash: { id: 'existing-id', isDefault: true } };
+      const getHashStub = sinon.stub().resolves(existingHt);
+      const saveHashStub = sinon.stub().resolves();
       const ctx = DEFAULT_CONTEXT({
         env: { ORDERS_BUCKET: {} },
         requestInfo: config,
       });
       const client = new StorageClient(ctx);
-      sinon.stub(client, 'getAddressHashTable').resolves({ h: 'abc' });
+      sinon.stub(client, 'putTo').callsFake(putToStub);
+      sinon.stub(client, 'getAddressHashTable').callsFake(getHashStub);
+      sinon.stub(client, 'saveAddressHashTable').callsFake(saveHashStub);
+      const addr = { line1: '456 Oak Ave' };
+      const res = await client.saveAddress('newHash', 'user@example.com', addr);
+      assert.deepStrictEqual(res, { ...addr, id: 'id-456' });
+      assert.strictEqual(addr.isDefault, undefined, 'non-first address should not auto-set default');
+      const [, , , opts] = putToStub.firstCall.args;
+      assert.strictEqual(opts.customMetadata.isDefault, 'false');
+      // hashtable preserves existing default and adds new entry
+      assert.deepStrictEqual(saveHashStub.firstCall.args[1], {
+        existingHash: { id: 'existing-id', isDefault: true },
+        newHash: { id: 'id-456', isDefault: false },
+      });
+    });
+
+    it('saveAddress with isDefault=true unsets existing default in hashtable', async () => {
+      sinon.stub(globalThis.crypto, 'randomUUID').returns('id-789');
+      const putToStub = sinon.stub().resolves(false);
+      const existingHt = { existingHash: { id: 'existing-id', isDefault: true } };
+      const getHashStub = sinon.stub().resolves(existingHt);
+      const saveHashStub = sinon.stub().resolves();
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'putTo').callsFake(putToStub);
+      sinon.stub(client, 'getAddressHashTable').callsFake(getHashStub);
+      sinon.stub(client, 'saveAddressHashTable').callsFake(saveHashStub);
+      const addr = { line1: '789 Elm St', isDefault: true };
+      const res = await client.saveAddress('newHash', 'user@example.com', addr);
+      assert.deepStrictEqual(res, { ...addr, id: 'id-789' });
+      const [, , , opts] = putToStub.firstCall.args;
+      assert.strictEqual(opts.customMetadata.isDefault, 'true');
+      // existing default should be unset, new entry is default
+      assert.deepStrictEqual(saveHashStub.firstCall.args[1], {
+        existingHash: { id: 'existing-id', isDefault: false },
+        newHash: { id: 'id-789', isDefault: true },
+      });
+    });
+
+    it('saveAddress works with old-format hashtable (backwards compat)', async () => {
+      sinon.stub(globalThis.crypto, 'randomUUID').returns('id-new');
+      const putToStub = sinon.stub().resolves(false);
+      // old format: values are plain strings
+      const getHashStub = sinon.stub().resolves({ oldHash: { id: 'old-id', isDefault: false } });
+      const saveHashStub = sinon.stub().resolves();
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'putTo').callsFake(putToStub);
+      sinon.stub(client, 'getAddressHashTable').callsFake(getHashStub);
+      sinon.stub(client, 'saveAddressHashTable').callsFake(saveHashStub);
+      const addr = { line1: '999 Pine' };
+      const res = await client.saveAddress('newHash', 'user@example.com', addr);
+      assert.deepStrictEqual(res, { ...addr, id: 'id-new' });
+      // saved hashtable should be in new format
+      assert.deepStrictEqual(saveHashStub.firstCall.args[1], {
+        oldHash: { id: 'old-id', isDefault: false },
+        newHash: { id: 'id-new', isDefault: false },
+      });
+    });
+
+    it('listAddresses returns isDefault as boolean', async () => {
+      const listStub = sinon.stub().resolves({
+        objects: [
+          { key: 'org/site/customers/e/addresses/.hashtable.json', customMetadata: {} },
+          { key: 'org/site/customers/e/addresses/id1.json', customMetadata: { email: 'e', isDefault: 'true' } },
+          { key: 'org/site/customers/e/addresses/id2.json', customMetadata: { email: 'e', isDefault: 'false' } },
+          { key: 'org/site/customers/e/addresses/id3.json', customMetadata: { email: 'e' } },
+        ],
+        truncated: false,
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: { list: listStub } },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      const res = await client.listAddresses('e');
+      assert.strictEqual(res.length, 3);
+      assert.strictEqual(res[0].isDefault, true);
+      assert.strictEqual(res[1].isDefault, false);
+      assert.strictEqual(res[2].isDefault, false);
+    });
+
+    it('saveAddress returns existing address when hash exists (new format)', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        env: { ORDERS_BUCKET: {} },
+        requestInfo: config,
+      });
+      const client = new StorageClient(ctx);
+      sinon.stub(client, 'getAddressHashTable').resolves({ h: { id: 'abc', isDefault: false } });
       const addr = { line1: '123' };
       const res = await client.saveAddress('h', 'e', addr);
       assert.deepStrictEqual(res, { ...addr, id: 'abc' });
@@ -2158,15 +2309,20 @@ describe('StorageClient Class Tests', () => {
         requestInfo: config,
       });
       const client = new StorageClient(ctx);
-      sinon.stub(client, 'getAddressHashTable').resolves({ hash1: 'addr1', hash2: 'addr2' });
+      sinon.stub(client, 'getAddressHashTable').resolves({
+        hash1: { id: 'addr1', isDefault: true },
+        hash2: { id: 'addr2', isDefault: false },
+      });
       const saveHashStub = sinon.stub().resolves();
       sinon.stub(client, 'saveAddressHashTable').callsFake(saveHashStub);
 
       const res = await client.deleteAddress('e', 'addr1');
       assert.strictEqual(res, true);
       assert.strictEqual(deleteStub.firstCall.args[0], 'org/site/customers/e/addresses/addr1.json');
-      // Hash table should have hash1 removed
-      assert.deepStrictEqual(saveHashStub.firstCall.args[1], { hash2: 'addr2' });
+      // Hash table should have hash1 removed, hash2 preserved with its entry
+      assert.deepStrictEqual(saveHashStub.firstCall.args[1], {
+        hash2: { id: 'addr2', isDefault: false },
+      });
     });
 
     it('deleteAddress returns false when address does not exist', async () => {

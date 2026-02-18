@@ -275,6 +275,103 @@ describe('routes/customers/addresses tests', () => {
     });
   });
 
+  describe('default address behavior', () => {
+    it('first address automatically becomes default', async () => {
+      let savedInput;
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['customers:write'], 'user@example.com'),
+        requestInfo: {
+          email: 'user@example.com',
+          method: 'POST',
+          org: 'org',
+          site: 'site',
+        },
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
+        data: { ...VALID_ADDRESS },
+        attributes: {
+          storageClient: {
+            getAddressHashTable: async () => ({}),
+            saveAddress: async (hash, email, address) => {
+              savedInput = { ...address };
+              return { ...address, id: 'first-addr', isDefault: true };
+            },
+            saveAddressHashTable: async () => {},
+          },
+        },
+      });
+
+      const resp = await handler(ctx);
+      assert.equal(resp.status, 200);
+      const body = await resp.json();
+      assert.equal(body.address.id, 'first-addr');
+      assert.equal(body.address.isDefault, true);
+      assert.ok(savedInput, 'saveAddress should have been called');
+    });
+
+    it('creating new address with default=true unsets existing default', async () => {
+      const calls = [];
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['customers:write'], 'user@example.com'),
+        requestInfo: {
+          email: 'user@example.com',
+          method: 'POST',
+          org: 'org',
+          site: 'site',
+        },
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
+        data: { ...VALID_ADDRESS, isDefault: true },
+        attributes: {
+          storageClient: {
+            getAddressHashTable: async () => ({}),
+            saveAddress: async (hash, email, address) => {
+              calls.push({
+                method: 'saveAddress', hash, email, address: { ...address },
+              });
+              return { ...address, id: 'new-default-addr' };
+            },
+            saveAddressHashTable: async () => {},
+          },
+        },
+      });
+
+      const resp = await handler(ctx);
+      assert.equal(resp.status, 200);
+      const body = await resp.json();
+      assert.equal(body.address.isDefault, true);
+      assert.equal(body.address.id, 'new-default-addr');
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].address.isDefault, true);
+    });
+
+    it('listAddresses responds with the default property', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['customers:read'], 'user@example.com'),
+        requestInfo: {
+          email: 'user@example.com',
+          method: 'GET',
+          org: 'org',
+          site: 'site',
+        },
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
+        attributes: {
+          storageClient: {
+            listAddresses: async () => [
+              { id: 'addr1', email: 'user@example.com', isDefault: true },
+              { id: 'addr2', email: 'user@example.com', isDefault: false },
+            ],
+          },
+        },
+      });
+
+      const resp = await handler(ctx);
+      assert.equal(resp.status, 200);
+      const body = await resp.json();
+      assert.equal(body.addresses.length, 2);
+      assert.equal(body.addresses[0].isDefault, true);
+      assert.equal(body.addresses[1].isDefault, false);
+    });
+  });
+
   describe('unsupported methods', () => {
     it('should return 405 for PATCH', async () => {
       const ctx = DEFAULT_CONTEXT({
