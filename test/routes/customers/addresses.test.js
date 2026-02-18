@@ -14,7 +14,7 @@
 
 import assert from 'node:assert';
 import { DEFAULT_CONTEXT, createAuthInfoMock } from '../../fixtures/context.js';
-import handler from '../../../src/routes/customers/addresses.js';
+import handler, { getAddressId } from '../../../src/routes/customers/addresses.js';
 
 const VALID_ADDRESS = {
   name: 'John Doe',
@@ -369,6 +369,50 @@ describe('routes/customers/addresses tests', () => {
       assert.equal(body.addresses.length, 2);
       assert.equal(body.addresses[0].isDefault, true);
       assert.equal(body.addresses[1].isDefault, false);
+    });
+  });
+
+  describe('address hash normalization', () => {
+    it('should produce the same hash for address2="" vs address2 missing', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withEmpty = { ...VALID_ADDRESS, address2: '' };
+      const hashBase = await getAddressId(base);
+      const hashEmpty = await getAddressId(withEmpty);
+      assert.strictEqual(hashBase, hashEmpty);
+    });
+
+    it('should produce the same hash for address2=undefined vs address2 missing', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withUndef = { ...VALID_ADDRESS, address2: undefined };
+      const hashBase = await getAddressId(base);
+      const hashUndef = await getAddressId(withUndef);
+      assert.strictEqual(hashBase, hashUndef);
+    });
+
+    it('should produce different hashes when address2 has a value vs missing', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withValue = { ...VALID_ADDRESS, address2: 'Apt 4B' };
+      const hashBase = await getAddressId(base);
+      const hashValue = await getAddressId(withValue);
+      assert.notStrictEqual(hashBase, hashValue);
+    });
+
+    it('should ignore id and isDefault for hashing', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withMeta = { ...VALID_ADDRESS, id: 'some-id', isDefault: true };
+      const hashBase = await getAddressId(base);
+      const hashMeta = await getAddressId(withMeta);
+      assert.strictEqual(hashBase, hashMeta);
+    });
+
+    it('should produce the same hash for multiple empty optional fields', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withEmpties = {
+        ...VALID_ADDRESS, address2: '', company: '', phone: '',
+      };
+      const hashBase = await getAddressId(base);
+      const hashEmpties = await getAddressId(withEmpties);
+      assert.strictEqual(hashBase, hashEmpties);
     });
   });
 
