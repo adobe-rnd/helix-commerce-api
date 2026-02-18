@@ -19,6 +19,7 @@ import AuthInfo from './utils/AuthInfo.js';
 
 const router = new Router(nameSelector)
   .add('/:org/sites/:site/catalog/*', handlers.catalog)
+  .add('/:org/sites/:site/catalog', handlers.catalog)
   .add('/:org/sites/:site/auth/:subRoute', handlers.auth)
   .add('/:org/sites/:site/auth/:subRoute/:email', handlers.auth)
   .add('/:org/sites/:site/orders/:orderId', handlers.orders)
