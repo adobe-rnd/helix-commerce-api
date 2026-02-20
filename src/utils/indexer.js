@@ -23,16 +23,23 @@ export async function publishIndexingJobs(ctx, payload) {
       INDEXER_QUEUE: indexerQueue,
     },
   } = ctx;
+  const chunkSize = 100;
+  const products = [...payload.products];
 
-  const normalized = {
-    ...payload,
-    products: payload.products.map((product) => ({
-      ...product,
-      path: product.path.endsWith('.json') ? product.path.slice(0, -5) : product.path,
-    })),
-  };
+  while (products.length > 0) {
+    const chunk = products.slice(0, chunkSize);
 
-  await indexerQueue.send(normalized);
+    // eslint-disable-next-line no-await-in-loop
+    await indexerQueue.send({
+      ...payload,
+      products: chunk.map((product) => ({
+        ...product,
+        path: product.path.endsWith('.json') ? product.path.slice(0, -5) : product.path,
+      })),
+    });
+
+    products.splice(0, chunkSize);
+  }
 }
 
 /**

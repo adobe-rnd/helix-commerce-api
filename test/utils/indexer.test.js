@@ -118,7 +118,7 @@ describe('publishIndexingJobs', () => {
     assert.strictEqual(sent.timestamp, 1234567890);
   });
 
-  it('should handle empty products array', async () => {
+  it('should not send when products array is empty', async () => {
     const payload = {
       org: 'myorg',
       site: 'mysite',
@@ -128,9 +128,7 @@ describe('publishIndexingJobs', () => {
 
     await publishIndexingJobs(ctx, payload);
 
-    assert(sendStub.calledOnce);
-    const sent = sendStub.firstCall.args[0];
-    assert.deepStrictEqual(sent.products, []);
+    assert(sendStub.notCalled);
   });
 
   it('should only strip .json from the end of the path', async () => {
@@ -173,6 +171,56 @@ describe('publishIndexingJobs', () => {
       ],
       timestamp: 1234567890,
     }));
+  });
+
+  it('should split products into chunks of 100', async () => {
+    const products = Array.from({ length: 250 }, (_, i) => ({
+      path: `/products/product-${i}`,
+      action: 'update',
+    }));
+    const payload = {
+      org: 'myorg',
+      site: 'mysite',
+      products,
+      timestamp: 1234567890,
+    };
+
+    await publishIndexingJobs(ctx, payload);
+
+    assert.strictEqual(sendStub.callCount, 3);
+    assert.strictEqual(sendStub.firstCall.args[0].products.length, 100);
+    assert.strictEqual(sendStub.secondCall.args[0].products.length, 100);
+    assert.strictEqual(sendStub.thirdCall.args[0].products.length, 50);
+
+    for (const call of sendStub.getCalls()) {
+      const sent = call.args[0];
+      assert.strictEqual(sent.org, 'myorg');
+      assert.strictEqual(sent.site, 'mysite');
+      assert.strictEqual(sent.timestamp, 1234567890);
+    }
+  });
+
+  it('should produce chunks whose JSON payload stays within 128 KB', async () => {
+    const products = Array.from({ length: 100 }, (_, i) => ({
+      path: `/products/category/subcategory/product-with-a-long-name-${i}.json`,
+      action: 'update',
+    }));
+    const payload = {
+      org: 'myorg',
+      site: 'mysite',
+      products,
+      timestamp: 1234567890,
+    };
+
+    await publishIndexingJobs(ctx, payload);
+
+    for (const call of sendStub.getCalls()) {
+      const json = JSON.stringify(call.args[0]);
+      assert(
+        json.length <= 128_000,
+        `Chunk payload is ${json.length} characters, exceeds 128,000 limit`,
+      );
+    }
   });
 });
 
