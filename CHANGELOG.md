@@ -1,3 +1,10 @@
+## [2.4.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.6...v2.4.7) (2026-02-20)
+
+
+### Bug Fixes
+
+* chunk index messages ([#153](https://github.com/adobe-rnd/helix-commerce-api/issues/153)) ([59a4507](https://github.com/adobe-rnd/helix-commerce-api/commit/59a450780b3a0cd98eff17bf1deec726bcaa1734))
+
 ## [2.4.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.5...v2.4.6) (2026-02-20)
 
 
