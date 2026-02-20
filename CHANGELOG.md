@@ -1,3 +1,10 @@
+## [2.4.6](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.5...v2.4.6) (2026-02-20)
+
+
+### Bug Fixes
+
+* upgrade deps ([#152](https://github.com/adobe-rnd/helix-commerce-api/issues/152)) ([7281f11](https://github.com/adobe-rnd/helix-commerce-api/commit/7281f1151dd732df60dcbe1ccb0a2eee75d8f6e2))
+
 ## [2.4.5](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.4...v2.4.5) (2026-02-17)
 
 
