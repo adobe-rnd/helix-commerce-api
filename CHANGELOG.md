@@ -1,3 +1,10 @@
+## [2.4.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.7...v2.4.8) (2026-02-25)
+
+
+### Bug Fixes
+
+* add isDefault to addresses ([#151](https://github.com/adobe-rnd/helix-commerce-api/issues/151)) ([ecc41f4](https://github.com/adobe-rnd/helix-commerce-api/commit/ecc41f4947c28ba178622e7360f8d60b5df03ffa))
+
 ## [2.4.7](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.6...v2.4.7) (2026-02-20)
 
 
