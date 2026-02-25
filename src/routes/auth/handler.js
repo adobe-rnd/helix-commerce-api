@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../../utils/http.js';
+import { errorResponse, optionsHandler } from '../../utils/http.js';
 import retrieve from './token/retrieve.js';
 import update from './token/update.js';
 import rotate from './token/rotate.js';
@@ -30,15 +30,19 @@ const handlers = {
     GET: retrieve,
     PUT: update,
     POST: rotate,
+    OPTIONS: optionsHandler(['GET', 'PUT', 'POST']),
   },
   login: {
     POST: login,
+    OPTIONS: optionsHandler(['POST']),
   },
   logout: {
     POST: logout,
+    OPTIONS: optionsHandler(['POST']),
   },
   callback: {
     POST: callback,
+    OPTIONS: optionsHandler(['POST']),
   },
   admins: {
     GET: (ctx, req) => {
@@ -50,6 +54,7 @@ const handlers = {
     },
     PUT: createAdmin,
     DELETE: removeAdmin,
+    OPTIONS: optionsHandler(['GET', 'PUT', 'DELETE']),
   },
 };
 

@@ -83,7 +83,7 @@ export async function sendEmail(ctx, fromEmail, toEmail, subject, body) {
         },
       },
     }));
-    log.info(`[SES] email sent for ${org}/${site}`, resp.MessageId);
+    log.info(`[SES] email sent for ${org}/${site}`, resp.$metadata.httpStatusCode, resp.MessageId);
   } catch (error) {
     log.error(`[SES] error sending email for ${org}/${site}`, error);
     throw errorWithResponse(500, 'internal server error');

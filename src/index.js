@@ -19,6 +19,7 @@ import AuthInfo from './utils/AuthInfo.js';
 
 const router = new Router(nameSelector)
   .add('/:org/sites/:site/catalog/*', handlers.catalog)
+  .add('/:org/sites/:site/catalog', handlers.catalog)
   .add('/:org/sites/:site/auth/:subRoute', handlers.auth)
   .add('/:org/sites/:site/auth/:subRoute/:email', handlers.auth)
   .add('/:org/sites/:site/orders/:orderId', handlers.orders)
@@ -29,6 +30,7 @@ const router = new Router(nameSelector)
   .add('/:org/sites/:site/customers', handlers.customers)
   .add('/:org/sites/:site/cache', handlers.cache)
   .add('/:org/sites/:site/index/*', handlers.indices)
+  .add('/:org/sites/:site/index', handlers.indices)
   .add('/:org/sites/:site/config', handlers.config)
   .add('/:org/sites/:site/operations-log', handlers['operations-log']);
 
@@ -88,13 +90,17 @@ export async function makeContext(eCtx, req, env) {
 }
 
 /**
+ * @param {Context} ctx
  * @param {Response} resp
  * @returns {Promise<Response>}
  */
-async function applyCORSHeaders(resp) {
-  const origin = resp.headers.get('access-control-allow-origin') || '*';
+async function applyCORSHeaders(ctx, resp) {
   const methods = resp.headers.get('access-control-allow-methods') || 'GET, POST, PUT, DELETE, OPTIONS';
   const headers = resp.headers.get('access-control-allow-headers') || 'Content-Type';
+  let origin = resp.headers.get('access-control-allow-origin') || '*';
+  if (origin === '*') {
+    origin = ctx.requestInfo.getHeader('origin') || '*';
+  }
   return new Response(await resp.text(), {
     status: resp.status,
     headers: {
@@ -102,6 +108,7 @@ async function applyCORSHeaders(resp) {
       'access-control-allow-origin': origin,
       'access-control-allow-methods': methods,
       'access-control-allow-headers': headers,
+      'access-control-allow-credentials': 'true',
     },
   });
 }
@@ -130,7 +137,7 @@ export default {
       ctx.authInfo = await AuthInfo.create(ctx, request);
 
       let resp = await handler(ctx, request);
-      resp = await applyCORSHeaders(resp);
+      resp = await applyCORSHeaders(ctx, resp);
       return resp;
     } catch (e) {
       if (e.response) {

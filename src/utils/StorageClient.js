@@ -44,6 +44,42 @@ export default class StorageClient extends SharedStorageClient {
   }
 
   /**
+   * List products in the catalog.
+   * @returns {Promise<{
+   *   products: Array<{sku: string, name: string, path: string}>,
+   *   truncated: boolean,
+   *   cursor: string|undefined
+   * }>}
+   */
+  async listProducts() {
+    const {
+      env,
+      requestInfo: { org, site },
+    } = this.ctx;
+
+    const prefix = `${org}/${site}/catalog/`;
+    const res = await env.CATALOG_BUCKET.list({
+      prefix,
+      limit: 100,
+      cursor: this.ctx.data.cursor,
+      // @ts-ignore not defined in types for some reason
+      include: ['customMetadata'],
+    });
+
+    const products = res.objects.map((obj) => ({
+      sku: obj.customMetadata?.sku || '',
+      name: obj.customMetadata?.name || '',
+      path: obj.customMetadata?.path || obj.key.substring(`${org}/${site}/catalog`.length).replace(/\.json$/, ''),
+    }));
+
+    return {
+      products,
+      truncated: res.truncated,
+      cursor: res.truncated ? res.cursor : undefined,
+    };
+  }
+
+  /**
    * Load product by path.
    * @param {string} path - The path to the product
    * @returns {Promise<SharedTypes.ProductBusEntry>} - A promise that resolves to the product.
