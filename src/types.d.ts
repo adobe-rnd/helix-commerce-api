@@ -166,6 +166,7 @@ declare global {
     country: string;
     phone: string;
     email: string;
+    isDefault?: boolean;
   }
 
   export interface DecodedJWT {
@@ -197,6 +198,15 @@ declare global {
     otpEmailBodyTemplate?: string;
     // OTP email body URL, fetched and used as template if defined
     otpEmailBodyUrl?: string;
+  }
+
+  export interface AddressHashEntry {
+    id: string;
+    isDefault: boolean;
+  }
+
+  export interface AddressHashTable {
+    [hash: string]: AddressHashEntry;
   }
 }
 

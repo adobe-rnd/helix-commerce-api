@@ -456,9 +456,29 @@ export default class StorageClient extends SharedStorageClient {
   }
 
   /**
-   * Get hash table for a customer's address hash -> id lookup
+   * Normalize a hash table to the new format. Old format entries are plain
+   * string ids; new format entries are `{ id, isDefault }` objects.
+   * @param {Record<string, string | AddressHashEntry>} raw
+   * @returns {AddressHashTable}
+   */
+  // eslint-disable-next-line class-methods-use-this
+  normalizeHashTable(raw) {
+    /** @type {AddressHashTable} */
+    const out = {};
+    for (const [hash, value] of Object.entries(raw)) {
+      if (typeof value === 'string') {
+        out[hash] = { id: value, isDefault: false };
+      } else {
+        out[hash] = value;
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Get hash table for a customer's address hash -> entry lookup
    * @param {string} email
-   * @returns {Promise<Record<string, string>>} { hash: id }
+   * @returns {Promise<AddressHashTable>}
    */
   async getAddressHashTable(email) {
     const {
@@ -473,13 +493,13 @@ export default class StorageClient extends SharedStorageClient {
     if (!resp) {
       return {};
     }
-    return resp.json();
+    return this.normalizeHashTable(await resp.json());
   }
 
   /**
-   * Save hash table for a customer's address hash -> id lookup
+   * Save hash table for a customer's address hash -> entry lookup
    * @param {string} email
-   * @param {Record<string, string>} hashTable { hash: id }
+   * @param {AddressHashTable} hashTable
    * @returns {Promise<void>}
    */
   async saveAddressHashTable(email, hashTable) {
@@ -494,6 +514,19 @@ export default class StorageClient extends SharedStorageClient {
     await this.putTo(env.ORDERS_BUCKET, key, JSON.stringify(hashTable), {
       httpMetadata: { contentType: 'application/json' },
     });
+  }
+
+  /**
+   * Unset the isDefault flag in the hash table for whichever entry is currently default.
+   * @param {AddressHashTable} hashTable - mutated in place
+   */
+  // eslint-disable-next-line class-methods-use-this
+  unsetDefaultInHashTable(hashTable) {
+    for (const entry of Object.values(hashTable)) {
+      if (entry.isDefault) {
+        entry.isDefault = false;
+      }
+    }
   }
 
   /**
@@ -512,13 +545,19 @@ export default class StorageClient extends SharedStorageClient {
     } = this.ctx;
     const hashTable = await this.getAddressHashTable(email);
     if (hashTable[hash]) {
-      // address hash already exists, return it as the address
-      // NOTE: that this does not handle address updates by ID, yet
-      const id = hashTable[hash];
       return {
         ...address,
-        id,
+        id: hashTable[hash].id,
       };
+    }
+
+    const isFirstAddress = Object.keys(hashTable).length === 0;
+    if (isFirstAddress) {
+      address.isDefault = true;
+    }
+
+    if (address.isDefault) {
+      this.unsetDefaultInHashTable(hashTable);
     }
 
     const id = crypto.randomUUID();
@@ -528,11 +567,11 @@ export default class StorageClient extends SharedStorageClient {
       customMetadata: {
         email,
         id,
+        isDefault: address.isDefault ? 'true' : 'false',
       },
     });
 
-    // persist hash table with new hash -> id
-    hashTable[hash] = id;
+    hashTable[hash] = { id, isDefault: !!address.isDefault };
     await this.saveAddressHashTable(email, hashTable);
     return {
       ...address,
@@ -585,9 +624,11 @@ export default class StorageClient extends SharedStorageClient {
       .filter((obj) => !obj.key.endsWith('.hashtable.json'))
       .map((obj) => {
         const id = obj.key.substring(prefix.length).replace(/\.json$/, '');
+        const { isDefault, ...rest } = obj.customMetadata ?? {};
         return {
           id,
-          ...obj.customMetadata,
+          ...rest,
+          isDefault: isDefault === 'true',
         };
       });
     return /** @type {Address[]} */ (objects);
@@ -617,11 +658,11 @@ export default class StorageClient extends SharedStorageClient {
 
     // Remove from hash table
     const hashTable = await this.getAddressHashTable(email);
-    /** @type {Record<string, string>} */
+    /** @type {AddressHashTable} */
     const updated = {};
-    for (const [hash, id] of Object.entries(hashTable)) {
-      if (id !== addressId) {
-        updated[hash] = id;
+    for (const [hash, entry] of Object.entries(hashTable)) {
+      if (entry.id !== addressId) {
+        updated[hash] = entry;
       }
     }
     await this.saveAddressHashTable(email, updated);

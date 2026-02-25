@@ -14,7 +14,7 @@
 
 import assert from 'node:assert';
 import { DEFAULT_CONTEXT, createAuthInfoMock } from '../../fixtures/context.js';
-import handler from '../../../src/routes/customers/addresses.js';
+import handler, { getAddressId } from '../../../src/routes/customers/addresses.js';
 
 const VALID_ADDRESS = {
   name: 'John Doe',
@@ -272,6 +272,147 @@ describe('routes/customers/addresses tests', () => {
 
       const resp = await handler(ctx);
       assert.equal(resp.status, 400);
+    });
+  });
+
+  describe('default address behavior', () => {
+    it('first address automatically becomes default', async () => {
+      let savedInput;
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['customers:write'], 'user@example.com'),
+        requestInfo: {
+          email: 'user@example.com',
+          method: 'POST',
+          org: 'org',
+          site: 'site',
+        },
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
+        data: { ...VALID_ADDRESS },
+        attributes: {
+          storageClient: {
+            getAddressHashTable: async () => ({}),
+            saveAddress: async (hash, email, address) => {
+              savedInput = { ...address };
+              return { ...address, id: 'first-addr', isDefault: true };
+            },
+            saveAddressHashTable: async () => {},
+          },
+        },
+      });
+
+      const resp = await handler(ctx);
+      assert.equal(resp.status, 200);
+      const body = await resp.json();
+      assert.equal(body.address.id, 'first-addr');
+      assert.equal(body.address.isDefault, true);
+      assert.ok(savedInput, 'saveAddress should have been called');
+    });
+
+    it('creating new address with default=true unsets existing default', async () => {
+      const calls = [];
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['customers:write'], 'user@example.com'),
+        requestInfo: {
+          email: 'user@example.com',
+          method: 'POST',
+          org: 'org',
+          site: 'site',
+        },
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
+        data: { ...VALID_ADDRESS, isDefault: true },
+        attributes: {
+          storageClient: {
+            getAddressHashTable: async () => ({}),
+            saveAddress: async (hash, email, address) => {
+              calls.push({
+                method: 'saveAddress', hash, email, address: { ...address },
+              });
+              return { ...address, id: 'new-default-addr' };
+            },
+            saveAddressHashTable: async () => {},
+          },
+        },
+      });
+
+      const resp = await handler(ctx);
+      assert.equal(resp.status, 200);
+      const body = await resp.json();
+      assert.equal(body.address.isDefault, true);
+      assert.equal(body.address.id, 'new-default-addr');
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].address.isDefault, true);
+    });
+
+    it('listAddresses responds with the default property', async () => {
+      const ctx = DEFAULT_CONTEXT({
+        authInfo: createAuthInfoMock(['customers:read'], 'user@example.com'),
+        requestInfo: {
+          email: 'user@example.com',
+          method: 'GET',
+          org: 'org',
+          site: 'site',
+        },
+        url: new URL('https://example.com/org/sites/site/customers/user@example.com/addresses'),
+        attributes: {
+          storageClient: {
+            listAddresses: async () => [
+              { id: 'addr1', email: 'user@example.com', isDefault: true },
+              { id: 'addr2', email: 'user@example.com', isDefault: false },
+            ],
+          },
+        },
+      });
+
+      const resp = await handler(ctx);
+      assert.equal(resp.status, 200);
+      const body = await resp.json();
+      assert.equal(body.addresses.length, 2);
+      assert.equal(body.addresses[0].isDefault, true);
+      assert.equal(body.addresses[1].isDefault, false);
+    });
+  });
+
+  describe('address hash normalization', () => {
+    it('should produce the same hash for address2="" vs address2 missing', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withEmpty = { ...VALID_ADDRESS, address2: '' };
+      const hashBase = await getAddressId(base);
+      const hashEmpty = await getAddressId(withEmpty);
+      assert.strictEqual(hashBase, hashEmpty);
+    });
+
+    it('should produce the same hash for address2=undefined vs address2 missing', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withUndef = { ...VALID_ADDRESS, address2: undefined };
+      const hashBase = await getAddressId(base);
+      const hashUndef = await getAddressId(withUndef);
+      assert.strictEqual(hashBase, hashUndef);
+    });
+
+    it('should produce different hashes when address2 has a value vs missing', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withValue = { ...VALID_ADDRESS, address2: 'Apt 4B' };
+      const hashBase = await getAddressId(base);
+      const hashValue = await getAddressId(withValue);
+      assert.notStrictEqual(hashBase, hashValue);
+    });
+
+    it('should ignore id and isDefault for hashing', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withMeta = { ...VALID_ADDRESS, id: 'some-id', isDefault: true };
+      const hashBase = await getAddressId(base);
+      const hashMeta = await getAddressId(withMeta);
+      assert.strictEqual(hashBase, hashMeta);
+    });
+
+    it('should produce the same hash for multiple empty optional fields', async () => {
+      const base = { ...VALID_ADDRESS };
+      const withEmpties = {
+        ...VALID_ADDRESS, address2: '', company: '', phone: '',
+      };
+      const hashBase = await getAddressId(base);
+      const hashEmpties = await getAddressId(withEmpties);
+      assert.strictEqual(hashBase, hashEmpties);
     });
   });
 

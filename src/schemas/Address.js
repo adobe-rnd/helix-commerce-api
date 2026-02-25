@@ -30,6 +30,7 @@ const Order = {
     country: { type: 'string', maxLength: 255 },
     phone: { type: 'string', maxLength: 255 },
     email: EmailSchema,
+    isDefault: { type: 'boolean' },
   },
   required: ['name', 'email', 'address1', 'city', 'state', 'zip', 'country'],
 };

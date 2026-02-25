@@ -27,11 +27,25 @@ function assertValidAddress(address) {
 }
 
 /**
+ * Build a normalized object for hashing: strip metadata fields and
+ * remove keys whose values are undefined or empty strings so that
+ * value-identical addresses always produce the same hash.
+ * @param {Address} address
+ * @returns {Record<string, unknown>}
+ */
+function normalizeForHash(address) {
+  return Object.fromEntries(
+    Object.entries(address)
+      .filter(([k, v]) => k !== 'id' && k !== 'isDefault' && v !== undefined && v !== ''),
+  );
+}
+
+/**
  * @param {Address} address
  * @returns {Promise<string>}
  */
-async function getAddressId(address) {
-  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify({ ...address, id: undefined })));
+export async function getAddressId(address) {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(normalizeForHash(address))));
   return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
