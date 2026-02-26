@@ -31,8 +31,8 @@ import { createImapListener } from './fixtures/imap.js';
 
 config();
 
-// const API_BASE = `https://adobe-commerce-api-ci.adobeaem.workers.dev`;
-const API_BASE = 'http://localhost:8787';
+const API_BASE = 'https://adobe-commerce-api-ci.adobeaem.workers.dev';
+// const API_BASE = 'http://localhost:8787';
 
 /**
  * @param {string} path
