@@ -415,8 +415,11 @@ describe('Post-Deploy Tests', () => {
       try {
         // set up email listener
         const emailPromise = userImapListener.onEmail(
-          ({ recipient, subject }) => recipient.includes(testRecipient)
-              && subject.includes('Post-deploy test email'),
+          ({ recipient, subject }) => {
+            console.log('email check', recipient, subject, recipient.includes(testRecipient) && subject.includes('Post-deploy test email'));
+            return recipient.includes(testRecipient)
+              && subject.includes('Post-deploy test email');
+          },
           60_000,
         );
 
