@@ -12,7 +12,7 @@
 
 import { errorWithResponse } from './http.js';
 import { extractToken, verifyToken } from './jwt.js';
-import { isTokenRevoked, timingSafeEqual } from './auth.js';
+import { isTokenRevoked, isServiceTokenRevoked, timingSafeEqual } from './auth.js';
 
 /**
  * @type {Record<string, string[]>}
@@ -30,8 +30,10 @@ const PERMISSIONS = {
     'customers:write',
     'service_token:read',
     'service_token:write',
+    'service_token:create',
     'config:read',
     'config:write',
+    'emails:send',
   ],
   // service (ie. ETL) permissions
   service: [
@@ -57,6 +59,51 @@ PERMISSIONS.superuser = [
   'config:read',
   'config:write',
 ];
+
+/**
+ * Permissions that may be granted to service tokens.
+ * Permissions not in this list cannot be delegated.
+ * @type {Set<string>}
+ */
+export const SERVICE_TOKEN_ALLOWED_PERMISSIONS = new Set([
+  'catalog:read',
+  'catalog:write',
+  'orders:read',
+  'orders:write',
+  'index:read',
+  'index:write',
+  'customers:read',
+  'customers:write',
+  'emails:send',
+]);
+
+const MAX_SERVICE_TOKEN_TTL_SECONDS = 365 * 24 * 60 * 60; // 1 year
+
+export { MAX_SERVICE_TOKEN_TTL_SECONDS };
+
+/**
+ * Check if a destination email matches an email scope pattern.
+ * Patterns support `*` as the local part (e.g. `*@example.com`).
+ *
+ * @param {string} email - destination email to check
+ * @param {string} pattern - allowed pattern (exact or `*@domain`)
+ * @returns {boolean}
+ */
+export function emailMatchesScope(email, pattern) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedPattern = pattern.trim().toLowerCase();
+
+  if (normalizedEmail === normalizedPattern) {
+    return true;
+  }
+
+  if (normalizedPattern.startsWith('*@')) {
+    const domain = normalizedPattern.slice(2);
+    return normalizedEmail.endsWith(`@${domain}`);
+  }
+
+  return false;
+}
 
 export default class AuthInfo {
   /**
@@ -97,6 +144,12 @@ export default class AuthInfo {
   #site;
 
   /**
+   * Whether this auth represents a JWT-based service token
+   * @type {boolean}
+   */
+  #isServiceToken = false;
+
+  /**
    * @param {Context} ctx
    */
   constructor(ctx) {
@@ -108,6 +161,13 @@ export default class AuthInfo {
    */
   get email() {
     return this.#email;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  get isServiceToken() {
+    return this.#isServiceToken;
   }
 
   /**
@@ -126,6 +186,7 @@ export default class AuthInfo {
     }
 
     try {
+      const decoded = await verifyToken(ctx, token);
       const {
         email,
         roles,
@@ -133,25 +194,46 @@ export default class AuthInfo {
         site,
         iat,
         exp,
-      } = await verifyToken(ctx, token);
+        type,
+        permissions: directPermissions,
+      } = decoded;
+
       // check if token is revoked
-      const revoked = await isTokenRevoked(ctx, token);
+      const isServiceTkn = type === 'service_token';
+      const revoked = isServiceTkn
+        ? await isServiceTokenRevoked(ctx, token)
+        : await isTokenRevoked(ctx, token);
       if (revoked) {
         throw errorWithResponse(401, 'token revoked');
       }
+
       const auth = new AuthInfo(ctx);
       auth.#email = email;
-      auth.#roles = new Set(roles);
       auth.#iat = iat;
       auth.#exp = exp;
       auth.#org = org;
       auth.#site = site;
-      if (email) {
-        auth.#roles.add('user');
+
+      if (isServiceTkn) {
+        auth.#isServiceToken = true;
+        if (Array.isArray(directPermissions)) {
+          for (const perm of directPermissions) {
+            auth.#permissions.add(perm);
+          }
+        }
+      } else {
+        auth.#roles = new Set(roles);
+        if (email) {
+          auth.#roles.add('user');
+        }
+        auth.#applyPermissions(...auth.#roles);
       }
-      auth.#applyPermissions(...auth.#roles);
+
       return auth;
     } catch (error) {
+      if (error.response) {
+        throw error;
+      }
       // ignore token, continue with unauthenticated flow
       ctx.log.debug('invalid token', { error: error.message });
       const auth = new AuthInfo(ctx);
@@ -286,6 +368,34 @@ export default class AuthInfo {
     }
     if (this.#email !== email) {
       throw errorWithResponse(403, 'access denied');
+    }
+  }
+
+  /**
+   * Assert that the token has scope to email the given addresses.
+   * Checks each address against `emails:send:<pattern>` permissions.
+   * Admins with `emails:send` permission bypass scope checks.
+   *
+   * @param {string[]} addresses - all destination emails (to + cc + bcc)
+   */
+  assertEmailScope(addresses) {
+    if (this.isAdmin()) {
+      return;
+    }
+
+    const scopePermissions = [...this.#permissions]
+      .filter((p) => p.startsWith('emails:send:'))
+      .map((p) => p.slice('emails:send:'.length));
+
+    if (scopePermissions.length === 0) {
+      throw errorWithResponse(403, 'no email scopes defined');
+    }
+
+    for (const addr of addresses) {
+      const allowed = scopePermissions.some((pattern) => emailMatchesScope(addr, pattern));
+      if (!allowed) {
+        throw errorWithResponse(403, `not allowed to email ${addr}`);
+      }
     }
   }
 }

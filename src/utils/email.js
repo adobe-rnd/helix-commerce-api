@@ -40,11 +40,12 @@ export function isValidEmail(email) {
  *
  * @param {Context} ctx
  * @param {string} fromEmail
- * @param {string} toEmail
+ * @param {string|string[]} toEmail
  * @param {string} subject
  * @param {string} body html
+ * @param {{ cc?: string[]; bcc?: string[] }} [options]
  */
-export async function sendEmail(ctx, fromEmail, toEmail, subject, body) {
+export async function sendEmail(ctx, fromEmail, toEmail, subject, body, options = {}) {
   const { env, log, requestInfo } = ctx;
   const { org, site } = requestInfo;
 
@@ -64,12 +65,21 @@ export async function sendEmail(ctx, fromEmail, toEmail, subject, body) {
     },
   });
 
+  const toAddresses = Array.isArray(toEmail) ? toEmail : [toEmail];
+
+  /** @type {import('@aws-sdk/client-sesv2').Destination} */
+  const destination = { ToAddresses: toAddresses };
+  if (options.cc?.length) {
+    destination.CcAddresses = options.cc;
+  }
+  if (options.bcc?.length) {
+    destination.BccAddresses = options.bcc;
+  }
+
   try {
     const resp = await client.send(new SendEmailCommand({
       FromEmailAddress: fromEmail,
-      Destination: {
-        ToAddresses: [toEmail],
-      },
+      Destination: destination,
       Content: {
         Simple: {
           Subject: {

@@ -63,6 +63,7 @@ export const DEFAULT_CONTEXT = (
   const defaultAuthInfo = {
     isSuperuser: () => false,
     isAdmin: () => false,
+    isServiceToken: false,
     issuedAt: () => undefined,
     expiresAt: () => undefined,
     isExpired: () => false,
@@ -73,6 +74,7 @@ export const DEFAULT_CONTEXT = (
     },
     assertAuthenticated: () => { throw errorWithResponse(401, 'unauthorized'); },
     assertEmail: () => { throw errorWithResponse(403, 'access denied'); },
+    assertEmailScope: () => { throw errorWithResponse(403, 'no email scopes defined'); },
     assertOrgSite: () => {}, // Pass org/site check by default
   };
 
@@ -113,16 +115,19 @@ export const DEFAULT_CONTEXT = (
  * @param {string} [email] - Optional email for the authenticated user
  * @returns {object}
  */
-export const createAuthInfoMock = (permissions = [], email = null) => {
+export const createAuthInfoMock = (permissions = [], email = null, opts = {}) => {
   const permissionSet = new Set(permissions);
+  const isServiceTkn = opts.isServiceToken || false;
+  const { emailMatchesScope } = opts;
   return {
     isSuperuser: () => permissions.includes('admins:read') || permissions.includes('admins:write'),
-    isAdmin: () => permissions.includes('catalog:write') && permissions.includes('orders:write'),
+    isAdmin: () => permissions.includes('catalog:write') && permissions.includes('orders:write')
+      && !isServiceTkn,
+    isServiceToken: isServiceTkn,
     issuedAt: () => Date.now() / 1000,
     expiresAt: () => (Date.now() / 1000) + 86400,
     isExpired: () => false,
     assertRole: (role) => {
-      // Simple role check based on permissions
       if (role === 'admin' && !permissions.includes('catalog:write')) {
         throw errorWithResponse(403, 'access denied');
       }
@@ -143,19 +148,36 @@ export const createAuthInfoMock = (permissions = [], email = null) => {
       }
     },
     assertEmail: (targetEmail, allowAdmin = true) => {
-      // Allow if admin
       if (allowAdmin && permissions.includes('catalog:write') && permissions.includes('orders:write')) {
         return;
       }
-      // Allow if email matches
       if (email && email === targetEmail) {
         return;
       }
       throw errorWithResponse(403, 'access denied');
     },
+    assertEmailScope: (addresses) => {
+      if (permissions.includes('catalog:write') && permissions.includes('orders:write')
+        && !isServiceTkn) {
+        return;
+      }
+      const scopes = permissions
+        .filter((p) => p.startsWith('emails:send:'))
+        .map((p) => p.slice('emails:send:'.length));
+      if (scopes.length === 0) {
+        throw errorWithResponse(403, 'no email scopes defined');
+      }
+      for (const addr of addresses) {
+        const allowed = emailMatchesScope
+          ? scopes.some((pattern) => emailMatchesScope(addr, pattern))
+          : scopes.includes(addr);
+        if (!allowed) {
+          throw errorWithResponse(403, `not allowed to email ${addr}`);
+        }
+      }
+    },
     assertOrgSite: (/* org, site */) => {
       // By default, pass org/site checks in tests
-      // Individual tests can override this to test cross-site isolation
     },
   };
 };
@@ -172,8 +194,10 @@ export const SUPERUSER_CONTEXT = (overrides = {}) => {
     'customers:write',
     'service_token:read',
     'service_token:write',
+    'service_token:create',
     'admins:read',
     'admins:write',
+    'emails:send',
   ];
 
   return DEFAULT_CONTEXT({

@@ -61,6 +61,36 @@ export async function createToken(ctx, email, roles = ['user'], expiresIn = '24h
 }
 
 /**
+ * Create a JWT-based service token with explicit permissions
+ *
+ * @param {Context} ctx
+ * @param {string[]} permissions
+ * @param {number} ttlSeconds
+ * @returns {Promise<string>} JWT
+ */
+export async function createServiceToken(ctx, permissions, ttlSeconds) {
+  const { requestInfo } = ctx;
+  const { org, site } = requestInfo;
+
+  const key = await getSecretKey(ctx);
+
+  const expiresIn = `${ttlSeconds}s`;
+  const token = await new SignJWT({
+    type: 'service_token',
+    permissions,
+    org,
+    site,
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+    .setSubject('service_token')
+    .sign(key);
+
+  return token;
+}
+
+/**
  * Verify and decode a JWT token
  * Rejects if token is invalid or expired
  *
@@ -87,6 +117,10 @@ export async function verifyToken(ctx, token) {
     site: payload.site,
     iat: payload.iat,
     exp: payload.exp,
+    // @ts-ignore - service token fields
+    type: payload.type,
+    // @ts-ignore
+    permissions: payload.permissions,
   };
 }
 

@@ -42,4 +42,42 @@ describe('routes/auth handler tests', () => {
     const resp = await mocked.default(ctx);
     assert.equal(resp.status, 200);
   });
+
+  it('should route to service_token POST', async () => {
+    const mocked = await esmock('../../../src/routes/auth/handler.js', {
+      '../../../src/routes/auth/service-token/create.js': async () => new Response('{}', { status: 201 }),
+    });
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        method: 'POST',
+        variables: { subRoute: 'service_token' },
+      },
+    });
+    const resp = await mocked.default(ctx);
+    assert.equal(resp.status, 201);
+  });
+
+  it('should route to service_token DELETE', async () => {
+    const mocked = await esmock('../../../src/routes/auth/handler.js', {
+      '../../../src/routes/auth/service-token/revoke.js': async () => new Response(null, { status: 204 }),
+    });
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        method: 'DELETE',
+        variables: { subRoute: 'service_token' },
+      },
+    });
+    const resp = await mocked.default(ctx);
+    assert.equal(resp.status, 204);
+  });
+
+  it('should 404 on unsupported method for service_token', async () => {
+    const ctx = DEFAULT_CONTEXT({
+      requestInfo: {
+        variables: { subRoute: 'service_token' },
+      },
+    });
+    const resp = await handler(ctx);
+    assert.equal(resp.status, 404);
+  });
 });
