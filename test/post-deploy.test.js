@@ -31,6 +31,9 @@ import { createImapListener } from './fixtures/imap.js';
 
 config();
 
+const API_BASE = 'https://adobe-commerce-api-ci.adobeaem.workers.dev';
+// const API_BASE = 'http://localhost:8787';
+
 /**
  * @param {string} path
  * @param {RequestInit} [init]
@@ -38,8 +41,8 @@ config();
  */
 function getFetchOptions(path, init = {}) {
   return {
-    url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
-    // url: new URL(`http://localhost:8787${path}`),
+    // url: new URL(`${API_BASE}${path}`),
+    url: new URL(`${API_BASE}${path}`),
     cache: 'no-store',
     redirect: 'manual',
     ...init,
@@ -74,6 +77,20 @@ async function headS3File(client, bucket, key) {
 
 describe('Post-Deploy Tests', () => {
   const fetchContext = h1NoCache();
+
+  before(async function clearInbox() {
+    this.timeout(30_000);
+    const listener = createImapListener({
+      email: process.env.TEST_USER_EMAIL,
+      password: process.env.IMAP_APP_PASSWORD,
+    });
+    await listener.start();
+    const count = await listener.markAllSeen();
+    if (count > 0) {
+      console.log(`Marked ${count} pre-existing unseen emails as seen`);
+    }
+    await listener.stop();
+  });
 
   after(async () => {
     await fetchContext.reset();
@@ -169,7 +186,13 @@ describe('Post-Deploy Tests', () => {
     };
     const apiPrefix = '/maxakuru/sites/productbus-test/catalog';
 
-    it('can PUT, GET, and DELETE a product with async image processing', async () => {
+    it('can PUT, GET, and DELETE a product with async image processing', async function asyncImageTestSuite() {
+      if (API_BASE.includes('localhost')) {
+        // skip test if running locally
+        this.skip();
+        return;
+      }
+
       const putOpts = getFetchOptions(
         `${apiPrefix}${productPath}.json?asyncImages=true`,
         {
@@ -232,6 +255,324 @@ describe('Post-Deploy Tests', () => {
       const getAfterDeleteRes = await fetch(getAfterDeleteOptions.url, getAfterDeleteOptions);
       assert.strictEqual(getAfterDeleteRes.status, 404, 'GET request should return 404 after deletion');
     }).timeout(650000);
+  });
+
+  describe('service tokens and emails', function serviceTokenTestSuite() {
+    this.timeout(3 * 60_000);
+
+    const apiPrefix = '/maxakuru/sites/productbus-test';
+    const adminEmail = process.env.TEST_ADMIN_EMAIL;
+    const testRecipient = process.env.TEST_USER_EMAIL;
+
+    /** @type {ReturnType<typeof createImapListener>} */
+    let imapListener;
+    /** @type {string} */
+    let adminToken;
+
+    /**
+     * @param {string} path
+     * @param {RequestInit} init
+     * @returns {{url: URL} & RequestInit}
+     */
+    function getAuthFetchOptions(path, init = {}) {
+      return getFetchOptions(path, {
+        ...init,
+        headers: {
+          authorization: undefined,
+          ...(init.headers ?? {}),
+        },
+      });
+    }
+
+    /**
+     * Login as admin and return the JWT
+     * @returns {Promise<string>}
+     */
+    async function loginAsAdmin() {
+      if (adminToken) return adminToken;
+
+      const codeEmailPromise = imapListener.onEmail(
+        ({ recipient, subject }) => recipient.includes(adminEmail)
+          && subject.includes(OTP_SUBJECT),
+        60_000,
+      );
+
+      const loginOpts = getAuthFetchOptions(`${apiPrefix}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail }),
+      });
+      const loginRes = await fetch(loginOpts.url, loginOpts);
+      assert.strictEqual(loginRes.status, 200, 'Admin login should succeed');
+      const { email, hash, exp } = await loginRes.json();
+
+      const codeEmail = await codeEmailPromise;
+      const [, code] = codeEmail.body.match(/\b(\d{6})\b/);
+
+      const callbackOpts = getAuthFetchOptions(`${apiPrefix}/auth/callback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, code, hash, exp,
+        }),
+      });
+      const callbackRes = await fetch(callbackOpts.url, callbackOpts);
+      assert.strictEqual(callbackRes.status, 200, 'Admin callback should succeed');
+
+      const setCookie = callbackRes.headers.get('Set-Cookie');
+      [, adminToken] = setCookie.split(';')[0].split('=');
+      return adminToken;
+    }
+
+    before(async () => {
+      imapListener = createImapListener({
+        email: process.env.TEST_ADMIN_EMAIL,
+        password: process.env.IMAP_APP_PASSWORD,
+      });
+      await imapListener.start();
+    });
+
+    after(async () => {
+      await imapListener.stop();
+    });
+
+    it('admin can create a service token with short TTL', async () => {
+      const token = await loginAsAdmin();
+
+      const createOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          permissions: ['catalog:read'],
+          ttl: 60,
+        }),
+      });
+      const createRes = await fetch(createOpts.url, createOpts);
+      assert.strictEqual(createRes.status, 201, 'Service token creation should succeed');
+      const { token: serviceToken, ttl } = await createRes.json();
+      assert.ok(serviceToken, 'Service token should be returned');
+      assert.strictEqual(ttl, 60, 'TTL should match');
+
+      // verify the service token can access catalog
+      const catalogOpts = getFetchOptions(`${apiPrefix}/catalog/products/test.json`, {
+        headers: { authorization: `Bearer ${serviceToken}` },
+      });
+      const catalogRes = await fetch(catalogOpts.url, catalogOpts);
+      // 404 is expected (product doesn't exist), but not 401/403
+      assert.ok([200, 404].includes(catalogRes.status), `Catalog access should work, got ${catalogRes.status}`);
+    });
+
+    it('service token cannot create other service tokens', async () => {
+      const token = await loginAsAdmin();
+
+      // create a service token with broad permissions
+      const createOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          permissions: ['catalog:read', 'catalog:write'],
+          ttl: 60,
+        }),
+      });
+      const createRes = await fetch(createOpts.url, createOpts);
+      assert.strictEqual(createRes.status, 201);
+      const { token: serviceToken } = await createRes.json();
+
+      // try to create another service token using the service token
+      const create2Opts = getAuthFetchOptions(`${apiPrefix}/auth/service_token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${serviceToken}`,
+        },
+        body: JSON.stringify({
+          permissions: ['catalog:read'],
+          ttl: 60,
+        }),
+      });
+      const create2Res = await fetch(create2Opts.url, create2Opts);
+      assert.strictEqual(create2Res.status, 403, 'Service token should not be able to create tokens');
+    });
+
+    it('admin can create, use, and revoke a service token for emails', async () => {
+      const token = await loginAsAdmin();
+
+      // create service token scoped to test email
+      const createOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          permissions: ['emails:send', `emails:send:${testRecipient}`],
+          ttl: 120,
+        }),
+      });
+      const createRes = await fetch(createOpts.url, createOpts);
+      assert.strictEqual(createRes.status, 201, 'Service token creation should succeed');
+      const { token: emailServiceToken } = await createRes.json();
+
+      // stop admin listener to avoid it consuming emails from the shared mailbox
+      await imapListener.stop();
+
+      const userImapListener = createImapListener({
+        email: process.env.TEST_USER_EMAIL,
+        password: process.env.IMAP_APP_PASSWORD,
+      });
+      await userImapListener.start();
+
+      try {
+        // set up email listener
+        const emailPromise = userImapListener.onEmail(
+          ({ recipient, subject }) => recipient.includes(testRecipient)
+              && subject.includes('Post-deploy test email'),
+          60_000,
+        );
+
+        // send email using service token
+        const emailOpts = getAuthFetchOptions(`${apiPrefix}/emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${emailServiceToken}`,
+          },
+          body: JSON.stringify({
+            html: '<p>This is a post-deploy test email.</p>',
+            subject: 'Post-deploy test email',
+            toEmail: testRecipient,
+          }),
+        });
+        const emailRes = await fetch(emailOpts.url, emailOpts);
+        assert.strictEqual(emailRes.status, 200, 'Email send should succeed');
+        const emailBody = await emailRes.json();
+        assert.strictEqual(emailBody.success, true, 'Email send should return success');
+
+        // verify the email was received
+        const received = await emailPromise;
+        assert.ok(received, 'Email should be received');
+        assert.ok(received.subject.includes('Post-deploy test email'), 'Subject should match');
+
+        // service token should NOT be able to email addresses outside scope
+        const forbiddenOpts = getAuthFetchOptions(`${apiPrefix}/emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${emailServiceToken}`,
+          },
+          body: JSON.stringify({
+            html: '<p>Should fail</p>',
+            subject: 'Should fail',
+            toEmail: 'unauthorized@example.com',
+          }),
+        });
+        const forbiddenRes = await fetch(forbiddenOpts.url, forbiddenOpts);
+        assert.strictEqual(forbiddenRes.status, 403, 'Email to unauthorized address should be rejected');
+
+        // revoke the service token
+        const revokeOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token/revoke`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ token: emailServiceToken }),
+        });
+        const revokeRes = await fetch(revokeOpts.url, revokeOpts);
+        assert.strictEqual(revokeRes.status, 204, 'Service token revocation should succeed');
+
+        // verify the revoked token no longer works
+        const afterRevokeOpts = getAuthFetchOptions(`${apiPrefix}/emails`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${emailServiceToken}`,
+          },
+          body: JSON.stringify({
+            html: '<p>Should fail after revocation</p>',
+            subject: 'Should fail',
+            toEmail: testRecipient,
+          }),
+        });
+        const afterRevokeRes = await fetch(afterRevokeOpts.url, afterRevokeOpts);
+        assert.strictEqual(afterRevokeRes.status, 401, 'Revoked token should be rejected');
+      } finally {
+        await userImapListener.stop();
+      }
+    });
+
+    it('rejects email sending without proper permissions', async () => {
+      const token = await loginAsAdmin();
+
+      // create service token WITHOUT email permissions
+      const createOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          permissions: ['catalog:read'],
+          ttl: 60,
+        }),
+      });
+      const createRes = await fetch(createOpts.url, createOpts);
+      assert.strictEqual(createRes.status, 201);
+      const { token: noEmailToken } = await createRes.json();
+
+      // try to send an email
+      const emailOpts = getAuthFetchOptions(`${apiPrefix}/emails`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${noEmailToken}`,
+        },
+        body: JSON.stringify({
+          html: '<p>Should fail</p>',
+          subject: 'test',
+          toEmail: testRecipient,
+        }),
+      });
+      const emailRes = await fetch(emailOpts.url, emailOpts);
+      assert.strictEqual(emailRes.status, 403, 'Email without permission should be rejected');
+    });
+
+    it('rejects service token creation with disallowed permissions', async () => {
+      const token = await loginAsAdmin();
+
+      const createOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          permissions: ['admins:write'],
+          ttl: 60,
+        }),
+      });
+      const createRes = await fetch(createOpts.url, createOpts);
+      assert.strictEqual(createRes.status, 400, 'Disallowed permission should be rejected');
+    });
+
+    it('rejects unauthenticated service token creation', async () => {
+      const createOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          permissions: ['catalog:read'],
+          ttl: 60,
+        }),
+      });
+      const createRes = await fetch(createOpts.url, createOpts);
+      assert.ok([401, 403].includes(createRes.status), 'Unauthenticated should be rejected');
+    });
   });
 
   describe('auth', function authTestSuite() {

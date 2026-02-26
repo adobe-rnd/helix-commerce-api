@@ -23,11 +23,12 @@ describe('routes/index', () => {
     assert(handlers.cache, 'cache handler should be exported');
     assert(handlers.indices, 'indices handler should be exported');
     assert(handlers.config, 'config handler should be exported');
+    assert(handlers.emails, 'emails handler should be exported');
   });
 
   it('should export correct number of handlers', () => {
     const handlerKeys = Object.keys(handlers);
-    assert.strictEqual(handlerKeys.length, 8);
+    assert.strictEqual(handlerKeys.length, 9);
   });
 
   it('should have handlers as functions', () => {
@@ -39,5 +40,6 @@ describe('routes/index', () => {
     assert.strictEqual(typeof handlers.cache, 'function');
     assert.strictEqual(typeof handlers.indices, 'function');
     assert.strictEqual(typeof handlers.config, 'function');
+    assert.strictEqual(typeof handlers.emails, 'function');
   });
 });

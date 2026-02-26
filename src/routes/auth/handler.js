@@ -21,6 +21,8 @@ import retrieveAdmin from './admins/retrieve.js';
 import createAdmin from './admins/create.js';
 import removeAdmin from './admins/remove.js';
 import logout from './logout.js';
+import createServiceToken from './service-token/create.js';
+import revokeServiceToken from './service-token/revoke.js';
 
 /**
  * @type {Record<string, Record<string, RouteHandler>>}
@@ -42,7 +44,7 @@ const handlers = {
   },
   admins: {
     GET: (ctx, req) => {
-      const email = ctx.requestInfo.getVariable('email');
+      const email = ctx.requestInfo.getVariable('emailOrAction');
       if (email) {
         return retrieveAdmin(ctx, req);
       }
@@ -50,6 +52,18 @@ const handlers = {
     },
     PUT: createAdmin,
     DELETE: removeAdmin,
+  },
+  service_token: {
+    POST: async (ctx, req) => {
+      const action = ctx.requestInfo.getVariable('emailOrAction');
+      if (action === 'revoke') {
+        return revokeServiceToken(ctx, req);
+      }
+      if (!action) {
+        return createServiceToken(ctx, req);
+      }
+      return errorResponse(404);
+    },
   },
 };
 

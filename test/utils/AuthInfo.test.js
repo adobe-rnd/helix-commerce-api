@@ -15,21 +15,28 @@
 import assert from 'node:assert';
 import { SignJWT } from 'jose';
 import { DEFAULT_CONTEXT } from '../fixtures/context.js';
-import AuthInfo from '../../src/utils/AuthInfo.js';
+import AuthInfo, { emailMatchesScope } from '../../src/utils/AuthInfo.js';
 
 /**
- * Helper to create a valid JWT
+ * Helper to get a HMAC key for JWT signing
  */
-async function createTestJWT(email, org, site, roles = ['user'], secret = 'test-jwt-secret') {
+async function getTestKey(secret = 'test-jwt-secret') {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secret);
-  const key = await crypto.subtle.importKey(
+  return crypto.subtle.importKey(
     'raw',
     keyData,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign', 'verify'],
   );
+}
+
+/**
+ * Helper to create a valid JWT
+ */
+async function createTestJWT(email, org, site, roles = ['user'], secret = 'test-jwt-secret') {
+  const key = await getTestKey(secret);
 
   return new SignJWT({
     email,
@@ -41,6 +48,25 @@ async function createTestJWT(email, org, site, roles = ['user'], secret = 'test-
     .setIssuedAt()
     .setExpirationTime('24h')
     .setSubject(email)
+    .sign(key);
+}
+
+/**
+ * Helper to create a service token JWT
+ */
+async function createTestServiceToken(org, site, permissions, ttl = '1h', secret = 'test-jwt-secret') {
+  const key = await getTestKey(secret);
+
+  return new SignJWT({
+    type: 'service_token',
+    permissions,
+    org,
+    site,
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(ttl)
+    .setSubject('service_token')
     .sign(key);
 }
 
@@ -555,15 +581,7 @@ describe('AuthInfo', () => {
 
     it('should return true for expired token', async () => {
       const email = 'user@example.com';
-      const encoder = new TextEncoder();
-      const keyData = encoder.encode(jwtSecret);
-      const key = await crypto.subtle.importKey(
-        'raw',
-        keyData,
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign', 'verify'],
-      );
+      const key = await getTestKey(jwtSecret);
 
       // Create an expired token
       const expiredToken = await new SignJWT({
@@ -591,6 +609,194 @@ describe('AuthInfo', () => {
 
       // Since the token was rejected, isExpired() returns false (no token = not expired)
       assert.equal(authInfo.isExpired(), false);
+    });
+  });
+
+  describe('service token (JWT-based)', () => {
+    it('should create AuthInfo with direct permissions from service token', async () => {
+      const permissions = ['emails:send', 'emails:send:*@example.com', 'catalog:read'];
+      const token = await createTestServiceToken(org, site, permissions, '1h', jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
+      });
+
+      const authInfo = await AuthInfo.create(ctx, req);
+
+      assert.equal(authInfo.isServiceToken, true);
+      assert.equal(authInfo.isAdmin(), false);
+      assert.equal(authInfo.isSuperuser(), false);
+      assert.doesNotThrow(() => authInfo.assertPermissions('emails:send'));
+      assert.doesNotThrow(() => authInfo.assertPermissions('catalog:read'));
+      assert.throws(() => authInfo.assertPermissions('catalog:write'), /access denied/);
+    });
+
+    it('should reject revoked service token', async () => {
+      const permissions = ['emails:send'];
+      const token = await createTestServiceToken(org, site, permissions, '1h', jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: {
+          JWT_SECRET: jwtSecret,
+          AUTH_BUCKET: {
+            head: async (key) => {
+              if (key.includes('revoked/service_tokens/')) return {};
+              return null;
+            },
+          },
+        },
+      });
+
+      await assert.rejects(() => AuthInfo.create(ctx, req), /token revoked/);
+    });
+
+    it('should not grant role-based permissions to service tokens', async () => {
+      const permissions = ['catalog:read'];
+      const token = await createTestServiceToken(org, site, permissions, '1h', jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
+      });
+
+      const authInfo = await AuthInfo.create(ctx, req);
+
+      assert.doesNotThrow(() => authInfo.assertPermissions('catalog:read'));
+      // should not have orders:read even though 'user' role is auto-added for normal JWTs
+      assert.throws(() => authInfo.assertPermissions('orders:read'), /access denied/);
+    });
+  });
+
+  describe('assertEmailScope', () => {
+    it('should pass when email matches exact scope', async () => {
+      const permissions = ['emails:send', 'emails:send:user@example.com'];
+      const token = await createTestServiceToken(org, site, permissions, '1h', jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
+      });
+
+      const authInfo = await AuthInfo.create(ctx, req);
+
+      assert.doesNotThrow(() => authInfo.assertEmailScope(['user@example.com']));
+    });
+
+    it('should pass when email matches wildcard scope', async () => {
+      const permissions = ['emails:send', 'emails:send:*@example.com'];
+      const token = await createTestServiceToken(org, site, permissions, '1h', jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
+      });
+
+      const authInfo = await AuthInfo.create(ctx, req);
+
+      assert.doesNotThrow(() => authInfo.assertEmailScope(['anyone@example.com']));
+    });
+
+    it('should reject when email does not match any scope', async () => {
+      const permissions = ['emails:send', 'emails:send:*@example.com'];
+      const token = await createTestServiceToken(org, site, permissions, '1h', jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
+      });
+
+      const authInfo = await AuthInfo.create(ctx, req);
+
+      assert.throws(
+        () => authInfo.assertEmailScope(['user@other.com']),
+        /not allowed to email user@other.com/,
+      );
+    });
+
+    it('should reject when no email scopes are defined', async () => {
+      const permissions = ['emails:send'];
+      const token = await createTestServiceToken(org, site, permissions, '1h', jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
+      });
+
+      const authInfo = await AuthInfo.create(ctx, req);
+
+      assert.throws(
+        () => authInfo.assertEmailScope(['user@example.com']),
+        /no email scopes defined/,
+      );
+    });
+
+    it('should check all addresses against scopes', async () => {
+      const permissions = ['emails:send', 'emails:send:a@example.com', 'emails:send:b@example.com'];
+      const token = await createTestServiceToken(org, site, permissions, '1h', jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
+      });
+
+      const authInfo = await AuthInfo.create(ctx, req);
+
+      assert.doesNotThrow(() => authInfo.assertEmailScope(['a@example.com', 'b@example.com']));
+      assert.throws(
+        () => authInfo.assertEmailScope(['a@example.com', 'c@example.com']),
+        /not allowed to email c@example.com/,
+      );
+    });
+
+    it('should bypass scope checks for admins', async () => {
+      const email = 'admin@example.com';
+      const token = await createTestJWT(email, org, site, ['admin'], jwtSecret);
+      const req = new Request('https://example.com', {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const ctx = DEFAULT_CONTEXT({
+        env: { JWT_SECRET: jwtSecret, AUTH_BUCKET: { head: async () => null } },
+      });
+
+      const authInfo = await AuthInfo.create(ctx, req);
+
+      assert.doesNotThrow(() => authInfo.assertEmailScope(['anyone@anywhere.com']));
+    });
+  });
+
+  describe('emailMatchesScope', () => {
+    it('should match exact emails', () => {
+      assert.equal(emailMatchesScope('user@example.com', 'user@example.com'), true);
+      assert.equal(emailMatchesScope('user@example.com', 'other@example.com'), false);
+    });
+
+    it('should match wildcard patterns', () => {
+      assert.equal(emailMatchesScope('user@example.com', '*@example.com'), true);
+      assert.equal(emailMatchesScope('anyone@example.com', '*@example.com'), true);
+      assert.equal(emailMatchesScope('user@other.com', '*@example.com'), false);
+    });
+
+    it('should be case-insensitive', () => {
+      assert.equal(emailMatchesScope('User@Example.Com', 'user@example.com'), true);
+      assert.equal(emailMatchesScope('user@example.com', '*@EXAMPLE.COM'), true);
+    });
+
+    it('should handle whitespace', () => {
+      assert.equal(emailMatchesScope(' user@example.com ', 'user@example.com'), true);
+    });
+
+    it('should not match subdomains with wildcard', () => {
+      assert.equal(emailMatchesScope('user@sub.example.com', '*@example.com'), false);
     });
   });
 });

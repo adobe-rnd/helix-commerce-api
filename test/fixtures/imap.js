@@ -37,6 +37,8 @@ import { simpleParser } from 'mailparser';
  * @extends EventEmitter
  */
 export class IMAPListener extends EventEmitter {
+  static seenUids = new Set();
+
   /**
    * @param {IMAPListenerConfig} config
    */
@@ -55,7 +57,6 @@ export class IMAPListener extends EventEmitter {
     this.imap = null;
     this.polling = false;
     this.pollTimer = null;
-    this.seenUids = new Set();
   }
 
   /**
@@ -103,6 +104,44 @@ export class IMAPListener extends EventEmitter {
   }
 
   /**
+   * Mark all unseen emails as seen on the IMAP server.
+   * Must be called after start(). Useful for clearing the inbox before tests.
+   *
+   * @returns {Promise<number>} number of messages marked as seen
+   */
+  markAllSeen() {
+    return new Promise((resolve, reject) => {
+      this.imap.openBox('INBOX', false, (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        this.imap.search(['UNSEEN'], (searchErr, uids) => {
+          if (searchErr) {
+            reject(searchErr);
+            return;
+          }
+
+          if (!uids || uids.length === 0) {
+            resolve(0);
+            return;
+          }
+
+          this.imap.addFlags(uids, ['\\Seen'], (flagErr) => {
+            if (flagErr) {
+              reject(flagErr);
+              return;
+            }
+            uids.forEach((uid) => IMAPListener.seenUids.add(uid));
+            resolve(uids.length);
+          });
+        });
+      });
+    });
+  }
+
+  /**
    * Wait for an email matching the callback criteria
    *
    * @param {OnEmailCallback} callback - returns true if email matches
@@ -115,8 +154,7 @@ export class IMAPListener extends EventEmitter {
 
       const emailHandler = (email) => {
         try {
-          const matches = callback(email);
-          if (matches) {
+          if (callback(email)) {
             clearTimeout(timeoutId);
             this.removeListener('email', emailHandler);
             resolve(email);
@@ -197,13 +235,12 @@ export class IMAPListener extends EventEmitter {
    */
   #checkForNewEmails() {
     return new Promise((resolve, reject) => {
-      this.imap.openBox('INBOX', false, (err, _box) => {
+      this.imap.openBox('INBOX', true, (err, _box) => {
         if (err) {
           reject(err);
           return;
         }
 
-        // Search for unseen messages
         this.imap.search(['UNSEEN'], (searchErr, uids) => {
           if (searchErr) {
             reject(searchErr);
@@ -215,8 +252,7 @@ export class IMAPListener extends EventEmitter {
             return;
           }
 
-          // Filter out already seen UIDs
-          const newUids = uids.filter((uid) => !this.seenUids.has(uid));
+          const newUids = uids.filter((uid) => !IMAPListener.seenUids.has(uid));
           if (newUids.length === 0) {
             resolve();
             return;
@@ -224,10 +260,10 @@ export class IMAPListener extends EventEmitter {
 
           const fetch = this.imap.fetch(newUids, {
             bodies: '',
-            markSeen: true,
+            markSeen: false,
           });
 
-          const emails = [];
+          const parsePromises = [];
 
           fetch.on('message', (msg) => {
             let emailData = '';
@@ -238,45 +274,46 @@ export class IMAPListener extends EventEmitter {
               });
             });
 
-            msg.once('end', async () => {
-              try {
-                const parsed = await simpleParser(emailData);
+            parsePromises.push(new Promise((resolveMsg) => {
+              msg.once('end', () => {
+                resolveMsg(simpleParser(emailData).then((parsed) => {
+                  // @ts-ignore - mailparser types
+                  const fromAddress = parsed.from?.text || parsed.from?.value?.[0]?.address || '';
+                  // @ts-ignore - mailparser types
+                  const toAddress = parsed.to?.text || parsed.to?.value?.[0]?.address || '';
 
-                // @ts-ignore - mailparser types
-                const fromAddress = parsed.from?.text || parsed.from?.value?.[0]?.address || '';
-                // @ts-ignore - mailparser types
-                const toAddress = parsed.to?.text || parsed.to?.value?.[0]?.address || '';
-
-                const email = {
-                  sender: fromAddress,
-                  recipient: toAddress,
-                  subject: parsed.subject || '',
-                  body: parsed.html || parsed.text || '',
-                  date: parsed.date,
-                  messageId: parsed.messageId,
-                };
-
-                emails.push(email);
-              } catch (parseErr) {
-                this.emit('error', parseErr);
-              }
-            });
+                  return {
+                    sender: fromAddress,
+                    recipient: toAddress,
+                    subject: parsed.subject || '',
+                    body: parsed.html || parsed.text || '',
+                    date: parsed.date,
+                    messageId: parsed.messageId,
+                  };
+                }));
+              });
+            }));
           });
 
           fetch.once('error', (fetchErr) => {
             reject(fetchErr);
           });
 
-          fetch.once('end', () => {
-            // Mark these UIDs as seen
-            newUids.forEach((uid) => this.seenUids.add(uid));
+          fetch.once('end', async () => {
+            try {
+              const emails = await Promise.all(parsePromises);
 
-            // Emit email events
-            emails.forEach((email) => {
-              this.emit('email', email);
-            });
+              newUids.forEach((uid) => IMAPListener.seenUids.add(uid));
 
-            resolve();
+              emails.forEach((email) => {
+                this.emit('email', email);
+              });
+
+              resolve();
+            } catch (emitErr) {
+              this.emit('error', emitErr);
+              resolve();
+            }
           });
         });
       });

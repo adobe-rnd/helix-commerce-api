@@ -176,6 +176,8 @@ declare global {
     site: string;
     iat: number; // issued at
     exp: number; // expires at
+    type?: 'service_token';
+    permissions?: string[];
   }
 
   export interface AdminMetadata extends Record<string, string> {

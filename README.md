@@ -8,10 +8,13 @@ Product API for Edge Delivery Services.
   - [PUT a product (complete example with all properties)](#put-a-product-complete-example-with-all-properties)
   - [Bulk POST products](#bulk-post-products)
   - [DELETE a product](#delete-a-product)
-- [Auth token management](#auth-token-management)
-  - [Fetch auth token (GET)](#fetch-auth-token-get)
-  - [Rotate auth token (POST)](#rotate-auth-token-post)
-  - [Set auth token (PUT)](#set-auth-token-put)
+- [Service tokens](#service-tokens)
+  - [Create a service token (POST)](#create-a-service-token-post)
+  - [Revoke a service token (POST)](#revoke-a-service-token-post)
+- [Transactional emails](#transactional-emails)
+  - [Step 1: Configure the sender address](#step-1-configure-the-sender-address)
+  - [Step 2: Create a service token with email scopes](#step-2-create-a-service-token-with-email-scopes)
+  - [Step 3: Send an email](#step-3-send-an-email)
 - [Schemas](#schemas)
 
 ### Environments
@@ -215,6 +218,8 @@ Example response:
 
 ### Auth token management
 
+> NOTE: This API is deprecated and will be removed. Use the [`/auth/service_token` API](#service-tokens) instead.
+
 Base URL structure: `https://<host>/{org}/sites/{site}/auth/token`
 
 All auth routes require `Authorization: Bearer <SITE_API_KEY>` (or a superuser key).
@@ -265,6 +270,132 @@ Example response body:
 
 ```json
 { "token": "SPECIFIC_TOKEN_VALUE" }
+```
+
+### Service tokens
+
+JWT-based service tokens provide fine-grained, time-limited access for external services. Unlike legacy UUID tokens (which inherit a fixed `service` role), service tokens carry only the permissions explicitly granted at creation time.
+
+Admins create service tokens via the `/auth/service_token` endpoint. The permissions allowlist is: `catalog:read`, `catalog:write`, `orders:read`, `orders:write`, `index:read`, `index:write`, `customers:read`, `customers:write`, `emails:send`. Permissions like `admins:write`, `service_token:create`, or `config:write` cannot be delegated to service tokens.
+
+#### Create a service token (POST)
+
+Requires admin auth (cookie or bearer token from OTP login).
+
+```bash
+curl -sS -X POST \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/service_token" \
+  --data-binary @- <<'JSON'
+{
+  "permissions": [
+    "emails:send",
+    "emails:send:*@example.com",
+    "emails:send:alerts@ops.internal"
+  ],
+  "ttl": 2592000
+}
+JSON
+```
+
+- `permissions` — Array of permissions. Email scope patterns use the prefix `emails:send:` followed by an exact address or `*@domain`.
+- `ttl` — Token lifetime in seconds (max 1 year / 31,536,000 seconds).
+
+Example response (201):
+
+```json
+{ "token": "eyJhbG...", "ttl": 2592000 }
+```
+
+#### Revoke a service token (POST)
+
+```bash
+curl -sS -X POST \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/service_token/revoke" \
+  --data-binary '{"token":"eyJhbG..."}'
+```
+
+Returns 204 on success. Revoked tokens are stored in `{org}/{site}/revoked/service_tokens/` and checked on every request.
+
+### Transactional emails
+
+The `/emails` endpoint lets service tokens send transactional email via AWS SES. Access requires the `emails:send` permission plus one or more `emails:send:<pattern>` scopes defining which destination addresses are allowed.
+
+#### Step 1: Configure the sender address
+
+The "from" address is read from the site config's `otpEmailSender` field (falling back to the `FROM_EMAIL` env var, then `noreply@adobecommerce.live`). Set it with:
+
+```bash
+curl -sS -X POST \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/config" \
+  --data-binary @- <<'JSON'
+{
+  "otpEmailSender": "notifications@yourstore.com"
+}
+JSON
+```
+
+The sender must be a verified identity in your AWS SES account.
+
+#### Step 2: Create a service token with email scopes
+
+```bash
+curl -sS -X POST \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/service_token" \
+  --data-binary @- <<'JSON'
+{
+  "permissions": [
+    "emails:send",
+    "emails:send:*@example.com",
+    "emails:send:vip@partner.org"
+  ],
+  "ttl": 86400
+}
+JSON
+```
+
+This token can email any `@example.com` address and `vip@partner.org`, but no others. Save the returned `token` value.
+
+#### Step 3: Send an email
+
+```bash
+export SERVICE_TOKEN="eyJhbG..."
+
+curl -sS -X POST \
+  -H "Authorization: Bearer $SERVICE_TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/emails" \
+  --data-binary @- <<'JSON'
+{
+  "toEmail": "subscriber@example.com",
+  "subject": "Welcome to our newsletter",
+  "html": "<h1>Welcome!</h1><p>Thanks for subscribing.</p>",
+  "cc": ["team@example.com"],
+  "bcc": ["archive@example.com"]
+}
+JSON
+```
+
+- `toEmail` — `string` or `string[]`. Required.
+- `subject` — `string`. Required.
+- `html` — `string` (max 256 KB). Required.
+- `cc` — `string[]`. Optional.
+- `bcc` — `string[]`. Optional.
+- Total recipients across all fields is capped at 50.
+
+All addresses in `toEmail`, `cc`, and `bcc` are checked against the token's email scopes.
+
+Example response (200):
+
+```json
+{ "success": true }
 ```
 
 ### Schemas

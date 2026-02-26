@@ -140,6 +140,52 @@ export async function revokeToken(ctx, token) {
 }
 
 /**
+ * Check if a service token has been revoked
+ *
+ * @param {Context} ctx
+ * @param {string} token
+ * @returns {Promise<boolean>}
+ */
+export async function isServiceTokenRevoked(ctx, token) {
+  const { env, requestInfo } = ctx;
+  const { org, site } = requestInfo;
+  const key = `${org}/${site}/revoked/service_tokens/${token}`;
+  const revoked = await env.AUTH_BUCKET.head(key);
+  return !!revoked;
+}
+
+/**
+ * Revoke a service token
+ *
+ * @param {Context} ctx
+ * @param {string} token
+ * @param {number} [expiresAt] - token expiration in seconds since epoch
+ */
+export async function revokeServiceToken(ctx, token, expiresAt) {
+  const { env, requestInfo } = ctx;
+  const { org, site } = requestInfo;
+
+  const key = `${org}/${site}/revoked/service_tokens/${token}`;
+  const ttlMs = expiresAt
+    ? (expiresAt * 1000) - Date.now()
+    : REVOKED_TOKEN_EXPIRATION_MS;
+
+  try {
+    await env.AUTH_BUCKET.put(key, '', {
+      customMetadata: {
+        revokedAt: new Date().toISOString(),
+        expiresAt: String(Date.now() + Math.max(ttlMs, 0)),
+      },
+    });
+    ctx.log.debug('Service token revoked', { token: token.substring(0, 20) });
+  } catch (error) {
+    ctx.log.error('Failed to revoke service token', { error: error.message });
+    throw errorWithResponse(500, 'failed to revoke service token');
+  }
+  return true;
+}
+
+/**
  * Get SHA-256 hash of email
  * @param {string} email
  * @returns {Promise<string>} SHA-256 hash of email
