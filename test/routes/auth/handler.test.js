@@ -64,7 +64,7 @@ describe('routes/auth handler tests', () => {
     const ctx = DEFAULT_CONTEXT({
       requestInfo: {
         method: 'POST',
-        variables: { subRoute: 'service_token', email: 'revoke' },
+        variables: { subRoute: 'service_token', emailOrAction: 'revoke' },
       },
     });
     const resp = await mocked.default(ctx);
@@ -85,7 +85,7 @@ describe('routes/auth handler tests', () => {
     const ctx = DEFAULT_CONTEXT({
       requestInfo: {
         method: 'POST',
-        variables: { subRoute: 'service_token', email: 'unknown' },
+        variables: { subRoute: 'service_token', emailOrAction: 'unknown' },
       },
     });
     const resp = await handler(ctx);
