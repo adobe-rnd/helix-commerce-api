@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.8...v2.5.0) (2026-02-26)
+
+
+### Features
+
+* email and service_token api ([#154](https://github.com/adobe-rnd/helix-commerce-api/issues/154)) ([4d4a587](https://github.com/adobe-rnd/helix-commerce-api/commit/4d4a587098bd4fec0616e0bfbc72bf5e3e9327ec))
+
 ## [2.4.8](https://github.com/adobe-rnd/helix-commerce-api/compare/v2.4.7...v2.4.8) (2026-02-25)
 
 
