@@ -10,7 +10,7 @@ Product API for Edge Delivery Services.
   - [DELETE a product](#delete-a-product)
 - [Service tokens](#service-tokens)
   - [Create a service token (POST)](#create-a-service-token-post)
-  - [Revoke a service token (DELETE)](#revoke-a-service-token-delete)
+  - [Revoke a service token (POST)](#revoke-a-service-token-post)
 - [Transactional emails](#transactional-emails)
   - [Step 1: Configure the sender address](#step-1-configure-the-sender-address)
   - [Step 2: Create a service token with email scopes](#step-2-create-a-service-token-with-email-scopes)
@@ -308,13 +308,13 @@ Example response (201):
 { "token": "eyJhbG...", "ttl": 2592000 }
 ```
 
-#### Revoke a service token (DELETE)
+#### Revoke a service token (POST)
 
 ```bash
-curl -sS -X DELETE \
+curl -sS -X POST \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
-  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/service_token" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/auth/service_token/revoke" \
   --data-binary '{"token":"eyJhbG..."}'
 ```
 

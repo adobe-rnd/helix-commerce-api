@@ -60,7 +60,6 @@ export default async function handler(ctx) {
   authInfo.assertAuthenticated();
   authInfo.assertPermissions('emails:send');
   authInfo.assertOrgSite(org, site);
-
   // validate payload
   const {
     html, subject, toEmail, cc, bcc,

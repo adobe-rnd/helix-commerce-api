@@ -38,8 +38,8 @@ config();
  */
 function getFetchOptions(path, init = {}) {
   return {
-    url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
-    // url: new URL(`http://localhost:8787${path}`),
+    // url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
+    url: new URL(`http://localhost:8787${path}`),
     cache: 'no-store',
     redirect: 'manual',
     ...init,
@@ -407,7 +407,7 @@ describe('Post-Deploy Tests', () => {
         // set up email listener
         const emailPromise = userImapListener.onEmail(
           ({ recipient, subject }) => recipient.includes(testRecipient)
-            && subject.includes('Post-deploy test email'),
+              && subject.includes('Post-deploy test email'),
           60_000,
         );
 
@@ -451,8 +451,8 @@ describe('Post-Deploy Tests', () => {
         assert.strictEqual(forbiddenRes.status, 403, 'Email to unauthorized address should be rejected');
 
         // revoke the service token
-        const revokeOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token`, {
-          method: 'DELETE',
+        const revokeOpts = getAuthFetchOptions(`${apiPrefix}/auth/service_token/revoke`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             authorization: `Bearer ${token}`,

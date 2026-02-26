@@ -36,11 +36,10 @@ export default async function revoke(ctx) {
     return errorResponse(400, 'token is required');
   }
 
-  // verify the token is a valid service token before revoking
   let decoded;
   try {
     decoded = await verifyToken(ctx, token);
-  } catch (error) {
+  } catch {
     return errorResponse(400, 'invalid or expired token');
   }
 

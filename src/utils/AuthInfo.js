@@ -77,9 +77,7 @@ export const SERVICE_TOKEN_ALLOWED_PERMISSIONS = new Set([
   'emails:send',
 ]);
 
-const MAX_SERVICE_TOKEN_TTL_SECONDS = 365 * 24 * 60 * 60; // 1 year
-
-export { MAX_SERVICE_TOKEN_TTL_SECONDS };
+export const MAX_SERVICE_TOKEN_TTL_SECONDS = 365 * 24 * 60 * 60; // 1 year
 
 /**
  * Check if a destination email matches an email scope pattern.
@@ -351,7 +349,7 @@ export default class AuthInfo {
    * @throws {ResponseError} if the user is not authenticated
    */
   assertAuthenticated() {
-    if (!this.#email) {
+    if (!this.#email && !this.#isServiceToken) {
       throw errorWithResponse(401, 'unauthorized');
     }
   }

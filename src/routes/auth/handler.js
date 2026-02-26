@@ -44,7 +44,7 @@ const handlers = {
   },
   admins: {
     GET: (ctx, req) => {
-      const email = ctx.requestInfo.getVariable('email');
+      const email = ctx.requestInfo.getVariable('emailOrAction');
       if (email) {
         return retrieveAdmin(ctx, req);
       }
@@ -54,8 +54,16 @@ const handlers = {
     DELETE: removeAdmin,
   },
   service_token: {
-    POST: createServiceToken,
-    DELETE: revokeServiceToken,
+    POST: async (ctx, req) => {
+      const action = ctx.requestInfo.getVariable('emailOrAction');
+      if (action === 'revoke') {
+        return revokeServiceToken(ctx, req);
+      }
+      if (!action) {
+        return createServiceToken(ctx, req);
+      }
+      return errorResponse(404);
+    },
   },
 };
 
