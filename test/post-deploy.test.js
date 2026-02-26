@@ -38,8 +38,8 @@ config();
  */
 function getFetchOptions(path, init = {}) {
   return {
-    // url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
-    url: new URL(`http://localhost:8787${path}`),
+    url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
+    // url: new URL(`http://localhost:8787${path}`),
     cache: 'no-store',
     redirect: 'manual',
     ...init,
