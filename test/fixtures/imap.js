@@ -37,6 +37,8 @@ import { simpleParser } from 'mailparser';
  * @extends EventEmitter
  */
 export class IMAPListener extends EventEmitter {
+  static seenUids = new Set();
+
   /**
    * @param {IMAPListenerConfig} config
    */
@@ -55,8 +57,6 @@ export class IMAPListener extends EventEmitter {
     this.imap = null;
     this.polling = false;
     this.pollTimer = null;
-    this.seenUids = new Set();
-    this.startedAt = null;
   }
 
   /**
@@ -70,7 +70,6 @@ export class IMAPListener extends EventEmitter {
     }
 
     this.polling = true;
-    this.startedAt = new Date();
     await this.#connect();
     this.#startPolling();
     this.emit('started');
@@ -105,6 +104,44 @@ export class IMAPListener extends EventEmitter {
   }
 
   /**
+   * Mark all unseen emails as seen on the IMAP server.
+   * Must be called after start(). Useful for clearing the inbox before tests.
+   *
+   * @returns {Promise<number>} number of messages marked as seen
+   */
+  markAllSeen() {
+    return new Promise((resolve, reject) => {
+      this.imap.openBox('INBOX', false, (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        this.imap.search(['UNSEEN'], (searchErr, uids) => {
+          if (searchErr) {
+            reject(searchErr);
+            return;
+          }
+
+          if (!uids || uids.length === 0) {
+            resolve(0);
+            return;
+          }
+
+          this.imap.addFlags(uids, ['\\Seen'], (flagErr) => {
+            if (flagErr) {
+              reject(flagErr);
+              return;
+            }
+            uids.forEach((uid) => IMAPListener.seenUids.add(uid));
+            resolve(uids.length);
+          });
+        });
+      });
+    });
+  }
+
+  /**
    * Wait for an email matching the callback criteria
    *
    * @param {OnEmailCallback} callback - returns true if email matches
@@ -117,15 +154,12 @@ export class IMAPListener extends EventEmitter {
 
       const emailHandler = (email) => {
         try {
-          console.log('email received', email);
           if (callback(email)) {
-            console.log('email matches callback', email);
             clearTimeout(timeoutId);
             this.removeListener('email', emailHandler);
             resolve(email);
           }
         } catch (error) {
-          console.log('error in email handler', error);
           clearTimeout(timeoutId);
           this.removeListener('email', emailHandler);
           reject(error);
@@ -201,7 +235,7 @@ export class IMAPListener extends EventEmitter {
    */
   #checkForNewEmails() {
     return new Promise((resolve, reject) => {
-      this.imap.openBox('INBOX', false, (err, _box) => {
+      this.imap.openBox('INBOX', true, (err, _box) => {
         if (err) {
           reject(err);
           return;
@@ -218,7 +252,7 @@ export class IMAPListener extends EventEmitter {
             return;
           }
 
-          const newUids = uids.filter((uid) => !this.seenUids.has(uid));
+          const newUids = uids.filter((uid) => !IMAPListener.seenUids.has(uid));
           if (newUids.length === 0) {
             resolve();
             return;
@@ -226,7 +260,7 @@ export class IMAPListener extends EventEmitter {
 
           const fetch = this.imap.fetch(newUids, {
             bodies: '',
-            markSeen: true,
+            markSeen: false,
           });
 
           const parsePromises = [];
@@ -269,14 +303,9 @@ export class IMAPListener extends EventEmitter {
             try {
               const emails = await Promise.all(parsePromises);
 
-              newUids.forEach((uid) => this.seenUids.add(uid));
+              newUids.forEach((uid) => IMAPListener.seenUids.add(uid));
 
               emails.forEach((email) => {
-                if (this.startedAt && email.date && email.date < this.startedAt) {
-                  console.log('email date is before startedAt', email.date, this.startedAt);
-                  return;
-                }
-                console.log('emitting email', email);
                 this.emit('email', email);
               });
 

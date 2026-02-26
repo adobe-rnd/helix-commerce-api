@@ -78,6 +78,20 @@ async function headS3File(client, bucket, key) {
 describe('Post-Deploy Tests', () => {
   const fetchContext = h1NoCache();
 
+  before(async function clearInbox() {
+    this.timeout(30_000);
+    const listener = createImapListener({
+      email: process.env.TEST_USER_EMAIL,
+      password: process.env.IMAP_APP_PASSWORD,
+    });
+    await listener.start();
+    const count = await listener.markAllSeen();
+    if (count > 0) {
+      console.log(`Marked ${count} pre-existing unseen emails as seen`);
+    }
+    await listener.stop();
+  });
+
   after(async () => {
     await fetchContext.reset();
   });
@@ -405,7 +419,9 @@ describe('Post-Deploy Tests', () => {
       assert.strictEqual(createRes.status, 201, 'Service token creation should succeed');
       const { token: emailServiceToken } = await createRes.json();
 
-      // switch to user IMAP to receive the email
+      // stop admin listener to avoid it consuming emails from the shared mailbox
+      await imapListener.stop();
+
       const userImapListener = createImapListener({
         email: process.env.TEST_USER_EMAIL,
         password: process.env.IMAP_APP_PASSWORD,
@@ -415,11 +431,8 @@ describe('Post-Deploy Tests', () => {
       try {
         // set up email listener
         const emailPromise = userImapListener.onEmail(
-          ({ recipient, subject }) => {
-            console.log('email check', recipient, subject, recipient.includes(testRecipient) && subject.includes('Post-deploy test email'));
-            return recipient.includes(testRecipient)
-              && subject.includes('Post-deploy test email');
-          },
+          ({ recipient, subject }) => recipient.includes(testRecipient)
+              && subject.includes('Post-deploy test email'),
           60_000,
         );
 
