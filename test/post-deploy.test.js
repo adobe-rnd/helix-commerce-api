@@ -31,6 +31,9 @@ import { createImapListener } from './fixtures/imap.js';
 
 config();
 
+// const API_BASE = `https://adobe-commerce-api-ci.adobeaem.workers.dev`;
+const API_BASE = 'http://localhost:8787';
+
 /**
  * @param {string} path
  * @param {RequestInit} [init]
@@ -38,8 +41,8 @@ config();
  */
 function getFetchOptions(path, init = {}) {
   return {
-    url: new URL(`https://adobe-commerce-api-ci.adobeaem.workers.dev${path}`),
-    // url: new URL(`http://localhost:8787${path}`),
+    // url: new URL(`${API_BASE}${path}`),
+    url: new URL(`${API_BASE}${path}`),
     cache: 'no-store',
     redirect: 'manual',
     ...init,
@@ -169,7 +172,13 @@ describe('Post-Deploy Tests', () => {
     };
     const apiPrefix = '/maxakuru/sites/productbus-test/catalog';
 
-    it('can PUT, GET, and DELETE a product with async image processing', async () => {
+    it('can PUT, GET, and DELETE a product with async image processing', async function asyncImageTestSuite() {
+      if (API_BASE.includes('localhost')) {
+        // skip test if running locally
+        this.skip();
+        return;
+      }
+
       const putOpts = getFetchOptions(
         `${apiPrefix}${productPath}.json?asyncImages=true`,
         {
