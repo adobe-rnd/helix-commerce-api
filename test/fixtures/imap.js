@@ -56,6 +56,7 @@ export class IMAPListener extends EventEmitter {
     this.polling = false;
     this.pollTimer = null;
     this.seenUids = new Set();
+    this.startedAt = null;
   }
 
   /**
@@ -69,6 +70,7 @@ export class IMAPListener extends EventEmitter {
     }
 
     this.polling = true;
+    this.startedAt = new Date();
     await this.#connect();
     this.#startPolling();
     this.emit('started');
@@ -221,7 +223,7 @@ export class IMAPListener extends EventEmitter {
 
           const fetch = this.imap.fetch(newUids, {
             bodies: '',
-            markSeen: false,
+            markSeen: true,
           });
 
           const parsePromises = [];
@@ -267,6 +269,9 @@ export class IMAPListener extends EventEmitter {
               newUids.forEach((uid) => this.seenUids.add(uid));
 
               emails.forEach((email) => {
+                if (this.startedAt && email.date && email.date < this.startedAt) {
+                  return;
+                }
                 this.emit('email', email);
               });
 
