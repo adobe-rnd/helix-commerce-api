@@ -117,12 +117,15 @@ export class IMAPListener extends EventEmitter {
 
       const emailHandler = (email) => {
         try {
+          console.log('email received', email);
           if (callback(email)) {
+            console.log('email matches callback', email);
             clearTimeout(timeoutId);
             this.removeListener('email', emailHandler);
             resolve(email);
           }
         } catch (error) {
+          console.log('error in email handler', error);
           clearTimeout(timeoutId);
           this.removeListener('email', emailHandler);
           reject(error);
@@ -270,8 +273,10 @@ export class IMAPListener extends EventEmitter {
 
               emails.forEach((email) => {
                 if (this.startedAt && email.date && email.date < this.startedAt) {
+                  console.log('email date is before startedAt', email.date, this.startedAt);
                   return;
                 }
+                console.log('emitting email', email);
                 this.emit('email', email);
               });
 
