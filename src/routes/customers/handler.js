@@ -12,7 +12,7 @@
 
 import handleAddresses from './addresses.js';
 import handleOrders from './orders.js';
-import { errorResponse } from '../../utils/http.js';
+import { errorResponse, optionsHandler } from '../../utils/http.js';
 import create from './create.js';
 import StorageClient from '../../utils/StorageClient.js';
 
@@ -91,6 +91,8 @@ export default async function handler(ctx, req) {
         },
       });
     }
+    case 'OPTIONS':
+      return optionsHandler(['POST', 'GET', 'DELETE'])(ctx);
     default:
       return errorResponse(405, 'Method not allowed');
   }

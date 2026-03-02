@@ -318,9 +318,43 @@ describe('routes/indices/handler', () => {
     });
   });
 
+  describe('GET (list)', () => {
+    beforeEach(() => {
+      ctx.requestInfo.method = 'GET';
+    });
+
+    it('should list indices from the registry', async () => {
+      storageClient.fetchIndexRegistry.resolves({
+        data: {
+          '/products/index.json': { lastmod: '2025-01-07T00:00:00.000Z' },
+          '/ca/en_us/index.json': { lastmod: '2025-06-15T12:00:00.000Z' },
+        },
+        etag: 'etag-1',
+      });
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 200);
+      const body = await response.json();
+      assert.strictEqual(body.indices.length, 2);
+      assert.strictEqual(body.indices[0].path, '/products/index.json');
+      assert.strictEqual(body.indices[1].path, '/ca/en_us/index.json');
+    });
+
+    it('should return empty list when no indices exist', async () => {
+      storageClient.fetchIndexRegistry.resolves({ data: {}, etag: 'etag-1' });
+
+      const response = await handler(ctx, null);
+
+      assert.strictEqual(response.status, 200);
+      const body = await response.json();
+      assert.strictEqual(body.indices.length, 0);
+    });
+  });
+
   describe('other methods', () => {
     it('should return 405 for unsupported methods', async () => {
-      ctx.requestInfo.method = 'GET';
+      ctx.requestInfo.method = 'PATCH';
 
       const response = await handler(ctx, null);
 

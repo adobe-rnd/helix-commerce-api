@@ -11,7 +11,7 @@
  */
 
 import StorageClient from '../../utils/StorageClient.js';
-import { errorResponse } from '../../utils/http.js';
+import { errorResponse, optionsHandler } from '../../utils/http.js';
 import { DIRECTORY_PATH_PATTERN } from '../../utils/validation.js';
 import { queueExistingProductsForIndexing } from '../../utils/indexer.js';
 
@@ -170,6 +170,30 @@ async function remove(ctx) {
 }
 
 /**
+ * Get the list of created indices for a site
+ * Reponds with the registry entries
+ *
+ * @param {Context} ctx
+ * @returns {Promise<Response>}
+ */
+async function list(ctx) {
+  const { org, site } = ctx.requestInfo;
+  const storage = StorageClient.fromContext(ctx);
+  const { data: registry } = await storage.fetchIndexRegistry(org, site);
+  return new Response(JSON.stringify({
+    indices: Object.entries(registry).map(([path, entry]) => ({
+      path,
+      lastModified: new Date(entry.lastmod).toISOString(),
+    })),
+  }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
  * @type {RouteHandler}
  */
 export default async function handler(ctx) {
@@ -177,6 +201,18 @@ export default async function handler(ctx) {
   const {
     path, method, org, site,
   } = requestInfo;
+
+  console.log('indices handler', method, path);
+
+  if (method === 'OPTIONS') {
+    return optionsHandler(['GET', 'POST', 'DELETE'])(ctx);
+  }
+
+  if (method === 'GET') {
+    ctx.authInfo.assertPermissions('index:read');
+    ctx.authInfo.assertOrgSite(org, site);
+    return list(ctx);
+  }
 
   if (!path) {
     return errorResponse(404, 'path is required');

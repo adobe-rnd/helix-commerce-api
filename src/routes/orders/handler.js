@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { errorResponse } from '../../utils/http.js';
+import { errorResponse, optionsHandler } from '../../utils/http.js';
 import list from './list.js';
 import retrieve from './retrieve.js';
 import create from './create.js';
@@ -24,14 +24,7 @@ const allHandlers = {
   GET: list,
   // POST ${org}/${site}/orders
   POST: create,
-  OPTIONS: async () => new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  }),
+  OPTIONS: optionsHandler(['GET', 'POST']),
 };
 
 /**
@@ -42,14 +35,7 @@ const oneHandlers = {
   GET: retrieve,
   // DELETE ${org}/${site}/orders/${id}
   DELETE: remove,
-  OPTIONS: async () => new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, DELETE',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  }),
+  OPTIONS: optionsHandler(['GET', 'DELETE']),
 };
 
 /**

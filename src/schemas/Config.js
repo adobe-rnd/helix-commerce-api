@@ -17,6 +17,7 @@ const Config = {
   type: 'object',
   properties: {
     authEnabled: { type: 'boolean' },
+    authOrigins: { type: 'array', items: { type: 'string', maxLength: 1024 } },
     otpEmailSender: EmailSchema,
     otpEmailSubject: { type: 'string', maxLength: 255 },
     otpEmailBodyTemplate: { type: 'string', maxLength: 1024 * 100 },

@@ -278,6 +278,7 @@ export default async function callback(ctx) {
 
   return new Response(JSON.stringify({
     success: true,
+    token,
     email,
     roles,
     org,

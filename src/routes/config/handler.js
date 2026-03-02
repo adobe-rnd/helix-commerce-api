@@ -11,6 +11,7 @@
  */
 
 import { errorResponse } from '@dylandepass/helix-product-shared';
+import { optionsHandler } from '../../utils/http.js';
 import { assertValidConfig } from '../../utils/config.js';
 
 /**
@@ -121,6 +122,8 @@ export default async function handler(ctx) {
       ctx.authInfo.assertPermissions('config:write');
       ctx.authInfo.assertOrgSite(org, site);
       return remove(ctx);
+    case 'OPTIONS':
+      return optionsHandler(['GET', 'POST', 'DELETE'])(ctx);
     default:
       return errorResponse(405, 'method not allowed');
   }

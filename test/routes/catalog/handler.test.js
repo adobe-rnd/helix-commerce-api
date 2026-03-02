@@ -38,11 +38,11 @@ describe('catalogHandler Tests', () => {
     sinon.restore();
   });
 
-  it('should return 404 when path is missing', async () => {
+  it('should return 404 when path is missing for non-GET methods', async () => {
     const ctx = DEFAULT_CONTEXT({
       requestInfo: {
         path: undefined,
-        method: 'GET',
+        method: 'PUT',
       },
     });
     const request = {};

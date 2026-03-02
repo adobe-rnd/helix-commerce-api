@@ -73,3 +73,28 @@ export function errorWithResponse(status, xError, body = '') {
   const error = new ResponseError(xError, response);
   return error;
 }
+
+/**
+ * @param {string[]} [methods] - allowed methods
+ * @param {string[]} [headers] - allowed headers
+ * @param {string[]} [origins] - allowed origins
+ * @returns {(ctx: Context) => Promise<Response>}
+ */
+export function optionsHandler(methods = ['POST'], headers = ['Content-Type, Authorization'], origins = ['*']) {
+  return async (ctx) => {
+    const origin = ctx.requestInfo.getHeader('origin') || '*';
+    let acao;
+    if (origins.includes(origin) || origins.includes('*')) {
+      acao = origin;
+    }
+    return new Response(null, {
+      status: 200,
+      headers: {
+        ...(methods.length > 0 ? { 'Access-Control-Allow-Methods': methods.join(',') } : {}),
+        ...(headers.length > 0 ? { 'Access-Control-Allow-Headers': headers.join(',') } : {}),
+        ...(acao ? { 'Access-Control-Allow-Origin': acao } : {}),
+        'Access-Control-Allow-Credentials': 'true',
+      },
+    });
+  };
+}
