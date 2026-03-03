@@ -182,6 +182,93 @@ describe('schemas/ProductBus', () => {
       };
       assertValidProduct(DEFAULT_CONTEXT(), product);
     });
+  });
+
+  describe('image filename validation', () => {
+    it('should accept product with valid image filename', () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        images: [
+          { url: './media_abc123.jpg', filename: 'blue-mug' },
+        ],
+      };
+      assertValidProduct(DEFAULT_CONTEXT(), product);
+    });
+
+    it('should accept product with images without filename (backwards compatibility)', () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        images: [
+          { url: './media_abc123.jpg' },
+        ],
+      };
+      assertValidProduct(DEFAULT_CONTEXT(), product);
+    });
+
+    it('should reject product with path-traversal filename', async () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        images: [
+          { url: './media_abc123.jpg', filename: '../secret' },
+        ],
+      };
+      try {
+        assertValidProduct(DEFAULT_CONTEXT(), product);
+        assert.ok(false, 'should have thrown');
+      } catch (e) {
+        assert.ok(e instanceof ResponseError);
+        const { response } = e;
+        assert.strictEqual(response.status, 400);
+        const json = await response.json();
+        assert.ok(json.errors.some((err) => err.path.includes('filename')));
+      }
+    });
+
+    it('should reject product with slash in filename', async () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        images: [
+          { url: './media_abc123.jpg', filename: 'foo/bar' },
+        ],
+      };
+      try {
+        assertValidProduct(DEFAULT_CONTEXT(), product);
+        assert.ok(false, 'should have thrown');
+      } catch (e) {
+        assert.ok(e instanceof ResponseError);
+        const { response } = e;
+        assert.strictEqual(response.status, 400);
+        const json = await response.json();
+        assert.ok(json.errors.some((err) => err.path.includes('filename')));
+      }
+    });
+
+    it('should accept valid filenames in variant images', () => {
+      const product = {
+        sku: '123',
+        name: 'Product 1',
+        path: '/products/test',
+        variants: [
+          {
+            sku: 'v1',
+            name: 'Variant 1',
+            url: '/products/test-v1',
+            images: [
+              { url: './media_abc123.jpg', filename: 'variant-photo' },
+            ],
+          },
+        ],
+      };
+      assertValidProduct(DEFAULT_CONTEXT(), product);
+    });
 
     it('should accept products with all OpenAI fields combined', () => {
       const product = {

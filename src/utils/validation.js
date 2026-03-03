@@ -61,6 +61,13 @@ export const PATH_PATTERN_WITH_JSON = /^\/([a-z0-9_]+([-_][a-z0-9_]+)*\/)*[a-z0-
 export const DIRECTORY_PATH_PATTERN = /^\/[a-z0-9]+([-_][a-z0-9]+)*(\/[a-z0-9]+([-_][a-z0-9]+)*)*$/;
 
 /**
+ * Pattern for image filename field on ProductBusMedia.
+ * Allows letters (A-Z, a-z), digits (0-9), hyphens (-), and underscores (_).
+ * Prevents path traversal, slashes, dots, spaces, and special characters.
+ */
+export const IMAGE_FILENAME_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+/**
  * @param {unknown} obj
  * @param {SchemaType} ptype
  * @param {string} path

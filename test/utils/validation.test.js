@@ -19,6 +19,7 @@ import {
   PATH_PATTERN,
   PATH_PATTERN_WITH_JSON,
   DIRECTORY_PATH_PATTERN,
+  IMAGE_FILENAME_PATTERN,
 } from '../../src/utils/validation.js';
 
 function check(val, schema, expectedErrors) {
@@ -1098,6 +1099,84 @@ describe('util', () => {
           paths.forEach((path) => {
             assert.ok(DIRECTORY_PATH_PATTERN.test(path), `DIRECTORY_PATH_PATTERN should accept ${path}`);
             assert.ok(PATH_PATTERN.test(path), `PATH_PATTERN should accept ${path}`);
+          });
+        });
+      });
+    });
+
+    describe('IMAGE_FILENAME_PATTERN', () => {
+      describe('valid filenames', () => {
+        const validFilenames = [
+          'blue-mug',
+          'product-image-001',
+          'BlenderPro500',
+          'my_product_photo',
+          'a',
+          'Z',
+          '0',
+          'IMG_1234',
+          'hero-image-2x',
+          'T1000-Blender-Pro',
+          'cafe-latte',
+          '-start-with-hyphen',
+          'end-with-hyphen-',
+          '_start_with_underscore',
+          'end_with_underscore_',
+        ];
+
+        validFilenames.forEach((filename) => {
+          it(`should match valid filename: ${filename}`, () => {
+            assert.ok(IMAGE_FILENAME_PATTERN.test(filename), `Expected "${filename}" to match`);
+          });
+        });
+      });
+
+      describe('invalid filenames - security', () => {
+        const securityFilenames = [
+          { filename: '../secret', reason: 'path traversal (../)' },
+          { filename: '../../etc/passwd', reason: 'deep path traversal' },
+          { filename: 'foo/bar', reason: 'forward slash' },
+          { filename: 'foo\\bar', reason: 'backslash' },
+          { filename: 'file name', reason: 'space' },
+          { filename: '<script>', reason: 'angle brackets (XSS)' },
+          { filename: 'file"name', reason: 'double quote' },
+          { filename: "file'name", reason: 'single quote' },
+          { filename: 'file&name', reason: 'ampersand' },
+          { filename: 'file?query', reason: 'question mark' },
+          { filename: 'file#hash', reason: 'hash' },
+          { filename: 'file%20name', reason: 'percent encoding' },
+          { filename: 'file:name', reason: 'colon' },
+          { filename: 'file;name', reason: 'semicolon' },
+          { filename: 'file=name', reason: 'equals sign' },
+          { filename: 'file@name', reason: 'at sign' },
+          { filename: 'file+name', reason: 'plus sign' },
+          { filename: 'file*name', reason: 'asterisk' },
+          { filename: 'file|name', reason: 'pipe' },
+          { filename: 'café', reason: 'non-ASCII (accented)' },
+          { filename: '测试', reason: 'non-ASCII (Chinese)' },
+          { filename: '🎉', reason: 'emoji' },
+        ];
+
+        securityFilenames.forEach(({ filename, reason }) => {
+          it(`should reject ${reason}: ${filename}`, () => {
+            assert.ok(!IMAGE_FILENAME_PATTERN.test(filename), `Expected "${filename}" to be rejected`);
+          });
+        });
+      });
+
+      describe('invalid filenames - edge cases', () => {
+        const edgeCases = [
+          { filename: '', reason: 'empty string' },
+          { filename: '.start', reason: 'starts with dot' },
+          { filename: 'end.', reason: 'ends with dot' },
+          { filename: 'has.dot', reason: 'contains dot' },
+          { filename: 'image.final', reason: 'dot in middle' },
+          { filename: 'photo_2024.01.15', reason: 'multiple dots' },
+        ];
+
+        edgeCases.forEach(({ filename, reason }) => {
+          it(`should reject ${reason}: ${filename}`, () => {
+            assert.ok(!IMAGE_FILENAME_PATTERN.test(filename), `Expected "${filename}" to be rejected`);
           });
         });
       });
