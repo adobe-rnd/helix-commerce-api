@@ -54,10 +54,12 @@ Example response body:
   "path": "/products/blender-pro-500",
   "url": "https://www.example.com/products/blender-pro-500",
   "images": [
-    { "url": "./media_xyz.jpg", "label": "main" }
+    { "url": "./media_a1b2c3d4e5f6789012345678901234567890abcd.jpg", "label": "main", "filename": "blender-pro-500-front" }
   ]
 }
 ```
+
+When a `filename` is provided on an image, the rendered and indexed media URL includes a human-readable segment: `./media_{hash}/blender-pro-500-front.jpg`. If `filename` is omitted the URL remains `./media_{hash}.jpg`.
 
 #### PUT a product (small example)
 
@@ -130,7 +132,8 @@ curl -sS -X PUT \
   "images": [
     {
       "url": "https://cdn.example.com/images/sku-123/main.jpg",
-      "label": "main",
+      "label": "Blender Pro 500 front view",
+      "filename": "blender-pro-500-front",
       "roles": ["small", "thumbnail"],
       "video": "https://cdn.example.com/videos/sku-123/overview.mp4"
     }
@@ -146,7 +149,7 @@ curl -sS -X PUT \
       },
       "url": "https://www.example.com/products/product-url-key?color=red",
       "images": [
-        { "url": "https://cdn.example.com/images/sku-123/red.jpg", "label": "red" }
+        { "url": "https://cdn.example.com/images/sku-123/red.jpg", "label": "red", "filename": "blender-pro-500-red" }
       ],
       "gtin": "0123456789013",
       "description": "Red variant description",
@@ -439,6 +442,7 @@ Example response (200):
 | --- | --- | --- |
 | `url` | `string` | Absolute or relative media URL. Required. |
 | `label` | `string` | Optional label or alt text. |
+| `filename` | `string` | Optional human-readable filename segment inserted into the media URL after processing. Only letters, digits, hyphens, and underscores are allowed (no dots, slashes, or spaces). E.g. `blender-pro-500-front` produces `./media_{hash}/blender-pro-500-front.jpg`. Omitting this field leaves the URL as `./media_{hash}.jpg`. |
 | `roles` | `string[]` | Optional role hints (e.g., `thumbnail`, `small`). |
 | `video` | `string` | Optional related video URL. |
 

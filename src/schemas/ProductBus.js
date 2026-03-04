@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { PATH_PATTERN } from '../utils/validation.js';
+import { PATH_PATTERN, IMAGE_FILENAME_PATTERN } from '../utils/validation.js';
 
 const MAX_JSON_LD_LENGTH = 128_000;
 
@@ -67,6 +67,7 @@ const ProductBusMedia = {
   properties: {
     url: { type: 'string' },
     label: { type: 'string' },
+    filename: { type: 'string', pattern: IMAGE_FILENAME_PATTERN },
     roles: { type: 'array', items: { type: 'string' } },
     video: { type: 'string' },
   },
