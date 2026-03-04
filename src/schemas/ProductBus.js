@@ -67,7 +67,7 @@ const ProductBusMedia = {
   properties: {
     url: { type: 'string' },
     label: { type: 'string' },
-    filename: { type: 'string', pattern: IMAGE_FILENAME_PATTERN, maxLength: 200 },
+    filename: { type: 'string', pattern: IMAGE_FILENAME_PATTERN },
     roles: { type: 'array', items: { type: 'string' } },
     video: { type: 'string' },
   },
