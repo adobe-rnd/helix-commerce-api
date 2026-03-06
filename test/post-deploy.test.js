@@ -903,8 +903,11 @@ describe('Post-Deploy Tests', () => {
     });
   });
 
-  describe('Secrets', () => {
+  describe('Secrets', function secretsTestSuite() {
+    this.timeout(3 * 60_000);
+
     const apiPrefix = '/maxakuru/sites/productbus-test';
+    const adminEmail = process.env.TEST_ADMIN_EMAIL;
     const secretsPath = '/payments-chase.json';
     const validPayload = {
       merchantId: 'test-merchant-123',
@@ -912,9 +915,55 @@ describe('Post-Deploy Tests', () => {
       apiSecret: 'test-secret-xyz',
       environment: 'sandbox',
     };
-    let s3;
 
-    before(() => {
+    /** @type {import('@aws-sdk/client-s3').S3Client} */
+    let s3;
+    /** @type {ReturnType<typeof createImapListener>} */
+    let imapListener;
+    /** @type {string} */
+    let adminToken;
+
+    async function loginAsAdmin() {
+      if (adminToken) return adminToken;
+
+      const codeEmailPromise = imapListener.onEmail(
+        ({ recipient, subject }) => recipient.includes(adminEmail)
+          && subject.includes(OTP_SUBJECT),
+        60_000,
+      );
+
+      const loginOpts = {
+        url: new URL(`${API_BASE}${apiPrefix}/auth/login`),
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail }),
+      };
+      const loginRes = await fetch(loginOpts.url, loginOpts);
+      assert.strictEqual(loginRes.status, 200, 'Admin login should succeed');
+      const { email, hash, exp } = await loginRes.json();
+
+      const codeEmail = await codeEmailPromise;
+      const [, code] = codeEmail.body.match(/\b(\d{6})\b/);
+
+      const callbackOpts = {
+        url: new URL(`${API_BASE}${apiPrefix}/auth/callback`),
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, code, hash, exp,
+        }),
+      };
+      const callbackRes = await fetch(callbackOpts.url, callbackOpts);
+      assert.strictEqual(callbackRes.status, 200, 'Admin callback should succeed');
+
+      const setCookie = callbackRes.headers.get('Set-Cookie');
+      [, adminToken] = setCookie.split(';')[0].split('=');
+      return adminToken;
+    }
+
+    before(async () => {
       s3 = new S3Client({
         region: 'auto',
         endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -923,6 +972,15 @@ describe('Post-Deploy Tests', () => {
           secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY,
         },
       });
+      imapListener = createImapListener({
+        email: process.env.TEST_ADMIN_EMAIL,
+        password: process.env.IMAP_APP_PASSWORD,
+      });
+      await imapListener.start();
+    });
+
+    after(async () => {
+      await imapListener.stop();
     });
 
     it('rejects unauthenticated request', async () => {
@@ -937,25 +995,47 @@ describe('Post-Deploy Tests', () => {
       assert.ok([401, 403].includes(res.status), `Expected 401 or 403, got ${res.status}`);
     });
 
-    it('rejects invalid payload', async () => {
-      const opts = getFetchOptions(`${apiPrefix}/secrets${secretsPath}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ merchantId: 123 }),
-      });
-      const res = await fetch(opts.url, opts);
-      assert.strictEqual(res.status, 400, 'Invalid payload should return 400');
-    });
-
-    it('accepts valid and authorized write', async () => {
+    it('rejects service token with 403', async () => {
       const opts = getFetchOptions(`${apiPrefix}/secrets${secretsPath}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(validPayload),
       });
       const res = await fetch(opts.url, opts);
+      assert.strictEqual(res.status, 403, 'Service token should be rejected');
+    });
+
+    it('rejects invalid payload', async () => {
+      const token = await loginAsAdmin();
+      const opts = {
+        url: new URL(`${API_BASE}${apiPrefix}/secrets${secretsPath}`),
+        method: 'PUT',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ merchantId: 123 }),
+      };
+      const res = await fetch(opts.url, opts);
+      assert.strictEqual(res.status, 400, 'Invalid payload should return 400');
+    });
+
+    it('accepts valid and authorized write', async () => {
+      const token = await loginAsAdmin();
+      const opts = {
+        url: new URL(`${API_BASE}${apiPrefix}/secrets${secretsPath}`),
+        method: 'PUT',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(validPayload),
+      };
+      const res = await fetch(opts.url, opts);
       assert.strictEqual(res.status, 204, `Expected 204, got ${res.status}: ${res.headers.get('x-error')}`);
-    }).timeout(30_000);
+    });
 
     it('written secret is encrypted at rest', async () => {
       const storageKey = 'maxakuru/productbus-test/secrets/payments-chase.json';
