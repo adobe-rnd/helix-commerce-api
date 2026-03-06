@@ -61,6 +61,44 @@ export const PATH_PATTERN_WITH_JSON = /^\/([a-z0-9_]+([-_][a-z0-9_]+)*\/)*[a-z0-
 export const DIRECTORY_PATH_PATTERN = /^\/[a-z0-9]+([-_][a-z0-9]+)*(\/[a-z0-9]+([-_][a-z0-9]+)*)*$/;
 
 /**
+ * Secrets path pattern. Must end with .json and allows hyphens in the filename.
+ * Directory prefix (everything before the filename) is limited to 256 characters.
+ * Pattern: /optional/dir/segments/filename.json
+ */
+export const SECRETS_PATH_PATTERN = /^\/([a-z0-9_]+([-_][a-z0-9_]+)*\/)*[a-z0-9]+(-[a-z0-9]+)*\.json$/;
+export const SECRETS_PATH_MAX_PREFIX_LENGTH = 256;
+
+/**
+ * Validate a secrets path: must match pattern, end with .json, have no
+ * traversal segments, and have a directory prefix no longer than
+ * {@link SECRETS_PATH_MAX_PREFIX_LENGTH} characters.
+ *
+ * @param {string} path
+ * @returns {{ valid: boolean, error?: string, filename?: string }}
+ */
+export function validateSecretsPath(path) {
+  if (!path || typeof path !== 'string') {
+    return { valid: false, error: 'path is required' };
+  }
+  if (!path.endsWith('.json')) {
+    return { valid: false, error: 'path must end with .json' };
+  }
+  if (path.includes('..')) {
+    return { valid: false, error: 'path must not contain ..' };
+  }
+  if (!SECRETS_PATH_PATTERN.test(path)) {
+    return { valid: false, error: 'invalid secrets path' };
+  }
+  const lastSlash = path.lastIndexOf('/');
+  const prefix = path.slice(0, lastSlash + 1);
+  if (prefix.length > SECRETS_PATH_MAX_PREFIX_LENGTH) {
+    return { valid: false, error: `path prefix exceeds ${SECRETS_PATH_MAX_PREFIX_LENGTH} characters` };
+  }
+  const filename = path.slice(lastSlash + 1, -'.json'.length);
+  return { valid: true, filename };
+}
+
+/**
  * @param {unknown} obj
  * @param {SchemaType} ptype
  * @param {string} path

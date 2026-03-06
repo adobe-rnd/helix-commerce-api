@@ -31,7 +31,8 @@ const router = new Router(nameSelector)
   .add('/:org/sites/:site/index/*', handlers.indices)
   .add('/:org/sites/:site/config', handlers.config)
   .add('/:org/sites/:site/operations-log', handlers['operations-log'])
-  .add('/:org/sites/:site/emails', handlers.emails);
+  .add('/:org/sites/:site/emails', handlers.emails)
+  .add('/:org/sites/:site/secrets/*', handlers.secrets);
 
 /**
  * @param {import("@cloudflare/workers-types").Request} req

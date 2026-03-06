@@ -182,6 +182,8 @@ export const createAuthInfoMock = (permissions = [], email = null, opts = {}) =>
   };
 };
 
+export const TEST_SECRETS_PK = 'vH4duMjOjWwIee6/xT+6m2LPUAzwtGPHL+p6dd5dVsc=';
+
 export const SUPERUSER_CONTEXT = (overrides = {}) => {
   const superuserPermissions = [
     'catalog:read',
@@ -198,6 +200,7 @@ export const SUPERUSER_CONTEXT = (overrides = {}) => {
     'admins:read',
     'admins:write',
     'emails:send',
+    'secrets:write',
   ];
 
   return DEFAULT_CONTEXT({

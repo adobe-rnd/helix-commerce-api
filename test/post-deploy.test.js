@@ -13,12 +13,13 @@
 /* eslint-disable max-len */
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import assert from 'assert';
 import { h1NoCache } from '@adobe/fetch';
 import { config } from 'dotenv';
 import { OTP_SUBJECT } from '../src/utils/auth.js';
 import { createImapListener } from './fixtures/imap.js';
+import { deriveKey, decrypt } from '../src/utils/encryption.js';
 
 // required env variables
 // POSTDEPLOY_SERVICE_TOKEN allows catalog APIs
@@ -28,6 +29,7 @@ import { createImapListener } from './fixtures/imap.js';
 // CLOUDFLARE_ACCOUNT_ID for R2 storage
 // CLOUDFLARE_ACCESS_KEY_ID for R2 storage, access to helix-commerce-auth-dev R2 bucket
 // CLOUDFLARE_SECRET_ACCESS_KEY for R2 storage, access to helix-commerce-auth-dev R2 bucket
+// SECRETS_PK_CI for decrypting secrets in post-deploy verification
 
 config();
 
@@ -899,5 +901,90 @@ describe('Post-Deploy Tests', () => {
       assert.ok(Array.isArray(orders4), 'Orders should be an array');
       assert.deepStrictEqual(orders, orders4, 'Orders should be the same');
     });
+  });
+
+  describe('Secrets', () => {
+    const apiPrefix = '/maxakuru/sites/productbus-test';
+    const secretsPath = '/payments-chase.json';
+    const validPayload = {
+      merchantId: 'test-merchant-123',
+      apiKey: 'test-key-abc',
+      apiSecret: 'test-secret-xyz',
+      environment: 'sandbox',
+    };
+    let s3;
+
+    before(() => {
+      s3 = new S3Client({
+        region: 'auto',
+        endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID,
+          secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY,
+        },
+      });
+    });
+
+    it('rejects unauthenticated request', async () => {
+      const opts = {
+        url: new URL(`${API_BASE}${apiPrefix}/secrets${secretsPath}`),
+        method: 'PUT',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validPayload),
+      };
+      const res = await fetch(opts.url, opts);
+      assert.ok([401, 403].includes(res.status), `Expected 401 or 403, got ${res.status}`);
+    });
+
+    it('rejects invalid payload', async () => {
+      const opts = getFetchOptions(`${apiPrefix}/secrets${secretsPath}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ merchantId: 123 }),
+      });
+      const res = await fetch(opts.url, opts);
+      assert.strictEqual(res.status, 400, 'Invalid payload should return 400');
+    });
+
+    it('accepts valid and authorized write', async () => {
+      const opts = getFetchOptions(`${apiPrefix}/secrets${secretsPath}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validPayload),
+      });
+      const res = await fetch(opts.url, opts);
+      assert.strictEqual(res.status, 204, `Expected 204, got ${res.status}: ${res.headers.get('x-error')}`);
+    }).timeout(30_000);
+
+    it('written secret is encrypted at rest', async () => {
+      const storageKey = 'maxakuru/productbus-test/secrets/payments-chase.json';
+      const command = new GetObjectCommand({
+        Bucket: 'helix-commerce-secrets-dev',
+        Key: storageKey,
+      });
+      const response = await s3.send(command);
+      const body = await response.Body.transformToString();
+
+      assert.ok(body.startsWith('v1:'), 'Stored blob should have version prefix');
+      assert.ok(!body.includes('test-merchant-123'), 'Plaintext values must not appear in encrypted blob');
+      assert.ok(!body.includes('test-key-abc'), 'Plaintext values must not appear in encrypted blob');
+    }).timeout(15_000);
+
+    it('written secret decrypts to expected payload', async () => {
+      const storageKey = 'maxakuru/productbus-test/secrets/payments-chase.json';
+      const command = new GetObjectCommand({
+        Bucket: 'helix-commerce-secrets-dev',
+        Key: storageKey,
+      });
+      const response = await s3.send(command);
+      const blob = await response.Body.transformToString();
+
+      const cryptoKey = await deriveKey(process.env.SECRETS_PK_CI, 'maxakuru', 'productbus-test');
+      const plaintext = await decrypt(cryptoKey, blob);
+      const parsed = JSON.parse(plaintext);
+
+      assert.deepStrictEqual(parsed, validPayload, 'Decrypted secret should match the written payload');
+    }).timeout(15_000);
   });
 });
