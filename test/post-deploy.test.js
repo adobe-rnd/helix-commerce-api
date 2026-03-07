@@ -910,10 +910,18 @@ describe('Post-Deploy Tests', () => {
     const adminEmail = process.env.TEST_ADMIN_EMAIL;
     const secretsPath = '/payments-chase.json';
     const validPayload = {
+      username: 'test-chase-user',
+      password: 'test-chase-pass',
+      hostedSecureId: 'hs-id-test',
+      hostedSecureApiToken: 'hs-token-test',
       merchantId: 'test-merchant-123',
-      apiKey: 'test-key-abc',
-      apiSecret: 'test-secret-xyz',
-      environment: 'sandbox',
+      terminalId: 'test-terminal-456',
+      bin: '999888',
+      initUrl: 'https://chase.example.com/init',
+      redirectUrl: 'https://chase.example.com/redirect',
+      serviceUrl: 'https://chase.example.com/service',
+      successUrl: 'https://mysite.example.com/success',
+      cancelUrl: 'https://mysite.example.com/cancel',
     };
 
     /** @type {import('@aws-sdk/client-s3').S3Client} */
@@ -1048,7 +1056,7 @@ describe('Post-Deploy Tests', () => {
 
       assert.ok(body.startsWith('v1:'), 'Stored blob should have version prefix');
       assert.ok(!body.includes('test-merchant-123'), 'Plaintext values must not appear in encrypted blob');
-      assert.ok(!body.includes('test-key-abc'), 'Plaintext values must not appear in encrypted blob');
+      assert.ok(!body.includes('test-chase-user'), 'Plaintext values must not appear in encrypted blob');
     }).timeout(15_000);
 
     it('written secret decrypts to expected payload', async () => {

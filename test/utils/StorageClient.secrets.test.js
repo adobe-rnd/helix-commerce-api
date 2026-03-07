@@ -59,7 +59,10 @@ describe('StorageClient#getSecrets', () => {
 
   it('should return root secrets only for a root path', async () => {
     const rootPayload = {
-      merchantId: 'root-merchant', apiKey: 'root-key', apiSecret: 'root-secret', environment: 'production',
+      username: 'root-user',
+      password: 'root-pass',
+      merchantId: 'root-merchant',
+      terminalId: 'root-terminal',
     };
     const encrypted = await encryptPayload('myorg', 'mysite', rootPayload);
 
@@ -78,7 +81,10 @@ describe('StorageClient#getSecrets', () => {
 
   it('should return locale secrets only when no root secrets exist', async () => {
     const localePayload = {
-      merchantId: 'locale-merchant', apiKey: 'locale-key', apiSecret: 'locale-secret', environment: 'sandbox',
+      username: 'locale-user',
+      password: 'locale-pass',
+      merchantId: 'locale-merchant',
+      terminalId: 'locale-terminal',
     };
     const encrypted = await encryptPayload('myorg', 'mysite', localePayload);
 
@@ -97,16 +103,16 @@ describe('StorageClient#getSecrets', () => {
 
   it('should merge root and locale secrets with locale taking precedence', async () => {
     const rootPayload = {
+      username: 'root-user',
+      password: 'root-pass',
       merchantId: 'root-merchant',
-      apiKey: 'root-key',
-      apiSecret: 'root-secret',
-      environment: 'production',
+      terminalId: 'root-terminal',
     };
     const localePayload = {
+      username: 'locale-user',
+      password: 'locale-pass',
       merchantId: 'locale-merchant',
-      apiKey: 'locale-key',
-      apiSecret: 'locale-secret',
-      environment: 'sandbox',
+      terminalId: 'locale-terminal',
     };
 
     const rootEncrypted = await encryptPayload('myorg', 'mysite', rootPayload);
@@ -133,10 +139,10 @@ describe('StorageClient#getSecrets', () => {
 
   it('should merge with locale overriding only specific fields', async () => {
     const rootPayload = {
+      username: 'root-user',
+      password: 'root-pass',
       merchantId: 'root-merchant',
-      apiKey: 'root-key',
-      apiSecret: 'root-secret',
-      environment: 'production',
+      terminalId: 'root-terminal',
     };
     const localePayload = {
       merchantId: 'ca-merchant',
@@ -159,10 +165,10 @@ describe('StorageClient#getSecrets', () => {
 
     const result = await client.getSecrets('/ca/payments-chase.json');
     assert.deepStrictEqual(result, {
+      username: 'root-user',
+      password: 'root-pass',
       merchantId: 'ca-merchant',
-      apiKey: 'root-key',
-      apiSecret: 'root-secret',
-      environment: 'production',
+      terminalId: 'root-terminal',
     });
   });
 });

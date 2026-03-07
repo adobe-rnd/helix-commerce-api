@@ -19,10 +19,18 @@ import { DEFAULT_CONTEXT, createAuthInfoMock, TEST_SECRETS_PK } from '../../fixt
 import { deriveKey, decrypt } from '../../../src/utils/encryption.js';
 
 const validPayload = {
+  username: 'chase-user',
+  password: 'chase-pass',
+  hostedSecureId: 'hs-id-123',
+  hostedSecureApiToken: 'hs-token-abc',
   merchantId: 'merchant-123',
-  apiKey: 'key-abc',
-  apiSecret: 'secret-xyz',
-  environment: 'sandbox',
+  terminalId: 'terminal-456',
+  bin: '123456',
+  initUrl: 'https://chase.example.com/init',
+  redirectUrl: 'https://chase.example.com/redirect',
+  serviceUrl: 'https://chase.example.com/service',
+  successUrl: 'https://mysite.example.com/success',
+  cancelUrl: 'https://mysite.example.com/cancel',
 };
 
 function makeCtx(overrides = {}) {
@@ -162,11 +170,9 @@ describe('Secrets Handler Tests', () => {
   });
 
   describe('Payload validation', () => {
-    it('should reject invalid payload', async () => {
+    it('should reject invalid payload - wrong type', async () => {
       const ctx = makeCtx({
-        data: {
-          merchantId: 123, apiKey: 'key', apiSecret: 'secret', environment: 'sandbox',
-        },
+        data: { ...validPayload, merchantId: 123 },
       });
 
       const response = await secretsHandler(ctx);
@@ -186,15 +192,6 @@ describe('Secrets Handler Tests', () => {
     it('should reject payload missing required fields', async () => {
       const ctx = makeCtx({
         data: { merchantId: 'merchant-123' },
-      });
-
-      const response = await secretsHandler(ctx);
-      assert.strictEqual(response.status, 400);
-    });
-
-    it('should reject invalid environment value', async () => {
-      const ctx = makeCtx({
-        data: { ...validPayload, environment: 'staging' },
       });
 
       const response = await secretsHandler(ctx);
