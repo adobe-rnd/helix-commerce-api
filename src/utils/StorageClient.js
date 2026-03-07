@@ -17,6 +17,7 @@ import {
 import { BatchProcessor } from './batch.js';
 import { errorWithResponse } from './http.js';
 import { purgeBatch } from '../routes/cache/purge.js';
+import { deriveKey, decrypt } from './encryption.js';
 
 export default class StorageClient extends SharedStorageClient {
   /**
@@ -795,5 +796,70 @@ export default class StorageClient extends SharedStorageClient {
       };
       return order;
     });
+  }
+
+  /**
+   * Fetch and decrypt secrets for a given path, merging root (default)
+   * secrets with locale-specific secrets. Locale values override root values.
+   *
+   * Returns `null` if no secrets exist at either location.
+   *
+   * @example
+   * // Secrets stored at:
+   * //   SECRETS_BUCKET:/myorg/mysite/secrets/payments-chase.json       (root)
+   * //   SECRETS_BUCKET:/myorg/mysite/secrets/en/us/payments-chase.json (locale)
+   * //
+   * // Calling with path '/en/us/payments-chase.json' merges both:
+   * //   result = { ...rootSecrets, ...localeSecrets }
+   *
+   * @example
+   * // Only root secrets at SECRETS_BUCKET:/myorg/mysite/secrets/payments-chase.json
+   * // Calling with path '/payments-chase.json' returns root secrets only.
+   *
+   * @example
+   * // No secrets at either location -> returns null
+   *
+   * @param {string} path - Full sub-path relative to secrets root
+   *   (e.g. '/en/us/payments-chase.json' or '/payments-chase.json')
+   * @returns {Promise<Record<string, unknown> | null>}
+   */
+  async getSecrets(path) {
+    const {
+      env: { SECRETS_BUCKET, SECRETS_PK },
+      requestInfo: { org, site },
+    } = this.ctx;
+
+    const filename = path.slice(path.lastIndexOf('/') + 1);
+    const rootKey = `${org}/${site}/secrets/${filename}`;
+    const localeKey = `${org}/${site}/secrets${path}`;
+    const isRootPath = rootKey === localeKey;
+
+    const key = await deriveKey(SECRETS_PK, org, site);
+
+    const fetchSecret = async (storageKey) => {
+      const obj = await SECRETS_BUCKET.get(storageKey);
+      if (!obj) return null;
+      const blob = await obj.text();
+      const plaintext = await decrypt(key, blob);
+      return JSON.parse(plaintext);
+    };
+
+    if (isRootPath) {
+      return fetchSecret(rootKey);
+    }
+
+    const [rootSecrets, localeSecrets] = await Promise.all([
+      fetchSecret(rootKey),
+      fetchSecret(localeKey),
+    ]);
+
+    if (!rootSecrets && !localeSecrets) {
+      return null;
+    }
+
+    return {
+      ...rootSecrets,
+      ...localeSecrets,
+    };
   }
 }

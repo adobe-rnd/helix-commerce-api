@@ -13,7 +13,8 @@ env:
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
   CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_ACCESS_KEY_ID }}
   CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_SECRET_ACCESS_KEY }}
-
+  SECRETS_PK_CI: ${{ secrets.SECRETS_PK_CI }}
+  
 permissions:
   id-token: write
   contents: write  # semantic-release-dry verifies the write permissions

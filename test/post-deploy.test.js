@@ -13,12 +13,13 @@
 /* eslint-disable max-len */
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import assert from 'assert';
 import { h1NoCache } from '@adobe/fetch';
 import { config } from 'dotenv';
 import { OTP_SUBJECT } from '../src/utils/auth.js';
 import { createImapListener } from './fixtures/imap.js';
+import { deriveKey, decrypt } from '../src/utils/encryption.js';
 
 // required env variables
 // POSTDEPLOY_SERVICE_TOKEN allows catalog APIs
@@ -28,6 +29,7 @@ import { createImapListener } from './fixtures/imap.js';
 // CLOUDFLARE_ACCOUNT_ID for R2 storage
 // CLOUDFLARE_ACCESS_KEY_ID for R2 storage, access to helix-commerce-auth-dev R2 bucket
 // CLOUDFLARE_SECRET_ACCESS_KEY for R2 storage, access to helix-commerce-auth-dev R2 bucket
+// SECRETS_PK_CI for decrypting secrets in post-deploy verification
 
 config();
 
@@ -899,5 +901,178 @@ describe('Post-Deploy Tests', () => {
       assert.ok(Array.isArray(orders4), 'Orders should be an array');
       assert.deepStrictEqual(orders, orders4, 'Orders should be the same');
     });
+  });
+
+  describe('Secrets', function secretsTestSuite() {
+    this.timeout(3 * 60_000);
+
+    const apiPrefix = '/maxakuru/sites/productbus-test';
+    const adminEmail = process.env.TEST_ADMIN_EMAIL;
+    const secretsPath = '/payments-chase.json';
+    const validPayload = {
+      username: 'test-chase-user',
+      password: 'test-chase-pass',
+      hostedSecureId: 'hs-id-test',
+      hostedSecureApiToken: 'hs-token-test',
+      merchantId: 'test-merchant-123',
+      terminalId: 'test-terminal-456',
+      bin: '999888',
+      initUrl: 'https://chase.example.com/init',
+      redirectUrl: 'https://chase.example.com/redirect',
+      serviceUrl: 'https://chase.example.com/service',
+      successUrl: 'https://mysite.example.com/success',
+      cancelUrl: 'https://mysite.example.com/cancel',
+    };
+
+    /** @type {import('@aws-sdk/client-s3').S3Client} */
+    let s3;
+    /** @type {ReturnType<typeof createImapListener>} */
+    let imapListener;
+    /** @type {string} */
+    let adminToken;
+
+    async function loginAsAdmin() {
+      if (adminToken) return adminToken;
+
+      const codeEmailPromise = imapListener.onEmail(
+        ({ recipient, subject }) => recipient.includes(adminEmail)
+          && subject.includes(OTP_SUBJECT),
+        60_000,
+      );
+
+      const loginOpts = {
+        url: new URL(`${API_BASE}${apiPrefix}/auth/login`),
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail }),
+      };
+      const loginRes = await fetch(loginOpts.url, loginOpts);
+      assert.strictEqual(loginRes.status, 200, 'Admin login should succeed');
+      const { email, hash, exp } = await loginRes.json();
+
+      const codeEmail = await codeEmailPromise;
+      const [, code] = codeEmail.body.match(/\b(\d{6})\b/);
+
+      const callbackOpts = {
+        url: new URL(`${API_BASE}${apiPrefix}/auth/callback`),
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email, code, hash, exp,
+        }),
+      };
+      const callbackRes = await fetch(callbackOpts.url, callbackOpts);
+      assert.strictEqual(callbackRes.status, 200, 'Admin callback should succeed');
+
+      const setCookie = callbackRes.headers.get('Set-Cookie');
+      [, adminToken] = setCookie.split(';')[0].split('=');
+      return adminToken;
+    }
+
+    before(async () => {
+      s3 = new S3Client({
+        region: 'auto',
+        endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID,
+          secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY,
+        },
+      });
+      imapListener = createImapListener({
+        email: process.env.TEST_ADMIN_EMAIL,
+        password: process.env.IMAP_APP_PASSWORD,
+      });
+      await imapListener.start();
+    });
+
+    after(async () => {
+      await imapListener.stop();
+    });
+
+    it('rejects unauthenticated request', async () => {
+      const opts = {
+        url: new URL(`${API_BASE}${apiPrefix}/secrets${secretsPath}`),
+        method: 'PUT',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validPayload),
+      };
+      const res = await fetch(opts.url, opts);
+      assert.ok([401, 403].includes(res.status), `Expected 401 or 403, got ${res.status}`);
+    });
+
+    it('rejects service token with 403', async () => {
+      const opts = getFetchOptions(`${apiPrefix}/secrets${secretsPath}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validPayload),
+      });
+      const res = await fetch(opts.url, opts);
+      assert.strictEqual(res.status, 403, 'Service token should be rejected');
+    });
+
+    it('rejects invalid payload', async () => {
+      const token = await loginAsAdmin();
+      const opts = {
+        url: new URL(`${API_BASE}${apiPrefix}/secrets${secretsPath}`),
+        method: 'PUT',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ merchantId: 123 }),
+      };
+      const res = await fetch(opts.url, opts);
+      assert.strictEqual(res.status, 400, 'Invalid payload should return 400');
+    });
+
+    it('accepts valid and authorized write', async () => {
+      const token = await loginAsAdmin();
+      const opts = {
+        url: new URL(`${API_BASE}${apiPrefix}/secrets${secretsPath}`),
+        method: 'PUT',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(validPayload),
+      };
+      const res = await fetch(opts.url, opts);
+      assert.strictEqual(res.status, 204, `Expected 204, got ${res.status}: ${res.headers.get('x-error')}`);
+    });
+
+    it('written secret is encrypted at rest', async () => {
+      const storageKey = 'maxakuru/productbus-test/secrets/payments-chase.json';
+      const command = new GetObjectCommand({
+        Bucket: 'helix-commerce-secrets-dev',
+        Key: storageKey,
+      });
+      const response = await s3.send(command);
+      const body = await response.Body.transformToString();
+
+      assert.ok(body.startsWith('v1:'), 'Stored blob should have version prefix');
+      assert.ok(!body.includes('test-merchant-123'), 'Plaintext values must not appear in encrypted blob');
+      assert.ok(!body.includes('test-chase-user'), 'Plaintext values must not appear in encrypted blob');
+    }).timeout(15_000);
+
+    it('written secret decrypts to expected payload', async () => {
+      const storageKey = 'maxakuru/productbus-test/secrets/payments-chase.json';
+      const command = new GetObjectCommand({
+        Bucket: 'helix-commerce-secrets-dev',
+        Key: storageKey,
+      });
+      const response = await s3.send(command);
+      const blob = await response.Body.transformToString();
+
+      const cryptoKey = await deriveKey(process.env.SECRETS_PK_CI, 'maxakuru', 'productbus-test');
+      const plaintext = await decrypt(cryptoKey, blob);
+      const parsed = JSON.parse(plaintext);
+
+      assert.deepStrictEqual(parsed, validPayload, 'Decrypted secret should match the written payload');
+    }).timeout(15_000);
   });
 });

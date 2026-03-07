@@ -75,6 +75,10 @@ declare global {
     CATALOG_BUCKET: R2Bucket;
     ORDERS_BUCKET: R2Bucket;
     CONFIGS_BUCKET: R2Bucket;
+    SECRETS_BUCKET: R2Bucket;
+
+    // secrets encryption
+    SECRETS_PK: string;
 
     [key: string]: string | KVNamespace<string> | R2Bucket | Queue<SharedTypes.IndexingJob>;
   }

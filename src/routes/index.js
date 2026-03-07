@@ -19,6 +19,7 @@ import cache from './cache/handler.js';
 import indices from './indices/handler.js';
 import config from './config/handler.js';
 import emails from './emails/handler.js';
+import secrets from './secrets/handler.js';
 
 /**
  * @type {Record<string, RouteHandler>}
@@ -33,4 +34,5 @@ export default {
   indices,
   config,
   emails,
+  secrets,
 };

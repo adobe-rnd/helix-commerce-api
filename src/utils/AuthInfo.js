@@ -34,8 +34,10 @@ const PERMISSIONS = {
     'config:read',
     'config:write',
     'emails:send',
+    'secrets:write',
   ],
   // service (ie. ETL) permissions
+  // TODO: remove this in favor of servicetokens
   service: [
     'catalog:read',
     'catalog:write',

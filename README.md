@@ -15,6 +15,9 @@ Product API for Edge Delivery Services.
   - [Step 1: Configure the sender address](#step-1-configure-the-sender-address)
   - [Step 2: Create a service token with email scopes](#step-2-create-a-service-token-with-email-scopes)
   - [Step 3: Send an email](#step-3-send-an-email)
+- [Secrets](#secrets)
+  - [PUT a secret (root/default)](#put-a-secret-rootdefault)
+  - [PUT a secret (locale-specific override)](#put-a-secret-locale-specific-override)
 - [Schemas](#schemas)
 
 ### Environments
@@ -397,6 +400,52 @@ Example response (200):
 ```json
 { "success": true }
 ```
+
+### Secrets
+
+The `/secrets` endpoint stores encrypted configuration for third-party integrations (e.g., payment provider credentials). Secrets are write-only via the API, encrypted at rest with per-tenant derived keys (HKDF + AES-GCM-256), and readable only by internal service code via `StorageClient.getSecrets()`.
+
+- Only admins can write secrets. The `secrets:write` permission cannot be granted to service tokens.
+- Only known secret store IDs are accepted (see `src/schemas/secrets/index.js` for the lookup table).
+- Secrets can be stored at a root path (site-wide default) or a locale-specific path. When read internally, locale secrets override root secrets.
+
+#### PUT a secret (root/default)
+
+```bash
+curl -sS -X PUT \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/secrets/payments-chase.json" \
+  --data-binary @- <<'JSON'
+{
+  "merchantId": "merchant-123",
+  "apiKey": "key-abc",
+  "apiSecret": "secret-xyz",
+  "environment": "production"
+}
+JSON
+```
+
+Returns 204 on success. The secret is encrypted and stored at `SECRETS_BUCKET:{org}/{site}/secrets/payments-chase.json`.
+
+#### PUT a secret (locale-specific override)
+
+```bash
+curl -sS -X PUT \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.adobecommerce.live/$ORG/sites/$SITE/secrets/ca/en/payments-chase.json" \
+  --data-binary @- <<'JSON'
+{
+  "merchantId": "ca-merchant-456",
+  "apiKey": "ca-key-def",
+  "apiSecret": "ca-secret-uvw",
+  "environment": "production"
+}
+JSON
+```
+
+When code calls `StorageClient.getSecrets('/ca/en/payments-chase.json')`, both the root and locale secrets are fetched and merged, with locale values taking precedence.
 
 ### Schemas
 
